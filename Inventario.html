@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventario Taller Wilian</title>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            padding: 20px 0;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        header h1 {
+            text-align: center;
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+        }
+
+        .header-info {
+            display: flex;
+            justify-content: space-between;
+            padding: 0 20px;
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background-color: #2a5298;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #1e3c72;
+        }
+
+        .btn-success {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background-color: #218838;
+        }
+
+        .btn-danger {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+
+        .btn-warning {
+            background-color: #ffc107;
+            color: #212529;
+        }
+
+        .btn-warning:hover {
+            background-color: #e0a800;
+        }
+
+        .btn-info {
+            background-color: #17a2b8;
+            color: white;
+        }
+
+        .btn-info:hover {
+            background-color: #138496;
+        }
+
+        .inventory-table {
+            background-color: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background-color: #2a5298;
+            color: white;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .actions button {
+            padding: 5px 10px;
+            font-size: 0.8rem;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal h2 {
+            margin-bottom: 20px;
+            color: #2a5298;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+
+        .iva-info {
+            background-color: #e8f4fd;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 5px;
+            font-size: 0.9rem;
+        }
+
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            text-align: center;
+            display: none;
+        }
+
+        .status.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            font-size: 1.2rem;
+            color: #2a5298;
+        }
+
+        .file-input-container {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-input {
+            position: absolute;
+            left: -9999px;
+        }
+
+        .file-input-label {
+            display: block;
+            padding: 10px 20px;
+            background-color: #28a745;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            text-align: center;
+            transition: background-color 0.3s;
+        }
+
+        .file-input-label:hover {
+            background-color: #218838;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            padding: 20px;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+            }
+            
+            .search-box {
+                width: 100%;
+            }
+            
+            .actions {
+                flex-direction: column;
+            }
+            
+            th, td {
+                padding: 8px 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Inventario Taller Wilian</h1>
+            <div class="header-info">
+                <span>Fecha: <span id="current-date"></span></span>
+                <span>Total de productos: <span id="total-products">0</span></span>
+            </div>
+        </header>
+
+        <div class="status" id="status-message"></div>
+
+        <div class="controls">
+            <div class="search-box">
+                <input type="text" id="search-input" placeholder="Buscar producto...">
+            </div>
+            <button class="btn btn-primary" id="add-product-btn">Agregar Producto</button>
+            <div class="file-input-container">
+                <input type="file" id="excel-file" class="file-input" accept=".xlsx, .xls">
+                <label for="excel-file" class="file-input-label">Importar desde Excel</label>
+            </div>
+        </div>
+
+        <div class="inventory-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Descripción</th>
+                        <th>Cantidad</th>
+                        <th>Costo/Unidad</th>
+                        <th>Precio/Venta (con IVA)</th>
+                        <th>IVA (13%)</th>
+                        <th>Precio sin IVA</th>
+                        <th>Total Costo</th>
+                        <th>Total Venta</th>
+                        <th>Ganancia</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="inventory-body">
+                    <tr>
+                        <td colspan="11" class="loading">Cargando inventario...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <footer>
+            <p>Sistema de Inventario Taller Wilian &copy; 2025</p>
+        </footer>
+    </div>
+
+    <!-- Modal para agregar/editar producto -->
+    <div class="modal" id="product-modal">
+        <div class="modal-content">
+            <h2 id="modal-title">Agregar Producto</h2>
+            <form id="product-form">
+                <div class="form-group">
+                    <label for="product-code">Código</label>
+                    <input type="text" id="product-code" required>
+                </div>
+                <div class="form-group">
+                    <label for="product-description">Descripción</label>
+                    <input type="text" id="product-description" required>
+                </div>
+                <div class="form-group">
+                    <label for="product-quantity">Cantidad</label>
+                    <input type="number" id="product-quantity" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label for="product-cost">Costo/Unidad</label>
+                    <input type="number" id="product-cost" min="0" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label for="product-price">Precio/Venta (con IVA incluido)</label>
+                    <input type="number" id="product-price" min="0" step="0.01">
+                    <div class="iva-info">
+                        Desglose del precio:<br>
+                        - Precio sin IVA: <span id="price-without-iva">$0.00</span><br>
+                        - IVA (13%): <span id="iva-amount">$0.00</span>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-danger" id="cancel-btn">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" id="save-btn">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Configuración de Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyDh074AarXaYCc-Htw-lsCeIc_95QQNSnY",
+            authDomain: "tallerwilliam-732b3.firebaseapp.com",
+            projectId: "tallerwilliam-732b3",
+            storageBucket: "tallerwilliam-732b3.firebasestorage.app",
+            messagingSenderId: "822262666247",
+            appId: "1:822262666247:web:6680487bbf1108006b86a2"
+        };
+
+        // Inicializar Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // Referencias a elementos del DOM
+        const inventoryBody = document.getElementById('inventory-body');
+        const productModal = document.getElementById('product-modal');
+        const productForm = document.getElementById('product-form');
+        const modalTitle = document.getElementById('modal-title');
+        const searchInput = document.getElementById('search-input');
+        const addProductBtn = document.getElementById('add-product-btn');
+        const cancelBtn = document.getElementById('cancel-btn');
+        const statusMessage = document.getElementById('status-message');
+        const totalProductsSpan = document.getElementById('total-products');
+        const currentDateSpan = document.getElementById('current-date');
+        const excelFileInput = document.getElementById('excel-file');
+        const priceWithoutIvaSpan = document.getElementById('price-without-iva');
+        const ivaAmountSpan = document.getElementById('iva-amount');
+        const productPriceInput = document.getElementById('product-price');
+
+        // Variables globales
+        let currentEditingId = null;
+        let inventoryData = [];
+
+        // Mostrar fecha actual
+        const now = new Date();
+        currentDateSpan.textContent = now.toLocaleDateString('es-ES');
+
+        // Cargar inventario al iniciar
+        document.addEventListener('DOMContentLoaded', loadInventory);
+
+        // Event Listeners
+        addProductBtn.addEventListener('click', () => openModal());
+        cancelBtn.addEventListener('click', () => closeModal());
+        productForm.addEventListener('submit', saveProduct);
+        searchInput.addEventListener('input', filterInventory);
+        excelFileInput.addEventListener('change', handleExcelImport);
+        productPriceInput.addEventListener('input', updateIvaCalculation);
+
+        // Cargar inventario desde Firebase
+        function loadInventory() {
+            inventoryBody.innerHTML = '<tr><td colspan="11" class="loading">Cargando inventario...</td></tr>';
+            
+            db.collection('INVENTARIO').get()
+                .then((querySnapshot) => {
+                    inventoryData = [];
+                    inventoryBody.innerHTML = '';
+                    
+                    if (querySnapshot.empty) {
+                        inventoryBody.innerHTML = '<tr><td colspan="11" style="text-align: center;">No hay productos en el inventario</td></tr>';
+                        updateTotalProducts();
+                        return;
+                    }
+                    
+                    querySnapshot.forEach((doc) => {
+                        const product = doc.data();
+                        product.id = doc.id;
+                        inventoryData.push(product);
+                    });
+                    
+                    renderInventory(inventoryData);
+                    updateTotalProducts();
+                })
+                .catch((error) => {
+                    console.error("Error al cargar inventario: ", error);
+                    showStatus("Error al cargar el inventario", "error");
+                });
+        }
+
+        // Manejar importación de archivo Excel
+        function handleExcelImport(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    
+                    // Obtener la primera hoja
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    
+                    // Convertir a JSON
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                    
+                    // Procesar los datos (saltar filas de encabezado)
+                    const products = [];
+                    for (let i = 2; i < jsonData.length; i++) {
+                        const row = jsonData[i];
+                        if (row && row.length >= 3 && row[1] !== undefined) {
+                            const product = {
+                                codigo: row[0]?.toString() || `PROD${i}`,
+                                descripcion: row[2]?.toString() || 'Producto sin nombre',
+                                cantidad: parseInt(row[1]) || 0,
+                                costo: 0,
+                                precio: 0 // Precio con IVA incluido
+                            };
+                            products.push(product);
+                        }
+                    }
+                    
+                    importProductsToFirebase(products);
+                    
+                } catch (error) {
+                    console.error("Error al procesar archivo Excel:", error);
+                    showStatus("Error al procesar el archivo Excel", "error");
+                }
+            };
+            
+            reader.onerror = function() {
+                showStatus("Error al leer el archivo", "error");
+            };
+            
+            reader.readAsArrayBuffer(file);
+            
+            // Limpiar el input de archivo
+            event.target.value = '';
+        }
+
+        // Importar productos a Firebase
+        function importProductsToFirebase(products) {
+            if (products.length === 0) {
+                showStatus("No se encontraron productos para importar", "error");
+                return;
+            }
+
+            const batch = db.batch();
+            const inventoryRef = db.collection('INVENTARIO');
+            
+            products.forEach((product) => {
+                const docRef = inventoryRef.doc();
+                batch.set(docRef, product);
+            });
+            
+            batch.commit()
+                .then(() => {
+                    showStatus(`${products.length} productos importados correctamente desde Excel`, "success");
+                    loadInventory();
+                })
+                .catch((error) => {
+                    console.error("Error al importar productos: ", error);
+                    showStatus("Error al importar productos", "error");
+                });
+        }
+
+        // Actualizar cálculo del IVA
+        function updateIvaCalculation() {
+            const priceWithIva = parseFloat(productPriceInput.value) || 0;
+            const priceWithoutIva = priceWithIva / 1.13;
+            const ivaAmount = priceWithIva - priceWithoutIva;
+            
+            priceWithoutIvaSpan.textContent = `$${priceWithoutIva.toFixed(2)}`;
+            ivaAmountSpan.textContent = `$${ivaAmount.toFixed(2)}`;
+        }
+
+        // Renderizar inventario en la tabla
+        function renderInventory(data) {
+            inventoryBody.innerHTML = '';
+            
+            if (data.length === 0) {
+                inventoryBody.innerHTML = '<tr><td colspan="11" style="text-align: center;">No hay productos en el inventario</td></tr>';
+                return;
+            }
+            
+            data.forEach(product => {
+                const row = document.createElement('tr');
+                
+                // Calcular valores relacionados con IVA
+                const priceWithIva = product.precio || 0;
+                const priceWithoutIva = priceWithIva / 1.13;
+                const ivaAmount = priceWithIva - priceWithoutIva;
+                
+                // Calcular totales
+                const totalCosto = product.costo ? (product.costo * product.cantidad).toFixed(2) : '0.00';
+                const totalVenta = priceWithIva ? (priceWithIva * product.cantidad).toFixed(2) : '0.00';
+                const ganancia = (priceWithIva && product.costo) ? 
+                    ((priceWithIva - product.costo) * product.cantidad).toFixed(2) : '0.00';
+                
+                row.innerHTML = `
+                    <td>${product.codigo || 'N/A'}</td>
+                    <td>${product.descripcion}</td>
+                    <td>${product.cantidad}</td>
+                    <td>${product.costo ? '$' + product.costo.toFixed(2) : 'N/A'}</td>
+                    <td>${priceWithIva ? '$' + priceWithIva.toFixed(2) : 'N/A'}</td>
+                    <td>$${ivaAmount.toFixed(2)}</td>
+                    <td>$${priceWithoutIva.toFixed(2)}</td>
+                    <td>$${totalCosto}</td>
+                    <td>$${totalVenta}</td>
+                    <td>$${ganancia}</td>
+                    <td class="actions">
+                        <button class="btn btn-warning edit-btn" data-id="${product.id}">Editar</button>
+                        <button class="btn btn-danger delete-btn" data-id="${product.id}">Eliminar</button>
+                    </td>
+                `;
+                
+                inventoryBody.appendChild(row);
+            });
+            
+            // Agregar event listeners a los botones de editar y eliminar
+            document.querySelectorAll('.edit-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const productId = e.target.getAttribute('data-id');
+                    editProduct(productId);
+                });
+            });
+            
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const productId = e.target.getAttribute('data-id');
+                    deleteProduct(productId);
+                });
+            });
+        }
+
+        // Filtrar inventario
+        function filterInventory() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const filteredData = inventoryData.filter(product => 
+                product.descripcion.toLowerCase().includes(searchTerm) || 
+                (product.codigo && product.codigo.toLowerCase().includes(searchTerm))
+            );
+            renderInventory(filteredData);
+            updateTotalProducts(filteredData.length);
+        }
+
+        // Actualizar contador de productos
+        function updateTotalProducts(count) {
+            totalProductsSpan.textContent = count || inventoryData.length;
+        }
+
+        // Abrir modal para agregar/editar producto
+        function openModal(product = null) {
+            currentEditingId = product ? product.id : null;
+            modalTitle.textContent = product ? 'Editar Producto' : 'Agregar Producto';
+            
+            if (product) {
+                document.getElementById('product-code').value = product.codigo || '';
+                document.getElementById('product-description').value = product.descripcion || '';
+                document.getElementById('product-quantity').value = product.cantidad || 0;
+                document.getElementById('product-cost').value = product.costo || '';
+                document.getElementById('product-price').value = product.precio || '';
+                updateIvaCalculation();
+            } else {
+                productForm.reset();
+                updateIvaCalculation();
+            }
+            
+            productModal.style.display = 'flex';
+        }
+
+        // Cerrar modal
+        function closeModal() {
+            productModal.style.display = 'none';
+            currentEditingId = null;
+            productForm.reset();
+        }
+
+        // Guardar producto (agregar o editar)
+        function saveProduct(e) {
+            e.preventDefault();
+            
+            const productData = {
+                codigo: document.getElementById('product-code').value,
+                descripcion: document.getElementById('product-description').value,
+                cantidad: parseInt(document.getElementById('product-quantity').value),
+                costo: parseFloat(document.getElementById('product-cost').value) || 0,
+                precio: parseFloat(document.getElementById('product-price').value) || 0 // Precio con IVA incluido
+            };
+            
+            if (currentEditingId) {
+                // Editar producto existente
+                db.collection('INVENTARIO').doc(currentEditingId).update(productData)
+                    .then(() => {
+                        showStatus("Producto actualizado correctamente", "success");
+                        closeModal();
+                        loadInventory();
+                    })
+                    .catch((error) => {
+                        console.error("Error al actualizar producto: ", error);
+                        showStatus("Error al actualizar producto", "error");
+                    });
+            } else {
+                // Agregar nuevo producto
+                db.collection('INVENTARIO').add(productData)
+                    .then(() => {
+                        showStatus("Producto agregado correctamente", "success");
+                        closeModal();
+                        loadInventory();
+                    })
+                    .catch((error) => {
+                        console.error("Error al agregar producto: ", error);
+                        showStatus("Error al agregar producto", "error");
+                    });
+            }
+        }
+
+        // Editar producto
+        function editProduct(productId) {
+            const product = inventoryData.find(p => p.id === productId);
+            if (product) {
+                openModal(product);
+            }
+        }
+
+        // Eliminar producto
+        function deleteProduct(productId) {
+            if (confirm("¿Estás seguro de que quieres eliminar este producto?")) {
+                db.collection('INVENTARIO').doc(productId).delete()
+                    .then(() => {
+                        showStatus("Producto eliminado correctamente", "success");
+                        loadInventory();
+                    })
+                    .catch((error) => {
+                        console.error("Error al eliminar producto: ", error);
+                        showStatus("Error al eliminar producto", "error");
+                    });
+            }
+        }
+
+        // Mostrar mensaje de estado
+        function showStatus(message, type) {
+            statusMessage.textContent = message;
+            statusMessage.className = `status ${type}`;
+            statusMessage.style.display = 'block';
+            
+            setTimeout(() => {
+                statusMessage.style.display = 'none';
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
