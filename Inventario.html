@@ -189,7 +189,14 @@
             color: white;
         }
 
-        th, td {
+        th {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.9em; /* 10% más pequeño */
+        }
+
+        td {
             padding: 12px 15px;
             text-align: left;
             border-bottom: 1px solid var(--border-color);
@@ -400,13 +407,12 @@
                         <th>Stock</th>
                         <th>Precio Unidad</th>
                         <th>Precio Venta</th>
-                        <th>Total</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
                 <tbody id="inventory-body">
                     <tr>
-                        <td colspan="7" class="loading">Cargando inventario...</td>
+                        <td colspan="6" class="loading">Cargando inventario...</td>
                     </tr>
                 </tbody>
             </table>
@@ -514,7 +520,7 @@
 
         // Cargar inventario desde Firebase
         function loadInventory() {
-            inventoryBody.innerHTML = '<tr><td colspan="7" class="loading">Cargando inventario...</td></tr>';
+            inventoryBody.innerHTML = '<tr><td colspan="6" class="loading">Cargando inventario...</td></tr>';
             
             db.collection('INVENTARIO').get()
                 .then((querySnapshot) => {
@@ -522,7 +528,7 @@
                     inventoryBody.innerHTML = '';
                     
                     if (querySnapshot.empty) {
-                        inventoryBody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No hay productos en el inventario</td></tr>';
+                        inventoryBody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No hay productos en el inventario</td></tr>';
                         updateTotalProducts();
                         return;
                     }
@@ -547,15 +553,12 @@
             inventoryBody.innerHTML = '';
             
             if (data.length === 0) {
-                inventoryBody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No hay productos en el inventario</td></tr>';
+                inventoryBody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No hay productos en el inventario</td></tr>';
                 return;
             }
             
             data.forEach(product => {
                 const row = document.createElement('tr');
-                
-                // Calcular total
-                const total = product.costo && product.cantidad ? (product.costo * product.cantidad).toFixed(2) : '0.00';
                 
                 row.innerHTML = `
                     <td>${product.codigo || 'N/A'}</td>
@@ -569,7 +572,6 @@
                     </td>
                     <td class="number-cell">${product.costo ? '$' + product.costo.toFixed(2) : 'N/A'}</td>
                     <td class="number-cell">${product.precio ? '$' + product.precio.toFixed(2) : 'N/A'}</td>
-                    <td class="number-cell">$${total}</td>
                     <td class="actions">
                         <button class="edit-btn" data-id="${product.id}" title="Editar">
                             <i class="fas fa-edit"></i>
