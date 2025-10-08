@@ -14,10 +14,43 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2c3e50;
+            --accent-color: #2980b9;
+            --success-color: #27ae60;
+            --warning-color: #f39c12;
+            --danger-color: #e74c3c;
+            --light-color: #ecf0f1;
+            --dark-color: #2c3e50;
+            --text-color: #333;
+            --bg-color: #f5f7fa;
+            --panel-bg: white;
+            --border-color: #ddd;
+            --header-gradient: linear-gradient(135deg, #3498db, #2c3e50);
+        }
+
+        [data-theme="dark"] {
+            --primary-color: #1a1a1a;
+            --secondary-color: #000000;
+            --accent-color: #333333;
+            --success-color: #2ecc71;
+            --warning-color: #e67e22;
+            --danger-color: #c0392b;
+            --light-color: #2d2d2d;
+            --dark-color: #ecf0f1;
+            --text-color: #e0e0e0;
+            --bg-color: #121212;
+            --panel-bg: #1e1e1e;
+            --border-color: #444444;
+            --header-gradient: linear-gradient(135deg, #000000, #333333);
+        }
+
         body {
-            background-color: #f5f7fa;
-            color: #333;
+            background-color: var(--bg-color);
+            color: var(--text-color);
             line-height: 1.6;
+            transition: all 0.3s ease;
         }
 
         .container {
@@ -27,18 +60,19 @@
         }
 
         header {
-            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            background: var(--header-gradient);
             color: white;
-            padding: 20px 0;
+            padding: 15px 0;
             border-radius: 10px;
             margin-bottom: 20px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            position: relative;
         }
 
         header h1 {
             text-align: center;
-            font-size: 2.2rem;
-            margin-bottom: 10px;
+            font-size: 1.8rem;
+            margin-bottom: 8px;
         }
 
         .header-info {
@@ -49,9 +83,31 @@
             opacity: 0.9;
         }
 
+        .theme-toggle {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+        }
+
+        .theme-toggle:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
         .tabs {
             display: flex;
-            background: white;
+            background: var(--panel-bg);
             border-radius: 10px;
             padding: 5px;
             margin-bottom: 20px;
@@ -64,10 +120,11 @@
             border-radius: 8px;
             transition: all 0.3s ease;
             font-weight: 600;
+            color: var(--text-color);
         }
 
         .tab.active {
-            background: #2ecc71;
+            background: var(--primary-color);
             color: white;
         }
 
@@ -80,17 +137,18 @@
         }
 
         .panel {
-            background: white;
+            background: var(--panel-bg);
             border-radius: 10px;
             padding: 20px;
             margin-bottom: 20px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border-color);
         }
 
         .panel h2 {
-            color: #2c3e50;
+            color: var(--text-color);
             margin-bottom: 15px;
-            border-bottom: 2px solid #ecf0f1;
+            border-bottom: 2px solid var(--border-color);
             padding-bottom: 10px;
         }
 
@@ -98,6 +156,26 @@
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 20px;
+        }
+
+        .combined-panel {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            background: var(--panel-bg);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border-color);
+        }
+
+        .combined-panel h2 {
+            grid-column: 1 / -1;
+            color: var(--text-color);
+            margin-bottom: 15px;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 10px;
         }
 
         .form-group {
@@ -108,15 +186,37 @@
             display: block;
             margin-bottom: 5px;
             font-weight: 600;
-            color: #2c3e50;
+            color: var(--text-color);
         }
 
         .form-group input, .form-group select {
             width: 100%;
             padding: 10px;
-            border: 1px solid #ddd;
+            border: 1px solid var(--border-color);
             border-radius: 5px;
             font-size: 1rem;
+            background: var(--panel-bg);
+            color: var(--text-color);
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 100px 1fr;
+            gap: 10px;
+            align-items: end;
+        }
+
+        .search-container {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 10px;
+            align-items: end;
         }
 
         .btn {
@@ -129,16 +229,16 @@
         }
 
         .btn-primary {
-            background-color: #3498db;
+            background-color: var(--primary-color);
             color: white;
         }
 
         .btn-primary:hover {
-            background-color: #2980b9;
+            background-color: var(--accent-color);
         }
 
         .btn-success {
-            background-color: #27ae60;
+            background-color: var(--success-color);
             color: white;
         }
 
@@ -147,7 +247,7 @@
         }
 
         .btn-danger {
-            background-color: #e74c3c;
+            background-color: var(--danger-color);
             color: white;
         }
 
@@ -156,7 +256,7 @@
         }
 
         .btn-warning {
-            background-color: #f39c12;
+            background-color: var(--warning-color);
             color: white;
         }
 
@@ -182,46 +282,84 @@
         th, td {
             padding: 12px 15px;
             text-align: left;
-            border-bottom: 1px solid #e0e0e0;
+            border-bottom: 1px solid var(--border-color);
         }
 
         thead {
-            background-color: #34495e;
+            background-color: var(--secondary-color);
             color: white;
         }
 
         tbody tr:hover {
-            background-color: #f8f9fa;
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+
+        [data-theme="dark"] tbody tr:hover {
+            background-color: rgba(255, 255, 255, 0.05);
         }
 
         .product-item {
-            background: #f8f9fa;
+            background: var(--light-color);
             padding: 10px;
             border-radius: 5px;
             margin-bottom: 10px;
-            border-left: 4px solid #3498db;
+            border-left: 4px solid var(--primary-color);
         }
 
         .search-results {
             max-height: 400px;
             overflow-y: auto;
-            border: 1px solid #ddd;
+            border: 1px solid var(--border-color);
             border-radius: 5px;
             padding: 10px;
             margin-top: 10px;
+            background: var(--panel-bg);
+        }
+
+        .search-dropdown {
+            position: absolute;
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            max-height: 300px;
+            overflow-y: auto;
+            width: calc(100% - 130px);
+            z-index: 1000;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .search-dropdown-item {
+            padding: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border-color);
+            transition: background-color 0.2s;
+        }
+
+        .search-dropdown-item:hover {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .search-dropdown-item:last-child {
+            border-bottom: none;
         }
 
         .sale-summary {
-            background: #e8f6f3;
+            background: rgba(39, 174, 96, 0.1);
             padding: 15px;
             border-radius: 10px;
-            border: 2px solid #27ae60;
+            border: 2px solid var(--success-color);
+            margin-top: 20px;
+        }
+
+        [data-theme="dark"] .sale-summary {
+            background: rgba(46, 204, 113, 0.1);
         }
 
         .summary-total {
             font-size: 2rem;
             font-weight: bold;
-            color: #27ae60;
+            color: var(--success-color);
             text-align: center;
             margin: 20px 0;
         }
@@ -244,7 +382,7 @@
         }
 
         .payment-btn.contado {
-            background-color: #27ae60;
+            background-color: var(--success-color);
             color: white;
         }
 
@@ -253,7 +391,7 @@
         }
 
         .payment-btn.pendiente {
-            background-color: #f39c12;
+            background-color: var(--warning-color);
             color: white;
         }
 
@@ -275,17 +413,29 @@
             border: 1px solid #c3e6cb;
         }
 
+        [data-theme="dark"] .status.success {
+            background-color: rgba(46, 204, 113, 0.2);
+            color: #90ee90;
+            border: 1px solid #2ecc71;
+        }
+
         .status.error {
             background-color: #f8d7da;
             color: #721c24;
             border: 1px solid #f5c6cb;
         }
 
+        [data-theme="dark"] .status.error {
+            background-color: rgba(192, 57, 43, 0.2);
+            color: #ff6b6b;
+            border: 1px solid #c0392b;
+        }
+
         .loading {
             text-align: center;
             padding: 20px;
             font-size: 1.2rem;
-            color: #3498db;
+            color: var(--primary-color);
         }
 
         .actions {
@@ -300,22 +450,27 @@
         }
 
         .client-info {
-            background: #fff3cd;
+            background: var(--panel-bg);
             padding: 15px;
             border-radius: 5px;
             margin-bottom: 15px;
-            border-left: 4px solid #ffc107;
+            border: 1px solid var(--border-color);
         }
 
         .credit-status {
-            background: #ffeaa7;
+            background: rgba(243, 156, 18, 0.1);
             padding: 10px;
             border-radius: 5px;
             margin: 10px 0;
+            border: 1px solid var(--warning-color);
+        }
+
+        [data-theme="dark"] .credit-status {
+            background: rgba(230, 126, 34, 0.1);
         }
 
         .payment-history {
-            background: #f8f9fa;
+            background: var(--light-color);
             padding: 10px;
             border-radius: 5px;
             margin-top: 10px;
@@ -323,6 +478,10 @@
 
         @media (max-width: 768px) {
             .grid-2 {
+                grid-template-columns: 1fr;
+            }
+            
+            .combined-panel {
                 grid-template-columns: 1fr;
             }
             
@@ -341,12 +500,21 @@
             .actions {
                 flex-direction: column;
             }
+            
+            .form-row, .search-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .search-dropdown {
+                width: 100%;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
+            <button class="theme-toggle" id="theme-toggle">🌙</button>
             <h1>Sistema de Ventas - Taller Wilian</h1>
             <div class="header-info">
                 <span>Fecha: <span id="current-date"></span></span>
@@ -365,23 +533,36 @@
 
         <!-- Pestaña de Ventas -->
         <div class="tab-content active" id="sales-tab">
-            <div class="grid-2">
-                <!-- Panel izquierdo: Cliente y Búsqueda -->
-                <div class="panel">
-                    <h2>Datos de Venta</h2>
+            <!-- Panel combinado: Datos de Venta + Carrito -->
+            <div class="combined-panel">
+                <h2>Proceso de Venta</h2>
+                
+                <!-- Sección izquierda: Datos de Venta -->
+                <div>
                     <div class="client-info">
-                        <div class="form-group">
-                            <label for="client-name">Cliente o Equipo</label>
-                            <input type="text" id="client-name" placeholder="Ingrese nombre del cliente o equipo">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="equipo-number">N° Equipo</label>
+                                <input type="text" id="equipo-number" placeholder="000000" maxlength="6" pattern="[0-9]*">
+                            </div>
+                            <div class="form-group">
+                                <label for="client-name">Cliente o Equipo</label>
+                                <input type="text" id="client-name" placeholder="Ingrese nombre del cliente o equipo">
+                            </div>
                         </div>
                     </div>
                     
                     <div class="form-group">
                         <label for="search-product">Buscar Producto</label>
-                        <input type="text" id="search-product" placeholder="Buscar por código o descripción...">
-                        <button class="btn btn-primary" style="width: 100%; margin-top: 10px;" onclick="searchProducts()">
-                            Buscar Producto
-                        </button>
+                        <div class="search-container">
+                            <div style="position: relative;">
+                                <input type="text" id="search-product" placeholder="Buscar por código o descripción...">
+                                <div id="search-dropdown" class="search-dropdown" style="display: none;"></div>
+                            </div>
+                            <button class="btn btn-primary" onclick="addProductFromSearch()">
+                                AGREGAR PRODUCTO
+                            </button>
+                        </div>
                     </div>
                     
                     <div id="search-results" class="search-results" style="display: none;">
@@ -389,11 +570,11 @@
                     </div>
                 </div>
 
-                <!-- Panel derecho: Carrito y Botones -->
-                <div class="panel">
-                    <h2>Carrito de Venta</h2>
+                <!-- Sección derecha: Carrito -->
+                <div>
+                    <h3 style="margin-bottom: 15px; color: var(--text-color);">Carrito de Venta</h3>
                     
-                    <div id="cart-items">
+                    <div id="cart-items" style="max-height: 300px; overflow-y: auto;">
                         <p style="text-align: center; color: #7f8c8d;">No hay productos en el carrito</p>
                     </div>
                     
@@ -578,6 +759,8 @@
         let searchResults = [];
         let selectedCreditId = null;
         let isPrinting = false;
+        let currentTheme = 'light';
+        let saleCounter = 0;
 
         // Inicializar la aplicación
         document.addEventListener('DOMContentLoaded', function() {
@@ -585,13 +768,30 @@
             const now = new Date();
             document.getElementById('current-date').textContent = now.toLocaleDateString('es-ES');
             
+            // Cargar tema guardado
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            setTheme(savedTheme);
+            
+            // Cargar contador de ventas
+            loadSaleCounter();
             loadDailySales();
             loadPendingCredits();
             setupTabs();
             
-            document.getElementById('search-product').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    searchProducts();
+            // Configurar búsqueda en tiempo real
+            document.getElementById('search-product').addEventListener('input', function(e) {
+                if (this.value.length >= 2) {
+                    searchProducts(this.value);
+                } else {
+                    document.getElementById('search-dropdown').style.display = 'none';
+                }
+            });
+            
+            // Permitir solo números en el campo equipo
+            document.getElementById('equipo-number').addEventListener('input', function(e) {
+                this.value = this.value.replace(/[^0-9]/g, '');
+                if (this.value.length > 6) {
+                    this.value = this.value.substring(0, 6);
                 }
             });
             
@@ -607,7 +807,40 @@
                     document.getElementById('credit-details').style.display = 'none';
                 }
             });
+
+            // Configurar toggle de tema
+            document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
         });
+
+        // Cargar contador de ventas
+        async function loadSaleCounter() {
+            try {
+                const counterDoc = await db.collection('counters').doc('sales').get();
+                if (counterDoc.exists) {
+                    saleCounter = counterDoc.data().value || 0;
+                } else {
+                    // Si no existe, crear con valor 0
+                    await db.collection('counters').doc('sales').set({ value: 0 });
+                    saleCounter = 0;
+                }
+                console.log("Contador de ventas cargado:", saleCounter);
+            } catch (error) {
+                console.error("Error cargando contador:", error);
+                saleCounter = 0;
+            }
+        }
+
+        // Obtener siguiente número de venta
+        async function getNextSaleNumber() {
+            try {
+                saleCounter++;
+                await db.collection('counters').doc('sales').update({ value: saleCounter });
+                return saleCounter;
+            } catch (error) {
+                console.error("Error actualizando contador:", error);
+                return Date.now(); // Fallback: usar timestamp
+            }
+        }
 
         // Configurar pestañas
         function setupTabs() {
@@ -629,11 +862,27 @@
             });
         }
 
+        // Cambiar tema
+        function toggleTheme() {
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            setTheme(newTheme);
+        }
+
+        // Aplicar tema
+        function setTheme(theme) {
+            currentTheme = theme;
+            document.body.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+            
+            const themeToggle = document.getElementById('theme-toggle');
+            themeToggle.textContent = theme === 'light' ? '🌙' : '☀️';
+        }
+
         // =============================================
         // FUNCIÓN DE IMPRESIÓN CON TEXTO DE 32px Y 40px
         // =============================================
 
-        function printTicket(sale, saleId) {
+        function printTicket(sale, saleId, saleNumber) {
             if (isPrinting) {
                 showStatus("Ya hay una impresión en curso. Espere a que termine.", "error");
                 return;
@@ -642,13 +891,26 @@
             isPrinting = true;
             
             try {
+                // Obtener nombre del cliente formateado
+                const equipoNumber = document.getElementById('equipo-number').value;
+                const clientName = document.getElementById('client-name').value;
+                let displayName = '';
+                
+                if (equipoNumber && clientName) {
+                    displayName = `Equipo ${equipoNumber} - ${clientName}`;
+                } else if (equipoNumber) {
+                    displayName = `Equipo ${equipoNumber}`;
+                } else {
+                    displayName = clientName;
+                }
+
                 // Calcular altura dinámica con texto MUY grande
                 const baseHeight = 800; // Aumentada significativamente
                 const productHeight = sale.products.length * 120; // 120px por producto (incluye código)
                 const totalHeight = baseHeight + productHeight;
                 
                 // Crear contenido con texto de 32px y títulos de 40px
-                let ticketContent = createTicketContent(sale, saleId);
+                let ticketContent = createTicketContent(sale, saleNumber, displayName);
 
                 // Crear ventana de impresión MUY ancha para texto grande
                 const printWindow = window.open('', '_blank', `width=600,height=${totalHeight}`);
@@ -661,7 +923,7 @@
                     <!DOCTYPE html>
                     <html>
                     <head>
-                        <title>Ticket de Venta - ${saleId}</title>
+                        <title>Ticket de Venta - ${saleNumber}</title>
                         <style>
                             body { 
                                 margin: 0; 
@@ -726,7 +988,7 @@
         }
 
         // Crear contenido del ticket con texto de 32px y títulos de 40px
-        function createTicketContent(sale, saleId) {
+        function createTicketContent(sale, saleNumber, displayName) {
             let content = `
                 <div style="text-align: center; width: 100%;">
                     <!-- ENCABEZADO CON TEXTO DE 40px -->
@@ -736,13 +998,13 @@
                         </h1>
                         <p style="margin: 15px 0; font-size: 32px;">${new Date().toLocaleString('es-ES')}</p>
                         <p style="margin: 15px 0; font-size: 32px; font-weight: bold;">
-                            Venta: ${saleId.substring(0, 8)}
+                            Venta: ${saleNumber}
                         </p>
                     </div>
                     
                     <!-- INFORMACIÓN DEL CLIENTE - TEXTO DE 32px -->
                     <div style="text-align: left; margin: 20px 0; font-size: 32px; background: #f0f0f0; padding: 15px; border-radius: 8px;">
-                        <strong>CLIENTE:</strong> ${sale.clientName}
+                        <strong>CLIENTE:</strong> ${displayName}
                     </div>
                     
                     <div style="border-bottom: 4px dashed #000; margin: 20px 0;"></div>
@@ -818,20 +1080,15 @@
         // FUNCIONES DEL SISTEMA COMPLETAS
         // =============================================
 
-        // Buscar productos
-        async function searchProducts() {
-            const searchTerm = document.getElementById('search-product').value.trim().toLowerCase();
-            
-            if (!searchTerm) {
-                showStatus("Ingrese un término de búsqueda", "error");
+        // Buscar productos en tiempo real
+        async function searchProducts(searchTerm) {
+            if (!searchTerm || searchTerm.length < 2) {
+                document.getElementById('search-dropdown').style.display = 'none';
                 return;
             }
 
             try {
-                const resultsContainer = document.getElementById('search-results');
-                resultsContainer.innerHTML = '<div class="loading">Buscando productos...</div>';
-                resultsContainer.style.display = 'block';
-
+                const searchLower = searchTerm.toLowerCase();
                 const snapshot = await db.collection('INVENTARIO').get();
                 
                 searchResults = [];
@@ -841,45 +1098,55 @@
                     
                     const codigo = (product.codigo || '').toLowerCase();
                     const descripcion = (product.descripcion || '').toLowerCase();
+                    const categoria = (product.categoria || '').toLowerCase();
                     
-                    if (codigo.includes(searchTerm) || descripcion.includes(searchTerm)) {
+                    if (codigo.includes(searchLower) || descripcion.includes(searchLower) || categoria.includes(searchLower)) {
                         searchResults.push(product);
                     }
                 });
 
-                displaySearchResults();
+                displaySearchDropdown();
                 
             } catch (error) {
                 console.error("Error searching products:", error);
-                showStatus("Error al buscar productos", "error");
             }
         }
 
-        // Mostrar resultados de búsqueda
-        function displaySearchResults() {
-            const container = document.getElementById('search-results');
+        // Mostrar resultados en dropdown
+        function displaySearchDropdown() {
+            const dropdown = document.getElementById('search-dropdown');
             
             if (searchResults.length === 0) {
-                container.innerHTML = '<p style="text-align: center; color: #7f8c8d;">No se encontraron productos</p>';
+                dropdown.innerHTML = '<div class="search-dropdown-item">No se encontraron productos</div>';
+                dropdown.style.display = 'block';
                 return;
             }
 
-            container.innerHTML = '';
+            dropdown.innerHTML = '';
             searchResults.forEach(product => {
-                const productDiv = document.createElement('div');
-                productDiv.className = 'product-item';
-                productDiv.innerHTML = `
+                const item = document.createElement('div');
+                item.className = 'search-dropdown-item';
+                item.innerHTML = `
                     <strong>${product.descripcion || 'Sin descripción'}</strong>
-                    <div>Código: ${product.codigo || 'N/A'}</div>
-                    <div>Disponible: ${product.cantidad || 0}</div>
-                    <div>Precio Venta: $${(product.precio || 0).toFixed(2)}</div>
-                    <button class="btn btn-primary btn-sm" onclick="addToCart('${product.id}')" 
-                            ${(product.cantidad || 0) <= 0 ? 'disabled' : ''}>
-                        ${(product.cantidad || 0) <= 0 ? 'Sin Stock' : 'Agregar al Carrito'}
-                    </button>
+                    <div>Código: ${product.codigo || 'N/A'} | Stock: ${product.cantidad || 0} | Precio: $${(product.precio || 0).toFixed(2)}</div>
                 `;
-                container.appendChild(productDiv);
+                item.onclick = () => addToCart(product.id);
+                dropdown.appendChild(item);
             });
+            
+            dropdown.style.display = 'block';
+        }
+
+        // Agregar producto desde búsqueda
+        function addProductFromSearch() {
+            const searchInput = document.getElementById('search-product');
+            if (searchInput.value.trim() && searchResults.length > 0) {
+                addToCart(searchResults[0].id);
+                searchInput.value = '';
+                document.getElementById('search-dropdown').style.display = 'none';
+            } else {
+                showStatus("Busque y seleccione un producto primero", "error");
+            }
         }
 
         // Agregar producto al carrito
@@ -914,6 +1181,8 @@
 
             updateCartDisplay();
             showStatus("Producto agregado al carrito", "success");
+            document.getElementById('search-dropdown').style.display = 'none';
+            document.getElementById('search-product').value = '';
         }
 
         // Actualizar visualización del carrito
@@ -986,17 +1255,34 @@
                 return;
             }
 
+            const equipoNumber = document.getElementById('equipo-number').value.trim();
             const clientName = document.getElementById('client-name').value.trim();
             const total = parseFloat(document.getElementById('total-amount').textContent.replace('$', ''));
 
-            if (!clientName) {
-                showStatus("Ingrese el nombre del cliente o equipo", "error");
+            if (!equipoNumber && !clientName) {
+                showStatus("Ingrese el número de equipo o nombre del cliente", "error");
                 return;
             }
 
+            // Formatear nombre para mostrar
+            let displayName = '';
+            if (equipoNumber && clientName) {
+                displayName = `Equipo ${equipoNumber} - ${clientName}`;
+            } else if (equipoNumber) {
+                displayName = `Equipo ${equipoNumber}`;
+            } else {
+                displayName = clientName;
+            }
+
             try {
+                // Obtener número de venta secuencial
+                const saleNumber = await getNextSaleNumber();
+
                 const sale = {
-                    clientName: clientName,
+                    saleNumber: saleNumber,
+                    clientName: displayName,
+                    equipoNumber: equipoNumber,
+                    originalClientName: clientName,
                     products: cart.map(item => ({
                         productId: item.id,
                         description: item.description,
@@ -1027,7 +1313,8 @@
                     const creditRef = db.collection('creditos').doc();
                     batch.set(creditRef, {
                         saleId: saleRef.id,
-                        clientName: clientName,
+                        saleNumber: saleNumber,
+                        clientName: displayName,
                         originalAmount: total,
                         pendingAmount: total,
                         saleDate: new Date(),
@@ -1039,12 +1326,13 @@
                 await batch.commit();
 
                 // Imprimir ticket automáticamente
-                printTicket(sale, saleRef.id);
+                printTicket(sale, saleRef.id, saleNumber);
 
                 showStatus(`Venta ${paymentType === 'contado' ? 'al contado' : 'pendiente'} procesada exitosamente`, "success");
                 
                 cart = [];
                 updateCartDisplay();
+                document.getElementById('equipo-number').value = '';
                 document.getElementById('client-name').value = '';
                 document.getElementById('search-results').style.display = 'none';
                 document.getElementById('search-product').value = '';
@@ -1097,7 +1385,7 @@
             dailySales.forEach(sale => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td>${sale.id.substring(0, 8)}</td>
+                    <td>${sale.saleNumber || 'N/A'}</td>
                     <td>${sale.clientName}</td>
                     <td>${sale.products.length} productos</td>
                     <td>$${sale.total.toFixed(2)}</td>
@@ -1372,7 +1660,7 @@
                 const saleDoc = await db.collection('ventas').doc(saleId).get();
                 if (saleDoc.exists) {
                     const sale = saleDoc.data();
-                    printTicket(sale, saleId);
+                    printTicket(sale, saleId, sale.saleNumber || 'N/A');
                 } else {
                     showStatus("Venta no encontrada", "error");
                 }
@@ -1392,7 +1680,7 @@
                     
                     if (saleDoc.exists) {
                         const sale = saleDoc.data();
-                        printTicket(sale, credit.saleId);
+                        printTicket(sale, credit.saleId, credit.saleNumber || 'N/A');
                     }
                 } else {
                     showStatus("Crédito no encontrado", "error");
@@ -1482,7 +1770,7 @@
                     const sale = doc.data();
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
-                        <td>${doc.id.substring(0, 8)}</td>
+                        <td>${sale.saleNumber || 'N/A'}</td>
                         <td>${sale.clientName}</td>
                         <td>${sale.products.length} productos</td>
                         <td>$${sale.total.toFixed(2)}</td>
