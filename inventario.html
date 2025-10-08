@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventario Taller Wilian</title>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-color: #f5f7fa;
+            --text-color: #333;
+            --header-bg: linear-gradient(135deg, #1e3c72, #2a5298);
+            --card-bg: white;
+            --border-color: #e0e0e0;
+            --hover-color: #f8f9fa;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+            --info-color: #17a2b8;
+        }
+
+        .dark-mode {
+            --bg-color: #1a1a1a;
+            --text-color: #e0e0e0;
+            --header-bg: linear-gradient(135deg, #0d1b2a, #1b263b);
+            --card-bg: #2d3748;
+            --border-color: #4a5568;
+            --hover-color: #374151;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: var(--header-bg);
+            color: white;
+            padding: 20px 0;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        header h1 {
+            text-align: center;
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+        }
+
+        .header-info {
+            display: flex;
+            justify-content: space-between;
+            padding: 0 20px;
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 10px 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            font-size: 1rem;
+            background-color: var(--card-bg);
+            color: var(--text-color);
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .btn-primary {
+            background-color: #2a5298;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #1e3c72;
+        }
+
+        .btn-success {
+            background-color: var(--success-color);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background-color: #218838;
+        }
+
+        .btn-danger {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+
+        .btn-warning {
+            background-color: var(--warning-color);
+            color: #212529;
+        }
+
+        .btn-warning:hover {
+            background-color: #e0a800;
+        }
+
+        .btn-info {
+            background-color: var(--info-color);
+            color: white;
+        }
+
+        .btn-info:hover {
+            background-color: #138496;
+        }
+
+        .inventory-table {
+            background-color: var(--card-bg);
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background-color: #2a5298;
+            color: white;
+        }
+
+        th {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.9em; /* 10% más pequeño */
+        }
+
+        td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .number-cell {
+            text-align: center;
+        }
+
+        tbody tr:hover {
+            background-color: var(--hover-color);
+        }
+
+        .actions {
+            display: flex;
+            gap: 5px;
+            justify-content: center;
+        }
+
+        .actions button {
+            padding: 8px;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .edit-btn {
+            background-color: var(--warning-color);
+            color: #212529;
+        }
+
+        .delete-btn {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+        .stock-controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        .stock-btn {
+            width: 30px;
+            height: 30px;
+            border: none;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .decrease-btn {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+        .increase-btn {
+            background-color: var(--success-color);
+            color: white;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: var(--card-bg);
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            color: var(--text-color);
+        }
+
+        .modal h2 {
+            margin-bottom: 20px;
+            color: #2a5298;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            font-size: 1rem;
+            background-color: var(--card-bg);
+            color: var(--text-color);
+        }
+
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .floating-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 5px;
+            color: white;
+            z-index: 1001;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: none;
+            max-width: 300px;
+        }
+
+        .floating-notification.success {
+            background-color: var(--success-color);
+        }
+
+        .floating-notification.error {
+            background-color: var(--danger-color);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            font-size: 1.2rem;
+            color: #2a5298;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            padding: 20px;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .search-box {
+                min-width: 100%;
+            }
+            
+            .actions {
+                flex-direction: column;
+            }
+            
+            th, td {
+                padding: 8px 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <button class="theme-toggle" id="theme-toggle">
+                <i class="fas fa-moon"></i>
+            </button>
+            <h1>Inventario Taller Wilian</h1>
+            <div class="header-info">
+                <span>Fecha: <span id="current-date"></span></span>
+                <span>Total de productos: <span id="total-products">0</span></span>
+            </div>
+        </header>
+
+        <div class="floating-notification" id="floating-notification"></div>
+
+        <div class="controls">
+            <div class="search-box">
+                <input type="text" id="search-input" placeholder="Buscar producto...">
+            </div>
+            <button class="btn btn-primary" id="add-product-btn">Agregar Producto</button>
+        </div>
+
+        <div class="inventory-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Descripción</th>
+                        <th>Stock</th>
+                        <th>Precio Unidad</th>
+                        <th>Precio Venta</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="inventory-body">
+                    <tr>
+                        <td colspan="6" class="loading">Cargando inventario...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <footer>
+            <p>Sistema de Inventario Taller Wilian &copy; 2025</p>
+        </footer>
+    </div>
+
+    <!-- Modal para agregar/editar producto -->
+    <div class="modal" id="product-modal">
+        <div class="modal-content">
+            <h2 id="modal-title">Agregar Producto</h2>
+            <form id="product-form">
+                <div class="form-group">
+                    <label for="product-code">Código</label>
+                    <input type="text" id="product-code" required>
+                </div>
+                <div class="form-group">
+                    <label for="product-description">Descripción</label>
+                    <input type="text" id="product-description" required>
+                </div>
+                <div class="form-group">
+                    <label for="product-quantity">Stock</label>
+                    <input type="number" id="product-quantity" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label for="product-cost">Precio Unidad</label>
+                    <input type="number" id="product-cost" min="0" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label for="product-price">Precio Venta</label>
+                    <input type="number" id="product-price" min="0" step="0.01">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-danger" id="cancel-btn">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" id="save-btn">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Configuración de Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyDh074AarXaYCc-Htw-lsCeIc_95QQNSnY",
+            authDomain: "tallerwilliam-732b3.firebaseapp.com",
+            projectId: "tallerwilliam-732b3",
+            storageBucket: "tallerwilliam-732b3.firebasestorage.app",
+            messagingSenderId: "822262666247",
+            appId: "1:822262666247:web:6680487bbf1108006b86a2"
+        };
+
+        // Inicializar Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // Referencias a elementos del DOM
+        const inventoryBody = document.getElementById('inventory-body');
+        const productModal = document.getElementById('product-modal');
+        const productForm = document.getElementById('product-form');
+        const modalTitle = document.getElementById('modal-title');
+        const searchInput = document.getElementById('search-input');
+        const addProductBtn = document.getElementById('add-product-btn');
+        const cancelBtn = document.getElementById('cancel-btn');
+        const floatingNotification = document.getElementById('floating-notification');
+        const totalProductsSpan = document.getElementById('total-products');
+        const currentDateSpan = document.getElementById('current-date');
+        const themeToggle = document.getElementById('theme-toggle');
+
+        // Variables globales
+        let currentEditingId = null;
+        let inventoryData = [];
+        let isDarkMode = false;
+
+        // Mostrar fecha actual
+        const now = new Date();
+        currentDateSpan.textContent = now.toLocaleDateString('es-ES');
+
+        // Cargar inventario al iniciar
+        document.addEventListener('DOMContentLoaded', loadInventory);
+
+        // Event Listeners
+        addProductBtn.addEventListener('click', () => openModal());
+        cancelBtn.addEventListener('click', () => closeModal());
+        productForm.addEventListener('submit', saveProduct);
+        searchInput.addEventListener('input', filterInventory);
+        themeToggle.addEventListener('click', toggleTheme);
+
+        // Alternar modo oscuro/claro
+        function toggleTheme() {
+            isDarkMode = !isDarkMode;
+            document.body.classList.toggle('dark-mode', isDarkMode);
+            
+            const icon = themeToggle.querySelector('i');
+            if (isDarkMode) {
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+            } else {
+                icon.classList.remove('fa-sun');
+                icon.classList.add('fa-moon');
+            }
+        }
+
+        // Cargar inventario desde Firebase
+        function loadInventory() {
+            inventoryBody.innerHTML = '<tr><td colspan="6" class="loading">Cargando inventario...</td></tr>';
+            
+            db.collection('INVENTARIO').get()
+                .then((querySnapshot) => {
+                    inventoryData = [];
+                    inventoryBody.innerHTML = '';
+                    
+                    if (querySnapshot.empty) {
+                        inventoryBody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No hay productos en el inventario</td></tr>';
+                        updateTotalProducts();
+                        return;
+                    }
+                    
+                    querySnapshot.forEach((doc) => {
+                        const product = doc.data();
+                        product.id = doc.id;
+                        inventoryData.push(product);
+                    });
+                    
+                    renderInventory(inventoryData);
+                    updateTotalProducts();
+                })
+                .catch((error) => {
+                    console.error("Error al cargar inventario: ", error);
+                    showFloatingNotification("Error al cargar el inventario", "error");
+                });
+        }
+
+        // Renderizar inventario en la tabla
+        function renderInventory(data) {
+            inventoryBody.innerHTML = '';
+            
+            if (data.length === 0) {
+                inventoryBody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No hay productos en el inventario</td></tr>';
+                return;
+            }
+            
+            data.forEach(product => {
+                const row = document.createElement('tr');
+                
+                row.innerHTML = `
+                    <td>${product.codigo || 'N/A'}</td>
+                    <td>${product.descripcion}</td>
+                    <td class="number-cell">
+                        <div class="stock-controls">
+                            <button class="stock-btn decrease-btn" data-id="${product.id}">-</button>
+                            <span>${product.cantidad}</span>
+                            <button class="stock-btn increase-btn" data-id="${product.id}">+</button>
+                        </div>
+                    </td>
+                    <td class="number-cell">${product.costo ? '$' + product.costo.toFixed(2) : 'N/A'}</td>
+                    <td class="number-cell">${product.precio ? '$' + product.precio.toFixed(2) : 'N/A'}</td>
+                    <td class="actions">
+                        <button class="edit-btn" data-id="${product.id}" title="Editar">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="delete-btn" data-id="${product.id}" title="Eliminar">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                
+                inventoryBody.appendChild(row);
+            });
+            
+            // Agregar event listeners a los botones de editar y eliminar
+            document.querySelectorAll('.edit-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const productId = e.target.closest('button').getAttribute('data-id');
+                    editProduct(productId);
+                });
+            });
+            
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const productId = e.target.closest('button').getAttribute('data-id');
+                    deleteProduct(productId);
+                });
+            });
+            
+            // Agregar event listeners a los botones de stock
+            document.querySelectorAll('.increase-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const productId = e.target.closest('button').getAttribute('data-id');
+                    updateStock(productId, 1);
+                });
+            });
+            
+            document.querySelectorAll('.decrease-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const productId = e.target.closest('button').getAttribute('data-id');
+                    updateStock(productId, -1);
+                });
+            });
+        }
+
+        // Actualizar stock
+        function updateStock(productId, change) {
+            const product = inventoryData.find(p => p.id === productId);
+            if (!product) return;
+            
+            const newQuantity = Math.max(0, product.cantidad + change);
+            
+            db.collection('INVENTARIO').doc(productId).update({
+                cantidad: newQuantity
+            })
+            .then(() => {
+                showFloatingNotification("Stock actualizado correctamente", "success");
+                loadInventory();
+            })
+            .catch((error) => {
+                console.error("Error al actualizar stock: ", error);
+                showFloatingNotification("Error al actualizar stock", "error");
+            });
+        }
+
+        // Filtrar inventario
+        function filterInventory() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const filteredData = inventoryData.filter(product => 
+                product.descripcion.toLowerCase().includes(searchTerm) || 
+                (product.codigo && product.codigo.toLowerCase().includes(searchTerm))
+            );
+            renderInventory(filteredData);
+            updateTotalProducts(filteredData.length);
+        }
+
+        // Actualizar contador de productos
+        function updateTotalProducts(count) {
+            totalProductsSpan.textContent = count || inventoryData.length;
+        }
+
+        // Abrir modal para agregar/editar producto
+        function openModal(product = null) {
+            currentEditingId = product ? product.id : null;
+            modalTitle.textContent = product ? 'Editar Producto' : 'Agregar Producto';
+            
+            if (product) {
+                document.getElementById('product-code').value = product.codigo || '';
+                document.getElementById('product-description').value = product.descripcion || '';
+                document.getElementById('product-quantity').value = product.cantidad || 0;
+                document.getElementById('product-cost').value = product.costo || '';
+                document.getElementById('product-price').value = product.precio || '';
+            } else {
+                productForm.reset();
+            }
+            
+            productModal.style.display = 'flex';
+        }
+
+        // Cerrar modal
+        function closeModal() {
+            productModal.style.display = 'none';
+            currentEditingId = null;
+            productForm.reset();
+        }
+
+        // Guardar producto (agregar o editar)
+        function saveProduct(e) {
+            e.preventDefault();
+            
+            const productData = {
+                codigo: document.getElementById('product-code').value,
+                descripcion: document.getElementById('product-description').value,
+                cantidad: parseInt(document.getElementById('product-quantity').value),
+                costo: parseFloat(document.getElementById('product-cost').value) || 0,
+                precio: parseFloat(document.getElementById('product-price').value) || 0
+            };
+            
+            if (currentEditingId) {
+                // Editar producto existente
+                db.collection('INVENTARIO').doc(currentEditingId).update(productData)
+                    .then(() => {
+                        showFloatingNotification("Producto actualizado correctamente", "success");
+                        closeModal();
+                        loadInventory();
+                    })
+                    .catch((error) => {
+                        console.error("Error al actualizar producto: ", error);
+                        showFloatingNotification("Error al actualizar producto", "error");
+                    });
+            } else {
+                // Agregar nuevo producto
+                db.collection('INVENTARIO').add(productData)
+                    .then(() => {
+                        showFloatingNotification("Producto agregado correctamente", "success");
+                        closeModal();
+                        loadInventory();
+                    })
+                    .catch((error) => {
+                        console.error("Error al agregar producto: ", error);
+                        showFloatingNotification("Error al agregar producto", "error");
+                    });
+            }
+        }
+
+        // Editar producto
+        function editProduct(productId) {
+            const product = inventoryData.find(p => p.id === productId);
+            if (product) {
+                openModal(product);
+            }
+        }
+
+        // Eliminar producto
+        function deleteProduct(productId) {
+            if (confirm("¿Estás seguro de que quieres eliminar este producto?")) {
+                db.collection('INVENTARIO').doc(productId).delete()
+                    .then(() => {
+                        showFloatingNotification("Producto eliminado correctamente", "success");
+                        loadInventory();
+                    })
+                    .catch((error) => {
+                        console.error("Error al eliminar producto: ", error);
+                        showFloatingNotification("Error al eliminar producto", "error");
+                    });
+            }
+        }
+
+        // Mostrar notificación flotante
+        function showFloatingNotification(message, type) {
+            floatingNotification.textContent = message;
+            floatingNotification.className = `floating-notification ${type}`;
+            floatingNotification.style.display = 'block';
+            
+            setTimeout(() => {
+                floatingNotification.style.display = 'none';
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
