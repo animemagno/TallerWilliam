@@ -499,6 +499,14 @@
             padding: 6px 8px;
         }
 
+        .daily-closure {
+            background: rgba(52, 152, 219, 0.1);
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid var(--primary-color);
+            margin-top: 15px;
+        }
+
         @media (max-width: 768px) {
             .compact-grid {
                 grid-template-columns: 1fr;
@@ -561,6 +569,7 @@
             <div class="tab" data-tab="history">Historial</div>
             <div class="tab" data-tab="summary">Resumen</div>
             <div class="tab" data-tab="equipos">Equipos</div>
+            <div class="tab" data-tab="cierre">Cierre Diario</div>
         </div>
 
         <!-- Pestaña de Ventas -->
@@ -700,6 +709,11 @@
                             </div>
                         </div>
                     </div>
+
+                    <div class="payment-history" id="payment-history" style="display: none;">
+                        <h4 style="margin-bottom: 8px;">Historial de Abonos</h4>
+                        <div id="payments-list"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -795,6 +809,62 @@
                 </div>
             </div>
         </div>
+
+        <!-- Pestaña de Cierre Diario -->
+        <div class="tab-content" id="cierre-tab">
+            <div class="compact-grid">
+                <div class="panel">
+                    <h2>Cierre del Día</h2>
+                    <div class="daily-closure">
+                        <div class="form-group">
+                            <label for="closure-date">Fecha de Cierre</label>
+                            <input type="date" id="closure-date">
+                        </div>
+                        
+                        <div id="closure-summary">
+                            <div class="credit-status">
+                                <strong>Resumen del Día:</strong><br>
+                                <span id="closure-cash">Ventas Contado: $0.00</span><br>
+                                <span id="closure-credit">Ventas Pendientes: $0.00</span><br>
+                                <span id="closure-payments">Abonos Recibidos: $0.00</span><br>
+                                <span id="closure-total">Total General: $0.00</span>
+                            </div>
+                        </div>
+                        
+                        <div class="actions" style="margin-top: 15px;">
+                            <button class="btn btn-primary" onclick="generateClosureSummary()">
+                                Generar Resumen de Cierre
+                            </button>
+                            <button class="btn btn-success" onclick="processDailyClosure()">
+                                Procesar Cierre Diario
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h2>Historial de Cierres</h2>
+                    <div id="closures-history">
+                        <table class="compact-table">
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Ventas Contado</th>
+                                    <th>Ventas Crédito</th>
+                                    <th>Abonos</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody id="closures-body">
+                                <tr>
+                                    <td colspan="5" class="loading">Cargando cierres...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -831,6 +901,7 @@
             console.log("Página cargada correctamente");
             const now = new Date();
             document.getElementById('current-date').textContent = now.toLocaleDateString('es-ES');
+            document.getElementById('closure-date').valueAsDate = now;
             
             // Cargar tema guardado
             const savedTheme = localStorage.getItem('theme') || 'light';
@@ -841,6 +912,7 @@
             loadDailySales();
             loadPendingCredits();
             setupTabs();
+            loadClosuresHistory();
             
             // Configurar búsqueda en tiempo real
             document.getElementById('search-product').addEventListener('input', function(e) {
@@ -878,6 +950,7 @@
                     showCreditDetails(this.value);
                 } else {
                     document.getElementById('credit-details').style.display = 'none';
+                    document.getElementById('payment-history').style.display = 'none';
                 }
             });
 
@@ -930,6 +1003,8 @@
                         loadSalesHistory();
                     } else if (this.getAttribute('data-tab') === 'equipos') {
                         loadEquiposSummary();
+                    } else if (this.getAttribute('data-tab') === 'cierre') {
+                        loadClosuresHistory();
                     }
                 });
             });
@@ -952,10 +1027,10 @@
         }
 
         // =============================================
-        // FUNCIÓN DE IMPRESIÓN COMPACTA
+        // FUNCIÓN DE IMPRESIÓN COMPACTA CON HISTORIAL DE ABONOS
         // =============================================
 
-        function printTicket(sale, saleId, saleNumber) {
+        async function printTicket(sale, saleId, saleNumber) {
             if (isPrinting) {
                 showStatus("Impresión en curso...", "error");
                 return;
@@ -976,9 +1051,21 @@
                     displayName = clientName;
                 }
 
-                let ticketContent = createTicketContent(sale, saleNumber, displayName);
+                // Obtener información de crédito si es venta pendiente
+                let creditInfo = null;
+                let paymentHistory = [];
+                
+                if (sale.paymentType === 'pendiente') {
+                    const creditQuery = await db.collection('creditos').where('saleId', '==', saleId).get();
+                    if (!creditQuery.empty) {
+                        creditInfo = creditQuery.docs[0].data();
+                        paymentHistory = creditInfo.payments || [];
+                    }
+                }
 
-                const printWindow = window.open('', '_blank', `width=350,height=500`);
+                let ticketContent = await createTicketContent(sale, saleNumber, displayName, paymentHistory, creditInfo);
+
+                const printWindow = window.open('', '_blank', `width=350,height=600`);
                 
                 if (!printWindow) {
                     throw new Error("No se pudo abrir ventana de impresión");
@@ -990,8 +1077,19 @@
                     <head>
                         <title>Factura ${saleNumber}</title>
                         <style>
-                            body { margin: 5px; padding: 5px; width: 340px; font-family: 'Courier New', monospace; background: white; font-size: 12px; }
-                            @media print { body { margin: 0; padding: 0; } @page { size: auto; margin: 0; } }
+                            body { 
+                                margin: 5px; 
+                                padding: 5px; 
+                                width: 340px; 
+                                font-family: 'Courier New', monospace; 
+                                background: white; 
+                                font-size: 12px; 
+                                font-weight: bold; /* TODOS LOS TEXTOS EN NEGRITA */
+                            }
+                            @media print { 
+                                body { margin: 0; padding: 0; } 
+                                @page { size: auto; margin: 0; } 
+                            }
                             .header { text-align: center; border-bottom: 1px dashed #000; padding-bottom: 5px; margin-bottom: 5px; }
                             .title { font-size: 14px; font-weight: bold; margin: 3px 0; }
                             .info { font-size: 10px; margin: 2px 0; }
@@ -1002,6 +1100,10 @@
                             .total { text-align: center; background: #ffffcc; padding: 8px; border: 1px solid #000; margin: 8px 0; font-size: 12px; font-weight: bold; }
                             .status { padding: 5px; border: 1px solid #000; margin: 5px 0; font-weight: bold; text-align: center; background: ${sale.paymentType === 'contado' ? '#90EE90' : '#FFB6C1'}; }
                             .footer { background: #e6f7ff; padding: 5px; text-align: center; margin-top: 8px; font-size: 10px; }
+                            .payment-history { margin: 8px 0; padding: 5px; border: 1px dashed #000; background: #f9f9f9; }
+                            .payment-item { padding: 2px 0; border-bottom: 1px dotted #ccc; }
+                            .payment-item:last-child { border-bottom: none; }
+                            .current-balance { background: #fffacd; padding: 5px; border: 1px solid #000; margin: 5px 0; text-align: center; font-weight: bold; }
                         </style>
                     </head>
                     <body>${ticketContent}</body>
@@ -1028,8 +1130,8 @@
             }
         }
 
-        // Crear contenido del ticket compacto
-        function createTicketContent(sale, saleNumber, displayName) {
+        // Crear contenido del ticket compacto con historial de abonos
+        async function createTicketContent(sale, saleNumber, displayName, paymentHistory, creditInfo) {
             let content = `
                 <div class="header">
                     <div class="title">TALLER WILIAN</div>
@@ -1056,7 +1158,40 @@
             });
 
             content += `</tbody></table>
-                <div class="total">TOTAL: $${sale.total.toFixed(2)}</div>
+                <div class="total">TOTAL: $${sale.total.toFixed(2)}</div>`;
+
+            // Agregar historial de abonos si es venta pendiente
+            if (sale.paymentType === 'pendiente' && paymentHistory.length > 0) {
+                content += `
+                    <div class="payment-history">
+                        <div style="text-align: center; margin-bottom: 5px;"><strong>HISTORIAL DE ABONOS</strong></div>
+                        <div class="payment-item">
+                            <strong>Saldo Inicial: $${sale.total.toFixed(2)}</strong>
+                        </div>`;
+                
+                paymentHistory.forEach((payment, index) => {
+                    const paymentDate = payment.date.toDate ? payment.date.toDate() : new Date(payment.date);
+                    content += `
+                        <div class="payment-item">
+                            <strong>${paymentDate.toLocaleDateString('es-ES')} - Abono: $${payment.amount.toFixed(2)}</strong><br>
+                            <small>Saldo anterior: $${payment.previousBalance.toFixed(2)} | Nuevo saldo: $${payment.newBalance.toFixed(2)}</small>
+                        </div>`;
+                });
+
+                // Mostrar saldo actual
+                const currentBalance = creditInfo ? creditInfo.pendingAmount : sale.total;
+                content += `
+                    <div class="current-balance">
+                        <strong>SALDO PENDIENTE: $${currentBalance.toFixed(2)}</strong>
+                    </div>`;
+            } else if (sale.paymentType === 'pendiente') {
+                content += `
+                    <div class="current-balance">
+                        <strong>SALDO PENDIENTE: $${sale.total.toFixed(2)}</strong>
+                    </div>`;
+            }
+
+            content += `
                 <div class="status">${sale.paymentType === 'contado' ? '*** PAGADO ***' : '*** PENDIENTE ***'}</div>
                 <div class="footer">
                     <div><strong>¡GRACIAS POR SU COMPRA!</strong></div>
@@ -1592,7 +1727,7 @@
         }
 
         // Mostrar detalles del crédito seleccionado
-        function showCreditDetails(creditId) {
+        async function showCreditDetails(creditId) {
             const credit = pendingCredits.find(c => c.id === creditId);
             if (!credit) return;
 
@@ -1602,6 +1737,41 @@
             document.getElementById('credit-details').style.display = 'block';
             document.getElementById('payment-amount').value = '';
             document.getElementById('payment-amount').max = credit.pendingAmount;
+
+            // Cargar historial de abonos
+            await loadPaymentHistory(creditId);
+        }
+
+        // Cargar historial de abonos
+        async function loadPaymentHistory(creditId) {
+            try {
+                const creditDoc = await db.collection('creditos').doc(creditId).get();
+                if (creditDoc.exists) {
+                    const credit = creditDoc.data();
+                    const paymentsList = document.getElementById('payments-list');
+                    
+                    if (credit.payments && credit.payments.length > 0) {
+                        paymentsList.innerHTML = '';
+                        credit.payments.forEach((payment, index) => {
+                            const paymentDate = payment.date.toDate ? payment.date.toDate() : new Date(payment.date);
+                            const paymentDiv = document.createElement('div');
+                            paymentDiv.style.padding = '4px';
+                            paymentDiv.style.borderBottom = '1px solid #ddd';
+                            paymentDiv.innerHTML = `
+                                <strong>Abono ${index + 1}:</strong> $${payment.amount.toFixed(2)}<br>
+                                <small>Fecha: ${paymentDate.toLocaleDateString()}</small><br>
+                                <small>Saldo anterior: $${payment.previousBalance.toFixed(2)} | Nuevo saldo: $${payment.newBalance.toFixed(2)}</small>
+                            `;
+                            paymentsList.appendChild(paymentDiv);
+                        });
+                        document.getElementById('payment-history').style.display = 'block';
+                    } else {
+                        document.getElementById('payment-history').style.display = 'none';
+                    }
+                }
+            } catch (error) {
+                console.error("Error loading payment history:", error);
+            }
         }
 
         // Registrar abono
@@ -1645,6 +1815,7 @@
                 loadPendingCredits();
                 document.getElementById('payment-amount').value = '';
                 document.getElementById('credit-details').style.display = 'none';
+                document.getElementById('payment-history').style.display = 'none';
 
             } catch (error) {
                 console.error("Error registering payment:", error);
@@ -1652,9 +1823,9 @@
             }
         }
 
-        // Eliminar venta pendiente
+        // Eliminar venta pendiente - CORREGIDO
         async function deletePendingSale(creditId) {
-            if (!confirm("¿Eliminar venta pendiente?")) return;
+            if (!confirm("¿Eliminar venta pendiente? Esta acción no se puede deshacer.")) return;
 
             try {
                 const credit = pendingCredits.find(c => c.id === creditId);
@@ -1662,33 +1833,41 @@
 
                 const batch = db.batch();
                 
+                // Buscar la venta original
                 const saleDoc = await db.collection('ventas').doc(credit.saleId).get();
                 if (saleDoc.exists) {
                     const sale = saleDoc.data();
+                    // Restaurar inventario SOLO UNA VEZ
                     sale.products.forEach(product => {
                         const productRef = db.collection('INVENTARIO').doc(product.productId);
                         batch.update(productRef, {
                             cantidad: firebase.firestore.FieldValue.increment(product.quantity)
                         });
                     });
+                    
+                    // Eliminar la venta
+                    batch.delete(db.collection('ventas').doc(credit.saleId));
                 }
 
+                // Eliminar el crédito
                 batch.delete(db.collection('creditos').doc(creditId));
-                batch.update(db.collection('ventas').doc(credit.saleId), { status: 'cancelada' });
 
                 await batch.commit();
-                showStatus("Venta eliminada", "success");
+                showStatus("Venta pendiente eliminada correctamente", "success");
+                
+                // Actualizar ambas vistas
                 loadPendingCredits();
+                loadDailySales();
 
             } catch (error) {
                 console.error("Error deleting pending sale:", error);
-                showStatus("Error eliminar venta", "error");
+                showStatus("Error eliminar venta pendiente", "error");
             }
         }
 
-        // Eliminar venta
+        // Eliminar venta - CORREGIDO
         async function deleteSale(saleId) {
-            if (!confirm("¿Eliminar venta?")) return;
+            if (!confirm("¿Eliminar venta? Esta acción no se puede deshacer.")) return;
 
             try {
                 const saleDoc = await db.collection('ventas').doc(saleId).get();
@@ -1697,6 +1876,7 @@
                 const sale = saleDoc.data();
                 const batch = db.batch();
 
+                // Restaurar inventario SOLO UNA VEZ
                 sale.products.forEach(product => {
                     const productRef = db.collection('INVENTARIO').doc(product.productId);
                     batch.update(productRef, {
@@ -1704,8 +1884,10 @@
                     });
                 });
 
+                // Eliminar la venta
                 batch.delete(db.collection('ventas').doc(saleId));
 
+                // Si es venta pendiente, eliminar también el crédito
                 if (sale.paymentType === 'pendiente') {
                     const creditQuery = await db.collection('creditos').where('saleId', '==', saleId).get();
                     creditQuery.forEach(doc => {
@@ -1714,7 +1896,9 @@
                 }
 
                 await batch.commit();
-                showStatus("Venta eliminada", "success");
+                showStatus("Venta eliminada correctamente", "success");
+                
+                // Actualizar ambas vistas
                 loadDailySales();
                 loadPendingCredits();
 
@@ -1814,6 +1998,157 @@
             } catch (error) {
                 console.error("Error generating daily summary:", error);
                 showStatus("Error generar resumen", "error");
+            }
+        }
+
+        // Generar resumen para cierre diario
+        async function generateClosureSummary() {
+            try {
+                const closureDate = new Date(document.getElementById('closure-date').value);
+                closureDate.setHours(0, 0, 0, 0);
+                const nextDate = new Date(closureDate);
+                nextDate.setDate(nextDate.getDate() + 1);
+
+                const salesSnapshot = await db.collection('ventas')
+                    .where('date', '>=', closureDate)
+                    .where('date', '<', nextDate)
+                    .get();
+
+                let cashTotal = 0;
+                let creditTotal = 0;
+                let paymentsTotal = 0;
+
+                salesSnapshot.forEach(doc => {
+                    const sale = doc.data();
+                    if (sale.paymentType === 'contado') {
+                        cashTotal += sale.total;
+                    } else {
+                        creditTotal += sale.total;
+                    }
+                });
+
+                // Calcular abonos del día de cierre
+                const creditsSnapshot = await db.collection('creditos').get();
+                creditsSnapshot.forEach(doc => {
+                    const credit = doc.data();
+                    if (credit.payments) {
+                        credit.payments.forEach(payment => {
+                            const paymentDate = payment.date.toDate ? payment.date.toDate() : new Date(payment.date);
+                            if (paymentDate >= closureDate && paymentDate < nextDate) {
+                                paymentsTotal += payment.amount;
+                            }
+                        });
+                    }
+                });
+
+                const totalGeneral = cashTotal + paymentsTotal;
+
+                document.getElementById('closure-cash').textContent = `Ventas Contado: $${cashTotal.toFixed(2)}`;
+                document.getElementById('closure-credit').textContent = `Ventas Pendientes: $${creditTotal.toFixed(2)}`;
+                document.getElementById('closure-payments').textContent = `Abonos Recibidos: $${paymentsTotal.toFixed(2)}`;
+                document.getElementById('closure-total').textContent = `Total General: $${totalGeneral.toFixed(2)}`;
+
+                showStatus("Resumen de cierre generado", "success");
+
+            } catch (error) {
+                console.error("Error generating closure summary:", error);
+                showStatus("Error generar resumen cierre", "error");
+            }
+        }
+
+        // Procesar cierre diario
+        async function processDailyClosure() {
+            try {
+                const closureDate = new Date(document.getElementById('closure-date').value);
+                closureDate.setHours(0, 0, 0, 0);
+                const nextDate = new Date(closureDate);
+                nextDate.setDate(nextDate.getDate() + 1);
+
+                const salesSnapshot = await db.collection('ventas')
+                    .where('date', '>=', closureDate)
+                    .where('date', '<', nextDate)
+                    .get();
+
+                let cashTotal = 0;
+                let creditTotal = 0;
+                let paymentsTotal = 0;
+
+                salesSnapshot.forEach(doc => {
+                    const sale = doc.data();
+                    if (sale.paymentType === 'contado') {
+                        cashTotal += sale.total;
+                    } else {
+                        creditTotal += sale.total;
+                    }
+                });
+
+                // Calcular abonos del día de cierre
+                const creditsSnapshot = await db.collection('creditos').get();
+                creditsSnapshot.forEach(doc => {
+                    const credit = doc.data();
+                    if (credit.payments) {
+                        credit.payments.forEach(payment => {
+                            const paymentDate = payment.date.toDate ? payment.date.toDate() : new Date(payment.date);
+                            if (paymentDate >= closureDate && paymentDate < nextDate) {
+                                paymentsTotal += payment.amount;
+                            }
+                        });
+                    }
+                });
+
+                const totalGeneral = cashTotal + paymentsTotal;
+
+                // Guardar cierre en la base de datos
+                const closureRef = db.collection('cierres_diarios').doc();
+                await closureRef.set({
+                    date: closureDate,
+                    cashSales: cashTotal,
+                    creditSales: creditTotal,
+                    paymentsReceived: paymentsTotal,
+                    total: totalGeneral,
+                    processedAt: new Date()
+                });
+
+                showStatus("Cierre diario procesado correctamente", "success");
+                loadClosuresHistory();
+
+            } catch (error) {
+                console.error("Error processing daily closure:", error);
+                showStatus("Error procesar cierre", "error");
+            }
+        }
+
+        // Cargar historial de cierres
+        async function loadClosuresHistory() {
+            try {
+                const snapshot = await db.collection('cierres_diarios')
+                    .orderBy('date', 'desc')
+                    .limit(10)
+                    .get();
+
+                const tbody = document.getElementById('closures-body');
+                tbody.innerHTML = '';
+
+                if (snapshot.empty) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; font-size: 0.8rem;">No hay cierres registrados</td></tr>';
+                    return;
+                }
+
+                snapshot.forEach(doc => {
+                    const closure = doc.data();
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${closure.date.toDate ? closure.date.toDate().toLocaleDateString() : 'N/A'}</td>
+                        <td>$${closure.cashSales.toFixed(2)}</td>
+                        <td>$${closure.creditSales.toFixed(2)}</td>
+                        <td>$${closure.paymentsReceived.toFixed(2)}</td>
+                        <td>$${closure.total.toFixed(2)}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+
+            } catch (error) {
+                console.error("Error loading closures history:", error);
             }
         }
 
