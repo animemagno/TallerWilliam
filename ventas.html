@@ -507,6 +507,31 @@
             margin-top: 15px;
         }
 
+        .processing {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .connection-status {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            z-index: 10000;
+        }
+
+        .connection-status.online {
+            background-color: var(--success-color);
+            color: white;
+        }
+
+        .connection-status.offline {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
         @media (max-width: 768px) {
             .compact-grid {
                 grid-template-columns: 1fr;
@@ -547,10 +572,19 @@
             .panel {
                 padding: 10px;
             }
+
+            .connection-status {
+                position: relative;
+                top: 0;
+                right: 0;
+                margin: 5px;
+            }
         }
     </style>
 </head>
 <body>
+    <div class="connection-status" id="connection-status">Conectando...</div>
+    
     <div class="container">
         <header>
             <button class="theme-toggle" id="theme-toggle">🌙</button>
@@ -600,7 +634,7 @@
                                 <input type="text" id="search-product" placeholder="Código o descripción">
                                 <div id="search-dropdown" class="search-dropdown" style="display: none;"></div>
                             </div>
-                            <button class="btn btn-primary" onclick="addProductFromSearch()">
+                            <button class="btn btn-primary" onclick="addProductFromSearch()" id="add-product-btn">
                                 AGREGAR
                             </button>
                         </div>
@@ -621,10 +655,10 @@
                         </div>
                         
                         <div class="payment-buttons">
-                            <button class="payment-btn contado" onclick="processSale('contado')">
+                            <button class="payment-btn contado" onclick="processSale('contado')" id="contado-btn">
                                 CONTADO
                             </button>
-                            <button class="payment-btn pendiente" onclick="processSale('pendiente')">
+                            <button class="payment-btn pendiente" onclick="processSale('pendiente')" id="pendiente-btn">
                                 PENDIENTE
                             </button>
                         </div>
@@ -704,7 +738,7 @@
                             </div>
                             
                             <div class="actions" style="margin-top: 12px;">
-                                <button class="btn btn-success" onclick="registerPayment()">Registrar</button>
+                                <button class="btn btn-success" onclick="registerPayment()" id="register-payment-btn">Registrar</button>
                                 <button class="btn btn-danger" onclick="cancelPendingSale()" id="cancel-sale-btn">Cancelar</button>
                             </div>
                         </div>
@@ -768,7 +802,7 @@
                     </div>
                 </div>
                 
-                <button class="btn btn-primary" onclick="generateDailySummary()" style="margin-top: 15px; width: 100%;">
+                <button class="btn btn-primary" onclick="generateDailySummary()" style="margin-top: 15px; width: 100%;" id="generate-summary-btn">
                     Generar Resumen
                 </button>
             </div>
@@ -832,10 +866,10 @@
                         </div>
                         
                         <div class="actions" style="margin-top: 15px;">
-                            <button class="btn btn-primary" onclick="generateClosureSummary()">
+                            <button class="btn btn-primary" onclick="generateClosureSummary()" id="generate-closure-btn">
                                 Generar Resumen de Cierre
                             </button>
-                            <button class="btn btn-success" onclick="processDailyClosure()">
+                            <button class="btn btn-success" onclick="processDailyClosure()" id="process-closure-btn">
                                 Procesar Cierre Diario
                             </button>
                         </div>
@@ -879,12 +913,20 @@
         };
 
         // Inicializar Firebase
+        let firebaseInitialized = false;
+        let db = null;
+
         try {
             firebase.initializeApp(firebaseConfig);
+            db = firebase.firestore();
+            firebaseInitialized = true;
+            console.log("Firebase inicializado correctamente");
+            updateConnectionStatus(true);
         } catch (error) {
-            console.log("Firebase ya inicializado");
+            console.error("Error inicializando Firebase:", error);
+            showStatus("Error de conexión con la base de datos", "error");
+            updateConnectionStatus(false);
         }
-        const db = firebase.firestore();
 
         // Variables globales
         let cart = [];
@@ -895,6 +937,7 @@
         let isPrinting = false;
         let currentTheme = 'light';
         let saleCounter = 0;
+        let isProcessingSale = false;
 
         // Inicializar la aplicación
         document.addEventListener('DOMContentLoaded', function() {
@@ -907,12 +950,18 @@
             const savedTheme = localStorage.getItem('theme') || 'light';
             setTheme(savedTheme);
             
-            // Cargar contador de ventas
-            loadSaleCounter();
-            loadDailySales();
-            loadPendingCredits();
+            // Verificar conexión
+            checkFirebaseConnection();
+            
+            // Cargar datos iniciales si hay conexión
+            if (firebaseInitialized) {
+                loadSaleCounter();
+                loadDailySales();
+                loadPendingCredits();
+                loadClosuresHistory();
+            }
+            
             setupTabs();
-            loadClosuresHistory();
             
             // Configurar búsqueda en tiempo real
             document.getElementById('search-product').addEventListener('input', function(e) {
@@ -956,10 +1005,77 @@
 
             // Configurar toggle de tema
             document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
+
+            // Verificar conexión periódicamente
+            setInterval(checkFirebaseConnection, 30000);
         });
+
+        // Verificar conexión con Firebase
+        async function checkFirebaseConnection() {
+            if (!db) {
+                updateConnectionStatus(false);
+                return;
+            }
+
+            try {
+                await db.collection('INVENTARIO').limit(1).get();
+                updateConnectionStatus(true);
+                
+                // Recargar datos si se recuperó la conexión
+                if (!firebaseInitialized) {
+                    firebaseInitialized = true;
+                    loadSaleCounter();
+                    loadDailySales();
+                    loadPendingCredits();
+                }
+            } catch (error) {
+                console.error("Error de conexión Firebase:", error);
+                updateConnectionStatus(false);
+                firebaseInitialized = false;
+            }
+        }
+
+        // Actualizar estado de conexión
+        function updateConnectionStatus(connected) {
+            const statusElement = document.getElementById('connection-status');
+            if (connected) {
+                statusElement.textContent = '🟢 Conectado';
+                statusElement.className = 'connection-status online';
+            } else {
+                statusElement.textContent = '🔴 Sin conexión';
+                statusElement.className = 'connection-status offline';
+            }
+        }
+
+        // Habilitar/deshabilitar botones durante procesamiento
+        function setProcessingState(processing) {
+            isProcessingSale = processing;
+            const buttons = [
+                'contado-btn', 'pendiente-btn', 'add-product-btn',
+                'register-payment-btn', 'generate-summary-btn',
+                'generate-closure-btn', 'process-closure-btn'
+            ];
+            
+            buttons.forEach(buttonId => {
+                const button = document.getElementById(buttonId);
+                if (button) {
+                    button.disabled = processing;
+                    if (processing) {
+                        button.classList.add('processing');
+                    } else {
+                        button.classList.remove('processing');
+                    }
+                }
+            });
+        }
 
         // Cargar contador de ventas
         async function loadSaleCounter() {
+            if (!firebaseInitialized) {
+                console.warn("Firebase no inicializado, no se puede cargar contador");
+                return;
+            }
+
             try {
                 const counterDoc = await db.collection('counters').doc('sales').get();
                 if (counterDoc.exists) {
@@ -968,20 +1084,28 @@
                     await db.collection('counters').doc('sales').set({ value: 0 });
                     saleCounter = 0;
                 }
+                console.log("Contador de ventas cargado:", saleCounter);
             } catch (error) {
                 console.error("Error cargando contador:", error);
                 saleCounter = 0;
+                showStatus("Error cargando contador de ventas", "error");
             }
         }
 
         // Obtener siguiente número de venta
         async function getNextSaleNumber() {
+            if (!firebaseInitialized) {
+                // Fallback: usar timestamp como número de venta
+                return Date.now();
+            }
+
             try {
                 saleCounter++;
                 await db.collection('counters').doc('sales').update({ value: saleCounter });
                 return saleCounter;
             } catch (error) {
                 console.error("Error actualizando contador:", error);
+                // Fallback: usar timestamp
                 return Date.now();
             }
         }
@@ -1126,7 +1250,7 @@
             } catch (error) {
                 console.error("Error en impresión:", error);
                 isPrinting = false;
-                showStatus("Error al imprimir", "error");
+                showStatus("Error al imprimir: " + error.message, "error");
             }
         }
 
@@ -1212,6 +1336,11 @@
                 return;
             }
 
+            if (!firebaseInitialized) {
+                showStatus("Sin conexión a la base de datos", "error");
+                return;
+            }
+
             try {
                 const searchLower = searchTerm.toLowerCase();
                 const snapshot = await db.collection('INVENTARIO').get();
@@ -1234,6 +1363,7 @@
                 
             } catch (error) {
                 console.error("Error searching products:", error);
+                showStatus("Error buscando productos: " + error.message, "error");
             }
         }
 
@@ -1274,35 +1404,46 @@
         // Agregar producto al carrito
         function addToCart(productId) {
             const product = searchResults.find(p => p.id === productId);
-            if (!product) return;
+            if (!product) {
+                showStatus("Producto no encontrado", "error");
+                return;
+            }
 
-            if ((product.cantidad || 0) <= 0) {
-                showStatus("Sin stock", "error");
+            // Validar stock
+            const currentStock = product.cantidad || 0;
+            if (currentStock <= 0) {
+                showStatus("Producto sin stock disponible", "error");
                 return;
             }
 
             const existingItem = cart.find(item => item.id === productId);
             if (existingItem) {
-                if (existingItem.quantity < (product.cantidad || 0)) {
+                if (existingItem.quantity < currentStock) {
                     existingItem.quantity++;
                 } else {
-                    showStatus("Stock insuficiente", "error");
+                    showStatus("Stock insuficiente. Máximo disponible: " + currentStock, "error");
                     return;
                 }
             } else {
+                // Validar que el producto tenga todos los campos necesarios
+                if (!product.precio || product.precio <= 0) {
+                    showStatus("El producto no tiene precio válido", "error");
+                    return;
+                }
+
                 cart.push({
                     id: productId,
-                    code: product.codigo,
-                    description: product.descripcion,
+                    code: product.codigo || 'N/A',
+                    description: product.descripcion || 'Sin descripción',
                     price: product.precio || 0,
                     quantity: 1,
                     cost: product.costo || 0,
-                    available: product.cantidad || 0
+                    available: currentStock
                 });
             }
 
             updateCartDisplay();
-            showStatus("Producto agregado", "success");
+            showStatus("Producto agregado al carrito", "success");
             document.getElementById('search-dropdown').style.display = 'none';
             document.getElementById('search-product').value = '';
         }
@@ -1354,7 +1495,7 @@
             }
 
             if (newQuantity > cart[index].available) {
-                showStatus("Stock insuficiente", "error");
+                showStatus("Stock insuficiente. Máximo disponible: " + cart[index].available, "error");
                 return;
             }
 
@@ -1366,35 +1507,105 @@
         function removeFromCart(index) {
             cart.splice(index, 1);
             updateCartDisplay();
-            showStatus("Producto removido", "success");
+            showStatus("Producto removido del carrito", "success");
         }
 
-        // Procesar venta
-        async function processSale(paymentType) {
+        // Validar datos de la venta antes de procesar
+        function validateSaleData() {
+            // Validar carrito
             if (cart.length === 0) {
-                showStatus("Carrito vacío", "error");
-                return;
+                throw new Error("El carrito está vacío");
             }
 
+            // Validar datos del cliente
             const equipoNumber = document.getElementById('equipo-number').value.trim();
             const clientName = document.getElementById('client-name').value.trim();
-            const total = parseFloat(document.getElementById('total-amount').textContent.replace('$', ''));
 
             if (!equipoNumber && !clientName) {
-                showStatus("Ingrese equipo o cliente", "error");
+                throw new Error("Ingrese al menos un número de equipo o nombre de cliente");
+            }
+
+            // Validar productos
+            for (let item of cart) {
+                if (!item.id || !item.description || item.price <= 0 || item.quantity <= 0) {
+                    throw new Error(`Producto inválido en el carrito: ${item.description}`);
+                }
+            }
+
+            return true;
+        }
+
+        // Verificar stock antes de procesar venta
+        async function verifyStock() {
+            if (!firebaseInitialized) {
+                throw new Error("Sin conexión a la base de datos");
+            }
+
+            const stockVerifications = [];
+
+            for (let item of cart) {
+                try {
+                    const productDoc = await db.collection('INVENTARIO').doc(item.id).get();
+                    if (!productDoc.exists) {
+                        throw new Error(`Producto no encontrado: ${item.description}`);
+                    }
+
+                    const product = productDoc.data();
+                    const currentStock = product.cantidad || 0;
+
+                    if (currentStock < item.quantity) {
+                        throw new Error(`Stock insuficiente para ${item.description}. Disponible: ${currentStock}, Solicitado: ${item.quantity}`);
+                    }
+
+                    stockVerifications.push({
+                        productId: item.id,
+                        currentStock: currentStock,
+                        requiredStock: item.quantity
+                    });
+
+                } catch (error) {
+                    throw new Error(`Error verificando stock de ${item.description}: ${error.message}`);
+                }
+            }
+
+            return stockVerifications;
+        }
+
+        // Procesar venta - VERSIÓN MEJORADA
+        async function processSale(paymentType) {
+            if (isProcessingSale) {
+                showStatus("Ya hay una venta en proceso", "error");
                 return;
             }
 
-            let displayName = '';
-            if (equipoNumber && clientName) {
-                displayName = `Equipo ${equipoNumber} - ${clientName}`;
-            } else if (equipoNumber) {
-                displayName = `Equipo ${equipoNumber}`;
-            } else {
-                displayName = clientName;
+            if (!firebaseInitialized) {
+                showStatus("Sin conexión a la base de datos. Verifique su conexión a internet.", "error");
+                return;
             }
 
+            setProcessingState(true);
+
             try {
+                // Validaciones iniciales
+                validateSaleData();
+
+                // Verificar stock
+                await verifyStock();
+
+                const equipoNumber = document.getElementById('equipo-number').value.trim();
+                const clientName = document.getElementById('client-name').value.trim();
+                const total = parseFloat(document.getElementById('total-amount').textContent.replace('$', ''));
+
+                let displayName = '';
+                if (equipoNumber && clientName) {
+                    displayName = `Equipo ${equipoNumber} - ${clientName}`;
+                } else if (equipoNumber) {
+                    displayName = `Equipo ${equipoNumber}`;
+                } else {
+                    displayName = clientName;
+                }
+
+                // Obtener número de venta
                 const saleNumber = await getNextSaleNumber();
 
                 const sale = {
@@ -1416,8 +1627,10 @@
                     timestamp: firebase.firestore.FieldValue.serverTimestamp()
                 };
 
+                // Crear batch de operaciones
                 const batch = db.batch();
 
+                // Actualizar inventario
                 cart.forEach(item => {
                     const productRef = db.collection('INVENTARIO').doc(item.id);
                     batch.update(productRef, {
@@ -1425,9 +1638,11 @@
                     });
                 });
 
+                // Registrar venta
                 const saleRef = db.collection('ventas').doc();
                 batch.set(saleRef, sale);
 
+                // Si es pendiente, crear registro de crédito
                 if (paymentType === 'pendiente') {
                     const creditRef = db.collection('creditos').doc();
                     batch.set(creditRef, {
@@ -1442,33 +1657,44 @@
                     });
                 }
 
+                // Ejecutar batch
                 await batch.commit();
 
+                // Éxito
                 if (paymentType === 'contado') {
-                    printTicket(sale, saleRef.id, saleNumber);
-                    showStatus(`Venta contado procesada`, "success");
+                    showStatus(`Venta contado #${saleNumber} procesada correctamente`, "success");
+                    // Imprimir ticket después de un breve delay
+                    setTimeout(() => {
+                        printTicket(sale, saleRef.id, saleNumber);
+                    }, 500);
                 } else {
-                    showStatus(`Venta pendiente almacenada`, "success");
+                    showStatus(`Venta pendiente #${saleNumber} registrada correctamente`, "success");
                 }
                 
+                // Limpiar carrito y formulario
                 cart = [];
                 updateCartDisplay();
                 document.getElementById('equipo-number').value = '';
                 document.getElementById('client-name').value = '';
-                document.getElementById('search-results').style.display = 'none';
+                document.getElementById('search-dropdown').style.display = 'none';
                 document.getElementById('search-product').value = '';
 
+                // Actualizar vistas
                 loadDailySales();
                 loadPendingCredits();
 
             } catch (error) {
-                console.error("Error processing sale:", error);
-                showStatus("Error al procesar venta", "error");
+                console.error("Error procesando venta:", error);
+                showStatus("Error al procesar venta: " + error.message, "error");
+            } finally {
+                setProcessingState(false);
             }
         }
 
         // Cargar ventas del día
         async function loadDailySales() {
+            if (!firebaseInitialized) return;
+
             try {
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);
@@ -1488,6 +1714,7 @@
                 displayDailySales();
             } catch (error) {
                 console.error("Error loading daily sales:", error);
+                showStatus("Error cargando ventas del día", "error");
             }
         }
 
@@ -1523,6 +1750,8 @@
 
         // Cargar facturas agrupadas por equipo
         async function loadEquiposSummary() {
+            if (!firebaseInitialized) return;
+
             try {
                 const equipoFilter = document.getElementById('equipo-filter').value;
                 const snapshot = await db.collection('ventas').get();
@@ -1567,6 +1796,7 @@
                 
             } catch (error) {
                 console.error("Error loading equipos summary:", error);
+                showStatus("Error cargando resumen de equipos", "error");
             }
         }
 
@@ -1599,6 +1829,11 @@
 
         // Mostrar detalles de un equipo específico
         async function showEquipoDetails(equipoNumber) {
+            if (!firebaseInitialized) {
+                showStatus("Sin conexión a la base de datos", "error");
+                return;
+            }
+
             try {
                 const snapshot = await db.collection('ventas').where('equipoNumber', '==', equipoNumber).get();
 
@@ -1651,12 +1886,14 @@
 
             } catch (error) {
                 console.error("Error loading equipo details:", error);
-                showStatus("Error cargar detalles", "error");
+                showStatus("Error cargando detalles del equipo", "error");
             }
         }
 
         // Cargar ventas pendientes
         async function loadPendingCredits() {
+            if (!firebaseInitialized) return;
+
             try {
                 const snapshot = await db.collection('creditos').where('status', '==', 'pendiente').get();
 
@@ -1675,6 +1912,7 @@
                 
             } catch (error) {
                 console.error("Error loading credits:", error);
+                showStatus("Error cargando ventas pendientes", "error");
             }
         }
 
@@ -1728,6 +1966,11 @@
 
         // Mostrar detalles del crédito seleccionado
         async function showCreditDetails(creditId) {
+            if (!firebaseInitialized) {
+                showStatus("Sin conexión a la base de datos", "error");
+                return;
+            }
+
             const credit = pendingCredits.find(c => c.id === creditId);
             if (!credit) return;
 
@@ -1744,6 +1987,8 @@
 
         // Cargar historial de abonos
         async function loadPaymentHistory(creditId) {
+            if (!firebaseInitialized) return;
+
             try {
                 const creditDoc = await db.collection('creditos').doc(creditId).get();
                 if (creditDoc.exists) {
@@ -1776,21 +2021,36 @@
 
         // Registrar abono
         async function registerPayment() {
+            if (!firebaseInitialized) {
+                showStatus("Sin conexión a la base de datos", "error");
+                return;
+            }
+
             const creditId = selectedCreditId || document.getElementById('credit-select').value;
             const amount = parseFloat(document.getElementById('payment-amount').value);
 
-            if (!creditId || !amount || amount <= 0) {
-                showStatus("Monto inválido", "error");
+            if (!creditId) {
+                showStatus("Seleccione una venta pendiente", "error");
+                return;
+            }
+
+            if (!amount || amount <= 0) {
+                showStatus("Ingrese un monto válido", "error");
                 return;
             }
 
             const credit = pendingCredits.find(c => c.id === creditId);
-            if (!credit) return;
-
-            if (amount > credit.pendingAmount) {
-                showStatus("Monto mayor al saldo", "error");
+            if (!credit) {
+                showStatus("Venta pendiente no encontrada", "error");
                 return;
             }
+
+            if (amount > credit.pendingAmount) {
+                showStatus("El monto no puede ser mayor al saldo pendiente", "error");
+                return;
+            }
+
+            setProcessingState(true);
 
             try {
                 const newBalance = credit.pendingAmount - amount;
@@ -1807,29 +2067,46 @@
                     payments: firebase.firestore.FieldValue.arrayUnion(payment)
                 });
 
+                // Actualizar estado de la venta
                 await db.collection('ventas').doc(credit.saleId).update({
                     status: newBalance === 0 ? 'pagado' : 'parcial'
                 });
 
-                showStatus("Abono registrado", "success");
-                loadPendingCredits();
+                showStatus("Abono registrado correctamente", "success");
+                
+                // Limpiar formulario
                 document.getElementById('payment-amount').value = '';
                 document.getElementById('credit-details').style.display = 'none';
                 document.getElementById('payment-history').style.display = 'none';
 
+                // Actualizar datos
+                loadPendingCredits();
+
             } catch (error) {
                 console.error("Error registering payment:", error);
-                showStatus("Error registrar abono", "error");
+                showStatus("Error registrando abono: " + error.message, "error");
+            } finally {
+                setProcessingState(false);
             }
         }
 
         // Eliminar venta pendiente - CORREGIDO
         async function deletePendingSale(creditId) {
-            if (!confirm("¿Eliminar venta pendiente? Esta acción no se puede deshacer.")) return;
+            if (!confirm("¿Está seguro de eliminar esta venta pendiente? Esta acción no se puede deshacer y restaurará el inventario.")) return;
+
+            if (!firebaseInitialized) {
+                showStatus("Sin conexión a la base de datos", "error");
+                return;
+            }
+
+            setProcessingState(true);
 
             try {
                 const credit = pendingCredits.find(c => c.id === creditId);
-                if (!credit) return;
+                if (!credit) {
+                    showStatus("Venta pendiente no encontrada", "error");
+                    return;
+                }
 
                 const batch = db.batch();
                 
@@ -1837,7 +2114,7 @@
                 const saleDoc = await db.collection('ventas').doc(credit.saleId).get();
                 if (saleDoc.exists) {
                     const sale = saleDoc.data();
-                    // Restaurar inventario SOLO UNA VEZ
+                    // Restaurar inventario
                     sale.products.forEach(product => {
                         const productRef = db.collection('INVENTARIO').doc(product.productId);
                         batch.update(productRef, {
@@ -1861,22 +2138,34 @@
 
             } catch (error) {
                 console.error("Error deleting pending sale:", error);
-                showStatus("Error eliminar venta pendiente", "error");
+                showStatus("Error eliminando venta pendiente: " + error.message, "error");
+            } finally {
+                setProcessingState(false);
             }
         }
 
         // Eliminar venta - CORREGIDO
         async function deleteSale(saleId) {
-            if (!confirm("¿Eliminar venta? Esta acción no se puede deshacer.")) return;
+            if (!confirm("¿Está seguro de eliminar esta venta? Esta acción no se puede deshacer y restaurará el inventario.")) return;
+
+            if (!firebaseInitialized) {
+                showStatus("Sin conexión a la base de datos", "error");
+                return;
+            }
+
+            setProcessingState(true);
 
             try {
                 const saleDoc = await db.collection('ventas').doc(saleId).get();
-                if (!saleDoc.exists) return;
+                if (!saleDoc.exists) {
+                    showStatus("Venta no encontrada", "error");
+                    return;
+                }
 
                 const sale = saleDoc.data();
                 const batch = db.batch();
 
-                // Restaurar inventario SOLO UNA VEZ
+                // Restaurar inventario
                 sale.products.forEach(product => {
                     const productRef = db.collection('INVENTARIO').doc(product.productId);
                     batch.update(productRef, {
@@ -1904,7 +2193,9 @@
 
             } catch (error) {
                 console.error("Error deleting sale:", error);
-                showStatus("Error eliminar venta", "error");
+                showStatus("Error eliminando venta: " + error.message, "error");
+            } finally {
+                setProcessingState(false);
             }
         }
 
@@ -1912,7 +2203,7 @@
         function cancelPendingSale() {
             const creditId = selectedCreditId || document.getElementById('credit-select').value;
             if (!creditId) {
-                showStatus("Seleccione venta", "error");
+                showStatus("Seleccione una venta pendiente", "error");
                 return;
             }
             deletePendingSale(creditId);
@@ -1930,7 +2221,7 @@
                 }
             } catch (error) {
                 console.error("Error printing sale ticket:", error);
-                showStatus("Error imprimir", "error");
+                showStatus("Error imprimiendo ticket: " + error.message, "error");
             }
         }
 
@@ -1951,12 +2242,19 @@
                 }
             } catch (error) {
                 console.error("Error printing credit ticket:", error);
-                showStatus("Error imprimir", "error");
+                showStatus("Error imprimiendo ticket: " + error.message, "error");
             }
         }
 
         // Generar resumen diario
         async function generateDailySummary() {
+            if (!firebaseInitialized) {
+                showStatus("Sin conexión a la base de datos", "error");
+                return;
+            }
+
+            setProcessingState(true);
+
             try {
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);
@@ -1993,16 +2291,25 @@
                 document.getElementById('credit-total').textContent = `$${creditTotal.toFixed(2)}`;
                 document.getElementById('payments-total').textContent = `$${paymentsTotal.toFixed(2)}`;
 
-                showStatus("Resumen generado", "success");
+                showStatus("Resumen diario generado correctamente", "success");
 
             } catch (error) {
                 console.error("Error generating daily summary:", error);
-                showStatus("Error generar resumen", "error");
+                showStatus("Error generando resumen: " + error.message, "error");
+            } finally {
+                setProcessingState(false);
             }
         }
 
         // Generar resumen para cierre diario
         async function generateClosureSummary() {
+            if (!firebaseInitialized) {
+                showStatus("Sin conexión a la base de datos", "error");
+                return;
+            }
+
+            setProcessingState(true);
+
             try {
                 const closureDate = new Date(document.getElementById('closure-date').value);
                 closureDate.setHours(0, 0, 0, 0);
@@ -2048,16 +2355,25 @@
                 document.getElementById('closure-payments').textContent = `Abonos Recibidos: $${paymentsTotal.toFixed(2)}`;
                 document.getElementById('closure-total').textContent = `Total General: $${totalGeneral.toFixed(2)}`;
 
-                showStatus("Resumen de cierre generado", "success");
+                showStatus("Resumen de cierre generado correctamente", "success");
 
             } catch (error) {
                 console.error("Error generating closure summary:", error);
-                showStatus("Error generar resumen cierre", "error");
+                showStatus("Error generando resumen de cierre: " + error.message, "error");
+            } finally {
+                setProcessingState(false);
             }
         }
 
         // Procesar cierre diario
         async function processDailyClosure() {
+            if (!firebaseInitialized) {
+                showStatus("Sin conexión a la base de datos", "error");
+                return;
+            }
+
+            setProcessingState(true);
+
             try {
                 const closureDate = new Date(document.getElementById('closure-date').value);
                 closureDate.setHours(0, 0, 0, 0);
@@ -2114,12 +2430,16 @@
 
             } catch (error) {
                 console.error("Error processing daily closure:", error);
-                showStatus("Error procesar cierre", "error");
+                showStatus("Error procesando cierre diario: " + error.message, "error");
+            } finally {
+                setProcessingState(false);
             }
         }
 
         // Cargar historial de cierres
         async function loadClosuresHistory() {
+            if (!firebaseInitialized) return;
+
             try {
                 const snapshot = await db.collection('cierres_diarios')
                     .orderBy('date', 'desc')
@@ -2156,9 +2476,16 @@
         async function loadSalesHistory() {
             const dateInput = document.getElementById('history-date').value;
             if (!dateInput) {
-                showStatus("Seleccione fecha", "error");
+                showStatus("Seleccione una fecha", "error");
                 return;
             }
+
+            if (!firebaseInitialized) {
+                showStatus("Sin conexión a la base de datos", "error");
+                return;
+            }
+
+            setProcessingState(true);
 
             try {
                 const selectedDate = new Date(dateInput);
@@ -2174,7 +2501,7 @@
                 tbody.innerHTML = '';
 
                 if (snapshot.empty) {
-                    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; font-size: 0.8rem;">No hay ventas</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; font-size: 0.8rem;">No hay ventas en esta fecha</td></tr>';
                     return;
                 }
 
@@ -2195,7 +2522,9 @@
 
             } catch (error) {
                 console.error("Error loading sales history:", error);
-                showStatus("Error cargar historial", "error");
+                showStatus("Error cargando historial: " + error.message, "error");
+            } finally {
+                setProcessingState(false);
             }
         }
 
@@ -2208,7 +2537,7 @@
 
             setTimeout(() => {
                 statusElement.style.display = 'none';
-            }, 3000);
+            }, 5000);
         }
 
     </script>
