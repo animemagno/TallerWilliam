@@ -28,7 +28,7 @@
             border-radius: 15px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
             padding: 40px;
-            max-width: 800px;
+            max-width: 1000px;
             width: 100%;
             text-align: center;
         }
@@ -46,9 +46,8 @@
         }
         
         .cards-container {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
             gap: 25px;
             margin-top: 20px;
         }
@@ -58,11 +57,13 @@
             border-radius: 12px;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
             padding: 30px;
-            width: 220px;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
             cursor: pointer;
             text-decoration: none;
             color: inherit;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
         
         .card:hover {
@@ -86,6 +87,7 @@
             font-size: 0.95rem;
             color: #666;
             line-height: 1.5;
+            text-align: center;
         }
         
         .inventory {
@@ -100,6 +102,10 @@
             border-top: 4px solid #E91E63;
         }
         
+        .delivery {
+            border-top: 4px solid #9C27B0;
+        }
+        
         footer {
             margin-top: 40px;
             color: white;
@@ -109,8 +115,7 @@
         
         @media (max-width: 768px) {
             .cards-container {
-                flex-direction: column;
-                align-items: center;
+                grid-template-columns: 1fr;
             }
             
             .card {
@@ -143,11 +148,17 @@
                 <h3 class="card-title">Vendedores</h3>
                 <p class="card-description">Administra la información de los vendedores.</p>
             </a>
+            
+            <a href="control de entrega.html" class="card delivery">
+                <div class="card-icon">🚚</div>
+                <h3 class="card-title">Control de Ingresos</h3>
+                <p class="card-description">Registro de ingresos de mototaxis por equipo y cliente.</p>
+            </a>
         </div>
     </div>
     
     <footer>
-        <p>Sistema de Gestión &copy; 2023</p>
+        <p>Sistema de Gestión &copy; 2025</p>
     </footer>
 </body>
 </html>
