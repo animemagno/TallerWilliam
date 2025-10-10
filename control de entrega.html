@@ -464,6 +464,94 @@
             flex: 1;
             min-width: 150px;
         }
+        
+        /* NUEVOS ESTILOS PARA EL FORMULARIO SIMPLIFICADO */
+        .formulario-rapido {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: end;
+            margin-bottom: 15px;
+        }
+        
+        .campo-rapido {
+            flex: 1;
+            min-width: 120px;
+        }
+        
+        .campo-rapido.pequeno {
+            max-width: 100px;
+        }
+        
+        .campo-rapido.medio {
+            max-width: 200px;
+        }
+        
+        .campo-rapido.grande {
+            flex: 2;
+        }
+        
+        .campo-rapido.observacion {
+            min-width: 100%;
+        }
+        
+        .resumen-equipos-saldos {
+            margin-top: 15px;
+            border-top: 1px solid #ddd;
+            padding: 12px;
+        }
+        
+        .resumen-equipos-saldos h2 {
+            color: #2d3748;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+        
+        .lista-equipos-saldos {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .equipo-saldo-card {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 10px;
+            font-size: 12px;
+        }
+        
+        .equipo-saldo-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .equipo-saldo-numero {
+            font-weight: bold;
+            color: #27ae60;
+            font-size: 14px;
+        }
+        
+        .equipo-saldo-total {
+            font-weight: bold;
+            color: #e74c3c;
+        }
+        
+        .equipo-saldo-info {
+            color: #6c757d;
+            margin-bottom: 3px;
+        }
+        
+        .equipo-saldo-fecha {
+            font-size: 11px;
+            color: #3498db;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -475,10 +563,8 @@
         <div class="tabs">
             <div class="tab active" data-tab="ingresos">Registrar Ingreso</div>
             <div class="tab" data-tab="equipos">Gestionar Equipos</div>
-            <div class="tab" data-tab="clientes">Gestionar Clientes</div>
             <div class="tab" data-tab="historial">Historial de Ingresos</div>
             <div class="tab" data-tab="depositos-equipos">Depósitos por Equipo</div>
-            <div class="tab" data-tab="depositos-clientes">Depósitos por Cliente</div>
         </div>
         
         <!-- Pestaña de Ingresos -->
@@ -491,48 +577,36 @@
                 </div>
             </div>
             
-            <div class="form-group">
-                <label for="equipo-ingreso">Equipo:</label>
-                <select id="equipo-ingreso">
-                    <option value="">Seleccione un equipo</option>
-                </select>
-            </div>
-            
-            <div class="form-group">
-                <label for="cliente-ingreso">Cliente:</label>
-                <select id="cliente-ingreso">
-                    <option value="">Seleccione un cliente</option>
-                </select>
-            </div>
-            
-            <div class="form-group">
-                <label for="monto">Monto ($):</label>
-                <input type="number" id="monto" class="monto-input" placeholder="0.00" min="0" step="0.01">
-            </div>
-            
-            <div class="form-group">
-                <label for="descripcion">Descripción (opcional):</label>
-                <textarea id="descripcion" placeholder="Descripción del ingreso..."></textarea>
-            </div>
-            
-            <div>
-                <button class="btn btn-primary" id="guardar-ingreso">Registrar Ingreso</button>
-            </div>
-            
-            <div class="resumen-equipos">
-                <h2>Resumen por Equipo</h2>
-                <div class="lista-equipos" id="resumen-equipos">
-                    <!-- Aquí se mostrará el resumen por equipo -->
+            <div class="formulario-rapido">
+                <div class="campo-rapido pequeno">
+                    <label for="equipo-rapido">Equipo:</label>
+                    <input type="number" id="equipo-rapido" placeholder="Número" min="1">
                 </div>
-                <div class="total-general" id="total-general">
-                    Total General: $0.00
+                
+                <div class="campo-rapido medio">
+                    <label for="nombre-rapido">Nombre:</label>
+                    <input type="text" id="nombre-rapido" placeholder="Nombre del conductor" readonly>
+                </div>
+                
+                <div class="campo-rapido pequeno">
+                    <label for="monto-rapido">Monto ($):</label>
+                    <input type="number" id="monto-rapido" placeholder="0.00" min="0" step="0.01">
+                </div>
+                
+                <div class="campo-rapido">
+                    <button class="btn btn-primary" id="guardar-rapido" style="margin-top: 20px;">Registrar</button>
                 </div>
             </div>
             
-            <div class="resumen-clientes">
-                <h2>Resumen por Cliente</h2>
-                <div class="lista-clientes" id="resumen-clientes">
-                    <!-- Aquí se mostrará el resumen por cliente -->
+            <div class="campo-rapido observacion">
+                <label for="observacion-rapida">Observación (opcional):</label>
+                <textarea id="observacion-rapida" placeholder="Observación o comentario..."></textarea>
+            </div>
+            
+            <div class="resumen-equipos-saldos">
+                <h2>Resumen de Equipos con Saldo</h2>
+                <div class="lista-equipos-saldos" id="resumen-equipos-saldos">
+                    <!-- Aquí se mostrará el resumen de equipos con saldo -->
                 </div>
             </div>
         </div>
@@ -573,42 +647,6 @@
             </div>
         </div>
         
-        <!-- Pestaña de Clientes -->
-        <div class="tab-content" id="clientes">
-            <h2>Registrar Nuevo Cliente</h2>
-            
-            <div class="form-group">
-                <label for="nombre-cliente">Nombre del Cliente:</label>
-                <input type="text" id="nombre-cliente" placeholder="Nombre completo o razón social">
-            </div>
-            
-            <div class="form-group">
-                <label for="telefono-cliente">Teléfono:</label>
-                <input type="text" id="telefono-cliente" placeholder="Número de teléfono">
-            </div>
-            
-            <div class="form-group">
-                <label for="direccion-cliente">Dirección:</label>
-                <input type="text" id="direccion-cliente" placeholder="Dirección completa">
-            </div>
-            
-            <div class="form-group">
-                <label for="notas-cliente">Notas (opcional):</label>
-                <textarea id="notas-cliente" placeholder="Información adicional del cliente..."></textarea>
-            </div>
-            
-            <div>
-                <button class="btn btn-success" id="guardar-cliente">Guardar Cliente</button>
-            </div>
-            
-            <div class="ingresos-list">
-                <h2>Clientes Registrados</h2>
-                <div class="lista-ingresos" id="lista-clientes">
-                    <!-- Aquí se mostrarán los clientes -->
-                </div>
-            </div>
-        </div>
-        
         <!-- Pestaña de Historial -->
         <div class="tab-content" id="historial">
             <h2>Historial de Ingresos</h2>
@@ -618,13 +656,6 @@
                     <label for="filtro-equipo">Filtrar por Equipo:</label>
                     <select id="filtro-equipo">
                         <option value="">Todos los equipos</option>
-                    </select>
-                </div>
-                
-                <div class="filtro-group">
-                    <label for="filtro-cliente">Filtrar por Cliente:</label>
-                    <select id="filtro-cliente">
-                        <option value="">Todos los clientes</option>
                     </select>
                 </div>
                 
@@ -656,27 +687,6 @@
             <div class="depositos-equipo">
                 <div class="depositos-lista" id="depositos-lista-equipos">
                     <!-- Aquí se mostrarán los depósitos por equipo -->
-                </div>
-            </div>
-        </div>
-        
-        <!-- Pestaña de Depósitos por Cliente -->
-        <div class="tab-content" id="depositos-clientes">
-            <h2>Depósitos por Cliente</h2>
-            <button class="btn btn-info no-print" id="imprimir-todos-clientes">Imprimir Todos</button>
-            
-            <div class="filtros">
-                <div class="filtro-group">
-                    <label for="filtro-cliente-depositos">Filtrar por Cliente:</label>
-                    <select id="filtro-cliente-depositos">
-                        <option value="">Todos los clientes</option>
-                    </select>
-                </div>
-            </div>
-            
-            <div class="depositos-cliente">
-                <div class="depositos-lista" id="depositos-lista-clientes">
-                    <!-- Aquí se mostrarán los depósitos por cliente -->
                 </div>
             </div>
         </div>
@@ -716,19 +726,12 @@
                     
                     // Actualizar selectores si es necesario
                     if (tabId === 'ingresos') {
-                        actualizarSelectoresEquipos();
-                        actualizarSelectoresClientes();
-                        actualizarResumenEquipos();
-                        actualizarResumenClientes();
+                        actualizarResumenEquiposSaldos();
                     } else if (tabId === 'depositos-equipos') {
                         cargarDepositosPorEquipo();
                         actualizarFiltroEquipos('filtro-equipo-depositos');
-                    } else if (tabId === 'depositos-clientes') {
-                        cargarDepositosPorCliente();
-                        actualizarFiltroClientes('filtro-cliente-depositos');
                     } else if (tabId === 'historial') {
                         actualizarFiltroEquipos('filtro-equipo');
-                        actualizarFiltroClientes('filtro-cliente');
                         cargarHistorialIngresos();
                     }
                 });
@@ -759,28 +762,67 @@
             });
             
             // Elementos del DOM
-            const guardarIngresoBtn = document.getElementById('guardar-ingreso');
+            const guardarRapidoBtn = document.getElementById('guardar-rapido');
             const guardarEquipoBtn = document.getElementById('guardar-equipo');
-            const guardarClienteBtn = document.getElementById('guardar-cliente');
             const imprimirTodosEquiposBtn = document.getElementById('imprimir-todos-equipos');
-            const imprimirTodosClientesBtn = document.getElementById('imprimir-todos-clientes');
+            
+            // Elementos del formulario rápido
+            const equipoRapidoInput = document.getElementById('equipo-rapido');
+            const nombreRapidoInput = document.getElementById('nombre-rapido');
+            const montoRapidoInput = document.getElementById('monto-rapido');
+            const observacionRapidaInput = document.getElementById('observacion-rapida');
             
             // Inicializar la aplicación
             inicializarApp();
             
             // Event listeners
-            guardarIngresoBtn.addEventListener('click', guardarIngreso);
+            guardarRapidoBtn.addEventListener('click', guardarIngresoRapido);
             guardarEquipoBtn.addEventListener('click', guardarEquipo);
-            guardarClienteBtn.addEventListener('click', guardarCliente);
             imprimirTodosEquiposBtn.addEventListener('click', () => window.print());
-            imprimirTodosClientesBtn.addEventListener('click', () => window.print());
             
             // Filtros
             document.getElementById('filtro-equipo').addEventListener('change', cargarHistorialIngresos);
-            document.getElementById('filtro-cliente').addEventListener('change', cargarHistorialIngresos);
             document.getElementById('filtro-fecha').addEventListener('change', cargarHistorialIngresos);
             document.getElementById('filtro-equipo-depositos').addEventListener('change', cargarDepositosPorEquipo);
-            document.getElementById('filtro-cliente-depositos').addEventListener('change', cargarDepositosPorCliente);
+            
+            // Event listeners para navegación con ENTER
+            equipoRapidoInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    nombreRapidoInput.focus();
+                }
+            });
+            
+            nombreRapidoInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    montoRapidoInput.focus();
+                }
+            });
+            
+            montoRapidoInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    guardarIngresoRapido();
+                }
+            });
+            
+            // Event listener para autocompletar nombre cuando se ingresa número de equipo
+            equipoRapidoInput.addEventListener('change', function() {
+                const numeroEquipo = parseInt(this.value);
+                if (numeroEquipo > 0) {
+                    const equipos = JSON.parse(localStorage.getItem('equiposMototaxis')) || [];
+                    const equipo = equipos.find(e => e.numero === numeroEquipo);
+                    if (equipo) {
+                        nombreRapidoInput.value = equipo.nombre;
+                    } else {
+                        nombreRapidoInput.value = '';
+                    }
+                }
+            });
+            
+            // Enfocar en el campo de equipo al cargar la página
+            equipoRapidoInput.focus();
             
             // Función para inicializar la aplicación
             async function inicializarApp() {
@@ -788,12 +830,8 @@
                 await cargarDatosFirebase();
                 
                 // Cargar datos iniciales
-                actualizarSelectoresEquipos();
-                actualizarSelectoresClientes();
-                actualizarResumenEquipos();
-                actualizarResumenClientes();
+                actualizarResumenEquiposSaldos();
                 cargarListaEquipos();
-                cargarListaClientes();
                 cargarHistorialIngresos();
             }
             
@@ -808,14 +846,6 @@
                     });
                     localStorage.setItem('equiposMototaxis', JSON.stringify(equipos));
                     
-                    // Cargar clientes
-                    const clientesSnapshot = await db.collection('clientes').get();
-                    const clientes = [];
-                    clientesSnapshot.forEach(doc => {
-                        clientes.push({ id: doc.id, ...doc.data() });
-                    });
-                    localStorage.setItem('clientesMototaxis', JSON.stringify(clientes));
-                    
                     // Cargar ingresos
                     const ingresosSnapshot = await db.collection('ingresos').get();
                     const ingresos = [];
@@ -828,9 +858,6 @@
                     // Si no hay datos en Firebase, usar datos locales
                     if (!localStorage.getItem('equiposMototaxis')) {
                         localStorage.setItem('equiposMototaxis', JSON.stringify([]));
-                    }
-                    if (!localStorage.getItem('clientesMototaxis')) {
-                        localStorage.setItem('clientesMototaxis', JSON.stringify([]));
                     }
                     if (!localStorage.getItem('ingresosMototaxis')) {
                         localStorage.setItem('ingresosMototaxis', JSON.stringify([]));
@@ -905,7 +932,6 @@
                     localStorage.setItem('equiposMototaxis', JSON.stringify(equipos));
                     
                     // Actualizar interfaces
-                    actualizarSelectoresEquipos();
                     cargarListaEquipos();
                     
                     // Limpiar formulario
@@ -924,753 +950,427 @@
                     localStorage.setItem('equiposMototaxis', JSON.stringify(equipos));
                     
                     // Actualizar interfaces
-                    actualizarSelectoresEquipos();
                     cargarListaEquipos();
-                    
-                    // Limpiar formulario
-                    document.getElementById('numero-equipo').value = '';
-                    document.getElementById('placa').value = '';
-                    document.getElementById('nombre').value = '';
-                    document.getElementById('dui').value = '';
                 }
             }
             
-            // Función para guardar un nuevo cliente
-            async function guardarCliente() {
-                const nombre = document.getElementById('nombre-cliente').value.trim();
-                const telefono = document.getElementById('telefono-cliente').value.trim();
-                const direccion = document.getElementById('direccion-cliente').value.trim();
-                const notas = document.getElementById('notas-cliente').value.trim();
-                
-                // Validaciones mínimas - solo el nombre es obligatorio
-                if (!nombre) {
-                    alert('Por favor, ingrese el nombre del cliente.');
-                    return;
-                }
-                
-                // Obtener clientes actuales
-                const clientes = JSON.parse(localStorage.getItem('clientesMototaxis')) || [];
-                
-                // Verificar si ya existe el cliente
-                if (clientes.some(cliente => cliente.nombre.toLowerCase() === nombre.toLowerCase())) {
-                    alert('Ya existe un cliente con ese nombre.');
-                    return;
-                }
-                
-                // Crear nuevo cliente
-                const nuevoCliente = {
-                    nombre: nombre,
-                    telefono: telefono || 'No registrado',
-                    direccion: direccion || 'No registrada',
-                    notas: notas || 'Sin notas'
-                };
-                
-                // Guardar cliente en Firebase
-                const id = Date.now().toString();
-                const exito = await guardarEnFirebase('clientes', nuevoCliente, id);
-                
-                if (exito) {
-                    // Guardar cliente localmente
-                    nuevoCliente.id = id;
-                    clientes.push(nuevoCliente);
-                    localStorage.setItem('clientesMototaxis', JSON.stringify(clientes));
-                    
-                    // Actualizar interfaces
-                    actualizarSelectoresClientes();
-                    cargarListaClientes();
-                    
-                    // Limpiar formulario
-                    document.getElementById('nombre-cliente').value = '';
-                    document.getElementById('telefono-cliente').value = '';
-                    document.getElementById('direccion-cliente').value = '';
-                    document.getElementById('notas-cliente').value = '';
-                    
-                    alert('Cliente registrado correctamente.');
-                } else {
-                    alert('Error al guardar el cliente. Los datos se guardarán localmente.');
-                    
-                    // Guardar solo localmente si falla Firebase
-                    nuevoCliente.id = id;
-                    clientes.push(nuevoCliente);
-                    localStorage.setItem('clientesMototaxis', JSON.stringify(clientes));
-                    
-                    // Actualizar interfaces
-                    actualizarSelectoresClientes();
-                    cargarListaClientes();
-                    
-                    // Limpiar formulario
-                    document.getElementById('nombre-cliente').value = '';
-                    document.getElementById('telefono-cliente').value = '';
-                    document.getElementById('direccion-cliente').value = '';
-                    document.getElementById('notas-cliente').value = '';
-                }
-            }
-            
-            // Función para guardar un ingreso
-            async function guardarIngreso() {
-                const equipoId = document.getElementById('equipo-ingreso').value;
-                const clienteId = document.getElementById('cliente-ingreso').value;
-                const monto = parseFloat(document.getElementById('monto').value) || 0;
+            // Función para guardar un ingreso rápido
+            async function guardarIngresoRapido() {
                 const fecha = document.getElementById('fecha').value;
-                const descripcion = document.getElementById('descripcion').value.trim();
+                const equipo = parseInt(equipoRapidoInput.value) || 0;
+                const monto = parseFloat(montoRapidoInput.value) || 0;
+                const observacion = observacionRapidaInput.value.trim();
                 
                 // Validaciones
-                if (!equipoId) {
-                    alert('Por favor, seleccione un equipo.');
-                    return;
-                }
-                
-                if (!clienteId) {
-                    alert('Por favor, seleccione un cliente.');
-                    return;
-                }
-                
-                if (monto <= 0) {
-                    alert('Por favor, ingrese un monto válido.');
-                    return;
-                }
-                
                 if (!fecha) {
                     alert('Por favor, seleccione una fecha.');
                     return;
                 }
                 
-                // Obtener equipos y clientes para encontrar información
+                if (equipo <= 0) {
+                    alert('Por favor, ingrese un número de equipo válido.');
+                    equipoRapidoInput.focus();
+                    return;
+                }
+                
+                if (monto <= 0) {
+                    alert('Por favor, ingrese un monto válido.');
+                    montoRapidoInput.focus();
+                    return;
+                }
+                
+                // Obtener nombre del equipo
                 const equipos = JSON.parse(localStorage.getItem('equiposMototaxis')) || [];
-                const clientes = JSON.parse(localStorage.getItem('clientesMototaxis')) || [];
+                const equipoEncontrado = equipos.find(e => e.numero === equipo);
+                const nombreEquipo = equipoEncontrado ? equipoEncontrado.nombre : 'No registrado';
                 
-                const equipo = equipos.find(e => e.id === equipoId);
-                const cliente = clientes.find(c => c.id === clienteId);
-                
-                if (!equipo) {
-                    alert('Equipo no encontrado.');
-                    return;
-                }
-                
-                if (!cliente) {
-                    alert('Cliente no encontrado.');
-                    return;
-                }
-                
-                // Crear objeto ingreso
-                const ingreso = {
-                    fecha: formatearFecha(fecha), // Guardar fecha formateada
-                    fechaISO: fecha, // Guardar también en formato ISO para ordenamiento
-                    equipoId: equipoId,
-                    equipoNumero: equipo.numero,
-                    equipoNombre: equipo.nombre,
-                    clienteId: clienteId,
-                    clienteNombre: cliente.nombre,
+                // Crear nuevo ingreso
+                const nuevoIngreso = {
+                    fecha: fecha,
+                    equipo: equipo,
+                    nombreEquipo: nombreEquipo,
                     monto: monto,
-                    descripcion: descripcion || 'Sin descripción'
+                    observacion: observacion,
+                    tipo: 'cuota'
                 };
                 
-                // Guardar en Firebase
+                // Guardar ingreso en Firebase
                 const id = Date.now().toString();
-                const exito = await guardarEnFirebase('ingresos', ingreso, id);
+                const exito = await guardarEnFirebase('ingresos', nuevoIngreso, id);
                 
                 if (exito) {
-                    // Guardar en localStorage
-                    ingreso.id = id;
-                    let ingresos = JSON.parse(localStorage.getItem('ingresosMototaxis')) || [];
-                    ingresos.push(ingreso);
+                    // Guardar ingreso localmente
+                    nuevoIngreso.id = id;
+                    const ingresos = JSON.parse(localStorage.getItem('ingresosMototaxis')) || [];
+                    ingresos.push(nuevoIngreso);
                     localStorage.setItem('ingresosMototaxis', JSON.stringify(ingresos));
                     
-                    // Actualizar interfaces
-                    actualizarResumenEquipos();
-                    actualizarResumenClientes();
-                    cargarHistorialIngresos();
+                    // Limpiar formulario
+                    equipoRapidoInput.value = '';
+                    nombreRapidoInput.value = '';
+                    montoRapidoInput.value = '';
+                    observacionRapidaInput.value = '';
                     
-                    // Limpiar formulario (solo el monto y descripción, mantener fecha, equipo y cliente)
-                    document.getElementById('monto').value = '';
-                    document.getElementById('descripcion').value = '';
+                    // Enfocar en el campo de equipo
+                    equipoRapidoInput.focus();
+                    
+                    // Actualizar resumen
+                    actualizarResumenEquiposSaldos();
                     
                     alert('Ingreso registrado correctamente.');
                 } else {
                     alert('Error al guardar el ingreso. Los datos se guardarán localmente.');
                     
                     // Guardar solo localmente si falla Firebase
-                    ingreso.id = id;
-                    let ingresos = JSON.parse(localStorage.getItem('ingresosMototaxis')) || [];
-                    ingresos.push(ingreso);
+                    nuevoIngreso.id = id;
+                    const ingresos = JSON.parse(localStorage.getItem('ingresosMototaxis')) || [];
+                    ingresos.push(nuevoIngreso);
                     localStorage.setItem('ingresosMototaxis', JSON.stringify(ingresos));
                     
-                    // Actualizar interfaces
-                    actualizarResumenEquipos();
-                    actualizarResumenClientes();
-                    cargarHistorialIngresos();
+                    // Limpiar formulario
+                    equipoRapidoInput.value = '';
+                    nombreRapidoInput.value = '';
+                    montoRapidoInput.value = '';
+                    observacionRapidaInput.value = '';
                     
-                    // Limpiar formulario (solo el monto y descripción, mantener fecha, equipo y cliente)
-                    document.getElementById('monto').value = '';
-                    document.getElementById('descripcion').value = '';
+                    // Enfocar en el campo de equipo
+                    equipoRapidoInput.focus();
+                    
+                    // Actualizar resumen
+                    actualizarResumenEquiposSaldos();
                 }
             }
             
-            // Función para actualizar selectores de equipos
-            function actualizarSelectoresEquipos() {
-                const equipos = JSON.parse(localStorage.getItem('equiposMototaxis')) || [];
-                const selector = document.getElementById('equipo-ingreso');
-                
-                // Limpiar opciones (excepto la primera)
-                selector.innerHTML = '<option value="">Seleccione un equipo</option>';
-                
-                // Agregar equipos
-                equipos.forEach(equipo => {
-                    const option = document.createElement('option');
-                    option.value = equipo.id;
-                    option.textContent = `Equipo ${equipo.numero} - ${equipo.nombre}`;
-                    selector.appendChild(option);
-                });
-            }
-            
-            // Función para actualizar selectores de clientes
-            function actualizarSelectoresClientes() {
-                const clientes = JSON.parse(localStorage.getItem('clientesMototaxis')) || [];
-                const selector = document.getElementById('cliente-ingreso');
-                
-                // Limpiar opciones (excepto la primera)
-                selector.innerHTML = '<option value="">Seleccione un cliente</option>';
-                
-                // Agregar clientes
-                clientes.forEach(cliente => {
-                    const option = document.createElement('option');
-                    option.value = cliente.id;
-                    option.textContent = cliente.nombre;
-                    selector.appendChild(option);
-                });
-            }
-            
-            // Función para actualizar filtros de equipos
-            function actualizarFiltroEquipos(selectorId) {
-                const equipos = JSON.parse(localStorage.getItem('equiposMototaxis')) || [];
-                const selector = document.getElementById(selectorId);
-                
-                // Limpiar opciones (excepto la primera)
-                selector.innerHTML = '<option value="">Todos los equipos</option>';
-                
-                // Agregar equipos
-                equipos.forEach(equipo => {
-                    const option = document.createElement('option');
-                    option.value = equipo.id;
-                    option.textContent = `Equipo ${equipo.numero} - ${equipo.nombre}`;
-                    selector.appendChild(option);
-                });
-            }
-            
-            // Función para actualizar filtros de clientes
-            function actualizarFiltroClientes(selectorId) {
-                const clientes = JSON.parse(localStorage.getItem('clientesMototaxis')) || [];
-                const selector = document.getElementById(selectorId);
-                
-                // Limpiar opciones (excepto la primera)
-                selector.innerHTML = '<option value="">Todos los clientes</option>';
-                
-                // Agregar clientes
-                clientes.forEach(cliente => {
-                    const option = document.createElement('option');
-                    option.value = cliente.id;
-                    option.textContent = cliente.nombre;
-                    selector.appendChild(option);
-                });
-            }
-            
-            // Función para actualizar resumen de equipos
-            function actualizarResumenEquipos() {
-                const equipos = JSON.parse(localStorage.getItem('equiposMototaxis')) || [];
-                const ingresos = JSON.parse(localStorage.getItem('ingresosMototaxis')) || [];
-                const resumenContainer = document.getElementById('resumen-equipos');
-                const totalGeneral = document.getElementById('total-general');
-                
-                // Limpiar resumen
-                resumenContainer.innerHTML = '';
-                
-                if (equipos.length === 0) {
-                    resumenContainer.innerHTML = '<div class="empty-message">No hay equipos registrados.</div>';
-                    totalGeneral.textContent = 'Total General: $0.00';
-                    return;
-                }
-                
-                let totalGeneralMonto = 0;
-                
-                // Calcular total por equipo
-                equipos.forEach(equipo => {
-                    const ingresosEquipo = ingresos.filter(ingreso => ingreso.equipoId === equipo.id);
-                    const totalEquipo = ingresosEquipo.reduce((sum, ingreso) => sum + ingreso.monto, 0);
-                    totalGeneralMonto += totalEquipo;
-                    
-                    const equipoCard = document.createElement('div');
-                    equipoCard.className = 'equipo-card';
-                    equipoCard.innerHTML = `
-                        <div class="equipo-header">
-                            <div class="equipo-numero">Equipo ${equipo.numero}</div>
-                            <div class="equipo-total">$${totalEquipo.toFixed(2)}</div>
-                        </div>
-                        <div class="equipo-info">${equipo.nombre}</div>
-                        <div class="equipo-info">${equipo.placa}</div>
-                        <div class="equipo-info">${equipo.dui}</div>
-                    `;
-                    
-                    resumenContainer.appendChild(equipoCard);
-                });
-                
-                totalGeneral.textContent = `Total General: $${totalGeneralMonto.toFixed(2)}`;
-            }
-            
-            // Función para actualizar resumen de clientes
-            function actualizarResumenClientes() {
-                const clientes = JSON.parse(localStorage.getItem('clientesMototaxis')) || [];
-                const ingresos = JSON.parse(localStorage.getItem('ingresosMototaxis')) || [];
-                const resumenContainer = document.getElementById('resumen-clientes');
-                
-                // Limpiar resumen
-                resumenContainer.innerHTML = '';
-                
-                if (clientes.length === 0) {
-                    resumenContainer.innerHTML = '<div class="empty-message">No hay clientes registrados.</div>';
-                    return;
-                }
-                
-                // Calcular total por cliente
-                clientes.forEach(cliente => {
-                    const ingresosCliente = ingresos.filter(ingreso => ingreso.clienteId === cliente.id);
-                    const totalCliente = ingresosCliente.reduce((sum, ingreso) => sum + ingreso.monto, 0);
-                    
-                    if (totalCliente > 0) {
-                        const clienteCard = document.createElement('div');
-                        clienteCard.className = 'cliente-card';
-                        clienteCard.innerHTML = `
-                            <div class="cliente-header">
-                                <div class="cliente-nombre">${cliente.nombre}</div>
-                                <div class="cliente-total">$${totalCliente.toFixed(2)}</div>
-                            </div>
-                            <div class="cliente-info">${cliente.telefono}</div>
-                            <div class="cliente-info">${cliente.direccion}</div>
-                        `;
-                        
-                        resumenContainer.appendChild(clienteCard);
-                    }
-                });
-                
-                if (resumenContainer.children.length === 0) {
-                    resumenContainer.innerHTML = '<div class="empty-message">No hay ingresos registrados para ningún cliente.</div>';
-                }
-            }
-            
-            // Función para cargar lista de equipos
+            // Función para cargar la lista de equipos
             function cargarListaEquipos() {
+                const listaEquipos = document.getElementById('lista-equipos');
                 const equipos = JSON.parse(localStorage.getItem('equiposMototaxis')) || [];
-                const listaContainer = document.getElementById('lista-equipos');
-                
-                // Limpiar lista
-                listaContainer.innerHTML = '';
                 
                 if (equipos.length === 0) {
-                    listaContainer.innerHTML = '<div class="empty-message">No hay equipos registrados.</div>';
+                    listaEquipos.innerHTML = '<div class="empty-message">No hay equipos registrados</div>';
                     return;
                 }
                 
-                // Ordenar equipos por número
-                equipos.sort((a, b) => a.numero - b.numero);
+                listaEquipos.innerHTML = '';
                 
                 equipos.forEach(equipo => {
                     const equipoItem = document.createElement('div');
                     equipoItem.className = 'ingreso-item';
                     equipoItem.innerHTML = `
-                        <div class="ingreso-equipo">Equipo ${equipo.numero}</div>
-                        <div class="ingreso-info">${equipo.nombre} - ${equipo.placa} - ${equipo.dui}</div>
-                        <button class="delete-btn" data-id="${equipo.id}">🗑️</button>
+                        <div class="ingreso-fecha">#${equipo.numero}</div>
+                        <div class="ingreso-equipo">${equipo.placa}</div>
+                        <div class="ingreso-cliente">${equipo.nombre}</div>
+                        <div class="ingreso-info">${equipo.dui}</div>
+                        <button class="edit-btn" data-id="${equipo.id}">Editar</button>
+                        <button class="delete-btn" data-id="${equipo.id}">Eliminar</button>
                     `;
-                    
-                    listaContainer.appendChild(equipoItem);
+                    listaEquipos.appendChild(equipoItem);
                 });
                 
-                // Agregar event listeners a los botones de eliminar
-                document.querySelectorAll('.delete-btn').forEach(btn => {
+                // Agregar event listeners para botones de eliminar
+                document.querySelectorAll('#lista-equipos .delete-btn').forEach(btn => {
                     btn.addEventListener('click', function() {
                         const id = this.getAttribute('data-id');
                         eliminarEquipo(id);
                     });
                 });
-            }
-            
-            // Función para cargar lista de clientes
-            function cargarListaClientes() {
-                const clientes = JSON.parse(localStorage.getItem('clientesMototaxis')) || [];
-                const listaContainer = document.getElementById('lista-clientes');
                 
-                // Limpiar lista
-                listaContainer.innerHTML = '';
-                
-                if (clientes.length === 0) {
-                    listaContainer.innerHTML = '<div class="empty-message">No hay clientes registrados.</div>';
-                    return;
-                }
-                
-                // Ordenar clientes por nombre
-                clientes.sort((a, b) => a.nombre.localeCompare(b.nombre));
-                
-                clientes.forEach(cliente => {
-                    const clienteItem = document.createElement('div');
-                    clienteItem.className = 'ingreso-item';
-                    clienteItem.innerHTML = `
-                        <div class="ingreso-cliente">${cliente.nombre}</div>
-                        <div class="ingreso-info">${cliente.telefono} - ${cliente.direccion}</div>
-                        <button class="delete-btn" data-id="${cliente.id}">🗑️</button>
-                    `;
-                    
-                    listaContainer.appendChild(clienteItem);
-                });
-                
-                // Agregar event listeners a los botones de eliminar
-                document.querySelectorAll('.delete-btn').forEach(btn => {
+                // Agregar event listeners para botones de editar
+                document.querySelectorAll('#lista-equipos .edit-btn').forEach(btn => {
                     btn.addEventListener('click', function() {
                         const id = this.getAttribute('data-id');
-                        eliminarCliente(id);
+                        editarEquipo(id);
                     });
                 });
             }
             
-            // Función para cargar historial de ingresos
+            // Función para cargar el historial de ingresos
             function cargarHistorialIngresos() {
+                const historialIngresos = document.getElementById('historial-ingresos');
                 const ingresos = JSON.parse(localStorage.getItem('ingresosMototaxis')) || [];
-                const historialContainer = document.getElementById('historial-ingresos');
+                
+                // Aplicar filtros
+                let ingresosFiltrados = [...ingresos];
+                
                 const filtroEquipo = document.getElementById('filtro-equipo').value;
-                const filtroCliente = document.getElementById('filtro-cliente').value;
-                const filtroFecha = document.getElementById('filtro-fecha').value;
-                
-                // Limpiar historial
-                historialContainer.innerHTML = '';
-                
-                // Filtrar ingresos
-                let ingresosFiltrados = ingresos;
-                
                 if (filtroEquipo) {
-                    ingresosFiltrados = ingresosFiltrados.filter(ingreso => ingreso.equipoId === filtroEquipo);
+                    ingresosFiltrados = ingresosFiltrados.filter(ingreso => ingreso.equipo === parseInt(filtroEquipo));
                 }
                 
-                if (filtroCliente) {
-                    ingresosFiltrados = ingresosFiltrados.filter(ingreso => ingreso.clienteId === filtroCliente);
-                }
-                
+                const filtroFecha = document.getElementById('filtro-fecha').value;
                 if (filtroFecha) {
                     ingresosFiltrados = ingresosFiltrados.filter(ingreso => {
-                        const fechaIngreso = new Date(ingreso.fechaISO);
+                        const fechaIngreso = new Date(ingreso.fecha);
                         const año = fechaIngreso.getFullYear();
                         const mes = String(fechaIngreso.getMonth() + 1).padStart(2, '0');
                         return `${año}-${mes}` === filtroFecha;
                     });
                 }
                 
+                // Ordenar por fecha (más reciente primero)
+                ingresosFiltrados.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+                
                 if (ingresosFiltrados.length === 0) {
-                    historialContainer.innerHTML = '<div class="empty-message">No hay ingresos registrados con los filtros seleccionados.</div>';
+                    historialIngresos.innerHTML = '<div class="empty-message">No hay ingresos registrados</div>';
                     return;
                 }
                 
-                // Ordenar ingresos por fecha (más recientes primero)
-                ingresosFiltrados.sort((a, b) => new Date(b.fechaISO) - new Date(a.fechaISO));
+                historialIngresos.innerHTML = '';
+                
+                let totalGeneral = 0;
                 
                 ingresosFiltrados.forEach(ingreso => {
                     const ingresoItem = document.createElement('div');
                     ingresoItem.className = 'ingreso-item';
-                    ingresoItem.innerHTML = `
-                        <div class="ingreso-fecha">${ingreso.fecha}</div>
-                        <div class="ingreso-equipo">Equipo ${ingreso.equipoNumero}</div>
-                        <div class="ingreso-cliente">${ingreso.clienteNombre}</div>
-                        <div class="ingreso-monto">$${ingreso.monto.toFixed(2)}</div>
-                        <div class="ingreso-info">${ingreso.descripcion}</div>
-                        <button class="delete-btn" data-id="${ingreso.id}">🗑️</button>
-                    `;
                     
-                    historialContainer.appendChild(ingresoItem);
+                    const fechaFormateada = formatearFecha(ingreso.fecha);
+                    totalGeneral += ingreso.monto;
+                    
+                    ingresoItem.innerHTML = `
+                        <div class="ingreso-fecha">${fechaFormateada}</div>
+                        <div class="ingreso-equipo">#${ingreso.equipo}</div>
+                        <div class="ingreso-cliente">${ingreso.nombreEquipo}</div>
+                        <div class="ingreso-monto">$${ingreso.monto.toFixed(2)}</div>
+                        <div class="ingreso-info">${ingreso.observacion || ''}</div>
+                        <button class="edit-btn" data-id="${ingreso.id}">Editar</button>
+                        <button class="delete-btn" data-id="${ingreso.id}">Eliminar</button>
+                    `;
+                    historialIngresos.appendChild(ingresoItem);
                 });
                 
-                // Agregar event listeners a los botones de eliminar
-                document.querySelectorAll('.delete-btn').forEach(btn => {
+                // Agregar total general
+                const totalDiv = document.createElement('div');
+                totalDiv.className = 'total-general';
+                totalDiv.textContent = `Total General: $${totalGeneral.toFixed(2)}`;
+                historialIngresos.appendChild(totalDiv);
+                
+                // Agregar event listeners para botones de eliminar
+                document.querySelectorAll('#historial-ingresos .delete-btn').forEach(btn => {
                     btn.addEventListener('click', function() {
                         const id = this.getAttribute('data-id');
                         eliminarIngreso(id);
                     });
                 });
+                
+                // Agregar event listeners para botones de editar
+                document.querySelectorAll('#historial-ingresos .edit-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const id = this.getAttribute('data-id');
+                        editarIngreso(id);
+                    });
+                });
+            }
+            
+            // Función para actualizar el resumen de equipos con saldo
+            function actualizarResumenEquiposSaldos() {
+                const resumenEquiposSaldos = document.getElementById('resumen-equipos-saldos');
+                const equipos = JSON.parse(localStorage.getItem('equiposMototaxis')) || [];
+                const ingresos = JSON.parse(localStorage.getItem('ingresosMototaxis')) || [];
+                
+                if (equipos.length === 0) {
+                    resumenEquiposSaldos.innerHTML = '<div class="empty-message">No hay equipos registrados</div>';
+                    return;
+                }
+                
+                resumenEquiposSaldos.innerHTML = '';
+                
+                // Calcular totales por equipo
+                const equiposConSaldo = equipos.map(equipo => {
+                    const ingresosEquipo = ingresos.filter(ingreso => ingreso.equipo === equipo.numero);
+                    const total = ingresosEquipo.reduce((sum, ingreso) => sum + ingreso.monto, 0);
+                    
+                    // Obtener la última fecha de abono
+                    let ultimaFecha = null;
+                    if (ingresosEquipo.length > 0) {
+                        const fechas = ingresosEquipo.map(i => new Date(i.fecha));
+                        const fechaMasReciente = new Date(Math.max(...fechas));
+                        ultimaFecha = formatearFecha(fechaMasReciente.toISOString().split('T')[0]);
+                    }
+                    
+                    return {
+                        ...equipo,
+                        total: total,
+                        ultimaFecha: ultimaFecha
+                    };
+                }).filter(equipo => equipo.total > 0); // Solo mostrar equipos con saldo
+                
+                if (equiposConSaldo.length === 0) {
+                    resumenEquiposSaldos.innerHTML = '<div class="empty-message">No hay equipos con saldo</div>';
+                    return;
+                }
+                
+                // Ordenar por número de equipo
+                equiposConSaldo.sort((a, b) => a.numero - b.numero);
+                
+                equiposConSaldo.forEach(equipo => {
+                    const equipoCard = document.createElement('div');
+                    equipoCard.className = 'equipo-saldo-card';
+                    
+                    equipoCard.innerHTML = `
+                        <div class="equipo-saldo-header">
+                            <div class="equipo-saldo-numero">Equipo #${equipo.numero}</div>
+                            <div class="equipo-saldo-total">$${equipo.total.toFixed(2)}</div>
+                        </div>
+                        <div class="equipo-saldo-info">${equipo.nombre}</div>
+                        <div class="equipo-saldo-info">${equipo.placa}</div>
+                        ${equipo.ultimaFecha ? `<div class="equipo-saldo-fecha">Último abono: ${equipo.ultimaFecha}</div>` : ''}
+                    `;
+                    
+                    resumenEquiposSaldos.appendChild(equipoCard);
+                });
             }
             
             // Función para cargar depósitos por equipo
             function cargarDepositosPorEquipo() {
+                const depositosListaEquipos = document.getElementById('depositos-lista-equipos');
                 const equipos = JSON.parse(localStorage.getItem('equiposMototaxis')) || [];
                 const ingresos = JSON.parse(localStorage.getItem('ingresosMototaxis')) || [];
-                const depositosContainer = document.getElementById('depositos-lista-equipos');
+                
+                // Aplicar filtro
                 const filtroEquipo = document.getElementById('filtro-equipo-depositos').value;
+                let equiposFiltrados = [...equipos];
                 
-                // Limpiar contenedor
-                depositosContainer.innerHTML = '';
+                if (filtroEquipo) {
+                    equiposFiltrados = equiposFiltrados.filter(equipo => equipo.numero === parseInt(filtroEquipo));
+                }
                 
-                if (equipos.length === 0) {
-                    depositosContainer.innerHTML = '<div class="empty-message">No hay equipos registrados.</div>';
+                if (equiposFiltrados.length === 0) {
+                    depositosListaEquipos.innerHTML = '<div class="empty-message">No hay equipos registrados</div>';
                     return;
                 }
                 
-                // Ordenar equipos por número
-                equipos.sort((a, b) => a.numero - b.numero);
+                depositosListaEquipos.innerHTML = '';
                 
-                equipos.forEach(equipo => {
-                    // Aplicar filtro si está activo
-                    if (filtroEquipo && equipo.id !== filtroEquipo) {
-                        return;
-                    }
-                    
-                    const ingresosEquipo = ingresos.filter(ingreso => ingreso.equipoId === equipo.id);
+                equiposFiltrados.forEach(equipo => {
+                    const ingresosEquipo = ingresos.filter(ingreso => ingreso.equipo === equipo.numero);
                     
                     if (ingresosEquipo.length === 0) {
                         return; // No mostrar equipos sin ingresos
                     }
                     
-                    // Ordenar ingresos por fecha (más antiguos primero)
-                    ingresosEquipo.sort((a, b) => new Date(a.fechaISO) - new Date(b.fechaISO));
+                    // Ordenar ingresos por fecha (más reciente primero)
+                    ingresosEquipo.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
                     
                     const totalEquipo = ingresosEquipo.reduce((sum, ingreso) => sum + ingreso.monto, 0);
                     
-                    const equipoCard = document.createElement('div');
-                    equipoCard.className = 'deposito-equipo-card depositos-print';
-                    equipoCard.innerHTML = `
+                    const depositoCard = document.createElement('div');
+                    depositoCard.className = 'deposito-equipo-card depositos-print';
+                    
+                    let ingresosHTML = '';
+                    ingresosEquipo.forEach(ingreso => {
+                        const fechaFormateada = formatearFecha(ingreso.fecha);
+                        ingresosHTML += `
+                            <div class="deposito-item">
+                                <div class="deposito-fecha">${fechaFormateada}</div>
+                                <div class="deposito-monto">$${ingreso.monto.toFixed(2)}</div>
+                            </div>
+                        `;
+                    });
+                    
+                    depositoCard.innerHTML = `
                         <div class="deposito-equipo-header">
-                            <div class="deposito-equipo-numero">Equipo ${equipo.numero}</div>
-                            <div class="deposito-equipo-total">Total: $${totalEquipo.toFixed(2)}</div>
+                            <div class="deposito-equipo-numero">Equipo #${equipo.numero}</div>
+                            <div class="deposito-equipo-total">$${totalEquipo.toFixed(2)}</div>
                         </div>
-                        <div class="deposito-equipo-info">${equipo.nombre} - ${equipo.placa}</div>
-                        <div class="depositos-lista-equipo">
-                            ${ingresosEquipo.map(ingreso => `
-                                <div class="deposito-item">
-                                    <div class="deposito-fecha">${ingreso.fecha}</div>
-                                    <div class="deposito-monto">$${ingreso.monto.toFixed(2)}</div>
-                                </div>
-                            `).join('')}
-                        </div>
+                        <div class="deposito-equipo-info">${equipo.nombre}</div>
+                        <div class="deposito-equipo-info">${equipo.placa}</div>
+                        ${ingresosHTML}
                         <div class="deposito-total">Total: $${totalEquipo.toFixed(2)}</div>
-                        <button class="btn imprimir-btn no-print" onclick="imprimirEquipo(${equipo.numero})">Imprimir Equipo ${equipo.numero}</button>
                     `;
                     
-                    depositosContainer.appendChild(equipoCard);
+                    depositosListaEquipos.appendChild(depositoCard);
                 });
-                
-                if (depositosContainer.children.length === 0) {
-                    depositosContainer.innerHTML = '<div class="empty-message">No hay ingresos registrados para ningún equipo.</div>';
-                }
             }
             
-            // Función para cargar depósitos por cliente
-            function cargarDepositosPorCliente() {
-                const clientes = JSON.parse(localStorage.getItem('clientesMototaxis')) || [];
-                const ingresos = JSON.parse(localStorage.getItem('ingresosMototaxis')) || [];
-                const depositosContainer = document.getElementById('depositos-lista-clientes');
-                const filtroCliente = document.getElementById('filtro-cliente-depositos').value;
+            // Función para actualizar el filtro de equipos
+            function actualizarFiltroEquipos(selectorId) {
+                const filtroEquipo = document.getElementById(selectorId);
+                const equipos = JSON.parse(localStorage.getItem('equiposMototaxis')) || [];
                 
-                // Limpiar contenedor
-                depositosContainer.innerHTML = '';
-                
-                if (clientes.length === 0) {
-                    depositosContainer.innerHTML = '<div class="empty-message">No hay clientes registrados.</div>';
-                    return;
+                // Limpiar opciones actuales (excepto la primera)
+                while (filtroEquipo.options.length > 1) {
+                    filtroEquipo.remove(1);
                 }
                 
-                // Ordenar clientes por nombre
-                clientes.sort((a, b) => a.nombre.localeCompare(b.nombre));
-                
-                clientes.forEach(cliente => {
-                    // Aplicar filtro si está activo
-                    if (filtroCliente && cliente.id !== filtroCliente) {
-                        return;
-                    }
-                    
-                    const ingresosCliente = ingresos.filter(ingreso => ingreso.clienteId === cliente.id);
-                    
-                    if (ingresosCliente.length === 0) {
-                        return; // No mostrar clientes sin ingresos
-                    }
-                    
-                    // Ordenar ingresos por fecha (más antiguos primero)
-                    ingresosCliente.sort((a, b) => new Date(a.fechaISO) - new Date(b.fechaISO));
-                    
-                    const totalCliente = ingresosCliente.reduce((sum, ingreso) => sum + ingreso.monto, 0);
-                    
-                    const clienteCard = document.createElement('div');
-                    clienteCard.className = 'deposito-cliente-card depositos-print';
-                    clienteCard.innerHTML = `
-                        <div class="deposito-cliente-header">
-                            <div class="deposito-cliente-nombre">${cliente.nombre}</div>
-                            <div class="deposito-cliente-total">Total: $${totalCliente.toFixed(2)}</div>
-                        </div>
-                        <div class="deposito-cliente-info">${cliente.telefono} - ${cliente.direccion}</div>
-                        <div class="depositos-lista-cliente">
-                            ${ingresosCliente.map(ingreso => `
-                                <div class="deposito-item">
-                                    <div class="deposito-fecha">${ingreso.fecha}</div>
-                                    <div class="deposito-monto">$${ingreso.monto.toFixed(2)}</div>
-                                </div>
-                            `).join('')}
-                        </div>
-                        <div class="deposito-total">Total: $${totalCliente.toFixed(2)}</div>
-                        <button class="btn imprimir-btn no-print" onclick="imprimirCliente('${cliente.nombre}')">Imprimir ${cliente.nombre}</button>
-                    `;
-                    
-                    depositosContainer.appendChild(clienteCard);
+                // Agregar opciones de equipos
+                equipos.forEach(equipo => {
+                    const option = document.createElement('option');
+                    option.value = equipo.numero;
+                    option.textContent = `Equipo ${equipo.numero} - ${equipo.nombre}`;
+                    filtroEquipo.appendChild(option);
                 });
-                
-                if (depositosContainer.children.length === 0) {
-                    depositosContainer.innerHTML = '<div class="empty-message">No hay ingresos registrados para ningún cliente.</div>';
-                }
             }
             
-            // Función para imprimir un equipo específico
-            window.imprimirEquipo = function(numeroEquipo) {
-                const equipoCard = document.querySelector(`.deposito-equipo-card .deposito-equipo-numero`).closest('.deposito-equipo-card');
-                const contenido = equipoCard.outerHTML;
-                
-                const ventanaImpresion = window.open('', '_blank');
-                ventanaImpresion.document.write(`
-                    <html>
-                        <head>
-                            <title>Depósitos Equipo ${numeroEquipo}</title>
-                            <style>
-                                body { font-family: Arial, sans-serif; margin: 20px; }
-                                .deposito-equipo-card { border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; }
-                                .deposito-equipo-header { display: flex; justify-content: space-between; margin-bottom: 10px; }
-                                .deposito-equipo-numero { font-weight: bold; font-size: 18px; }
-                                .deposito-equipo-total { font-weight: bold; color: #e74c3c; }
-                                .deposito-item { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #ccc; }
-                                .deposito-total { margin-top: 10px; padding-top: 10px; border-top: 2px solid #27ae60; font-weight: bold; text-align: right; }
-                            </style>
-                        </head>
-                        <body>
-                            ${contenido}
-                        </body>
-                    </html>
-                `);
-                ventanaImpresion.document.close();
-                ventanaImpresion.print();
-            }
-            
-            // Función para imprimir un cliente específico
-            window.imprimirCliente = function(nombreCliente) {
-                const clienteCard = document.querySelector(`.deposito-cliente-card .deposito-cliente-nombre`).closest('.deposito-cliente-card');
-                const contenido = clienteCard.outerHTML;
-                
-                const ventanaImpresion = window.open('', '_blank');
-                ventanaImpresion.document.write(`
-                    <html>
-                        <head>
-                            <title>Depósitos ${nombreCliente}</title>
-                            <style>
-                                body { font-family: Arial, sans-serif; margin: 20px; }
-                                .deposito-cliente-card { border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; }
-                                .deposito-cliente-header { display: flex; justify-content: space-between; margin-bottom: 10px; }
-                                .deposito-cliente-nombre { font-weight: bold; font-size: 18px; }
-                                .deposito-cliente-total { font-weight: bold; color: #e74c3c; }
-                                .deposito-item { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #ccc; }
-                                .deposito-total { margin-top: 10px; padding-top: 10px; border-top: 2px solid #27ae60; font-weight: bold; text-align: right; }
-                            </style>
-                        </head>
-                        <body>
-                            ${contenido}
-                        </body>
-                    </html>
-                `);
-                ventanaImpresion.document.close();
-                ventanaImpresion.print();
-            }
-            
-            // Función para eliminar un equipo
+            // Funciones para eliminar registros
             async function eliminarEquipo(id) {
-                if (!confirm('¿Está seguro de que desea eliminar este equipo? También se eliminarán todos sus ingresos.')) {
-                    return;
+                if (confirm('¿Está seguro de que desea eliminar este equipo?')) {
+                    // Eliminar de Firebase
+                    const exito = await eliminarDeFirebase('equipos', id);
+                    
+                    if (exito) {
+                        // Eliminar localmente
+                        const equipos = JSON.parse(localStorage.getItem('equiposMototaxis')) || [];
+                        const nuevosEquipos = equipos.filter(equipo => equipo.id !== id);
+                        localStorage.setItem('equiposMototaxis', JSON.stringify(nuevosEquipos));
+                        
+                        // Actualizar interfaces
+                        cargarListaEquipos();
+                        actualizarResumenEquiposSaldos();
+                        
+                        alert('Equipo eliminado correctamente.');
+                    } else {
+                        alert('Error al eliminar el equipo de la base de datos. Se eliminará solo localmente.');
+                        
+                        // Eliminar solo localmente
+                        const equipos = JSON.parse(localStorage.getItem('equiposMototaxis')) || [];
+                        const nuevosEquipos = equipos.filter(equipo => equipo.id !== id);
+                        localStorage.setItem('equiposMototaxis', JSON.stringify(nuevosEquipos));
+                        
+                        // Actualizar interfaces
+                        cargarListaEquipos();
+                        actualizarResumenEquiposSaldos();
+                    }
                 }
-                
-                // Obtener equipos e ingresos
-                let equipos = JSON.parse(localStorage.getItem('equiposMototaxis')) || [];
-                let ingresos = JSON.parse(localStorage.getItem('ingresosMototaxis')) || [];
-                
-                // Eliminar equipo de Firebase
-                const exitoFirebaseEquipo = await eliminarDeFirebase('equipos', id);
-                
-                // Eliminar ingresos del equipo de Firebase
-                const ingresosAEliminar = ingresos.filter(ingreso => ingreso.equipoId === id);
-                for (const ingreso of ingresosAEliminar) {
-                    await eliminarDeFirebase('ingresos', ingreso.id);
-                }
-                
-                // Eliminar equipo localmente
-                equipos = equipos.filter(equipo => equipo.id !== id);
-                localStorage.setItem('equiposMototaxis', JSON.stringify(equipos));
-                
-                // Eliminar ingresos del equipo localmente
-                ingresos = ingresos.filter(ingreso => ingreso.equipoId !== id);
-                localStorage.setItem('ingresosMototaxis', JSON.stringify(ingresos));
-                
-                // Actualizar interfaces
-                actualizarSelectoresEquipos();
-                actualizarResumenEquipos();
-                actualizarResumenClientes();
-                cargarListaEquipos();
-                cargarHistorialIngresos();
-                
-                alert('Equipo eliminado correctamente.');
             }
             
-            // Función para eliminar un cliente
-            async function eliminarCliente(id) {
-                if (!confirm('¿Está seguro de que desea eliminar este cliente? También se eliminarán todos sus ingresos.')) {
-                    return;
-                }
-                
-                // Obtener clientes e ingresos
-                let clientes = JSON.parse(localStorage.getItem('clientesMototaxis')) || [];
-                let ingresos = JSON.parse(localStorage.getItem('ingresosMototaxis')) || [];
-                
-                // Eliminar cliente de Firebase
-                const exitoFirebaseCliente = await eliminarDeFirebase('clientes', id);
-                
-                // Eliminar ingresos del cliente de Firebase
-                const ingresosAEliminar = ingresos.filter(ingreso => ingreso.clienteId === id);
-                for (const ingreso of ingresosAEliminar) {
-                    await eliminarDeFirebase('ingresos', ingreso.id);
-                }
-                
-                // Eliminar cliente localmente
-                clientes = clientes.filter(cliente => cliente.id !== id);
-                localStorage.setItem('clientesMototaxis', JSON.stringify(clientes));
-                
-                // Eliminar ingresos del cliente localmente
-                ingresos = ingresos.filter(ingreso => ingreso.clienteId !== id);
-                localStorage.setItem('ingresosMototaxis', JSON.stringify(ingresos));
-                
-                // Actualizar interfaces
-                actualizarSelectoresClientes();
-                actualizarResumenEquipos();
-                actualizarResumenClientes();
-                cargarListaClientes();
-                cargarHistorialIngresos();
-                
-                alert('Cliente eliminado correctamente.');
-            }
-            
-            // Función para eliminar un ingreso
             async function eliminarIngreso(id) {
-                if (!confirm('¿Está seguro de que desea eliminar este ingreso?')) {
-                    return;
+                if (confirm('¿Está seguro de que desea eliminar este ingreso?')) {
+                    // Eliminar de Firebase
+                    const exito = await eliminarDeFirebase('ingresos', id);
+                    
+                    if (exito) {
+                        // Eliminar localmente
+                        const ingresos = JSON.parse(localStorage.getItem('ingresosMototaxis')) || [];
+                        const nuevosIngresos = ingresos.filter(ingreso => ingreso.id !== id);
+                        localStorage.setItem('ingresosMototaxis', JSON.stringify(nuevosIngresos));
+                        
+                        // Actualizar interfaces
+                        cargarHistorialIngresos();
+                        actualizarResumenEquiposSaldos();
+                        
+                        alert('Ingreso eliminado correctamente.');
+                    } else {
+                        alert('Error al eliminar el ingreso de la base de datos. Se eliminará solo localmente.');
+                        
+                        // Eliminar solo localmente
+                        const ingresos = JSON.parse(localStorage.getItem('ingresosMototaxis')) || [];
+                        const nuevosIngresos = ingresos.filter(ingreso => ingreso.id !== id);
+                        localStorage.setItem('ingresosMototaxis', JSON.stringify(nuevosIngresos));
+                        
+                        // Actualizar interfaces
+                        cargarHistorialIngresos();
+                        actualizarResumenEquiposSaldos();
+                    }
                 }
-                
-                // Eliminar de Firebase
-                const exito = await eliminarDeFirebase('ingresos', id);
-                
-                // Eliminar localmente
-                let ingresos = JSON.parse(localStorage.getItem('ingresosMototaxis')) || [];
-                ingresos = ingresos.filter(ingreso => ingreso.id !== id);
-                localStorage.setItem('ingresosMototaxis', JSON.stringify(ingresos));
-                
-                // Actualizar interfaces
-                actualizarResumenEquipos();
-                actualizarResumenClientes();
-                cargarHistorialIngresos();
-                
-                alert('Ingreso eliminado correctamente.');
+            }
+            
+            // Funciones para editar registros (simplificadas)
+            function editarEquipo(id) {
+                alert('Funcionalidad de edición en desarrollo. Por ahora, elimine y vuelva a crear el equipo.');
+            }
+            
+            function editarIngreso(id) {
+                alert('Funcionalidad de edición en desarrollo. Por ahora, elimine y vuelva a crear el ingreso.');
             }
         });
     </script>
