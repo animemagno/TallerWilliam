@@ -28,7 +28,7 @@
             border-radius: 15px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
             padding: 40px;
-            max-width: 1000px;
+            max-width: 900px;
             width: 100%;
             text-align: center;
         }
@@ -46,8 +46,9 @@
         }
         
         .cards-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
             gap: 25px;
             margin-top: 20px;
         }
@@ -57,13 +58,11 @@
             border-radius: 12px;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
             padding: 30px;
+            width: 200px;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
             cursor: pointer;
             text-decoration: none;
             color: inherit;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
         }
         
         .card:hover {
@@ -87,7 +86,6 @@
             font-size: 0.95rem;
             color: #666;
             line-height: 1.5;
-            text-align: center;
         }
         
         .inventory {
@@ -98,12 +96,12 @@
             border-top: 4px solid #FF9800;
         }
         
-        .sellers {
-            border-top: 4px solid #E91E63;
+        .orders {
+            border-top: 4px solid #9C27B0;
         }
         
-        .delivery {
-            border-top: 4px solid #9C27B0;
+        .income {
+            border-top: 4px solid #E91E63;
         }
         
         footer {
@@ -115,7 +113,8 @@
         
         @media (max-width: 768px) {
             .cards-container {
-                grid-template-columns: 1fr;
+                flex-direction: column;
+                align-items: center;
             }
             
             .card {
@@ -143,22 +142,22 @@
                 <p class="card-description">Consulta y administra las ventas realizadas.</p>
             </a>
             
-            <a href="vendedores.html" class="card sellers">
-                <div class="card-icon">👥</div>
-                <h3 class="card-title">Vendedores</h3>
-                <p class="card-description">Administra la información de los vendedores.</p>
+            <a href="ordenes.html" class="card orders">
+                <div class="card-icon">🔧</div>
+                <h3 class="card-title">Órdenes</h3>
+                <p class="card-description">Crea y gestiona órdenes de trabajo para equipos.</p>
             </a>
             
-            <a href="control de entrega.html" class="card delivery">
-                <div class="card-icon">🚚</div>
-                <h3 class="card-title">Control de Ingresos</h3>
-                <p class="card-description">Registro de ingresos de mototaxis por equipo y cliente.</p>
+            <a href="control de entrega.html" class="card income">
+                <div class="card-icon">🏍️</div>
+                <h3 class="card-title">Ingresos</h3>
+                <p class="card-description">Control de ingresos de mototaxis y clientes.</p>
             </a>
         </div>
     </div>
     
     <footer>
-        <p>Sistema de Gestión &copy; 2025</p>
+        <p>Sistema de Gestión &copy; 2023</p>
     </footer>
 </body>
 </html>
