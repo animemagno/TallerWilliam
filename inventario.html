@@ -46,7 +46,7 @@
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
             padding: 20px;
         }
@@ -193,7 +193,7 @@
             padding: 12px 15px;
             text-align: left;
             border-bottom: 1px solid var(--border-color);
-            font-size: 0.9em; /* 10% más pequeño */
+            font-size: 0.9em;
         }
 
         td {
@@ -206,8 +206,33 @@
             text-align: center;
         }
 
+        .editable-cell {
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 1px dashed #ccc;
+            border-radius: 3px;
+            padding: 5px;
+            min-width: 80px;
+        }
+
+        .editable-cell input {
+            width: 100%;
+            border: none;
+            background: transparent;
+            color: var(--text-color);
+            text-align: center;
+            font-size: 0.9em;
+        }
+
         tbody tr:hover {
             background-color: var(--hover-color);
+        }
+
+        .low-stock-row {
+            background-color: rgba(220, 53, 69, 0.15) !important;
+        }
+
+        .low-stock-row:hover {
+            background-color: rgba(220, 53, 69, 0.25) !important;
         }
 
         .actions {
@@ -233,6 +258,11 @@
 
         .delete-btn {
             background-color: var(--danger-color);
+            color: white;
+        }
+
+        .credit-fiscal-btn {
+            background-color: var(--info-color);
             color: white;
         }
 
@@ -283,9 +313,11 @@
             padding: 30px;
             border-radius: 10px;
             width: 90%;
-            max-width: 500px;
+            max-width: 700px;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
             color: var(--text-color);
+            max-height: 90vh;
+            overflow-y: auto;
         }
 
         .modal h2 {
@@ -303,7 +335,7 @@
             font-weight: 600;
         }
 
-        .form-group input {
+        .form-group input, .form-group select {
             width: 100%;
             padding: 10px;
             border: 1px solid var(--border-color);
@@ -311,6 +343,15 @@
             font-size: 1rem;
             background-color: var(--card-bg);
             color: var(--text-color);
+        }
+
+        .form-row {
+            display: flex;
+            gap: 15px;
+        }
+
+        .form-row .form-group {
+            flex: 1;
         }
 
         .form-actions {
@@ -348,6 +389,94 @@
             color: #2a5298;
         }
 
+        .order-form {
+            margin-bottom: 20px;
+        }
+
+        .order-input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .order-input-group input {
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            background-color: var(--card-bg);
+            color: var(--text-color);
+        }
+
+        .order-input-group input:focus {
+            outline: 2px solid #2a5298;
+        }
+
+        .code-input {
+            flex: 2;
+        }
+
+        .quantity-input {
+            flex: 1;
+        }
+
+        .price-input {
+            flex: 1;
+        }
+
+        .current-product {
+            background-color: rgba(42, 82, 152, 0.1);
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            border-left: 4px solid #2a5298;
+        }
+
+        .order-items-container {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 15px;
+        }
+
+        .order-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .order-item:last-child {
+            border-bottom: none;
+        }
+
+        .order-item-info {
+            flex: 1;
+        }
+
+        .order-item-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .remove-order-item {
+            background-color: var(--danger-color);
+            color: white;
+            border: none;
+            border-radius: 3px;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+
+        .order-summary {
+            background-color: rgba(40, 167, 69, 0.1);
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid var(--success-color);
+        }
+
         footer {
             text-align: center;
             margin-top: 30px;
@@ -373,6 +502,15 @@
             th, td {
                 padding: 8px 10px;
             }
+            
+            .form-row {
+                flex-direction: column;
+                gap: 0;
+            }
+            
+            .order-input-group {
+                flex-direction: column;
+            }
         }
     </style>
 </head>
@@ -396,6 +534,7 @@
                 <input type="text" id="search-input" placeholder="Buscar producto...">
             </div>
             <button class="btn btn-primary" id="add-product-btn">Agregar Producto</button>
+            <button class="btn btn-success" id="order-btn">Ingresar Pedido</button>
         </div>
 
         <div class="inventory-table">
@@ -404,15 +543,17 @@
                     <tr>
                         <th>Código</th>
                         <th>Descripción</th>
+                        <th>Marca</th>
                         <th>Stock</th>
                         <th>Precio Unidad</th>
                         <th>Precio Venta</th>
+                        <th>Crédito Fiscal</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
                 <tbody id="inventory-body">
                     <tr>
-                        <td colspan="6" class="loading">Cargando inventario...</td>
+                        <td colspan="8" class="loading">Cargando inventario...</td>
                     </tr>
                 </tbody>
             </table>
@@ -428,31 +569,91 @@
         <div class="modal-content">
             <h2 id="modal-title">Agregar Producto</h2>
             <form id="product-form">
-                <div class="form-group">
-                    <label for="product-code">Código</label>
-                    <input type="text" id="product-code" required>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="product-code">Código</label>
+                        <input type="text" id="product-code" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="product-brand">Marca</label>
+                        <input type="text" id="product-brand">
+                    </div>
                 </div>
                 <div class="form-group">
                     <label for="product-description">Descripción</label>
                     <input type="text" id="product-description" required>
                 </div>
-                <div class="form-group">
-                    <label for="product-quantity">Stock</label>
-                    <input type="number" id="product-quantity" min="0" required>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="product-quantity">Stock</label>
+                        <input type="number" id="product-quantity" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="product-min-stock">Alerta Stock Mínimo</label>
+                        <input type="number" id="product-min-stock" min="0" value="10">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="product-cost">Precio Unidad</label>
+                        <input type="number" id="product-cost" min="0" step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label for="product-price">Precio Venta</label>
+                        <input type="number" id="product-price" min="0" step="0.01">
+                    </div>
                 </div>
                 <div class="form-group">
-                    <label for="product-cost">Precio Unidad</label>
-                    <input type="number" id="product-cost" min="0" step="0.01">
-                </div>
-                <div class="form-group">
-                    <label for="product-price">Precio Venta</label>
-                    <input type="number" id="product-price" min="0" step="0.01">
+                    <label for="product-credit-fiscal">Crédito Fiscal</label>
+                    <select id="product-credit-fiscal">
+                        <option value="false">No</option>
+                        <option value="true">Sí</option>
+                    </select>
                 </div>
                 <div class="form-actions">
                     <button type="button" class="btn btn-danger" id="cancel-btn">Cancelar</button>
                     <button type="submit" class="btn btn-primary" id="save-btn">Guardar</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Modal para ingresar pedido -->
+    <div class="modal" id="order-modal">
+        <div class="modal-content">
+            <h2>Ingresar Pedido</h2>
+            
+            <div class="order-form">
+                <div class="order-input-group">
+                    <input type="text" id="order-code" class="code-input" placeholder="Código (escanea código de barras)" autofocus>
+                    <input type="number" id="order-quantity" class="quantity-input" placeholder="Cantidad" min="1" disabled>
+                    <input type="number" id="order-price" class="price-input" placeholder="Precio Unitario" min="0" step="0.01" disabled>
+                </div>
+                
+                <div id="current-product-info" class="current-product" style="display: none;">
+                    <strong>Producto encontrado:</strong>
+                    <span id="product-found-info"></span>
+                </div>
+            </div>
+
+            <h3>PEDIDO INGRESANDO</h3>
+            <div class="order-items-container" id="order-items-container">
+                <div style="text-align: center; padding: 20px; color: #666;">
+                    No hay productos en el pedido
+                </div>
+            </div>
+
+            <div class="order-summary">
+                <strong>Resumen del Pedido:</strong>
+                <div>Total de productos: <span id="order-total-items">0</span></div>
+                <div>Total de unidades: <span id="order-total-quantity">0</span></div>
+                <div>Inversión total: $<span id="order-total-cost">0.00</span></div>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="btn btn-danger" id="cancel-order-btn">Cancelar</button>
+                <button type="button" class="btn btn-success" id="save-order-btn">Guardar Pedido</button>
+            </div>
         </div>
     </div>
 
@@ -474,20 +675,34 @@
         // Referencias a elementos del DOM
         const inventoryBody = document.getElementById('inventory-body');
         const productModal = document.getElementById('product-modal');
+        const orderModal = document.getElementById('order-modal');
         const productForm = document.getElementById('product-form');
         const modalTitle = document.getElementById('modal-title');
         const searchInput = document.getElementById('search-input');
         const addProductBtn = document.getElementById('add-product-btn');
+        const orderBtn = document.getElementById('order-btn');
         const cancelBtn = document.getElementById('cancel-btn');
+        const cancelOrderBtn = document.getElementById('cancel-order-btn');
+        const saveOrderBtn = document.getElementById('save-order-btn');
         const floatingNotification = document.getElementById('floating-notification');
         const totalProductsSpan = document.getElementById('total-products');
         const currentDateSpan = document.getElementById('current-date');
         const themeToggle = document.getElementById('theme-toggle');
+        const orderItemsContainer = document.getElementById('order-items-container');
+        
+        // Elementos del formulario de pedido
+        const orderCodeInput = document.getElementById('order-code');
+        const orderQuantityInput = document.getElementById('order-quantity');
+        const orderPriceInput = document.getElementById('order-price');
+        const currentProductInfo = document.getElementById('current-product-info');
+        const productFoundInfo = document.getElementById('product-found-info');
 
         // Variables globales
         let currentEditingId = null;
         let inventoryData = [];
         let isDarkMode = false;
+        let currentOrderItems = [];
+        let currentProduct = null;
 
         // Mostrar fecha actual
         const now = new Date();
@@ -498,10 +713,28 @@
 
         // Event Listeners
         addProductBtn.addEventListener('click', () => openModal());
+        orderBtn.addEventListener('click', () => openOrderModal());
         cancelBtn.addEventListener('click', () => closeModal());
+        cancelOrderBtn.addEventListener('click', () => closeOrderModal());
+        saveOrderBtn.addEventListener('click', saveOrder);
         productForm.addEventListener('submit', saveProduct);
         searchInput.addEventListener('input', filterInventory);
         themeToggle.addEventListener('click', toggleTheme);
+
+        // Event Listeners para el formulario de pedido
+        orderCodeInput.addEventListener('input', handleCodeInput);
+        orderQuantityInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                orderPriceInput.focus();
+            }
+        });
+        orderPriceInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addToOrder();
+            }
+        });
 
         // Alternar modo oscuro/claro
         function toggleTheme() {
@@ -520,7 +753,7 @@
 
         // Cargar inventario desde Firebase
         function loadInventory() {
-            inventoryBody.innerHTML = '<tr><td colspan="6" class="loading">Cargando inventario...</td></tr>';
+            inventoryBody.innerHTML = '<tr><td colspan="8" class="loading">Cargando inventario...</td></tr>';
             
             db.collection('INVENTARIO').get()
                 .then((querySnapshot) => {
@@ -528,7 +761,7 @@
                     inventoryBody.innerHTML = '';
                     
                     if (querySnapshot.empty) {
-                        inventoryBody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No hay productos en el inventario</td></tr>';
+                        inventoryBody.innerHTML = '<tr><td colspan="8" style="text-align: center;">No hay productos en el inventario</td></tr>';
                         updateTotalProducts();
                         return;
                     }
@@ -553,16 +786,25 @@
             inventoryBody.innerHTML = '';
             
             if (data.length === 0) {
-                inventoryBody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No hay productos en el inventario</td></tr>';
+                inventoryBody.innerHTML = '<tr><td colspan="8" style="text-align: center;">No hay productos en el inventario</td></tr>';
                 return;
             }
             
             data.forEach(product => {
                 const row = document.createElement('tr');
                 
+                // Determinar si es stock bajo (usando minStock si existe, sino 10 por defecto)
+                const minStock = product.minStock || 10;
+                const isLowStock = product.cantidad <= minStock;
+                
+                if (isLowStock) {
+                    row.classList.add('low-stock-row');
+                }
+                
                 row.innerHTML = `
                     <td>${product.codigo || 'N/A'}</td>
                     <td>${product.descripcion}</td>
+                    <td>${product.marca || 'N/A'}</td>
                     <td class="number-cell">
                         <div class="stock-controls">
                             <button class="stock-btn decrease-btn" data-id="${product.id}">-</button>
@@ -570,8 +812,27 @@
                             <button class="stock-btn increase-btn" data-id="${product.id}">+</button>
                         </div>
                     </td>
-                    <td class="number-cell">${product.costo ? '$' + product.costo.toFixed(2) : 'N/A'}</td>
-                    <td class="number-cell">${product.precio ? '$' + product.precio.toFixed(2) : 'N/A'}</td>
+                    <td class="number-cell">
+                        <div class="editable-cell">
+                            <input type="number" value="${product.costo || 0}" step="0.01" 
+                                   data-id="${product.id}" data-field="costo" 
+                                   onchange="updateField('${product.id}', 'costo', this.value)">
+                        </div>
+                    </td>
+                    <td class="number-cell">
+                        <div class="editable-cell">
+                            <input type="number" value="${product.precio || 0}" step="0.01" 
+                                   data-id="${product.id}" data-field="precio" 
+                                   onchange="updateField('${product.id}', 'precio', this.value)">
+                        </div>
+                    </td>
+                    <td class="number-cell">
+                        <button class="credit-fiscal-btn" data-id="${product.id}" 
+                                onclick="toggleCreditFiscal('${product.id}')"
+                                title="${product.creditoFiscal ? 'Con Crédito Fiscal' : 'Sin Crédito Fiscal'}">
+                            <i class="fas ${product.creditoFiscal ? 'fa-check' : 'fa-times'}"></i>
+                        </button>
+                    </td>
                     <td class="actions">
                         <button class="edit-btn" data-id="${product.id}" title="Editar">
                             <i class="fas fa-edit"></i>
@@ -616,7 +877,37 @@
             });
         }
 
-        // Actualizar stock
+        // Actualizar campo individual sin recargar toda la tabla
+        function updateField(productId, field, value) {
+            const updateData = {};
+            updateData[field] = field === 'cantidad' ? parseInt(value) : parseFloat(value);
+            
+            db.collection('INVENTARIO').doc(productId).update(updateData)
+                .then(() => {
+                    // Actualizar solo la celda modificada en lugar de recargar toda la tabla
+                    const input = document.querySelector(`input[data-id="${productId}"][data-field="${field}"]`);
+                    if (input) {
+                        input.style.backgroundColor = 'var(--success-color)';
+                        input.style.color = 'white';
+                        setTimeout(() => {
+                            input.style.backgroundColor = '';
+                            input.style.color = '';
+                        }, 1000);
+                    }
+                    
+                    // Actualizar el dato en inventoryData
+                    const productIndex = inventoryData.findIndex(p => p.id === productId);
+                    if (productIndex !== -1) {
+                        inventoryData[productIndex][field] = updateData[field];
+                    }
+                })
+                .catch((error) => {
+                    console.error(`Error al actualizar ${field}: `, error);
+                    showFloatingNotification(`Error al actualizar ${field}`, "error");
+                });
+        }
+
+        // Actualizar stock sin parpadeo
         function updateStock(productId, change) {
             const product = inventoryData.find(p => p.id === productId);
             if (!product) return;
@@ -627,12 +918,78 @@
                 cantidad: newQuantity
             })
             .then(() => {
+                // Actualizar solo la celda de stock en lugar de recargar toda la tabla
+                const stockSpan = document.querySelector(`.stock-controls [data-id="${productId}"]`).parentElement.querySelector('span');
+                if (stockSpan) {
+                    stockSpan.textContent = newQuantity;
+                    
+                    // Actualizar clases de stock bajo
+                    const row = stockSpan.closest('tr');
+                    const minStock = product.minStock || 10;
+                    row.classList.remove('low-stock-row');
+                    if (newQuantity <= minStock) {
+                        row.classList.add('low-stock-row');
+                    }
+                    
+                    // Efecto visual
+                    stockSpan.style.color = 'var(--success-color)';
+                    stockSpan.style.fontWeight = 'bold';
+                    setTimeout(() => {
+                        stockSpan.style.color = '';
+                        stockSpan.style.fontWeight = '';
+                    }, 1000);
+                }
+                
+                // Actualizar el dato en inventoryData
+                const productIndex = inventoryData.findIndex(p => p.id === productId);
+                if (productIndex !== -1) {
+                    inventoryData[productIndex].cantidad = newQuantity;
+                }
+                
                 showFloatingNotification("Stock actualizado correctamente", "success");
-                loadInventory();
             })
             .catch((error) => {
                 console.error("Error al actualizar stock: ", error);
                 showFloatingNotification("Error al actualizar stock", "error");
+            });
+        }
+
+        // Alternar crédito fiscal
+        function toggleCreditFiscal(productId) {
+            const product = inventoryData.find(p => p.id === productId);
+            if (!product) return;
+            
+            const newCreditFiscal = !product.creditoFiscal;
+            
+            db.collection('INVENTARIO').doc(productId).update({
+                creditoFiscal: newCreditFiscal
+            })
+            .then(() => {
+                // Actualizar solo el botón de crédito fiscal
+                const button = document.querySelector(`.credit-fiscal-btn[data-id="${productId}"]`);
+                const icon = button.querySelector('i');
+                
+                if (newCreditFiscal) {
+                    icon.classList.remove('fa-times');
+                    icon.classList.add('fa-check');
+                    button.title = 'Con Crédito Fiscal';
+                } else {
+                    icon.classList.remove('fa-check');
+                    icon.classList.add('fa-times');
+                    button.title = 'Sin Crédito Fiscal';
+                }
+                
+                // Actualizar el dato en inventoryData
+                const productIndex = inventoryData.findIndex(p => p.id === productId);
+                if (productIndex !== -1) {
+                    inventoryData[productIndex].creditoFiscal = newCreditFiscal;
+                }
+                
+                showFloatingNotification("Crédito fiscal actualizado", "success");
+            })
+            .catch((error) => {
+                console.error("Error al actualizar crédito fiscal: ", error);
+                showFloatingNotification("Error al actualizar crédito fiscal", "error");
             });
         }
 
@@ -641,7 +998,8 @@
             const searchTerm = searchInput.value.toLowerCase();
             const filteredData = inventoryData.filter(product => 
                 product.descripcion.toLowerCase().includes(searchTerm) || 
-                (product.codigo && product.codigo.toLowerCase().includes(searchTerm))
+                (product.codigo && product.codigo.toLowerCase().includes(searchTerm)) ||
+                (product.marca && product.marca.toLowerCase().includes(searchTerm))
             );
             renderInventory(filteredData);
             updateTotalProducts(filteredData.length);
@@ -660,11 +1018,15 @@
             if (product) {
                 document.getElementById('product-code').value = product.codigo || '';
                 document.getElementById('product-description').value = product.descripcion || '';
+                document.getElementById('product-brand').value = product.marca || '';
                 document.getElementById('product-quantity').value = product.cantidad || 0;
+                document.getElementById('product-min-stock').value = product.minStock || 10;
                 document.getElementById('product-cost').value = product.costo || '';
                 document.getElementById('product-price').value = product.precio || '';
+                document.getElementById('product-credit-fiscal').value = product.creditoFiscal ? 'true' : 'false';
             } else {
                 productForm.reset();
+                document.getElementById('product-min-stock').value = 10;
             }
             
             productModal.style.display = 'flex';
@@ -684,9 +1046,12 @@
             const productData = {
                 codigo: document.getElementById('product-code').value,
                 descripcion: document.getElementById('product-description').value,
+                marca: document.getElementById('product-brand').value,
                 cantidad: parseInt(document.getElementById('product-quantity').value),
+                minStock: parseInt(document.getElementById('product-min-stock').value) || 10,
                 costo: parseFloat(document.getElementById('product-cost').value) || 0,
-                precio: parseFloat(document.getElementById('product-price').value) || 0
+                precio: parseFloat(document.getElementById('product-price').value) || 0,
+                creditoFiscal: document.getElementById('product-credit-fiscal').value === 'true'
             };
             
             if (currentEditingId) {
@@ -737,6 +1102,202 @@
                         showFloatingNotification("Error al eliminar producto", "error");
                     });
             }
+        }
+
+        // Manejar entrada de código en el formulario de pedido
+        function handleCodeInput() {
+            const code = orderCodeInput.value.trim();
+            if (code.length > 0) {
+                // Buscar producto por código
+                currentProduct = inventoryData.find(product => 
+                    product.codigo && product.codigo.toLowerCase() === code.toLowerCase()
+                );
+                
+                if (currentProduct) {
+                    // Producto encontrado
+                    productFoundInfo.textContent = `${currentProduct.descripcion} - ${currentProduct.marca || 'Sin marca'} | Stock actual: ${currentProduct.cantidad}`;
+                    currentProductInfo.style.display = 'block';
+                    
+                    // Habilitar y enfocar cantidad
+                    orderQuantityInput.disabled = false;
+                    orderQuantityInput.focus();
+                    orderQuantityInput.value = '';
+                } else {
+                    // Producto no encontrado
+                    currentProductInfo.style.display = 'none';
+                    orderQuantityInput.disabled = true;
+                    orderPriceInput.disabled = true;
+                    showFloatingNotification("Producto no encontrado", "error");
+                }
+            } else {
+                currentProductInfo.style.display = 'none';
+                orderQuantityInput.disabled = true;
+                orderPriceInput.disabled = true;
+            }
+        }
+
+        // Agregar producto al pedido
+        function addToOrder() {
+            const quantity = parseInt(orderQuantityInput.value);
+            const price = parseFloat(orderPriceInput.value);
+            
+            if (!currentProduct) {
+                showFloatingNotification("Primero busca un producto válido", "error");
+                return;
+            }
+            
+            if (!quantity || quantity <= 0) {
+                showFloatingNotification("Ingresa una cantidad válida", "error");
+                orderQuantityInput.focus();
+                return;
+            }
+            
+            if (!price || price <= 0) {
+                showFloatingNotification("Ingresa un precio válido", "error");
+                orderPriceInput.focus();
+                return;
+            }
+            
+            // Verificar si el producto ya está en el pedido
+            const existingItemIndex = currentOrderItems.findIndex(item => item.id === currentProduct.id);
+            
+            if (existingItemIndex !== -1) {
+                // Actualizar item existente
+                currentOrderItems[existingItemIndex].quantity += quantity;
+                currentOrderItems[existingItemIndex].totalCost += price * quantity;
+            } else {
+                // Agregar nuevo item
+                currentOrderItems.push({
+                    id: currentProduct.id,
+                    codigo: currentProduct.codigo,
+                    descripcion: currentProduct.descripcion,
+                    marca: currentProduct.marca,
+                    quantity: quantity,
+                    price: price,
+                    totalCost: price * quantity
+                });
+            }
+            
+            // Actualizar la vista del pedido
+            renderOrderItems();
+            
+            // Limpiar y resetear formulario
+            orderQuantityInput.value = '';
+            orderPriceInput.value = '';
+            orderCodeInput.value = '';
+            currentProductInfo.style.display = 'none';
+            orderQuantityInput.disabled = true;
+            orderPriceInput.disabled = true;
+            orderCodeInput.focus();
+            
+            showFloatingNotification("Producto agregado al pedido", "success");
+        }
+
+        // Renderizar items del pedido
+        function renderOrderItems() {
+            if (currentOrderItems.length === 0) {
+                orderItemsContainer.innerHTML = '<div style="text-align: center; padding: 20px; color: #666;">No hay productos en el pedido</div>';
+            } else {
+                orderItemsContainer.innerHTML = '';
+                
+                currentOrderItems.forEach((item, index) => {
+                    const orderItem = document.createElement('div');
+                    orderItem.className = 'order-item';
+                    orderItem.innerHTML = `
+                        <div class="order-item-info">
+                            <strong>${item.descripcion}</strong><br>
+                            <small>Código: ${item.codigo} | Marca: ${item.marca || 'N/A'}</small><br>
+                            <small>Cantidad: ${item.quantity} | Precio: $${item.price.toFixed(2)} | Total: $${item.totalCost.toFixed(2)}</small>
+                        </div>
+                        <div class="order-item-actions">
+                            <button class="remove-order-item" onclick="removeOrderItem(${index})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    `;
+                    orderItemsContainer.appendChild(orderItem);
+                });
+            }
+            
+            // Actualizar resumen
+            updateOrderSummary();
+        }
+
+        // Remover item del pedido
+        function removeOrderItem(index) {
+            currentOrderItems.splice(index, 1);
+            renderOrderItems();
+        }
+
+        // Actualizar resumen del pedido
+        function updateOrderSummary() {
+            const totalItems = currentOrderItems.length;
+            const totalQuantity = currentOrderItems.reduce((sum, item) => sum + item.quantity, 0);
+            const totalCost = currentOrderItems.reduce((sum, item) => sum + item.totalCost, 0);
+            
+            document.getElementById('order-total-items').textContent = totalItems;
+            document.getElementById('order-total-quantity').textContent = totalQuantity;
+            document.getElementById('order-total-cost').textContent = totalCost.toFixed(2);
+        }
+
+        // Abrir modal de pedido
+        function openOrderModal() {
+            currentOrderItems = [];
+            renderOrderItems();
+            orderCodeInput.value = '';
+            orderQuantityInput.value = '';
+            orderPriceInput.value = '';
+            orderQuantityInput.disabled = true;
+            orderPriceInput.disabled = true;
+            currentProductInfo.style.display = 'none';
+            orderCodeInput.focus();
+            
+            orderModal.style.display = 'flex';
+        }
+
+        // Cerrar modal de pedido
+        function closeOrderModal() {
+            orderModal.style.display = 'none';
+            currentOrderItems = [];
+            currentProduct = null;
+        }
+
+        // Guardar pedido
+        function saveOrder() {
+            if (currentOrderItems.length === 0) {
+                showFloatingNotification("No hay productos en el pedido", "error");
+                return;
+            }
+            
+            // Procesar cada item del pedido
+            const updatePromises = currentOrderItems.map(item => {
+                const product = inventoryData.find(p => p.id === item.id);
+                if (!product) return Promise.resolve();
+                
+                // Calcular nuevo precio promedio ponderado
+                const totalExistingCost = product.cantidad * (product.costo || 0);
+                const totalNewCost = item.totalCost;
+                const totalQuantity = product.cantidad + item.quantity;
+                const newAverageCost = (totalExistingCost + totalNewCost) / totalQuantity;
+                
+                // Actualizar en Firebase
+                return db.collection('INVENTARIO').doc(item.id).update({
+                    cantidad: totalQuantity,
+                    costo: newAverageCost
+                });
+            });
+            
+            // Ejecutar todas las actualizaciones
+            Promise.all(updatePromises)
+                .then(() => {
+                    showFloatingNotification("Pedido procesado correctamente", "success");
+                    closeOrderModal();
+                    loadInventory(); // Recargar para mostrar cambios
+                })
+                .catch((error) => {
+                    console.error("Error al procesar pedido: ", error);
+                    showFloatingNotification("Error al procesar pedido", "error");
+                });
         }
 
         // Mostrar notificación flotante
