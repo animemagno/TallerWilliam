@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Órdenes de Trabajo - Taller Wilian</title>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #2a5298;
+            --secondary-color: #1e3c72;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+            --light-color: #f8f9fa;
+            --dark-color: #343a40;
+            --text-color: #333;
+            --bg-color: #f5f7fa;
+            --card-bg: white;
+            --border-color: #e0e0e0;
+        }
+
+        .dark-mode {
+            --primary-color: #1a1a1a;
+            --secondary-color: #000000;
+            --success-color: #2ecc71;
+            --warning-color: #e67e22;
+            --danger-color: #c0392b;
+            --light-color: #2d2d2d;
+            --dark-color: #ecf0f1;
+            --text-color: #e0e0e0;
+            --bg-color: #121212;
+            --card-bg: #2d3748;
+            --border-color: #4a5568;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 20px 0;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        header h1 {
+            text-align: center;
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+        }
+
+        .header-info {
+            display: flex;
+            justify-content: space-between;
+            padding: 0 20px;
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background-color: var(--card-bg);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border-color);
+        }
+
+        .panel h2 {
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            font-size: 1rem;
+            background-color: var(--card-bg);
+            color: var(--text-color);
+        }
+
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--secondary-color);
+        }
+
+        .btn-success {
+            background-color: var(--success-color);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background-color: #218838;
+        }
+
+        .btn-danger {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+
+        .btn-warning {
+            background-color: var(--warning-color);
+            color: #212529;
+        }
+
+        .btn-warning:hover {
+            background-color: #e0a800;
+        }
+
+        .search-container {
+            position: relative;
+            margin-bottom: 15px;
+        }
+
+        .search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+        }
+
+        .search-result-item {
+            padding: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-result-item:hover {
+            background-color: var(--light-color);
+        }
+
+        .search-result-item:last-child {
+            border-bottom: none;
+        }
+
+        .order-items {
+            margin-top: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .order-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .order-item-info {
+            flex: 1;
+        }
+
+        .order-item-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .order-summary {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: var(--light-color);
+            border-radius: 5px;
+        }
+
+        .orders-list {
+            margin-top: 20px;
+        }
+
+        .order-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .order-card:hover {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .order-card.active {
+            border-color: var(--primary-color);
+            background-color: rgba(42, 82, 152, 0.1);
+        }
+
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .order-details {
+            display: none;
+            margin-top: 10px;
+        }
+
+        .order-details.active {
+            display: block;
+        }
+
+        .order-items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        .order-items-table th, .order-items-table td {
+            padding: 8px 10px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .order-items-table th {
+            background-color: var(--light-color);
+            font-weight: 600;
+        }
+
+        .floating-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 5px;
+            color: white;
+            z-index: 1001;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: none;
+            max-width: 300px;
+        }
+
+        .floating-notification.success {
+            background-color: var(--success-color);
+        }
+
+        .floating-notification.error {
+            background-color: var(--danger-color);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            font-size: 1.2rem;
+            color: var(--primary-color);
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            padding: 20px;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .order-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .order-item-actions {
+                margin-top: 10px;
+                width: 100%;
+                justify-content: flex-end;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <button class="theme-toggle" id="theme-toggle">
+                <i class="fas fa-moon"></i>
+            </button>
+            <h1>Órdenes de Trabajo - Taller Wilian</h1>
+            <div class="header-info">
+                <span>Fecha: <span id="current-date"></span></span>
+                <span>Usuario: <span id="current-user">Administrador</span></span>
+            </div>
+        </header>
+
+        <div class="floating-notification" id="floating-notification"></div>
+
+        <div class="main-content">
+            <!-- Panel de Creación de Órdenes -->
+            <div class="panel">
+                <h2>Crear Nueva Orden</h2>
+                
+                <div class="form-group">
+                    <label for="equipo-select">Seleccionar Equipo</label>
+                    <select id="equipo-select">
+                        <option value="">Seleccione un equipo</option>
+                        <option value="12-Ilobasco">Equipo 12 - Ilobasco</option>
+                        <option value="12-Tejutepeque">Equipo 12 - Tejutepeque</option>
+                        <option value="115-Ilobasco">Equipo 115 - Ilobasco</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="descripcion-orden">Descripción del Trabajo</label>
+                    <textarea id="descripcion-orden" rows="3" placeholder="Describa el trabajo a realizar..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="search-product">Buscar Producto</label>
+                    <div class="search-container">
+                        <input type="text" id="search-product" placeholder="Código o descripción del producto">
+                        <div class="search-results" id="search-results"></div>
+                    </div>
+                </div>
+
+                <div class="order-items" id="order-items">
+                    <p style="text-align: center; color: #666;">No hay productos agregados</p>
+                </div>
+
+                <div class="order-summary">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                        <span><strong>Subtotal:</strong></span>
+                        <span id="subtotal">$0.00</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                        <span><strong>IVA (13%):</strong></span>
+                        <span id="iva">$0.00</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 1.2rem;">
+                        <span><strong>Total:</strong></span>
+                        <span id="total">$0.00</span>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button class="btn btn-primary" id="save-order">Guardar Orden</button>
+                    <button class="btn btn-success" id="print-order">Imprimir Orden</button>
+                    <button class="btn btn-danger" id="clear-order">Limpiar</button>
+                </div>
+            </div>
+
+            <!-- Panel de Órdenes Existentes -->
+            <div class="panel">
+                <h2>Órdenes Existentes</h2>
+                
+                <div class="form-group">
+                    <label for="filter-equipo">Filtrar por Equipo</label>
+                    <select id="filter-equipo">
+                        <option value="">Todos los equipos</option>
+                        <option value="12-Ilobasco">Equipo 12 - Ilobasco</option>
+                        <option value="12-Tejutepeque">Equipo 12 - Tejutepeque</option>
+                        <option value="115-Ilobasco">Equipo 115 - Ilobasco</option>
+                    </select>
+                </div>
+
+                <div class="orders-list" id="orders-list">
+                    <div class="loading">Cargando órdenes...</div>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>Sistema de Órdenes de Trabajo - Taller Wilian &copy; 2025</p>
+        </footer>
+    </div>
+
+    <script>
+        // Configuración de Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyDh074AarXaYCc-Htw-lsCeIc_95QQNSnY",
+            authDomain: "tallerwilliam-732b3.firebaseapp.com",
+            projectId: "tallerwilliam-732b3",
+            storageBucket: "tallerwilliam-732b3.firebasestorage.app",
+            messagingSenderId: "82226266247",
+            appId: "1:822262666247:web:6680487bbf1108006b86a2"
+        };
+
+        // Inicializar Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // Referencias a elementos del DOM
+        const themeToggle = document.getElementById('theme-toggle');
+        const currentDateSpan = document.getElementById('current-date');
+        const searchProductInput = document.getElementById('search-product');
+        const searchResults = document.getElementById('search-results');
+        const orderItemsContainer = document.getElementById('order-items');
+        const subtotalSpan = document.getElementById('subtotal');
+        const ivaSpan = document.getElementById('iva');
+        const totalSpan = document.getElementById('total');
+        const saveOrderBtn = document.getElementById('save-order');
+        const printOrderBtn = document.getElementById('print-order');
+        const clearOrderBtn = document.getElementById('clear-order');
+        const equipoSelect = document.getElementById('equipo-select');
+        const descripcionOrden = document.getElementById('descripcion-orden');
+        const ordersList = document.getElementById('orders-list');
+        const filterEquipo = document.getElementById('filter-equipo');
+        const floatingNotification = document.getElementById('floating-notification');
+
+        // Variables globales
+        let isDarkMode = false;
+        let currentOrder = {
+            equipo: '',
+            descripcion: '',
+            items: [],
+            fecha: new Date(),
+            total: 0
+        };
+        let searchResultsData = [];
+        let allOrders = [];
+
+        // Mostrar fecha actual
+        const now = new Date();
+        currentDateSpan.textContent = now.toLocaleDateString('es-ES');
+
+        // Cargar datos al iniciar
+        document.addEventListener('DOMContentLoaded', function() {
+            loadInventoryData();
+            loadOrders();
+        });
+
+        // Event Listeners
+        themeToggle.addEventListener('click', toggleTheme);
+        searchProductInput.addEventListener('input', handleSearch);
+        saveOrderBtn.addEventListener('click', saveOrder);
+        printOrderBtn.addEventListener('click', printOrder);
+        clearOrderBtn.addEventListener('click', clearOrder);
+        equipoSelect.addEventListener('change', updateCurrentOrder);
+        descripcionOrden.addEventListener('input', updateCurrentOrder);
+        filterEquipo.addEventListener('change', filterOrders);
+
+        // Alternar modo oscuro/claro
+        function toggleTheme() {
+            isDarkMode = !isDarkMode;
+            document.body.classList.toggle('dark-mode', isDarkMode);
+            
+            const icon = themeToggle.querySelector('i');
+            if (isDarkMode) {
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+            } else {
+                icon.classList.remove('fa-sun');
+                icon.classList.add('fa-moon');
+            }
+        }
+
+        // Cargar datos del inventario
+        async function loadInventoryData() {
+            try {
+                const snapshot = await db.collection('INVENTARIO').get();
+                searchResultsData = [];
+                
+                snapshot.forEach(doc => {
+                    const product = doc.data();
+                    product.id = doc.id;
+                    searchResultsData.push(product);
+                });
+            } catch (error) {
+                console.error("Error cargando inventario:", error);
+                showNotification("Error cargando inventario", "error");
+            }
+        }
+
+        // Manejar búsqueda de productos
+        function handleSearch(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            
+            if (searchTerm.length < 2) {
+                searchResults.style.display = 'none';
+                return;
+            }
+            
+            const filteredProducts = searchResultsData.filter(product => {
+                const codigo = (product.codigo || '').toLowerCase();
+                const descripcion = (product.descripcion || '').toLowerCase();
+                return codigo.includes(searchTerm) || descripcion.includes(searchTerm);
+            });
+            
+            displaySearchResults(filteredProducts);
+        }
+
+        // Mostrar resultados de búsqueda
+        function displaySearchResults(products) {
+            searchResults.innerHTML = '';
+            
+            if (products.length === 0) {
+                searchResults.innerHTML = '<div class="search-result-item">No se encontraron productos</div>';
+                searchResults.style.display = 'block';
+                return;
+            }
+            
+            products.forEach(product => {
+                const item = document.createElement('div');
+                item.className = 'search-result-item';
+                item.innerHTML = `
+                    <div><strong>${product.descripcion}</strong></div>
+                    <div>Código: ${product.codigo || 'N/A'} | Stock: ${product.cantidad || 0} | Precio: $${(product.precio || 0).toFixed(2)}</div>
+                `;
+                item.addEventListener('click', () => addProductToOrder(product));
+                searchResults.appendChild(item);
+            });
+            
+            searchResults.style.display = 'block';
+        }
+
+        // Agregar producto a la orden
+        function addProductToOrder(product) {
+            // Verificar si el producto ya está en la orden
+            const existingItem = currentOrder.items.find(item => item.id === product.id);
+            
+            if (existingItem) {
+                existingItem.cantidad += 1;
+                existingItem.total = existingItem.cantidad * existingItem.precio;
+            } else {
+                currentOrder.items.push({
+                    id: product.id,
+                    codigo: product.codigo || 'N/A',
+                    descripcion: product.descripcion,
+                    cantidad: 1,
+                    precio: product.precio || 0,
+                    total: product.precio || 0
+                });
+            }
+            
+            updateOrderDisplay();
+            searchProductInput.value = '';
+            searchResults.style.display = 'none';
+            showNotification("Producto agregado a la orden", "success");
+        }
+
+        // Actualizar visualización de la orden
+        function updateOrderDisplay() {
+            orderItemsContainer.innerHTML = '';
+            
+            if (currentOrder.items.length === 0) {
+                orderItemsContainer.innerHTML = '<p style="text-align: center; color: #666;">No hay productos agregados</p>';
+                updateTotals();
+                return;
+            }
+            
+            currentOrder.items.forEach((item, index) => {
+                const itemElement = document.createElement('div');
+                itemElement.className = 'order-item';
+                itemElement.innerHTML = `
+                    <div class="order-item-info">
+                        <div><strong>${item.descripcion}</strong></div>
+                        <div>Código: ${item.codigo} | Cantidad: ${item.cantidad} | Precio: $${item.precio.toFixed(2)}</div>
+                    </div>
+                    <div class="order-item-actions">
+                        <button class="btn btn-warning" onclick="updateQuantity(${index}, -1)">-</button>
+                        <button class="btn btn-warning" onclick="updateQuantity(${index}, 1)">+</button>
+                        <button class="btn btn-danger" onclick="removeItem(${index})">Eliminar</button>
+                    </div>
+                `;
+                orderItemsContainer.appendChild(itemElement);
+            });
+            
+            updateTotals();
+        }
+
+        // Actualizar cantidad de un producto
+        function updateQuantity(index, change) {
+            const item = currentOrder.items[index];
+            const newQuantity = item.cantidad + change;
+            
+            if (newQuantity < 1) {
+                removeItem(index);
+                return;
+            }
+            
+            // Verificar stock disponible
+            const product = searchResultsData.find(p => p.id === item.id);
+            if (product && newQuantity > (product.cantidad || 0)) {
+                showNotification("Stock insuficiente", "error");
+                return;
+            }
+            
+            item.cantidad = newQuantity;
+            item.total = item.cantidad * item.precio;
+            updateOrderDisplay();
+        }
+
+        // Eliminar producto de la orden
+        function removeItem(index) {
+            currentOrder.items.splice(index, 1);
+            updateOrderDisplay();
+            showNotification("Producto eliminado de la orden", "success");
+        }
+
+        // Actualizar totales
+        function updateTotals() {
+            const subtotal = currentOrder.items.reduce((sum, item) => sum + item.total, 0);
+            const iva = subtotal * 0.13;
+            const total = subtotal + iva;
+            
+            currentOrder.total = total;
+            
+            subtotalSpan.textContent = `$${subtotal.toFixed(2)}`;
+            ivaSpan.textContent = `$${iva.toFixed(2)}`;
+            totalSpan.textContent = `$${total.toFixed(2)}`;
+        }
+
+        // Actualizar orden actual
+        function updateCurrentOrder() {
+            currentOrder.equipo = equipoSelect.value;
+            currentOrder.descripcion = descripcionOrden.value;
+        }
+
+        // Guardar orden
+        async function saveOrder() {
+            if (!currentOrder.equipo) {
+                showNotification("Seleccione un equipo", "error");
+                return;
+            }
+            
+            if (currentOrder.items.length === 0) {
+                showNotification("Agregue al menos un producto a la orden", "error");
+                return;
+            }
+            
+            try {
+                // Actualizar stock en inventario
+                const batch = db.batch();
+                
+                for (const item of currentOrder.items) {
+                    const productRef = db.collection('INVENTARIO').doc(item.id);
+                    const product = searchResultsData.find(p => p.id === item.id);
+                    
+                    if (product) {
+                        const newStock = (product.cantidad || 0) - item.cantidad;
+                        batch.update(productRef, { cantidad: newStock });
+                    }
+                }
+                
+                // Guardar orden
+                const orderRef = db.collection('ordenes_trabajo').doc();
+                batch.set(orderRef, {
+                    ...currentOrder,
+                    fecha: firebase.firestore.FieldValue.serverTimestamp(),
+                    estado: 'activa'
+                });
+                
+                await batch.commit();
+                
+                showNotification("Orden guardada correctamente", "success");
+                clearOrder();
+                loadOrders();
+                
+            } catch (error) {
+                console.error("Error guardando orden:", error);
+                showNotification("Error guardando orden", "error");
+            }
+        }
+
+        // Imprimir orden
+        function printOrder() {
+            if (currentOrder.items.length === 0) {
+                showNotification("No hay productos en la orden para imprimir", "error");
+                return;
+            }
+            
+            const printWindow = window.open('', '_blank');
+            const equipoText = getEquipoText(currentOrder.equipo);
+            
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Orden de Trabajo - ${equipoText}</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; margin: 20px; }
+                        .header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px; }
+                        .info { margin-bottom: 20px; }
+                        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+                        th, td { border: 1px solid #000; padding: 8px; text-align: left; }
+                        th { background-color: #f0f0f0; }
+                        .total { text-align: right; font-weight: bold; font-size: 1.2em; }
+                        .footer { margin-top: 30px; text-align: center; font-size: 0.9em; }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <h1>Taller Wilian</h1>
+                        <h2>Orden de Trabajo</h2>
+                    </div>
+                    
+                    <div class="info">
+                        <p><strong>Equipo:</strong> ${equipoText}</p>
+                        <p><strong>Fecha:</strong> ${new Date().toLocaleDateString('es-ES')}</p>
+                        <p><strong>Descripción:</strong> ${currentOrder.descripcion || 'Sin descripción'}</p>
+                    </div>
+                    
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Cantidad</th>
+                                <th>Código</th>
+                                <th>Descripción</th>
+                                <th>Precio Unitario</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${currentOrder.items.map(item => `
+                                <tr>
+                                    <td>${item.cantidad}</td>
+                                    <td>${item.codigo}</td>
+                                    <td>${item.descripcion}</td>
+                                    <td>$${item.precio.toFixed(2)}</td>
+                                    <td>$${item.total.toFixed(2)}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                    
+                    <div class="total">
+                        <p>Subtotal: $${(currentOrder.total / 1.13).toFixed(2)}</p>
+                        <p>IVA (13%): $${(currentOrder.total * 0.13).toFixed(2)}</p>
+                        <p>Total: $${currentOrder.total.toFixed(2)}</p>
+                    </div>
+                    
+                    <div class="footer">
+                        <p>¡Gracias por confiar en Taller Wilian!</p>
+                    </div>
+                </body>
+                </html>
+            `);
+            
+            printWindow.document.close();
+            printWindow.print();
+        }
+
+        // Obtener texto del equipo
+        function getEquipoText(equipoValue) {
+            switch(equipoValue) {
+                case '12-Ilobasco': return 'Equipo 12 - Ilobasco';
+                case '12-Tejutepeque': return 'Equipo 12 - Tejutepeque';
+                case '115-Ilobasco': return 'Equipo 115 - Ilobasco';
+                default: return 'Equipo no especificado';
+            }
+        }
+
+        // Limpiar orden actual
+        function clearOrder() {
+            currentOrder = {
+                equipo: '',
+                descripcion: '',
+                items: [],
+                fecha: new Date(),
+                total: 0
+            };
+            
+            equipoSelect.value = '';
+            descripcionOrden.value = '';
+            searchProductInput.value = '';
+            searchResults.style.display = 'none';
+            updateOrderDisplay();
+            
+            showNotification("Orden limpiada", "success");
+        }
+
+        // Cargar órdenes existentes
+        async function loadOrders() {
+            try {
+                const snapshot = await db.collection('ordenes_trabajo')
+                    .orderBy('fecha', 'desc')
+                    .get();
+                
+                allOrders = [];
+                snapshot.forEach(doc => {
+                    const order = doc.data();
+                    order.id = doc.id;
+                    
+                    // Convertir fecha de Firebase a Date
+                    if (order.fecha && order.fecha.toDate) {
+                        order.fecha = order.fecha.toDate();
+                    }
+                    
+                    allOrders.push(order);
+                });
+                
+                displayOrders();
+            } catch (error) {
+                console.error("Error cargando órdenes:", error);
+                showNotification("Error cargando órdenes", "error");
+            }
+        }
+
+        // Mostrar órdenes
+        function displayOrders() {
+            ordersList.innerHTML = '';
+            
+            if (allOrders.length === 0) {
+                ordersList.innerHTML = '<p style="text-align: center; color: #666;">No hay órdenes registradas</p>';
+                return;
+            }
+            
+            const filteredOrders = filterEquipo.value ? 
+                allOrders.filter(order => order.equipo === filterEquipo.value) : 
+                allOrders;
+            
+            if (filteredOrders.length === 0) {
+                ordersList.innerHTML = '<p style="text-align: center; color: #666;">No hay órdenes para el filtro seleccionado</p>';
+                return;
+            }
+            
+            filteredOrders.forEach((order, index) => {
+                const orderCard = document.createElement('div');
+                orderCard.className = 'order-card';
+                orderCard.innerHTML = `
+                    <div class="order-header">
+                        <div>
+                            <h3>${getEquipoText(order.equipo)}</h3>
+                            <p>${order.fecha ? order.fecha.toLocaleDateString('es-ES') : 'Fecha no disponible'}</p>
+                        </div>
+                        <div>
+                            <strong>$${order.total.toFixed(2)}</strong>
+                        </div>
+                    </div>
+                    <div class="order-details" id="order-details-${index}">
+                        <p><strong>Descripción:</strong> ${order.descripcion || 'Sin descripción'}</p>
+                        <table class="order-items-table">
+                            <thead>
+                                <tr>
+                                    <th>Cantidad</th>
+                                    <th>Código</th>
+                                    <th>Descripción</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${order.items.map(item => `
+                                    <tr>
+                                        <td>${item.cantidad}</td>
+                                        <td>${item.codigo}</td>
+                                        <td>${item.descripcion}</td>
+                                        <td>$${item.total.toFixed(2)}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                        <div style="margin-top: 10px;">
+                            <button class="btn btn-primary" onclick="printExistingOrder('${order.id}')">Imprimir</button>
+                        </div>
+                    </div>
+                `;
+                
+                orderCard.addEventListener('click', (e) => {
+                    if (!e.target.closest('button')) {
+                        const details = document.getElementById(`order-details-${index}`);
+                        details.classList.toggle('active');
+                    }
+                });
+                
+                ordersList.appendChild(orderCard);
+            });
+        }
+
+        // Filtrar órdenes
+        function filterOrders() {
+            displayOrders();
+        }
+
+        // Imprimir orden existente
+        async function printExistingOrder(orderId) {
+            try {
+                const orderDoc = await db.collection('ordenes_trabajo').doc(orderId).get();
+                
+                if (!orderDoc.exists) {
+                    showNotification("Orden no encontrada", "error");
+                    return;
+                }
+                
+                const order = orderDoc.data();
+                const printWindow = window.open('', '_blank');
+                const equipoText = getEquipoText(order.equipo);
+                
+                printWindow.document.write(`
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <title>Orden de Trabajo - ${equipoText}</title>
+                        <style>
+                            body { font-family: Arial, sans-serif; margin: 20px; }
+                            .header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px; }
+                            .info { margin-bottom: 20px; }
+                            table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+                            th, td { border: 1px solid #000; padding: 8px; text-align: left; }
+                            th { background-color: #f0f0f0; }
+                            .total { text-align: right; font-weight: bold; font-size: 1.2em; }
+                            .footer { margin-top: 30px; text-align: center; font-size: 0.9em; }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="header">
+                            <h1>Taller Wilian</h1>
+                            <h2>Orden de Trabajo</h2>
+                        </div>
+                        
+                        <div class="info">
+                            <p><strong>Equipo:</strong> ${equipoText}</p>
+                            <p><strong>Fecha:</strong> ${order.fecha ? order.fecha.toDate().toLocaleDateString('es-ES') : 'Fecha no disponible'}</p>
+                            <p><strong>Descripción:</strong> ${order.descripcion || 'Sin descripción'}</p>
+                        </div>
+                        
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Cantidad</th>
+                                    <th>Código</th>
+                                    <th>Descripción</th>
+                                    <th>Precio Unitario</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${order.items.map(item => `
+                                    <tr>
+                                        <td>${item.cantidad}</td>
+                                        <td>${item.codigo}</td>
+                                        <td>${item.descripcion}</td>
+                                        <td>$${item.precio.toFixed(2)}</td>
+                                        <td>$${item.total.toFixed(2)}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                        
+                        <div class="total">
+                            <p>Subtotal: $${(order.total / 1.13).toFixed(2)}</p>
+                            <p>IVA (13%): $${(order.total * 0.13).toFixed(2)}</p>
+                            <p>Total: $${order.total.toFixed(2)}</p>
+                        </div>
+                        
+                        <div class="footer">
+                            <p>¡Gracias por confiar en Taller Wilian!</p>
+                        </div>
+                    </body>
+                    </html>
+                `);
+                
+                printWindow.document.close();
+                printWindow.print();
+                
+            } catch (error) {
+                console.error("Error imprimiendo orden:", error);
+                showNotification("Error imprimiendo orden", "error");
+            }
+        }
+
+        // Mostrar notificación
+        function showNotification(message, type) {
+            floatingNotification.textContent = message;
+            floatingNotification.className = `floating-notification ${type}`;
+            floatingNotification.style.display = 'block';
+            
+            setTimeout(() => {
+                floatingNotification.style.display = 'none';
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
