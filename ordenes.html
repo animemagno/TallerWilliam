@@ -391,13 +391,13 @@
                 <h2>Crear Nueva Orden</h2>
                 
                 <div class="form-group">
-                    <label for="equipo-select">Seleccionar Equipo</label>
-                    <select id="equipo-select">
-                        <option value="">Seleccione un equipo</option>
-                        <option value="12-Ilobasco">Equipo 12 - Ilobasco</option>
-                        <option value="12-Tejutepeque">Equipo 12 - Tejutepeque</option>
-                        <option value="115-Ilobasco">Equipo 115 - Ilobasco</option>
-                    </select>
+                    <label for="equipo-numero">Número de Equipo</label>
+                    <input type="text" id="equipo-numero" placeholder="Ej: 12, 115, etc.">
+                </div>
+
+                <div class="form-group">
+                    <label for="equipo-ubicacion">Ubicación</label>
+                    <input type="text" id="equipo-ubicacion" placeholder="Ej: Ilobasco, Tejutepeque, etc.">
                 </div>
 
                 <div class="form-group">
@@ -418,14 +418,6 @@
                 </div>
 
                 <div class="order-summary">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                        <span><strong>Subtotal:</strong></span>
-                        <span id="subtotal">$0.00</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                        <span><strong>IVA (13%):</strong></span>
-                        <span id="iva">$0.00</span>
-                    </div>
                     <div style="display: flex; justify-content: space-between; font-size: 1.2rem;">
                         <span><strong>Total:</strong></span>
                         <span id="total">$0.00</span>
@@ -445,12 +437,7 @@
                 
                 <div class="form-group">
                     <label for="filter-equipo">Filtrar por Equipo</label>
-                    <select id="filter-equipo">
-                        <option value="">Todos los equipos</option>
-                        <option value="12-Ilobasco">Equipo 12 - Ilobasco</option>
-                        <option value="12-Tejutepeque">Equipo 12 - Tejutepeque</option>
-                        <option value="115-Ilobasco">Equipo 115 - Ilobasco</option>
-                    </select>
+                    <input type="text" id="filter-equipo" placeholder="Número de equipo">
                 </div>
 
                 <div class="orders-list" id="orders-list">
@@ -471,7 +458,7 @@
             authDomain: "tallerwilliam-732b3.firebaseapp.com",
             projectId: "tallerwilliam-732b3",
             storageBucket: "tallerwilliam-732b3.firebasestorage.app",
-            messagingSenderId: "82226266247",
+            messagingSenderId: "822262666247",
             appId: "1:822262666247:web:6680487bbf1108006b86a2"
         };
 
@@ -485,13 +472,12 @@
         const searchProductInput = document.getElementById('search-product');
         const searchResults = document.getElementById('search-results');
         const orderItemsContainer = document.getElementById('order-items');
-        const subtotalSpan = document.getElementById('subtotal');
-        const ivaSpan = document.getElementById('iva');
         const totalSpan = document.getElementById('total');
         const saveOrderBtn = document.getElementById('save-order');
         const printOrderBtn = document.getElementById('print-order');
         const clearOrderBtn = document.getElementById('clear-order');
-        const equipoSelect = document.getElementById('equipo-select');
+        const equipoNumero = document.getElementById('equipo-numero');
+        const equipoUbicacion = document.getElementById('equipo-ubicacion');
         const descripcionOrden = document.getElementById('descripcion-orden');
         const ordersList = document.getElementById('orders-list');
         const filterEquipo = document.getElementById('filter-equipo');
@@ -500,7 +486,8 @@
         // Variables globales
         let isDarkMode = false;
         let currentOrder = {
-            equipo: '',
+            equipoNumero: '',
+            equipoUbicacion: '',
             descripcion: '',
             items: [],
             fecha: new Date(),
@@ -525,9 +512,10 @@
         saveOrderBtn.addEventListener('click', saveOrder);
         printOrderBtn.addEventListener('click', printOrder);
         clearOrderBtn.addEventListener('click', clearOrder);
-        equipoSelect.addEventListener('change', updateCurrentOrder);
+        equipoNumero.addEventListener('input', updateCurrentOrder);
+        equipoUbicacion.addEventListener('input', updateCurrentOrder);
         descripcionOrden.addEventListener('input', updateCurrentOrder);
-        filterEquipo.addEventListener('change', filterOrders);
+        filterEquipo.addEventListener('input', filterOrders);
 
         // Alternar modo oscuro/claro
         function toggleTheme() {
@@ -644,7 +632,7 @@
                 itemElement.innerHTML = `
                     <div class="order-item-info">
                         <div><strong>${item.descripcion}</strong></div>
-                        <div>Código: ${item.codigo} | Cantidad: ${item.cantidad} | Precio: $${item.precio.toFixed(2)}</div>
+                        <div>Código: ${item.codigo} | Cantidad: ${item.cantidad} | Precio Unitario: $${item.precio.toFixed(2)} | Total: $${item.total.toFixed(2)}</div>
                     </div>
                     <div class="order-item-actions">
                         <button class="btn btn-warning" onclick="updateQuantity(${index}, -1)">-</button>
@@ -689,27 +677,23 @@
 
         // Actualizar totales
         function updateTotals() {
-            const subtotal = currentOrder.items.reduce((sum, item) => sum + item.total, 0);
-            const iva = subtotal * 0.13;
-            const total = subtotal + iva;
+            const total = currentOrder.items.reduce((sum, item) => sum + item.total, 0);
             
             currentOrder.total = total;
-            
-            subtotalSpan.textContent = `$${subtotal.toFixed(2)}`;
-            ivaSpan.textContent = `$${iva.toFixed(2)}`;
             totalSpan.textContent = `$${total.toFixed(2)}`;
         }
 
         // Actualizar orden actual
         function updateCurrentOrder() {
-            currentOrder.equipo = equipoSelect.value;
+            currentOrder.equipoNumero = equipoNumero.value;
+            currentOrder.equipoUbicacion = equipoUbicacion.value;
             currentOrder.descripcion = descripcionOrden.value;
         }
 
         // Guardar orden
         async function saveOrder() {
-            if (!currentOrder.equipo) {
-                showNotification("Seleccione un equipo", "error");
+            if (!currentOrder.equipoNumero || !currentOrder.equipoUbicacion) {
+                showNotification("Complete el número y ubicación del equipo", "error");
                 return;
             }
             
@@ -736,6 +720,7 @@
                 const orderRef = db.collection('ordenes_trabajo').doc();
                 batch.set(orderRef, {
                     ...currentOrder,
+                    equipo: `${currentOrder.equipoNumero} - ${currentOrder.equipoUbicacion}`,
                     fecha: firebase.firestore.FieldValue.serverTimestamp(),
                     estado: 'activa'
                 });
@@ -760,7 +745,7 @@
             }
             
             const printWindow = window.open('', '_blank');
-            const equipoText = getEquipoText(currentOrder.equipo);
+            const equipoText = `Equipo ${currentOrder.equipoNumero} - ${currentOrder.equipoUbicacion}`;
             
             printWindow.document.write(`
                 <!DOCTYPE html>
@@ -814,8 +799,6 @@
                     </table>
                     
                     <div class="total">
-                        <p>Subtotal: $${(currentOrder.total / 1.13).toFixed(2)}</p>
-                        <p>IVA (13%): $${(currentOrder.total * 0.13).toFixed(2)}</p>
                         <p>Total: $${currentOrder.total.toFixed(2)}</p>
                     </div>
                     
@@ -830,27 +813,19 @@
             printWindow.print();
         }
 
-        // Obtener texto del equipo
-        function getEquipoText(equipoValue) {
-            switch(equipoValue) {
-                case '12-Ilobasco': return 'Equipo 12 - Ilobasco';
-                case '12-Tejutepeque': return 'Equipo 12 - Tejutepeque';
-                case '115-Ilobasco': return 'Equipo 115 - Ilobasco';
-                default: return 'Equipo no especificado';
-            }
-        }
-
         // Limpiar orden actual
         function clearOrder() {
             currentOrder = {
-                equipo: '',
+                equipoNumero: '',
+                equipoUbicacion: '',
                 descripcion: '',
                 items: [],
                 fecha: new Date(),
                 total: 0
             };
             
-            equipoSelect.value = '';
+            equipoNumero.value = '';
+            equipoUbicacion.value = '';
             descripcionOrden.value = '';
             searchProductInput.value = '';
             searchResults.style.display = 'none';
@@ -895,8 +870,12 @@
                 return;
             }
             
-            const filteredOrders = filterEquipo.value ? 
-                allOrders.filter(order => order.equipo === filterEquipo.value) : 
+            const filterValue = filterEquipo.value.toLowerCase();
+            const filteredOrders = filterValue ? 
+                allOrders.filter(order => 
+                    order.equipoNumero.toLowerCase().includes(filterValue) ||
+                    order.equipo.toLowerCase().includes(filterValue)
+                ) : 
                 allOrders;
             
             if (filteredOrders.length === 0) {
@@ -910,7 +889,7 @@
                 orderCard.innerHTML = `
                     <div class="order-header">
                         <div>
-                            <h3>${getEquipoText(order.equipo)}</h3>
+                            <h3>${order.equipo || `Equipo ${order.equipoNumero} - ${order.equipoUbicacion}`}</h3>
                             <p>${order.fecha ? order.fecha.toLocaleDateString('es-ES') : 'Fecha no disponible'}</p>
                         </div>
                         <div>
@@ -973,7 +952,7 @@
                 
                 const order = orderDoc.data();
                 const printWindow = window.open('', '_blank');
-                const equipoText = getEquipoText(order.equipo);
+                const equipoText = order.equipo || `Equipo ${order.equipoNumero} - ${order.equipoUbicacion}`;
                 
                 printWindow.document.write(`
                     <!DOCTYPE html>
@@ -1027,8 +1006,6 @@
                         </table>
                         
                         <div class="total">
-                            <p>Subtotal: $${(order.total / 1.13).toFixed(2)}</p>
-                            <p>IVA (13%): $${(order.total * 0.13).toFixed(2)}</p>
                             <p>Total: $${order.total.toFixed(2)}</p>
                         </div>
                         
