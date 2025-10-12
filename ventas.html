@@ -851,149 +851,6 @@
                 </div>
             </div>
         </div>
-
-        <div class="tab-content" id="history-tab">
-            <div class="panel">
-                <h2>Historial de Ventas</h2>
-                <div class="form-group">
-                    <label for="history-date">Seleccionar Fecha</label>
-                    <input type="date" id="history-date">
-                </div>
-                <div id="sales-history">
-                    <table class="compact-table">
-                        <thead>
-                            <tr>
-                                <th>Factura</th>
-                                <th>Cliente/Equipo</th>
-                                <th>Productos</th>
-                                <th>Total</th>
-                                <th>Tipo</th>
-                                <th>Estado</th>
-                                <th>Fecha</th>
-                            </tr>
-                        </thead>
-                        <tbody id="history-body">
-                            <tr>
-                                <td colspan="7" class="loading">Seleccione fecha</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <div class="tab-content" id="summary-tab">
-            <div class="panel">
-                <h2>Resumen del Día</h2>
-                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
-                    <div style="background: rgba(39, 174, 96, 0.1); padding: 12px; border-radius: 6px; border: 1px solid var(--success-color);">
-                        <h3 style="font-size: 0.9rem;">Ventas Contado</h3>
-                        <div class="summary-total" style="font-size: 1.2rem;" id="cash-total">$0.00</div>
-                    </div>
-                    <div style="background: rgba(39, 174, 96, 0.1); padding: 12px; border-radius: 6px; border: 1px solid var(--success-color);">
-                        <h3 style="font-size: 0.9rem;">Ventas Pendientes</h3>
-                        <div class="summary-total" style="font-size: 1.2rem;" id="credit-total">$0.00</div>
-                    </div>
-                    <div style="background: rgba(39, 174, 96, 0.1); padding: 12px; border-radius: 6px; border: 1px solid var(--success-color);">
-                        <h3 style="font-size: 0.9rem;">Abonos Recibidos</h3>
-                        <div class="summary-total" style="font-size: 1.2rem;" id="payments-total">$0.00</div>
-                    </div>
-                </div>
-                
-                <button class="btn btn-primary" onclick="generateDailySummary()" style="margin-top: 15px; width: 100%;" id="generate-summary-btn">
-                    Generar Resumen
-                </button>
-            </div>
-        </div>
-
-        <div class="tab-content" id="equipos-tab">
-            <div class="panel">
-                <h2>Facturas por Equipo</h2>
-                <div class="form-group">
-                    <label for="equipo-filter">Filtrar por N° Equipo</label>
-                    <input type="text" id="equipo-filter" placeholder="Número equipo" maxlength="6" pattern="[0-9]*">
-                </div>
-                <div id="equipos-summary">
-                    <table class="compact-table">
-                        <thead>
-                            <tr>
-                                <th>Equipo</th>
-                                <th>Total</th>
-                                <th>Facturas</th>
-                                <th>Última</th>
-                                <th>Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody id="equipos-body">
-                            <tr>
-                                <td colspan="5" class="loading">Cargando equipos...</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div class="panel" id="equipo-details-panel" style="display: none;">
-                <h2 id="equipo-details-title" style="font-size: 1.1rem;">Detalles del Equipo</h2>
-                <div id="equipo-details-content">
-                </div>
-            </div>
-        </div>
-
-        <div class="tab-content" id="cierre-tab">
-            <div class="compact-grid">
-                <div class="panel">
-                    <h2>Cierre del Día</h2>
-                    <div class="daily-closure">
-                        <div class="form-group">
-                            <label for="closure-date">Fecha de Cierre</label>
-                            <input type="date" id="closure-date">
-                        </div>
-                        
-                        <div id="closure-summary">
-                            <div class="credit-status">
-                                <strong>Resumen del Día:</strong><br>
-                                <span id="closure-cash">Ventas Contado: $0.00</span><br>
-                                <span id="closure-credit">Ventas Pendientes: $0.00</span><br>
-                                <span id="closure-payments">Abonos Recibidos: $0.00</span><br>
-                                <span id="closure-total">Total General: $0.00</span>
-                            </div>
-                        </div>
-                        
-                        <div class="actions" style="margin-top: 15px;">
-                            <button class="btn btn-primary" onclick="generateClosureSummary()" id="generate-closure-btn">
-                                Generar Resumen de Cierre
-                            </button>
-                            <button class="btn btn-success" onclick="processDailyClosure()" id="process-closure-btn">
-                                Procesar Cierre Diario
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="panel">
-                    <h2>Historial de Cierres</h2>
-                    <div id="closures-history">
-                        <table class="compact-table">
-                            <thead>
-                                <tr>
-                                    <th>Fecha</th>
-                                    <th>Ventas Contado</th>
-                                    <th>Ventas Crédito</th>
-                                    <th>Abonos</th>
-                                    <th>Total</th>
-                                </tr>
-                            </thead>
-                            <tbody id="closures-body">
-                                <tr>
-                                    <td colspan="5" class="loading">Cargando cierres...</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
 
     <script>
@@ -1043,9 +900,17 @@
             setupTabs();
             
             document.getElementById('search-product').addEventListener('input', function(e) {
-                if (this.value.length >= 2) {
-                    searchProducts(this.value);
+                const searchTerm = this.value.trim();
+                if (searchTerm.length >= 2) {
+                    searchProducts(searchTerm);
                 } else {
+                    document.getElementById('search-dropdown').style.display = 'none';
+                    searchResults = [];
+                }
+            });
+            
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('.search-container')) {
                     document.getElementById('search-dropdown').style.display = 'none';
                 }
             });
@@ -1085,20 +950,6 @@
                     paymentType: "contado",
                     date: new Date(),
                     timestamp: new Date()
-                },
-                {
-                    id: "4",
-                    saleNumber: "F240101004",
-                    clientName: "Cliente Directo - Ana Martínez",
-                    equipoNumber: "",
-                    products: [
-                        { description: "Aceite Transmisión", code: "007", quantity: 1, price: 28.00 },
-                        { description: "Filtro Aceite", code: "008", quantity: 2, price: 9.50 }
-                    ],
-                    total: 47.00,
-                    paymentType: "contado",
-                    date: new Date(),
-                    timestamp: new Date()
                 }
             ];
             
@@ -1114,46 +965,12 @@
                     saleDate: new Date(),
                     status: "pendiente",
                     payments: []
-                },
-                {
-                    id: "2", 
-                    saleId: "3",
-                    saleNumber: "F240101003",
-                    clientName: "Equipo 123456 - Carlos López",
-                    equipoNumber: "123456",
-                    originalAmount: 47.00,
-                    pendingAmount: 47.00,
-                    saleDate: new Date(),
-                    status: "pendiente",
-                    payments: []
-                },
-                {
-                    id: "3",
-                    saleId: "5", 
-                    saleNumber: "F240101005",
-                    clientName: "Equipo 789012 - Transportes XYZ",
-                    equipoNumber: "789012",
-                    originalAmount: 220.50,
-                    pendingAmount: 120.50,
-                    saleDate: new Date(Date.now() - 172800000),
-                    status: "pendiente",
-                    payments: [
-                        {
-                            amount: 100.00,
-                            date: new Date(Date.now() - 86400000),
-                            previousBalance: 220.50,
-                            newBalance: 120.50
-                        }
-                    ]
                 }
             ];
             
             equiposConPendientes = [
                 { equipo: "123456", facturasPendientes: 1, totalPendiente: 47.00 },
-                { equipo: "654321", facturasPendientes: 1, totalPendiente: 80.00 },
-                { equipo: "789012", facturasPendientes: 1, totalPendiente: 120.50 },
-                { equipo: "111222", facturasPendientes: 2, totalPendiente: 320.75 },
-                { equipo: "333444", facturasPendientes: 1, totalPendiente: 45.25 }
+                { equipo: "654321", facturasPendientes: 1, totalPendiente: 80.00 }
             ];
             
             displayDailySales();
@@ -1162,65 +979,46 @@
             updateCreditSelect();
             
             console.log("Datos de ejemplo cargados correctamente");
-            showStatus("Sistema cargado en modo de pruebas", "success");
+            showStatus("Sistema cargado", "success");
         }
 
-        function setupTabs() {
-            document.querySelectorAll('.tab').forEach(tab => {
-                tab.addEventListener('click', function() {
-                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        async function searchProducts(searchTerm) {
+            if (!searchTerm || searchTerm.length < 2) {
+                document.getElementById('search-dropdown').style.display = 'none';
+                searchResults = [];
+                return;
+            }
+
+            if (!firebaseInitialized) {
+                showStatus("Sin conexión a la base de datos", "error");
+                return;
+            }
+
+            try {
+                const searchLower = searchTerm.toLowerCase();
+                const snapshot = await db.collection('INVENTARIO').get();
+                
+                searchResults = [];
+                snapshot.forEach(doc => {
+                    const product = doc.data();
+                    product.id = doc.id;
                     
-                    this.classList.add('active');
-                    const tabId = this.getAttribute('data-tab') + '-tab';
-                    document.getElementById(tabId).classList.add('active');
+                    const codigo = (product.codigo || '').toLowerCase();
+                    const descripcion = (product.descripcion || '').toLowerCase();
+                    const categoria = (product.categoria || '').toLowerCase();
+                    
+                    if (codigo.includes(searchLower) || descripcion.includes(searchLower) || categoria.includes(searchLower)) {
+                        searchResults.push(product);
+                    }
                 });
-            });
-            
-            document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
-        }
 
-        function toggleTheme() {
-            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-            setTheme(newTheme);
-        }
-
-        function setTheme(theme) {
-            currentTheme = theme;
-            document.body.setAttribute('data-theme', theme);
-            localStorage.setItem('theme', theme);
-            
-            const themeToggle = document.getElementById('theme-toggle');
-            themeToggle.textContent = theme === 'light' ? '🌙' : '☀️';
-        }
-
-        function showStatus(message, type) {
-            const statusElement = document.getElementById('status-message');
-            statusElement.textContent = message;
-            statusElement.className = `status ${type}`;
-            statusElement.style.display = 'block';
-
-            setTimeout(() => {
-                statusElement.style.display = 'none';
-            }, 5000);
-        }
-
-        function searchProducts(searchTerm) {
-            searchResults = [
-                { id: "1", codigo: "001", descripcion: "Aceite Motor 5W30", precio: 25.00, cantidad: 15 },
-                { id: "2", codigo: "002", descripcion: "Filtro Aire", precio: 15.50, cantidad: 8 },
-                { id: "3", codigo: "003", descripcion: "Bujías", precio: 8.75, cantidad: 25 },
-                { id: "4", codigo: "004", descripcion: "Correa Distribución", precio: 45.00, cantidad: 6 },
-                { id: "5", codigo: "005", descripcion: "Líquido Frenos", precio: 12.00, cantidad: 12 },
-                { id: "6", codigo: "006", descripcion: "Pastillas Freno", precio: 35.00, cantidad: 10 },
-                { id: "7", codigo: "007", descripcion: "Aceite Transmisión", precio: 28.00, cantidad: 7 },
-                { id: "8", codigo: "008", descripcion: "Filtro Aceite", precio: 9.50, cantidad: 20 }
-            ].filter(product => 
-                product.codigo.includes(searchTerm) || 
-                product.descripcion.toLowerCase().includes(searchTerm.toLowerCase())
-            );
-            
-            displaySearchDropdown();
+                displaySearchDropdown();
+                
+            } catch (error) {
+                console.error("Error buscando productos:", error);
+                showStatus("Error buscando productos: " + error.message, "error");
+                document.getElementById('search-dropdown').style.display = 'none';
+            }
         }
 
         function displaySearchDropdown() {
@@ -1236,8 +1034,16 @@
             searchResults.forEach(product => {
                 const item = document.createElement('div');
                 item.className = 'search-dropdown-item';
-                item.innerHTML = `<strong>${product.descripcion}</strong><div>Cód: ${product.codigo} | Stock: ${product.cantidad} | $${product.precio.toFixed(2)}</div>`;
-                item.onclick = () => addToCart(product.id);
+                item.innerHTML = `
+                    <strong>${product.descripcion || 'Sin descripción'}</strong>
+                    <div style="font-size: 0.7rem; margin-top: 2px;">
+                        Cód: ${product.codigo || 'N/A'} | Stock: ${product.cantidad || 0} | $${(product.precio || 0).toFixed(2)}
+                    </div>
+                `;
+                item.onclick = () => {
+                    addToCart(product.id);
+                    dropdown.style.display = 'none';
+                };
                 dropdown.appendChild(item);
             });
             
@@ -1246,13 +1052,21 @@
 
         function addProductFromSearch() {
             const searchInput = document.getElementById('search-product');
-            if (searchInput.value.trim() && searchResults.length > 0) {
-                addToCart(searchResults[0].id);
-                searchInput.value = '';
-                document.getElementById('search-dropdown').style.display = 'none';
-            } else {
-                showStatus("Busque producto primero", "error");
+            const searchTerm = searchInput.value.trim();
+            
+            if (!searchTerm) {
+                showStatus("Ingrese un término de búsqueda", "error");
+                return;
             }
+
+            if (searchResults.length === 0) {
+                showStatus("No hay productos que coincidan con la búsqueda", "error");
+                return;
+            }
+
+            addToCart(searchResults[0].id);
+            searchInput.value = '';
+            document.getElementById('search-dropdown').style.display = 'none';
         }
 
         function addToCart(productId) {
@@ -1262,16 +1076,34 @@
                 return;
             }
 
+            const currentStock = product.cantidad || 0;
+            if (currentStock <= 0) {
+                showStatus("Producto sin stock disponible", "error");
+                return;
+            }
+
             const existingItem = cart.find(item => item.id === productId);
             if (existingItem) {
-                existingItem.quantity++;
+                if (existingItem.quantity < currentStock) {
+                    existingItem.quantity++;
+                } else {
+                    showStatus("Stock insuficiente. Máximo disponible: " + currentStock, "error");
+                    return;
+                }
             } else {
+                if (!product.precio || product.precio <= 0) {
+                    showStatus("El producto no tiene precio válido", "error");
+                    return;
+                }
+
                 cart.push({
                     id: productId,
-                    code: product.codigo,
-                    description: product.descripcion,
-                    price: product.precio,
-                    quantity: 1
+                    code: product.codigo || 'N/A',
+                    description: product.descripcion || 'Sin descripción',
+                    price: product.precio || 0,
+                    quantity: 1,
+                    cost: product.costo || 0,
+                    available: currentStock
                 });
             }
 
@@ -1322,6 +1154,11 @@
             
             if (newQuantity < 1) {
                 removeFromCart(index);
+                return;
+            }
+
+            if (newQuantity > cart[index].available) {
+                showStatus("Stock insuficiente. Máximo disponible: " + cart[index].available, "error");
                 return;
             }
 
@@ -1842,197 +1679,44 @@
             displayEquiposConPendientes();
         }
 
-        function printInvoice(creditId) {
-            const credit = pendingCredits.find(c => c.id === creditId);
-            if (!credit) {
-                showStatus("Factura no encontrada", "error");
-                return;
-            }
+        function setupTabs() {
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    
+                    this.classList.add('active');
+                    const tabId = this.getAttribute('data-tab') + '-tab';
+                    document.getElementById(tabId).classList.add('active');
+                });
+            });
             
-            const sale = dailySales.find(s => s.id === credit.saleId);
-            if (!sale) {
-                showStatus("Información de venta no encontrada", "error");
-                return;
-            }
+            document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
+        }
+
+        function toggleTheme() {
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            setTheme(newTheme);
+        }
+
+        function setTheme(theme) {
+            currentTheme = theme;
+            document.body.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
             
-            const printWindow = window.open('', '_blank', 'width=350,height=600');
-            printWindow.document.write(`
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <title>Factura ${credit.saleNumber}</title>
-                    <style>
-                        body { 
-                            font-family: 'Courier New', monospace; 
-                            margin: 5px; 
-                            padding: 5px; 
-                            width: 340px;
-                            font-size: 14px;
-                            font-weight: bold;
-                        }
-                        @media print { 
-                            body { margin: 0; padding: 0; } 
-                            @page { size: auto; margin: 0; } 
-                        }
-                        .header { 
-                            text-align: center; 
-                            border-bottom: 2px dashed #000; 
-                            padding-bottom: 8px; 
-                            margin-bottom: 10px; 
-                        }
-                        .title { 
-                            font-size: 18px; 
-                            font-weight: bold; 
-                            margin: 5px 0; 
-                        }
-                        .subtitle {
-                            font-size: 16px;
-                            font-weight: bold;
-                            margin: 4px 0;
-                        }
-                        .info { 
-                            font-size: 12px; 
-                            margin: 3px 0; 
-                        }
-                        .details { 
-                            margin-bottom: 15px; 
-                            padding: 8px;
-                            background: #f9f9f9;
-                            border-radius: 4px;
-                        }
-                        .table { 
-                            width: 100%; 
-                            border-collapse: collapse; 
-                            margin-bottom: 15px; 
-                            font-size: 12px;
-                        }
-                        .table th, .table td { 
-                            border: 1px solid #ddd; 
-                            padding: 6px; 
-                            text-align: left; 
-                        }
-                        .table th { 
-                            background-color: #f2f2f2; 
-                        }
-                        .total { 
-                            text-align: center; 
-                            font-size: 16px; 
-                            font-weight: bold; 
-                            margin-top: 15px;
-                            padding: 10px;
-                            background: #ffffcc;
-                            border: 2px solid #000;
-                        }
-                        .footer { 
-                            margin-top: 20px; 
-                            text-align: center; 
-                            font-size: 12px; 
-                            color: #666; 
-                        }
-                        .product-code {
-                            font-size: 10px;
-                            color: #666;
-                            font-style: italic;
-                        }
-                        .date-large {
-                            font-size: 16px;
-                            font-weight: bold;
-                            margin: 8px 0;
-                        }
-                    </style>
-                </head>
-                <body>
-                    <div class="header">
-                        <div class="title">TALLER WILIAN</div>
-                        <div class="subtitle">FACTURA ${credit.saleNumber}</div>
-                        <div class="date-large">${sale.date.toLocaleDateString('es-ES', { 
-                            weekday: 'long', 
-                            year: 'numeric', 
-                            month: 'long', 
-                            day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                        })}</div>
-                        <div class="info">Tel: 7587-6928</div>
-                    </div>
-                    <div class="details">
-                        <p><strong>Cliente:</strong> ${credit.clientName}</p>
-                        <p><strong>Estado:</strong> ${credit.status === 'pendiente' ? 'PENDIENTE' : 'PAGADO'}</p>
-                        <p><strong>Saldo Pendiente:</strong> $${credit.pendingAmount.toFixed(2)}</p>
-                    </div>
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Producto</th>
-                                <th>Cant</th>
-                                <th>Total</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${sale.products.map(product => `
-                                <tr>
-                                    <td>
-                                        <div>${product.description}</div>
-                                        <div class="product-code">Cód: ${product.code}</div>
-                                    </td>
-                                    <td>${product.quantity}</td>
-                                    <td>$${(product.quantity * product.price).toFixed(2)}</td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                    <div class="total">
-                        TOTAL: $${sale.total.toFixed(2)}
-                    </div>
-                    ${credit.payments && credit.payments.length > 0 ? `
-                        <div style="margin-top: 15px;">
-                            <div style="text-align: center; font-weight: bold; margin-bottom: 8px;">HISTORIAL DE ABONOS</div>
-                            <table class="table">
-                                <thead>
-                                    <tr>
-                                        <th>Fecha</th>
-                                        <th>Monto</th>
-                                        <th>Saldo</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    ${credit.payments.map(payment => `
-                                        <tr>
-                                            <td>${payment.date.toLocaleDateString('es-ES')}</td>
-                                            <td>$${payment.amount.toFixed(2)}</td>
-                                            <td>$${payment.newBalance.toFixed(2)}</td>
-                                        </tr>
-                                    `).join('')}
-                                </tbody>
-                            </table>
-                        </div>
-                    ` : ''}
-                    <div class="footer">
-                        <p>¡Gracias por su preferencia!</p>
-                        <p>Taller Wilian - Tel: 7587-6928</p>
-                    </div>
-                </body>
-                </html>
-            `);
-            printWindow.document.close();
-            printWindow.print();
+            const themeToggle = document.getElementById('theme-toggle');
+            themeToggle.textContent = theme === 'light' ? '🌙' : '☀️';
         }
 
-        function viewSale(saleId) {
-            showStatus("Función de visualización en desarrollo", "info");
-        }
+        function showStatus(message, type) {
+            const statusElement = document.getElementById('status-message');
+            statusElement.textContent = message;
+            statusElement.className = `status ${type}`;
+            statusElement.style.display = 'block';
 
-        function deleteSale(saleId) {
-            if (!confirm("¿Está seguro de eliminar esta venta?")) return;
-            showStatus("Función de eliminación en desarrollo", "info");
-        }
-
-        function viewCreditDetails(creditId) {
-            showStatus("Función de detalles en desarrollo", "info");
-        }
-
-        function cancelPendingSale() {
-            showStatus("Función de cancelación en desarrollo", "info");
+            setTimeout(() => {
+                statusElement.style.display = 'none';
+            }, 5000);
         }
 
         function updateConnectionStatus(connected) {
@@ -2046,16 +1730,21 @@
             }
         }
 
-        function generateDailySummary() {
-            showStatus("Función de resumen en desarrollo", "info");
+        function printInvoice(creditId) {
+            showStatus("Función de impresión en desarrollo", "info");
         }
 
-        function generateClosureSummary() {
-            showStatus("Función de cierre en desarrollo", "info");
+        function viewSale(saleId) {
+            showStatus("Función de visualización en desarrollo", "info");
         }
 
-        function processDailyClosure() {
-            showStatus("Función de cierre diario en desarrollo", "info");
+        function deleteSale(saleId) {
+            if (!confirm("¿Está seguro de eliminar esta venta?")) return;
+            showStatus("Función de eliminación en desarrollo", "info");
+        }
+
+        function cancelPendingSale() {
+            showStatus("Función de cancelación en desarrollo", "info");
         }
     </script>
 </body>
