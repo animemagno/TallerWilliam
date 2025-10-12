@@ -157,31 +157,19 @@
             font-size: 1.2rem;
         }
 
-        .compact-grid {
+        .sales-process-container {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 15px;
+            margin-bottom: 15px;
         }
 
-        .compact-panel {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
+        .sales-form-container, .pending-invoices-container {
             background: var(--panel-bg);
             border-radius: 8px;
             padding: 15px;
-            margin-bottom: 15px;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
             border: 1px solid var(--border-color);
-        }
-
-        .compact-panel h2 {
-            grid-column: 1 / -1;
-            color: var(--text-color);
-            margin-bottom: 12px;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 8px;
-            font-size: 1.2rem;
         }
 
         .form-group {
@@ -212,10 +200,11 @@
             border-color: var(--primary-color);
         }
 
-        .form-row {
+        .client-fields {
             display: grid;
             grid-template-columns: 80px 1fr;
             gap: 8px;
+            margin-bottom: 15px;
             align-items: end;
         }
 
@@ -316,16 +305,6 @@
             font-size: 0.8rem;
         }
 
-        .search-results {
-            max-height: 200px;
-            overflow-y: auto;
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
-            padding: 8px;
-            margin-top: 8px;
-            background: var(--panel-bg);
-        }
-
         .search-dropdown {
             position: absolute;
             background: var(--panel-bg);
@@ -353,26 +332,6 @@
 
         .search-dropdown-item:last-child {
             border-bottom: none;
-        }
-
-        .sale-summary {
-            background: rgba(39, 174, 96, 0.1);
-            padding: 12px;
-            border-radius: 6px;
-            border: 1px solid var(--success-color);
-            margin-top: 15px;
-        }
-
-        [data-theme="dark"] .sale-summary {
-            background: rgba(46, 204, 113, 0.1);
-        }
-
-        .summary-total {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: var(--success-color);
-            text-align: center;
-            margin: 15px 0;
         }
 
         .payment-buttons {
@@ -461,14 +420,6 @@
             font-size: 0.75rem;
         }
 
-        .client-info {
-            background: var(--panel-bg);
-            padding: 12px;
-            border-radius: 4px;
-            margin-bottom: 12px;
-            border: 1px solid var(--border-color);
-        }
-
         .credit-status {
             background: rgba(243, 156, 18, 0.1);
             padding: 8px;
@@ -532,12 +483,152 @@
             color: white;
         }
 
+        .pending-equipos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .equipo-card {
+            background: var(--light-color);
+            border-radius: 6px;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid var(--border-color);
+        }
+
+        .equipo-card:hover {
+            background: var(--primary-color);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .equipo-card.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--accent-color);
+        }
+
+        .equipo-number {
+            font-weight: bold;
+            font-size: 1rem;
+        }
+
+        .equipo-count {
+            font-size: 0.7rem;
+            opacity: 0.8;
+        }
+
+        .equipo-invoices {
+            margin-top: 15px;
+            max-height: 400px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .equipo-invoices.active {
+            display: block;
+        }
+
+        .invoice-item {
+            background: var(--light-color);
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 12px;
+            border-left: 4px solid var(--warning-color);
+            font-size: 0.8rem;
+        }
+
+        .invoice-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            align-items: center;
+        }
+
+        .invoice-number {
+            font-weight: bold;
+            font-size: 1rem;
+        }
+
+        .invoice-total {
+            color: var(--warning-color);
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .invoice-details {
+            font-size: 0.75rem;
+            opacity: 0.8;
+            margin-bottom: 8px;
+        }
+
+        .invoice-products {
+            background: rgba(255, 255, 255, 0.5);
+            padding: 8px;
+            border-radius: 4px;
+            margin: 8px 0;
+            font-size: 0.75rem;
+        }
+
+        .product-detail {
+            display: flex;
+            justify-content: space-between;
+            padding: 2px 0;
+            border-bottom: 1px dotted var(--border-color);
+        }
+
+        .product-detail:last-child {
+            border-bottom: none;
+        }
+
+        .global-summary {
+            background: rgba(52, 152, 219, 0.1);
+            padding: 12px;
+            border-radius: 6px;
+            margin: 15px 0;
+            border: 1px solid var(--primary-color);
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 4px;
+        }
+
+        .summary-total-global {
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: var(--primary-color);
+            text-align: center;
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .payment-section {
+            background: rgba(39, 174, 96, 0.1);
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 12px;
+            border: 1px solid var(--success-color);
+        }
+
+        .summary-total {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--success-color);
+            text-align: center;
+            margin: 15px 0;
+        }
+
         @media (max-width: 768px) {
-            .compact-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .compact-panel {
+            .sales-process-container {
                 grid-template-columns: 1fr;
             }
             
@@ -557,7 +648,7 @@
                 flex-direction: column;
             }
             
-            .form-row, .search-container {
+            .client-fields, .search-container {
                 grid-template-columns: 1fr;
             }
             
@@ -578,6 +669,10 @@
                 top: 0;
                 right: 0;
                 margin: 5px;
+            }
+
+            .pending-equipos-grid {
+                grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
             }
         }
     </style>
@@ -606,24 +701,19 @@
             <div class="tab" data-tab="cierre">Cierre Diario</div>
         </div>
 
-        <!-- Pestaña de Ventas -->
         <div class="tab-content active" id="sales-tab">
-            <!-- Panel combinado compacto -->
-            <div class="compact-panel">
-                <h2>Proceso de Venta</h2>
-                
-                <!-- Sección izquierda: Datos de Venta -->
-                <div>
-                    <div class="client-info">
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="equipo-number">N° Equipo</label>
-                                <input type="text" id="equipo-number" placeholder="000000" maxlength="6" pattern="[0-9]*">
-                            </div>
-                            <div class="form-group">
-                                <label for="client-name">Cliente/Equipo</label>
-                                <input type="text" id="client-name" placeholder="Nombre cliente o equipo">
-                            </div>
+            <div class="sales-process-container">
+                <div class="sales-form-container">
+                    <h2>Proceso de Venta</h2>
+                    
+                    <div class="client-fields">
+                        <div class="form-group">
+                            <label for="equipo-number">N° Equipo</label>
+                            <input type="text" id="equipo-number" placeholder="000000" maxlength="6" pattern="[0-9]*">
+                        </div>
+                        <div class="form-group">
+                            <label for="client-name">Cliente/Equipo</label>
+                            <input type="text" id="client-name" placeholder="Nombre cliente o equipo">
                         </div>
                     </div>
                     
@@ -639,17 +729,14 @@
                             </button>
                         </div>
                     </div>
-                </div>
-
-                <!-- Sección derecha: Carrito -->
-                <div>
-                    <h3 style="margin-bottom: 12px; color: var(--text-color); font-size: 1rem;">Carrito</h3>
+                    
+                    <h3 style="margin: 15px 0 8px 0; color: var(--text-color); font-size: 1rem;">Carrito</h3>
                     
                     <div id="cart-items" style="max-height: 200px; overflow-y: auto;">
                         <p style="text-align: center; color: #7f8c8d; font-size: 0.8rem;">No hay productos</p>
                     </div>
                     
-                    <div class="sale-summary">
+                    <div style="margin-top: 15px;">
                         <div class="summary-total" style="font-size: 1.3rem;">
                             Total: <span id="total-amount">$0.00</span>
                         </div>
@@ -662,6 +749,20 @@
                                 PENDIENTE
                             </button>
                         </div>
+                    </div>
+                </div>
+
+                <div class="pending-invoices-container">
+                    <h2>Facturas Pendientes</h2>
+                    <p style="font-size: 0.8rem; margin-bottom: 10px; color: var(--text-color);">
+                        Seleccione un equipo para ver sus facturas pendientes
+                    </p>
+                    
+                    <div class="pending-equipos-grid" id="pending-equipos-grid">
+                        <div class="loading">Cargando equipos...</div>
+                    </div>
+                    
+                    <div id="equipo-invoices-container">
                     </div>
                 </div>
             </div>
@@ -691,7 +792,6 @@
             </div>
         </div>
 
-        <!-- Pestaña de Pendientes -->
         <div class="tab-content" id="credits-tab">
             <div class="compact-grid">
                 <div class="panel">
@@ -752,7 +852,6 @@
             </div>
         </div>
 
-        <!-- Pestaña de Historial -->
         <div class="tab-content" id="history-tab">
             <div class="panel">
                 <h2>Historial de Ventas</h2>
@@ -783,20 +882,19 @@
             </div>
         </div>
 
-        <!-- Pestaña de Resumen Diario -->
         <div class="tab-content" id="summary-tab">
             <div class="panel">
                 <h2>Resumen del Día</h2>
                 <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
-                    <div class="sale-summary">
+                    <div style="background: rgba(39, 174, 96, 0.1); padding: 12px; border-radius: 6px; border: 1px solid var(--success-color);">
                         <h3 style="font-size: 0.9rem;">Ventas Contado</h3>
                         <div class="summary-total" style="font-size: 1.2rem;" id="cash-total">$0.00</div>
                     </div>
-                    <div class="sale-summary">
+                    <div style="background: rgba(39, 174, 96, 0.1); padding: 12px; border-radius: 6px; border: 1px solid var(--success-color);">
                         <h3 style="font-size: 0.9rem;">Ventas Pendientes</h3>
                         <div class="summary-total" style="font-size: 1.2rem;" id="credit-total">$0.00</div>
                     </div>
-                    <div class="sale-summary">
+                    <div style="background: rgba(39, 174, 96, 0.1); padding: 12px; border-radius: 6px; border: 1px solid var(--success-color);">
                         <h3 style="font-size: 0.9rem;">Abonos Recibidos</h3>
                         <div class="summary-total" style="font-size: 1.2rem;" id="payments-total">$0.00</div>
                     </div>
@@ -808,7 +906,6 @@
             </div>
         </div>
 
-        <!-- Pestaña de Facturas por Equipo -->
         <div class="tab-content" id="equipos-tab">
             <div class="panel">
                 <h2>Facturas por Equipo</h2>
@@ -839,12 +936,10 @@
             <div class="panel" id="equipo-details-panel" style="display: none;">
                 <h2 id="equipo-details-title" style="font-size: 1.1rem;">Detalles del Equipo</h2>
                 <div id="equipo-details-content">
-                    <!-- Los detalles del equipo se cargarán aquí -->
                 </div>
             </div>
         </div>
 
-        <!-- Pestaña de Cierre Diario -->
         <div class="tab-content" id="cierre-tab">
             <div class="compact-grid">
                 <div class="panel">
@@ -902,7 +997,6 @@
     </div>
 
     <script>
-        // Configuración de Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyDh074AarXaYCc-Htw-lsCeIc_95QQNSnY",
             authDomain: "tallerwilliam-732b3.firebaseapp.com",
@@ -912,7 +1006,6 @@
             appId: "1:822262666247:web:6680487bbf1108006b86a2"
         };
 
-        // Inicializar Firebase
         let firebaseInitialized = false;
         let db = null;
 
@@ -928,42 +1021,27 @@
             updateConnectionStatus(false);
         }
 
-        // Variables globales
         let cart = [];
         let dailySales = [];
         let pendingCredits = [];
         let searchResults = [];
         let selectedCreditId = null;
-        let isPrinting = false;
         let currentTheme = 'light';
-        let saleCounter = 0;
-        let isProcessingSale = false;
+        let equiposConPendientes = [];
+        let selectedEquipo = null;
 
-        // Inicializar la aplicación
         document.addEventListener('DOMContentLoaded', function() {
             console.log("Página cargada correctamente");
             const now = new Date();
             document.getElementById('current-date').textContent = now.toLocaleDateString('es-ES');
-            document.getElementById('closure-date').valueAsDate = now;
             
-            // Cargar tema guardado
             const savedTheme = localStorage.getItem('theme') || 'light';
             setTheme(savedTheme);
             
-            // Verificar conexión
-            checkFirebaseConnection();
-            
-            // Cargar datos iniciales si hay conexión
-            if (firebaseInitialized) {
-                loadSaleCounter();
-                loadDailySales();
-                loadPendingCredits();
-                loadClosuresHistory();
-            }
+            loadExampleData();
             
             setupTabs();
             
-            // Configurar búsqueda en tiempo real
             document.getElementById('search-product').addEventListener('input', function(e) {
                 if (this.value.length >= 2) {
                     searchProducts(this.value);
@@ -972,7 +1050,6 @@
                 }
             });
             
-            // Permitir solo números en el campo equipo
             document.getElementById('equipo-number').addEventListener('input', function(e) {
                 this.value = this.value.replace(/[^0-9]/g, '');
                 if (this.value.length > 6) {
@@ -980,137 +1057,114 @@
                 }
             });
 
-            // Configurar filtro de equipos
-            document.getElementById('equipo-filter').addEventListener('input', function(e) {
-                this.value = this.value.replace(/[^0-9]/g, '');
-                if (this.value.length > 6) {
-                    this.value = this.value.substring(0, 6);
-                }
-                loadEquiposSummary();
-            });
-            
-            // Configurar evento para historial
-            document.getElementById('history-date').addEventListener('change', loadSalesHistory);
-            
-            // Configurar evento para selector de créditos
             document.getElementById('credit-select').addEventListener('change', function() {
                 if (this.value) {
-                    selectedCreditId = this.value;
                     showCreditDetails(this.value);
                 } else {
                     document.getElementById('credit-details').style.display = 'none';
                     document.getElementById('payment-history').style.display = 'none';
+                    selectedCreditId = null;
                 }
             });
-
-            // Configurar toggle de tema
-            document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
-
-            // Verificar conexión periódicamente
-            setInterval(checkFirebaseConnection, 30000);
         });
 
-        // Verificar conexión con Firebase
-        async function checkFirebaseConnection() {
-            if (!db) {
-                updateConnectionStatus(false);
-                return;
-            }
-
-            try {
-                await db.collection('INVENTARIO').limit(1).get();
-                updateConnectionStatus(true);
-                
-                // Recargar datos si se recuperó la conexión
-                if (!firebaseInitialized) {
-                    firebaseInitialized = true;
-                    loadSaleCounter();
-                    loadDailySales();
-                    loadPendingCredits();
+        function loadExampleData() {
+            console.log("Cargando datos de ejemplo...");
+            
+            dailySales = [
+                {
+                    id: "1",
+                    saleNumber: "F240101001",
+                    clientName: "Equipo 123456 - Juan Pérez",
+                    equipoNumber: "123456",
+                    products: [
+                        { description: "Aceite Motor 5W30", code: "001", quantity: 2, price: 25.00 },
+                        { description: "Filtro Aire", code: "002", quantity: 1, price: 15.50 }
+                    ],
+                    total: 65.50,
+                    paymentType: "contado",
+                    date: new Date(),
+                    timestamp: new Date()
+                },
+                {
+                    id: "4",
+                    saleNumber: "F240101004",
+                    clientName: "Cliente Directo - Ana Martínez",
+                    equipoNumber: "",
+                    products: [
+                        { description: "Aceite Transmisión", code: "007", quantity: 1, price: 28.00 },
+                        { description: "Filtro Aceite", code: "008", quantity: 2, price: 9.50 }
+                    ],
+                    total: 47.00,
+                    paymentType: "contado",
+                    date: new Date(),
+                    timestamp: new Date()
                 }
-            } catch (error) {
-                console.error("Error de conexión Firebase:", error);
-                updateConnectionStatus(false);
-                firebaseInitialized = false;
-            }
-        }
-
-        // Actualizar estado de conexión
-        function updateConnectionStatus(connected) {
-            const statusElement = document.getElementById('connection-status');
-            if (connected) {
-                statusElement.textContent = '🟢 Conectado';
-                statusElement.className = 'connection-status online';
-            } else {
-                statusElement.textContent = '🔴 Sin conexión';
-                statusElement.className = 'connection-status offline';
-            }
-        }
-
-        // Habilitar/deshabilitar botones durante procesamiento
-        function setProcessingState(processing) {
-            isProcessingSale = processing;
-            const buttons = [
-                'contado-btn', 'pendiente-btn', 'add-product-btn',
-                'register-payment-btn', 'generate-summary-btn',
-                'generate-closure-btn', 'process-closure-btn'
             ];
             
-            buttons.forEach(buttonId => {
-                const button = document.getElementById(buttonId);
-                if (button) {
-                    button.disabled = processing;
-                    if (processing) {
-                        button.classList.add('processing');
-                    } else {
-                        button.classList.remove('processing');
-                    }
+            pendingCredits = [
+                {
+                    id: "1",
+                    saleId: "2",
+                    saleNumber: "F240101002",
+                    clientName: "Equipo 654321 - María García", 
+                    equipoNumber: "654321",
+                    originalAmount: 80.00,
+                    pendingAmount: 80.00,
+                    saleDate: new Date(),
+                    status: "pendiente",
+                    payments: []
+                },
+                {
+                    id: "2", 
+                    saleId: "3",
+                    saleNumber: "F240101003",
+                    clientName: "Equipo 123456 - Carlos López",
+                    equipoNumber: "123456",
+                    originalAmount: 47.00,
+                    pendingAmount: 47.00,
+                    saleDate: new Date(),
+                    status: "pendiente",
+                    payments: []
+                },
+                {
+                    id: "3",
+                    saleId: "5", 
+                    saleNumber: "F240101005",
+                    clientName: "Equipo 789012 - Transportes XYZ",
+                    equipoNumber: "789012",
+                    originalAmount: 220.50,
+                    pendingAmount: 120.50,
+                    saleDate: new Date(Date.now() - 172800000),
+                    status: "pendiente",
+                    payments: [
+                        {
+                            amount: 100.00,
+                            date: new Date(Date.now() - 86400000),
+                            previousBalance: 220.50,
+                            newBalance: 120.50
+                        }
+                    ]
                 }
-            });
+            ];
+            
+            equiposConPendientes = [
+                { equipo: "123456", facturasPendientes: 1, totalPendiente: 47.00 },
+                { equipo: "654321", facturasPendientes: 1, totalPendiente: 80.00 },
+                { equipo: "789012", facturasPendientes: 1, totalPendiente: 120.50 },
+                { equipo: "111222", facturasPendientes: 2, totalPendiente: 320.75 },
+                { equipo: "333444", facturasPendientes: 1, totalPendiente: 45.25 }
+            ];
+            
+            displayDailySales();
+            displayPendingCredits();
+            displayEquiposConPendientes();
+            updateCreditSelect();
+            
+            console.log("Datos de ejemplo cargados correctamente");
+            showStatus("Sistema cargado en modo de pruebas", "success");
         }
 
-        // Cargar contador de ventas
-        async function loadSaleCounter() {
-            if (!firebaseInitialized) {
-                console.warn("Firebase no inicializado, no se puede cargar contador");
-                return;
-            }
-
-            try {
-                const counterDoc = await db.collection('counters').doc('sales').get();
-                if (counterDoc.exists) {
-                    saleCounter = counterDoc.data().value || 0;
-                } else {
-                    await db.collection('counters').doc('sales').set({ value: 0 });
-                    saleCounter = 0;
-                }
-                console.log("Contador de ventas cargado:", saleCounter);
-            } catch (error) {
-                console.error("Error cargando contador:", error);
-                saleCounter = 0;
-                showStatus("Error cargando contador de ventas", "error");
-            }
-        }
-
-        // Obtener siguiente número de venta
-        async function getNextSaleNumber() {
-            if (!firebaseInitialized) {
-                // Fallback: usar timestamp como número de venta
-                return Date.now();
-            }
-
-            try {
-                saleCounter++;
-                await db.collection('counters').doc('sales').update({ value: saleCounter });
-                return saleCounter;
-            } catch (error) {
-                console.error("Error actualizando contador:", error);
-                // Fallback: usar timestamp
-                return Date.now();
-            }
-        }
-
-        // Configurar pestañas
         function setupTabs() {
             document.querySelectorAll('.tab').forEach(tab => {
                 tab.addEventListener('click', function() {
@@ -1120,27 +1174,17 @@
                     this.classList.add('active');
                     const tabId = this.getAttribute('data-tab') + '-tab';
                     document.getElementById(tabId).classList.add('active');
-                    
-                    if (this.getAttribute('data-tab') === 'credits') {
-                        loadPendingCredits();
-                    } else if (this.getAttribute('data-tab') === 'history') {
-                        loadSalesHistory();
-                    } else if (this.getAttribute('data-tab') === 'equipos') {
-                        loadEquiposSummary();
-                    } else if (this.getAttribute('data-tab') === 'cierre') {
-                        loadClosuresHistory();
-                    }
                 });
             });
+            
+            document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
         }
 
-        // Cambiar tema
         function toggleTheme() {
             const newTheme = currentTheme === 'light' ? 'dark' : 'light';
             setTheme(newTheme);
         }
 
-        // Aplicar tema
         function setTheme(theme) {
             currentTheme = theme;
             document.body.setAttribute('data-theme', theme);
@@ -1150,224 +1194,35 @@
             themeToggle.textContent = theme === 'light' ? '🌙' : '☀️';
         }
 
-        // =============================================
-        // FUNCIÓN DE IMPRESIÓN COMPACTA CON HISTORIAL DE ABONOS
-        // =============================================
+        function showStatus(message, type) {
+            const statusElement = document.getElementById('status-message');
+            statusElement.textContent = message;
+            statusElement.className = `status ${type}`;
+            statusElement.style.display = 'block';
 
-        async function printTicket(sale, saleId, saleNumber) {
-            if (isPrinting) {
-                showStatus("Impresión en curso...", "error");
-                return;
-            }
+            setTimeout(() => {
+                statusElement.style.display = 'none';
+            }, 5000);
+        }
 
-            isPrinting = true;
+        function searchProducts(searchTerm) {
+            searchResults = [
+                { id: "1", codigo: "001", descripcion: "Aceite Motor 5W30", precio: 25.00, cantidad: 15 },
+                { id: "2", codigo: "002", descripcion: "Filtro Aire", precio: 15.50, cantidad: 8 },
+                { id: "3", codigo: "003", descripcion: "Bujías", precio: 8.75, cantidad: 25 },
+                { id: "4", codigo: "004", descripcion: "Correa Distribución", precio: 45.00, cantidad: 6 },
+                { id: "5", codigo: "005", descripcion: "Líquido Frenos", precio: 12.00, cantidad: 12 },
+                { id: "6", codigo: "006", descripcion: "Pastillas Freno", precio: 35.00, cantidad: 10 },
+                { id: "7", codigo: "007", descripcion: "Aceite Transmisión", precio: 28.00, cantidad: 7 },
+                { id: "8", codigo: "008", descripcion: "Filtro Aceite", precio: 9.50, cantidad: 20 }
+            ].filter(product => 
+                product.codigo.includes(searchTerm) || 
+                product.descripcion.toLowerCase().includes(searchTerm.toLowerCase())
+            );
             
-            try {
-                const equipoNumber = document.getElementById('equipo-number').value;
-                const clientName = document.getElementById('client-name').value;
-                let displayName = '';
-                
-                if (equipoNumber && clientName) {
-                    displayName = `Equipo ${equipoNumber} - ${clientName}`;
-                } else if (equipoNumber) {
-                    displayName = `Equipo ${equipoNumber}`;
-                } else {
-                    displayName = clientName;
-                }
-
-                // Obtener información de crédito si es venta pendiente
-                let creditInfo = null;
-                let paymentHistory = [];
-                
-                if (sale.paymentType === 'pendiente') {
-                    const creditQuery = await db.collection('creditos').where('saleId', '==', saleId).get();
-                    if (!creditQuery.empty) {
-                        creditInfo = creditQuery.docs[0].data();
-                        paymentHistory = creditInfo.payments || [];
-                    }
-                }
-
-                let ticketContent = await createTicketContent(sale, saleNumber, displayName, paymentHistory, creditInfo);
-
-                const printWindow = window.open('', '_blank', `width=350,height=600`);
-                
-                if (!printWindow) {
-                    throw new Error("No se pudo abrir ventana de impresión");
-                }
-
-                printWindow.document.write(`
-                    <!DOCTYPE html>
-                    <html>
-                    <head>
-                        <title>Factura ${saleNumber}</title>
-                        <style>
-                            body { 
-                                margin: 5px; 
-                                padding: 5px; 
-                                width: 340px; 
-                                font-family: 'Courier New', monospace; 
-                                background: white; 
-                                font-size: 12px; 
-                                font-weight: bold; /* TODOS LOS TEXTOS EN NEGRITA */
-                            }
-                            @media print { 
-                                body { margin: 0; padding: 0; } 
-                                @page { size: auto; margin: 0; } 
-                            }
-                            .header { text-align: center; border-bottom: 1px dashed #000; padding-bottom: 5px; margin-bottom: 5px; }
-                            .title { font-size: 14px; font-weight: bold; margin: 3px 0; }
-                            .info { font-size: 10px; margin: 2px 0; }
-                            .client { background: #f0f0f0; padding: 5px; margin: 5px 0; border-radius: 3px; font-size: 10px; }
-                            .table { width: 100%; border-collapse: collapse; font-size: 10px; margin: 5px 0; }
-                            .table th { background: #e0e0e0; padding: 3px; text-align: left; border-bottom: 1px dashed #000; }
-                            .table td { padding: 3px; border-bottom: 1px solid #ccc; }
-                            .total { text-align: center; background: #ffffcc; padding: 8px; border: 1px solid #000; margin: 8px 0; font-size: 12px; font-weight: bold; }
-                            .status { padding: 5px; border: 1px solid #000; margin: 5px 0; font-weight: bold; text-align: center; background: ${sale.paymentType === 'contado' ? '#90EE90' : '#FFB6C1'}; }
-                            .footer { background: #e6f7ff; padding: 5px; text-align: center; margin-top: 8px; font-size: 10px; }
-                            .payment-history { margin: 8px 0; padding: 5px; border: 1px dashed #000; background: #f9f9f9; }
-                            .payment-item { padding: 2px 0; border-bottom: 1px dotted #ccc; }
-                            .payment-item:last-child { border-bottom: none; }
-                            .current-balance { background: #fffacd; padding: 5px; border: 1px solid #000; margin: 5px 0; text-align: center; font-weight: bold; }
-                        </style>
-                    </head>
-                    <body>${ticketContent}</body>
-                    </html>
-                `);
-                printWindow.document.close();
-
-                printWindow.onbeforeunload = function() {
-                    isPrinting = false;
-                    showStatus("Impresión completada", "success");
-                };
-
-                setTimeout(() => {
-                    if (!printWindow.closed) {
-                        printWindow.close();
-                        isPrinting = false;
-                    }
-                }, 5000);
-
-            } catch (error) {
-                console.error("Error en impresión:", error);
-                isPrinting = false;
-                showStatus("Error al imprimir: " + error.message, "error");
-            }
+            displaySearchDropdown();
         }
 
-        // Crear contenido del ticket compacto con historial de abonos
-        async function createTicketContent(sale, saleNumber, displayName, paymentHistory, creditInfo) {
-            let content = `
-                <div class="header">
-                    <div class="title">TALLER WILIAN</div>
-                    <div class="info">${new Date().toLocaleString('es-ES')}</div>
-                    <div class="info"><strong>Factura: ${saleNumber}</strong></div>
-                </div>
-                
-                <div class="client"><strong>CLIENTE:</strong> ${displayName}</div>
-                
-                <table class="table">
-                    <thead><tr><th>PRODUCTO</th><th>CANT</th><th>TOTAL</th></tr></thead>
-                    <tbody>`;
-
-            sale.products.forEach(product => {
-                const productName = product.description.length > 18 ? product.description.substring(0, 18) + '...' : product.description;
-                const productInfo = searchResults.find(p => p.id === product.productId);
-                const productCode = productInfo ? (productInfo.codigo || 'N/A') : 'N/A';
-                
-                content += `<tr>
-                    <td><div><strong>${productName}</strong></div><div style="font-size: 9px; color: #666;">Cód: ${productCode}</div></td>
-                    <td style="text-align: center;">${product.quantity}</td>
-                    <td style="text-align: right;">$${(product.price * product.quantity).toFixed(2)}</td>
-                </tr>`;
-            });
-
-            content += `</tbody></table>
-                <div class="total">TOTAL: $${sale.total.toFixed(2)}</div>`;
-
-            // Agregar historial de abonos si es venta pendiente
-            if (sale.paymentType === 'pendiente' && paymentHistory.length > 0) {
-                content += `
-                    <div class="payment-history">
-                        <div style="text-align: center; margin-bottom: 5px;"><strong>HISTORIAL DE ABONOS</strong></div>
-                        <div class="payment-item">
-                            <strong>Saldo Inicial: $${sale.total.toFixed(2)}</strong>
-                        </div>`;
-                
-                paymentHistory.forEach((payment, index) => {
-                    const paymentDate = payment.date.toDate ? payment.date.toDate() : new Date(payment.date);
-                    content += `
-                        <div class="payment-item">
-                            <strong>${paymentDate.toLocaleDateString('es-ES')} - Abono: $${payment.amount.toFixed(2)}</strong><br>
-                            <small>Saldo anterior: $${payment.previousBalance.toFixed(2)} | Nuevo saldo: $${payment.newBalance.toFixed(2)}</small>
-                        </div>`;
-                });
-
-                // Mostrar saldo actual
-                const currentBalance = creditInfo ? creditInfo.pendingAmount : sale.total;
-                content += `
-                    <div class="current-balance">
-                        <strong>SALDO PENDIENTE: $${currentBalance.toFixed(2)}</strong>
-                    </div>`;
-            } else if (sale.paymentType === 'pendiente') {
-                content += `
-                    <div class="current-balance">
-                        <strong>SALDO PENDIENTE: $${sale.total.toFixed(2)}</strong>
-                    </div>`;
-            }
-
-            content += `
-                <div class="status">${sale.paymentType === 'contado' ? '*** PAGADO ***' : '*** PENDIENTE ***'}</div>
-                <div class="footer">
-                    <div><strong>¡GRACIAS POR SU COMPRA!</strong></div>
-                    <div>VUELVA PRONTO</div>
-                </div>`;
-
-            return content;
-        }
-
-        // =============================================
-        // FUNCIONES PRINCIPALES COMPACTAS
-        // =============================================
-
-        // Buscar productos
-        async function searchProducts(searchTerm) {
-            if (!searchTerm || searchTerm.length < 2) {
-                document.getElementById('search-dropdown').style.display = 'none';
-                return;
-            }
-
-            if (!firebaseInitialized) {
-                showStatus("Sin conexión a la base de datos", "error");
-                return;
-            }
-
-            try {
-                const searchLower = searchTerm.toLowerCase();
-                const snapshot = await db.collection('INVENTARIO').get();
-                
-                searchResults = [];
-                snapshot.forEach(doc => {
-                    const product = doc.data();
-                    product.id = doc.id;
-                    
-                    const codigo = (product.codigo || '').toLowerCase();
-                    const descripcion = (product.descripcion || '').toLowerCase();
-                    const categoria = (product.categoria || '').toLowerCase();
-                    
-                    if (codigo.includes(searchLower) || descripcion.includes(searchLower) || categoria.includes(searchLower)) {
-                        searchResults.push(product);
-                    }
-                });
-
-                displaySearchDropdown();
-                
-            } catch (error) {
-                console.error("Error searching products:", error);
-                showStatus("Error buscando productos: " + error.message, "error");
-            }
-        }
-
-        // Mostrar resultados en dropdown
         function displaySearchDropdown() {
             const dropdown = document.getElementById('search-dropdown');
             
@@ -1381,7 +1236,7 @@
             searchResults.forEach(product => {
                 const item = document.createElement('div');
                 item.className = 'search-dropdown-item';
-                item.innerHTML = `<strong>${product.descripcion || 'Sin descripción'}</strong><div>Cód: ${product.codigo || 'N/A'} | Stock: ${product.cantidad || 0} | $${(product.precio || 0).toFixed(2)}</div>`;
+                item.innerHTML = `<strong>${product.descripcion}</strong><div>Cód: ${product.codigo} | Stock: ${product.cantidad} | $${product.precio.toFixed(2)}</div>`;
                 item.onclick = () => addToCart(product.id);
                 dropdown.appendChild(item);
             });
@@ -1389,7 +1244,6 @@
             dropdown.style.display = 'block';
         }
 
-        // Agregar producto desde búsqueda
         function addProductFromSearch() {
             const searchInput = document.getElementById('search-product');
             if (searchInput.value.trim() && searchResults.length > 0) {
@@ -1401,7 +1255,6 @@
             }
         }
 
-        // Agregar producto al carrito
         function addToCart(productId) {
             const product = searchResults.find(p => p.id === productId);
             if (!product) {
@@ -1409,36 +1262,16 @@
                 return;
             }
 
-            // Validar stock
-            const currentStock = product.cantidad || 0;
-            if (currentStock <= 0) {
-                showStatus("Producto sin stock disponible", "error");
-                return;
-            }
-
             const existingItem = cart.find(item => item.id === productId);
             if (existingItem) {
-                if (existingItem.quantity < currentStock) {
-                    existingItem.quantity++;
-                } else {
-                    showStatus("Stock insuficiente. Máximo disponible: " + currentStock, "error");
-                    return;
-                }
+                existingItem.quantity++;
             } else {
-                // Validar que el producto tenga todos los campos necesarios
-                if (!product.precio || product.precio <= 0) {
-                    showStatus("El producto no tiene precio válido", "error");
-                    return;
-                }
-
                 cart.push({
                     id: productId,
-                    code: product.codigo || 'N/A',
-                    description: product.descripcion || 'Sin descripción',
-                    price: product.precio || 0,
-                    quantity: 1,
-                    cost: product.costo || 0,
-                    available: currentStock
+                    code: product.codigo,
+                    description: product.descripcion,
+                    price: product.precio,
+                    quantity: 1
                 });
             }
 
@@ -1448,7 +1281,6 @@
             document.getElementById('search-product').value = '';
         }
 
-        // Actualizar visualización del carrito
         function updateCartDisplay() {
             const container = document.getElementById('cart-items');
             const totalElement = document.getElementById('total-amount');
@@ -1485,7 +1317,6 @@
             totalElement.textContent = `$${total.toFixed(2)}`;
         }
 
-        // Actualizar cantidad en carrito
         function updateQuantity(index, change) {
             const newQuantity = cart[index].quantity + change;
             
@@ -1494,252 +1325,161 @@
                 return;
             }
 
-            if (newQuantity > cart[index].available) {
-                showStatus("Stock insuficiente. Máximo disponible: " + cart[index].available, "error");
-                return;
-            }
-
             cart[index].quantity = newQuantity;
             updateCartDisplay();
         }
 
-        // Eliminar producto del carrito
         function removeFromCart(index) {
             cart.splice(index, 1);
             updateCartDisplay();
             showStatus("Producto removido del carrito", "success");
         }
 
-        // Validar datos de la venta antes de procesar
-        function validateSaleData() {
-            // Validar carrito
+        function processSale(paymentType) {
             if (cart.length === 0) {
-                throw new Error("El carrito está vacío");
+                showStatus("El carrito está vacío", "error");
+                return;
             }
 
-            // Validar datos del cliente
             const equipoNumber = document.getElementById('equipo-number').value.trim();
             const clientName = document.getElementById('client-name').value.trim();
 
             if (!equipoNumber && !clientName) {
-                throw new Error("Ingrese al menos un número de equipo o nombre de cliente");
-            }
-
-            // Validar productos
-            for (let item of cart) {
-                if (!item.id || !item.description || item.price <= 0 || item.quantity <= 0) {
-                    throw new Error(`Producto inválido en el carrito: ${item.description}`);
-                }
-            }
-
-            return true;
-        }
-
-        // Verificar stock antes de procesar venta
-        async function verifyStock() {
-            if (!firebaseInitialized) {
-                throw new Error("Sin conexión a la base de datos");
-            }
-
-            const stockVerifications = [];
-
-            for (let item of cart) {
-                try {
-                    const productDoc = await db.collection('INVENTARIO').doc(item.id).get();
-                    if (!productDoc.exists) {
-                        throw new Error(`Producto no encontrado: ${item.description}`);
-                    }
-
-                    const product = productDoc.data();
-                    const currentStock = product.cantidad || 0;
-
-                    if (currentStock < item.quantity) {
-                        throw new Error(`Stock insuficiente para ${item.description}. Disponible: ${currentStock}, Solicitado: ${item.quantity}`);
-                    }
-
-                    stockVerifications.push({
-                        productId: item.id,
-                        currentStock: currentStock,
-                        requiredStock: item.quantity
-                    });
-
-                } catch (error) {
-                    throw new Error(`Error verificando stock de ${item.description}: ${error.message}`);
-                }
-            }
-
-            return stockVerifications;
-        }
-
-        // Procesar venta - VERSIÓN MEJORADA
-        async function processSale(paymentType) {
-            if (isProcessingSale) {
-                showStatus("Ya hay una venta en proceso", "error");
+                showStatus("Ingrese al menos un número de equipo o nombre de cliente", "error");
                 return;
             }
 
-            if (!firebaseInitialized) {
-                showStatus("Sin conexión a la base de datos. Verifique su conexión a internet.", "error");
-                return;
+            const total = parseFloat(document.getElementById('total-amount').textContent.replace('$', ''));
+
+            let displayName = '';
+            if (equipoNumber && clientName) {
+                displayName = `Equipo ${equipoNumber} - ${clientName}`;
+            } else if (equipoNumber) {
+                displayName = `Equipo ${equipoNumber}`;
+            } else {
+                displayName = clientName;
             }
 
-            setProcessingState(true);
+            const saleNumber = getNextSaleNumber();
 
-            try {
-                // Validaciones iniciales
-                validateSaleData();
+            const sale = {
+                id: 'sale-' + Date.now(),
+                saleNumber: saleNumber,
+                clientName: displayName,
+                equipoNumber: equipoNumber,
+                products: [...cart],
+                total: total,
+                paymentType: paymentType,
+                date: new Date()
+            };
 
-                // Verificar stock
-                await verifyStock();
-
-                const equipoNumber = document.getElementById('equipo-number').value.trim();
-                const clientName = document.getElementById('client-name').value.trim();
-                const total = parseFloat(document.getElementById('total-amount').textContent.replace('$', ''));
-
-                let displayName = '';
-                if (equipoNumber && clientName) {
-                    displayName = `Equipo ${equipoNumber} - ${clientName}`;
-                } else if (equipoNumber) {
-                    displayName = `Equipo ${equipoNumber}`;
-                } else {
-                    displayName = clientName;
+            if (firebaseInitialized) {
+                saveSaleToFirebase(sale, paymentType, equipoNumber);
+            } else {
+                if (paymentType === 'contado') {
+                    dailySales.unshift(sale);
                 }
-
-                // Obtener número de venta
-                const saleNumber = await getNextSaleNumber();
-
-                const sale = {
-                    saleNumber: saleNumber,
-                    clientName: displayName,
-                    equipoNumber: equipoNumber,
-                    originalClientName: clientName,
-                    products: cart.map(item => ({
-                        productId: item.id,
-                        description: item.description,
-                        quantity: item.quantity,
-                        price: item.price,
-                        cost: item.cost
-                    })),
-                    total: total,
-                    paymentType: paymentType,
-                    status: paymentType === 'contado' ? 'pagado' : 'pendiente',
-                    date: new Date(),
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                };
-
-                // Crear batch de operaciones
-                const batch = db.batch();
-
-                // Actualizar inventario
-                cart.forEach(item => {
-                    const productRef = db.collection('INVENTARIO').doc(item.id);
-                    batch.update(productRef, {
-                        cantidad: firebase.firestore.FieldValue.increment(-item.quantity)
-                    });
-                });
-
-                // Registrar venta
-                const saleRef = db.collection('ventas').doc();
-                batch.set(saleRef, sale);
-
-                // Si es pendiente, crear registro de crédito
+                
                 if (paymentType === 'pendiente') {
-                    const creditRef = db.collection('creditos').doc();
-                    batch.set(creditRef, {
-                        saleId: saleRef.id,
+                    const credit = {
+                        id: 'credit-' + Date.now(),
+                        saleId: sale.id,
                         saleNumber: saleNumber,
                         clientName: displayName,
+                        equipoNumber: equipoNumber,
                         originalAmount: total,
                         pendingAmount: total,
                         saleDate: new Date(),
                         status: 'pendiente',
                         payments: []
-                    });
-                }
-
-                // Ejecutar batch
-                await batch.commit();
-
-                // Éxito
-                if (paymentType === 'contado') {
-                    showStatus(`Venta contado #${saleNumber} procesada correctamente`, "success");
-                    // Imprimir ticket después de un breve delay
-                    setTimeout(() => {
-                        printTicket(sale, saleRef.id, saleNumber);
-                    }, 500);
-                } else {
-                    showStatus(`Venta pendiente #${saleNumber} registrada correctamente`, "success");
-                }
-                
-                // Limpiar carrito y formulario
-                cart = [];
-                updateCartDisplay();
-                document.getElementById('equipo-number').value = '';
-                document.getElementById('client-name').value = '';
-                document.getElementById('search-dropdown').style.display = 'none';
-                document.getElementById('search-product').value = '';
-
-                // Actualizar vistas
-                loadDailySales();
-                loadPendingCredits();
-
-            } catch (error) {
-                console.error("Error procesando venta:", error);
-                showStatus("Error al procesar venta: " + error.message, "error");
-            } finally {
-                setProcessingState(false);
-            }
-        }
-
-        // Cargar ventas del día
-        async function loadDailySales() {
-            if (!firebaseInitialized) return;
-
-            try {
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
-                
-                const snapshot = await db.collection('ventas').where('date', '>=', today).get();
-
-                dailySales = [];
-                snapshot.forEach(doc => {
-                    const sale = doc.data();
-                    sale.id = doc.id;
-                    if (sale.date && typeof sale.date.toDate === 'function') {
-                        sale.date = sale.date.toDate();
+                    };
+                    pendingCredits.push(credit);
+                    
+                    if (equipoNumber) {
+                        updateEquiposConPendientes(equipoNumber);
                     }
-                    dailySales.push(sale);
-                });
+                }
+            }
 
-                displayDailySales();
+            if (paymentType === 'contado') {
+                showStatus(`Venta contado #${saleNumber} procesada correctamente`, "success");
+            } else {
+                showStatus(`Venta pendiente #${saleNumber} registrada correctamente`, "success");
+            }
+            
+            cart = [];
+            updateCartDisplay();
+            document.getElementById('equipo-number').value = '';
+            document.getElementById('client-name').value = '';
+            document.getElementById('search-dropdown').style.display = 'none';
+            document.getElementById('search-product').value = '';
+
+            displayDailySales();
+            displayPendingCredits();
+            displayEquiposConPendientes();
+            updateCreditSelect();
+        }
+
+        async function saveSaleToFirebase(sale, paymentType, equipoNumber) {
+            try {
+                const saleRef = await db.collection('ventas').add(sale);
+                
+                if (paymentType === 'pendiente') {
+                    const credit = {
+                        saleId: saleRef.id,
+                        saleNumber: sale.saleNumber,
+                        clientName: sale.clientName,
+                        equipoNumber: equipoNumber,
+                        originalAmount: sale.total,
+                        pendingAmount: sale.total,
+                        saleDate: new Date(),
+                        status: 'pendiente',
+                        payments: []
+                    };
+                    await db.collection('creditos').add(credit);
+                }
+                
+                showStatus("Datos guardados en la nube", "success");
             } catch (error) {
-                console.error("Error loading daily sales:", error);
-                showStatus("Error cargando ventas del día", "error");
+                console.error("Error guardando en Firebase:", error);
+                showStatus("Error guardando en la nube, usando almacenamiento local", "error");
             }
         }
 
-        // Mostrar ventas del día
+        function getNextSaleNumber() {
+            const now = new Date();
+            const dateStr = now.toISOString().slice(2,10).replace(/-/g, '');
+            const count = dailySales.length + 1;
+            return 'F' + dateStr + count.toString().padStart(3, '0');
+        }
+
         function displayDailySales() {
             const tbody = document.getElementById('daily-sales-body');
             
-            if (dailySales.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; font-size: 0.8rem;">No hay ventas hoy</td></tr>';
+            const ventasContado = dailySales.filter(sale => sale.paymentType === 'contado');
+            
+            if (ventasContado.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #7f8c8d;">No hay ventas de contado hoy</td></tr>';
                 return;
             }
 
             tbody.innerHTML = '';
-            dailySales.forEach(sale => {
+            ventasContado.forEach(sale => {
+                const productosText = sale.products.map(p => 
+                    `${p.description} (${p.quantity})`
+                ).join(', ');
+                
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td><strong>${sale.saleNumber || 'N/A'}</strong></td>
+                    <td><strong>${sale.saleNumber}</strong></td>
                     <td>${sale.clientName}</td>
-                    <td>${sale.products.length} prod</td>
+                    <td title="${productosText}">${sale.products.length} producto(s)</td>
                     <td>$${sale.total.toFixed(2)}</td>
                     <td>${sale.paymentType === 'contado' ? 'Contado' : 'Pendiente'}</td>
-                    <td>${sale.date ? sale.date.toLocaleTimeString('es-ES', {hour: '2-digit', minute:'2-digit'}) : 'N/A'}</td>
+                    <td>${sale.date.toLocaleTimeString('es-ES', {hour: '2-digit', minute:'2-digit'})}</td>
                     <td>
                         <div class="actions">
-                            <button class="btn btn-info btn-sm" onclick="printTicketFromSale('${sale.id}')">Impr</button>
+                            <button class="btn btn-info btn-sm" onclick="viewSale('${sale.id}')">Ver</button>
                             <button class="btn btn-danger btn-sm" onclick="deleteSale('${sale.id}')">Del</button>
                         </div>
                     </td>
@@ -1748,180 +1488,167 @@
             });
         }
 
-        // Cargar facturas agrupadas por equipo
-        async function loadEquiposSummary() {
-            if (!firebaseInitialized) return;
-
-            try {
-                const equipoFilter = document.getElementById('equipo-filter').value;
-                const snapshot = await db.collection('ventas').get();
-
-                const equiposMap = new Map();
-
-                snapshot.forEach(doc => {
-                    const sale = doc.data();
-                    if (sale.equipoNumber) {
-                        const equipo = sale.equipoNumber;
-                        
-                        if (equipoFilter && equipo !== equipoFilter) return;
-
-                        if (!equiposMap.has(equipo)) {
-                            equiposMap.set(equipo, {
-                                equipoNumber: equipo,
-                                totalFacturado: 0,
-                                facturas: [],
-                                ultimaFactura: null
-                            });
-                        }
-
-                        const equipoData = equiposMap.get(equipo);
-                        equipoData.totalFacturado += sale.total;
-                        equipoData.facturas.push({
-                            saleNumber: sale.saleNumber,
-                            total: sale.total,
-                            date: sale.date,
-                            products: sale.products
-                        });
-
-                        if (!equipoData.ultimaFactura || sale.date > equipoData.ultimaFactura.date) {
-                            equipoData.ultimaFactura = {
-                                saleNumber: sale.saleNumber,
-                                date: sale.date
-                            };
-                        }
-                    }
-                });
-
-                displayEquiposSummary(equiposMap);
-                
-            } catch (error) {
-                console.error("Error loading equipos summary:", error);
-                showStatus("Error cargando resumen de equipos", "error");
-            }
-        }
-
-        // Mostrar resumen de equipos
-        function displayEquiposSummary(equiposMap) {
-            const tbody = document.getElementById('equipos-body');
+        function displayEquiposConPendientes() {
+            const grid = document.getElementById('pending-equipos-grid');
             
-            if (equiposMap.size === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; font-size: 0.8rem;">No hay facturas</td></tr>';
+            if (equiposConPendientes.length === 0) {
+                grid.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; color: #7f8c8d;">No hay equipos con facturas pendientes</div>';
                 return;
             }
-
-            tbody.innerHTML = '';
-            Array.from(equiposMap.values()).forEach(equipo => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td><strong>${equipo.equipoNumber}</strong></td>
-                    <td>$${equipo.totalFacturado.toFixed(2)}</td>
-                    <td>${equipo.facturas.length}</td>
-                    <td>${equipo.ultimaFactura ? `F-${equipo.ultimaFactura.saleNumber}` : 'N/A'}</td>
-                    <td>
-                        <div class="actions">
-                            <button class="btn btn-info btn-sm" onclick="showEquipoDetails('${equipo.equipoNumber}')">Ver</button>
-                        </div>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-
-        // Mostrar detalles de un equipo específico
-        async function showEquipoDetails(equipoNumber) {
-            if (!firebaseInitialized) {
-                showStatus("Sin conexión a la base de datos", "error");
-                return;
-            }
-
-            try {
-                const snapshot = await db.collection('ventas').where('equipoNumber', '==', equipoNumber).get();
-
-                const facturas = [];
-                let totalGeneral = 0;
-
-                snapshot.forEach(doc => {
-                    const sale = doc.data();
-                    facturas.push(sale);
-                    totalGeneral += sale.total;
-                });
-
-                facturas.sort((a, b) => new Date(b.date) - new Date(a.date));
-
-                const detailsContent = document.getElementById('equipo-details-content');
-                detailsContent.innerHTML = `
-                    <div class="credit-status">
-                        <strong>Equipo:</strong> ${equipoNumber}<br>
-                        <strong>Total:</strong> $${totalGeneral.toFixed(2)}<br>
-                        <strong>Facturas:</strong> ${facturas.length}
+            
+            let html = '';
+            
+            equiposConPendientes.forEach(equipo => {
+                html += `
+                    <div class="equipo-card" data-equipo="${equipo.equipo}" onclick="selectEquipo('${equipo.equipo}')">
+                        <div class="equipo-number">EQ${equipo.equipo}</div>
+                        <div class="equipo-count">$${equipo.totalPendiente.toFixed(2)}</div>
                     </div>
-                    
-                    <h3 style="font-size: 1rem; margin: 10px 0 5px 0;">Detalle Facturas</h3>
-                    <table class="compact-table">
-                        <thead>
-                            <tr>
-                                <th>Factura</th>
-                                <th>Fecha</th>
-                                <th>Productos</th>
-                                <th>Total</th>
-                                <th>Tipo</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${facturas.map(factura => `
-                                <tr>
-                                    <td><strong>${factura.saleNumber}</strong></td>
-                                    <td>${factura.date ? new Date(factura.date.seconds * 1000).toLocaleDateString() : 'N/A'}</td>
-                                    <td>${factura.products.length}</td>
-                                    <td>$${factura.total.toFixed(2)}</td>
-                                    <td>${factura.paymentType === 'contado' ? 'Contado' : 'Pendiente'}</td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
                 `;
-
-                document.getElementById('equipo-details-title').textContent = `Equipo ${equipoNumber}`;
-                document.getElementById('equipo-details-panel').style.display = 'block';
-
-            } catch (error) {
-                console.error("Error loading equipo details:", error);
-                showStatus("Error cargando detalles del equipo", "error");
+            });
+            
+            grid.innerHTML = html;
+            
+            if (equiposConPendientes.length > 0 && !selectedEquipo) {
+                selectEquipo(equiposConPendientes[0].equipo);
             }
         }
 
-        // Cargar ventas pendientes
-        async function loadPendingCredits() {
-            if (!firebaseInitialized) return;
-
-            try {
-                const snapshot = await db.collection('creditos').where('status', '==', 'pendiente').get();
-
-                pendingCredits = [];
-                snapshot.forEach(doc => {
-                    const credit = doc.data();
-                    credit.id = doc.id;
-                    if (credit.saleDate && typeof credit.saleDate.toDate === 'function') {
-                        credit.saleDate = credit.saleDate.toDate();
-                    }
-                    pendingCredits.push(credit);
-                });
-
-                displayPendingCredits();
-                updateCreditSelect();
+        function updateEquiposConPendientes(equipoNumber) {
+            if (!equipoNumber) return;
+            
+            const existingEquipo = equiposConPendientes.find(e => e.equipo === equipoNumber);
+            
+            if (existingEquipo) {
+                const facturasEquipo = pendingCredits.filter(credit => credit.equipoNumber === equipoNumber);
+                const totalPendiente = facturasEquipo.reduce((total, credit) => total + credit.pendingAmount, 0);
+                existingEquipo.totalPendiente = totalPendiente;
+                existingEquipo.facturasPendientes = facturasEquipo.length;
+            } else {
+                const facturasEquipo = pendingCredits.filter(credit => credit.equipoNumber === equipoNumber);
+                const totalPendiente = facturasEquipo.reduce((total, credit) => total + credit.pendingAmount, 0);
                 
-            } catch (error) {
-                console.error("Error loading credits:", error);
-                showStatus("Error cargando ventas pendientes", "error");
+                equiposConPendientes.push({
+                    equipo: equipoNumber,
+                    facturasPendientes: facturasEquipo.length,
+                    totalPendiente: totalPendiente
+                });
             }
+            
+            displayEquiposConPendientes();
         }
 
-        // Mostrar ventas pendientes
+        function selectEquipo(equipoNumber) {
+            selectedEquipo = equipoNumber;
+            
+            document.querySelectorAll('.equipo-card').forEach(card => {
+                card.classList.remove('active');
+            });
+            
+            const selectedCard = document.querySelector(`.equipo-card[data-equipo="${equipoNumber}"]`);
+            if (selectedCard) {
+                selectedCard.classList.add('active');
+            }
+            
+            loadFacturasPorEquipo(equipoNumber);
+        }
+
+        function loadFacturasPorEquipo(equipoNumber) {
+            const container = document.getElementById('equipo-invoices-container');
+            
+            const facturasPendientes = pendingCredits.filter(credit => {
+                return credit.equipoNumber === equipoNumber;
+            });
+            
+            let html = '<div class="equipo-invoices active">';
+            html += `<h3 style="margin-bottom: 10px; font-size: 1rem;">Facturas Pendientes - EQ${equipoNumber}</h3>`;
+            
+            if (facturasPendientes.length === 0) {
+                html += '<p style="text-align: center; color: #7f8c8d; font-size: 0.8rem;">No hay facturas pendientes para este equipo</p>';
+            } else {
+                let totalGlobal = 0;
+                
+                facturasPendientes.forEach(credit => {
+                    totalGlobal += credit.pendingAmount;
+                    
+                    const sale = dailySales.find(s => s.id === credit.saleId) || 
+                                { products: [{ description: "Producto no disponible", code: "N/A", quantity: 0, price: 0 }] };
+                    const productos = sale.products;
+                    
+                    html += `
+                        <div class="invoice-item">
+                            <div class="invoice-header">
+                                <div class="invoice-number">${credit.saleNumber}</div>
+                                <div class="invoice-total">$${credit.pendingAmount.toFixed(2)}</div>
+                            </div>
+                            <div class="invoice-details">
+                                <div><strong>Fecha:</strong> ${credit.saleDate.toLocaleDateString()}</div>
+                                <div><strong>Cliente:</strong> ${credit.clientName}</div>
+                                <div><strong>Saldo pendiente:</strong> $${credit.pendingAmount.toFixed(2)}</div>
+                            </div>
+                            <div class="invoice-products">
+                                <strong>Productos:</strong>
+                                ${productos.map(product => `
+                                    <div class="product-detail">
+                                        <div>
+                                            <div>${product.description}</div>
+                                            <div style="font-size: 0.7rem; color: #666;">Cód: ${product.code}</div>
+                                        </div>
+                                        <span>${product.quantity} x $${product.price.toFixed(2)} = $${(product.quantity * product.price).toFixed(2)}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            <div class="payment-section">
+                                <div class="form-group">
+                                    <label for="payment-amount-${credit.id}">Monto Abono</label>
+                                    <input type="number" id="payment-amount-${credit.id}" min="0" max="${credit.pendingAmount}" step="0.01" placeholder="0.00">
+                                </div>
+                                <div class="actions">
+                                    <button class="btn btn-success" onclick="registerPaymentForCredit('${credit.id}')">Registrar Abono</button>
+                                    <button class="btn btn-info" onclick="printInvoice('${credit.id}')">Imprimir</button>
+                                </div>
+                            </div>
+                            ${credit.payments && credit.payments.length > 0 ? `
+                                <div class="payment-history">
+                                    <strong>Historial de Abonos:</strong>
+                                    ${credit.payments.map((payment, index) => `
+                                        <div style="padding: 4px; border-bottom: 1px solid var(--border-color);">
+                                            <strong>Abono ${index + 1}:</strong> $${payment.amount.toFixed(2)}<br>
+                                            <small>Fecha: ${payment.date.toLocaleDateString()} | Saldo anterior: $${payment.previousBalance.toFixed(2)} | Nuevo saldo: $${payment.newBalance.toFixed(2)}</small>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                });
+                
+                html += `
+                    <div class="global-summary">
+                        <div class="summary-row">
+                            <span><strong>Total Facturas Pendientes:</strong></span>
+                            <span><strong>${facturasPendientes.length}</strong></span>
+                        </div>
+                        <div class="summary-row">
+                            <span><strong>Saldo Total Pendiente:</strong></span>
+                            <span><strong>$${totalGlobal.toFixed(2)}</strong></span>
+                        </div>
+                        <div class="summary-total-global">
+                            TOTAL GLOBAL: $${totalGlobal.toFixed(2)}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
         function displayPendingCredits() {
             const tbody = document.getElementById('credits-body');
             
             if (pendingCredits.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; font-size: 0.8rem;">No hay pendientes</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #7f8c8d;">No hay ventas pendientes</td></tr>';
                 return;
             }
 
@@ -1931,12 +1658,10 @@
                 tr.innerHTML = `
                     <td>${credit.clientName}</td>
                     <td>$${credit.pendingAmount.toFixed(2)}</td>
-                    <td>${credit.saleDate ? credit.saleDate.toLocaleDateString() : 'N/A'}</td>
+                    <td>${credit.saleDate.toLocaleDateString()}</td>
                     <td>
                         <div class="actions">
-                            <button class="btn btn-info btn-sm" onclick="printTicketFromCredit('${credit.id}')">Impr</button>
-                            <button class="btn btn-success btn-sm" onclick="selectCredit('${credit.id}')">Abonar</button>
-                            <button class="btn btn-danger btn-sm" onclick="deletePendingSale('${credit.id}')">Del</button>
+                            <button class="btn btn-success" style="padding: 4px 8px; font-size: 0.7rem;" onclick="selectCredit('${credit.id}')">Abonar</button>
                         </div>
                     </td>
                 `;
@@ -1944,7 +1669,6 @@
             });
         }
 
-        // Actualizar selector de créditos para abonos
         function updateCreditSelect() {
             const select = document.getElementById('credit-select');
             select.innerHTML = '<option value="">Seleccione venta</option>';
@@ -1957,20 +1681,13 @@
             });
         }
 
-        // Seleccionar crédito para abono
         function selectCredit(creditId) {
             selectedCreditId = creditId;
             document.getElementById('credit-select').value = creditId;
             showCreditDetails(creditId);
         }
 
-        // Mostrar detalles del crédito seleccionado
-        async function showCreditDetails(creditId) {
-            if (!firebaseInitialized) {
-                showStatus("Sin conexión a la base de datos", "error");
-                return;
-            }
-
+        function showCreditDetails(creditId) {
             const credit = pendingCredits.find(c => c.id === creditId);
             if (!credit) return;
 
@@ -1981,565 +1698,365 @@
             document.getElementById('payment-amount').value = '';
             document.getElementById('payment-amount').max = credit.pendingAmount;
 
-            // Cargar historial de abonos
-            await loadPaymentHistory(creditId);
+            showPaymentHistory(credit);
         }
 
-        // Cargar historial de abonos
-        async function loadPaymentHistory(creditId) {
-            if (!firebaseInitialized) return;
-
-            try {
-                const creditDoc = await db.collection('creditos').doc(creditId).get();
-                if (creditDoc.exists) {
-                    const credit = creditDoc.data();
-                    const paymentsList = document.getElementById('payments-list');
-                    
-                    if (credit.payments && credit.payments.length > 0) {
-                        paymentsList.innerHTML = '';
-                        credit.payments.forEach((payment, index) => {
-                            const paymentDate = payment.date.toDate ? payment.date.toDate() : new Date(payment.date);
-                            const paymentDiv = document.createElement('div');
-                            paymentDiv.style.padding = '4px';
-                            paymentDiv.style.borderBottom = '1px solid #ddd';
-                            paymentDiv.innerHTML = `
-                                <strong>Abono ${index + 1}:</strong> $${payment.amount.toFixed(2)}<br>
-                                <small>Fecha: ${paymentDate.toLocaleDateString()}</small><br>
-                                <small>Saldo anterior: $${payment.previousBalance.toFixed(2)} | Nuevo saldo: $${payment.newBalance.toFixed(2)}</small>
-                            `;
-                            paymentsList.appendChild(paymentDiv);
-                        });
-                        document.getElementById('payment-history').style.display = 'block';
-                    } else {
-                        document.getElementById('payment-history').style.display = 'none';
-                    }
-                }
-            } catch (error) {
-                console.error("Error loading payment history:", error);
+        function showPaymentHistory(credit) {
+            const paymentsList = document.getElementById('payments-list');
+            const paymentHistory = document.getElementById('payment-history');
+            
+            if (!credit.payments || credit.payments.length === 0) {
+                paymentsList.innerHTML = '<p style="text-align: center; color: #7f8c8d; font-size: 0.75rem;">No hay abonos registrados</p>';
+            } else {
+                let html = '';
+                credit.payments.forEach((payment, index) => {
+                    html += `
+                        <div style="padding: 4px; border-bottom: 1px solid var(--border-color);">
+                            <strong>Abono ${index + 1}:</strong> $${payment.amount.toFixed(2)}<br>
+                            <small>Fecha: ${payment.date.toLocaleDateString()} | Saldo anterior: $${payment.previousBalance.toFixed(2)} | Nuevo saldo: $${payment.newBalance.toFixed(2)}</small>
+                        </div>
+                    `;
+                });
+                paymentsList.innerHTML = html;
             }
+            
+            paymentHistory.style.display = 'block';
         }
 
-        // Registrar abono
-        async function registerPayment() {
-            if (!firebaseInitialized) {
-                showStatus("Sin conexión a la base de datos", "error");
-                return;
-            }
-
-            const creditId = selectedCreditId || document.getElementById('credit-select').value;
-            const amount = parseFloat(document.getElementById('payment-amount').value);
-
-            if (!creditId) {
-                showStatus("Seleccione una venta pendiente", "error");
-                return;
-            }
-
+        function registerPaymentForCredit(creditId) {
+            const amountInput = document.getElementById(`payment-amount-${creditId}`);
+            const amount = parseFloat(amountInput.value);
+            
             if (!amount || amount <= 0) {
                 showStatus("Ingrese un monto válido", "error");
                 return;
             }
-
+            
             const credit = pendingCredits.find(c => c.id === creditId);
-            if (!credit) {
-                showStatus("Venta pendiente no encontrada", "error");
-                return;
-            }
-
             if (amount > credit.pendingAmount) {
-                showStatus("El monto no puede ser mayor al saldo pendiente", "error");
+                showStatus("El monto excede el saldo pendiente", "error");
                 return;
             }
+            
+            const newBalance = credit.pendingAmount - amount;
+            
+            credit.pendingAmount = newBalance;
+            if (newBalance === 0) {
+                credit.status = 'pagado';
+            }
+            
+            if (!credit.payments) {
+                credit.payments = [];
+            }
+            
+            credit.payments.push({
+                amount: amount,
+                date: new Date(),
+                previousBalance: credit.pendingAmount + amount,
+                newBalance: newBalance
+            });
 
-            setProcessingState(true);
+            if (firebaseInitialized) {
+                savePaymentToFirebase(creditId, amount, newBalance);
+            }
 
+            showStatus(`Abono de $${amount.toFixed(2)} registrado correctamente`, "success");
+            
+            amountInput.value = '';
+            
+            displayPendingCredits();
+            updateCreditSelect();
+            displayEquiposConPendientes();
+            
+            if (selectedEquipo) {
+                loadFacturasPorEquipo(selectedEquipo);
+            }
+        }
+
+        async function savePaymentToFirebase(creditId, amount, newBalance) {
             try {
-                const newBalance = credit.pendingAmount - amount;
                 const payment = {
                     amount: amount,
                     date: new Date(),
-                    previousBalance: credit.pendingAmount,
+                    previousBalance: newBalance + amount,
                     newBalance: newBalance
                 };
-
+                
                 await db.collection('creditos').doc(creditId).update({
                     pendingAmount: newBalance,
                     status: newBalance === 0 ? 'pagado' : 'pendiente',
                     payments: firebase.firestore.FieldValue.arrayUnion(payment)
                 });
-
-                // Actualizar estado de la venta
-                await db.collection('ventas').doc(credit.saleId).update({
-                    status: newBalance === 0 ? 'pagado' : 'parcial'
-                });
-
-                showStatus("Abono registrado correctamente", "success");
                 
-                // Limpiar formulario
-                document.getElementById('payment-amount').value = '';
-                document.getElementById('credit-details').style.display = 'none';
-                document.getElementById('payment-history').style.display = 'none';
-
-                // Actualizar datos
-                loadPendingCredits();
-
+                showStatus("Abono guardado en la nube", "success");
             } catch (error) {
-                console.error("Error registering payment:", error);
-                showStatus("Error registrando abono: " + error.message, "error");
-            } finally {
-                setProcessingState(false);
+                console.error("Error guardando abono en Firebase:", error);
+                showStatus("Error guardando en la nube, usando almacenamiento local", "error");
             }
         }
 
-        // Eliminar venta pendiente - CORREGIDO
-        async function deletePendingSale(creditId) {
-            if (!confirm("¿Está seguro de eliminar esta venta pendiente? Esta acción no se puede deshacer y restaurará el inventario.")) return;
-
-            if (!firebaseInitialized) {
-                showStatus("Sin conexión a la base de datos", "error");
-                return;
-            }
-
-            setProcessingState(true);
-
-            try {
-                const credit = pendingCredits.find(c => c.id === creditId);
-                if (!credit) {
-                    showStatus("Venta pendiente no encontrada", "error");
-                    return;
-                }
-
-                const batch = db.batch();
-                
-                // Buscar la venta original
-                const saleDoc = await db.collection('ventas').doc(credit.saleId).get();
-                if (saleDoc.exists) {
-                    const sale = saleDoc.data();
-                    // Restaurar inventario
-                    sale.products.forEach(product => {
-                        const productRef = db.collection('INVENTARIO').doc(product.productId);
-                        batch.update(productRef, {
-                            cantidad: firebase.firestore.FieldValue.increment(product.quantity)
-                        });
-                    });
-                    
-                    // Eliminar la venta
-                    batch.delete(db.collection('ventas').doc(credit.saleId));
-                }
-
-                // Eliminar el crédito
-                batch.delete(db.collection('creditos').doc(creditId));
-
-                await batch.commit();
-                showStatus("Venta pendiente eliminada correctamente", "success");
-                
-                // Actualizar ambas vistas
-                loadPendingCredits();
-                loadDailySales();
-
-            } catch (error) {
-                console.error("Error deleting pending sale:", error);
-                showStatus("Error eliminando venta pendiente: " + error.message, "error");
-            } finally {
-                setProcessingState(false);
-            }
-        }
-
-        // Eliminar venta - CORREGIDO
-        async function deleteSale(saleId) {
-            if (!confirm("¿Está seguro de eliminar esta venta? Esta acción no se puede deshacer y restaurará el inventario.")) return;
-
-            if (!firebaseInitialized) {
-                showStatus("Sin conexión a la base de datos", "error");
-                return;
-            }
-
-            setProcessingState(true);
-
-            try {
-                const saleDoc = await db.collection('ventas').doc(saleId).get();
-                if (!saleDoc.exists) {
-                    showStatus("Venta no encontrada", "error");
-                    return;
-                }
-
-                const sale = saleDoc.data();
-                const batch = db.batch();
-
-                // Restaurar inventario
-                sale.products.forEach(product => {
-                    const productRef = db.collection('INVENTARIO').doc(product.productId);
-                    batch.update(productRef, {
-                        cantidad: firebase.firestore.FieldValue.increment(product.quantity)
-                    });
-                });
-
-                // Eliminar la venta
-                batch.delete(db.collection('ventas').doc(saleId));
-
-                // Si es venta pendiente, eliminar también el crédito
-                if (sale.paymentType === 'pendiente') {
-                    const creditQuery = await db.collection('creditos').where('saleId', '==', saleId).get();
-                    creditQuery.forEach(doc => {
-                        batch.delete(doc.ref);
-                    });
-                }
-
-                await batch.commit();
-                showStatus("Venta eliminada correctamente", "success");
-                
-                // Actualizar ambas vistas
-                loadDailySales();
-                loadPendingCredits();
-
-            } catch (error) {
-                console.error("Error deleting sale:", error);
-                showStatus("Error eliminando venta: " + error.message, "error");
-            } finally {
-                setProcessingState(false);
-            }
-        }
-
-        // Cancelar venta pendiente desde formulario
-        function cancelPendingSale() {
-            const creditId = selectedCreditId || document.getElementById('credit-select').value;
-            if (!creditId) {
+        function registerPayment() {
+            if (!selectedCreditId) {
                 showStatus("Seleccione una venta pendiente", "error");
                 return;
             }
-            deletePendingSale(creditId);
-        }
-
-        // Imprimir ticket desde venta existente
-        async function printTicketFromSale(saleId) {
-            try {
-                const saleDoc = await db.collection('ventas').doc(saleId).get();
-                if (saleDoc.exists) {
-                    const sale = saleDoc.data();
-                    printTicket(sale, saleId, sale.saleNumber || 'N/A');
-                } else {
-                    showStatus("Venta no encontrada", "error");
-                }
-            } catch (error) {
-                console.error("Error printing sale ticket:", error);
-                showStatus("Error imprimiendo ticket: " + error.message, "error");
-            }
-        }
-
-        // Imprimir ticket desde crédito
-        async function printTicketFromCredit(creditId) {
-            try {
-                const creditDoc = await db.collection('creditos').doc(creditId).get();
-                if (creditDoc.exists) {
-                    const credit = creditDoc.data();
-                    const saleDoc = await db.collection('ventas').doc(credit.saleId).get();
-                    
-                    if (saleDoc.exists) {
-                        const sale = saleDoc.data();
-                        printTicket(sale, credit.saleId, credit.saleNumber || 'N/A');
-                    }
-                } else {
-                    showStatus("Crédito no encontrado", "error");
-                }
-            } catch (error) {
-                console.error("Error printing credit ticket:", error);
-                showStatus("Error imprimiendo ticket: " + error.message, "error");
-            }
-        }
-
-        // Generar resumen diario
-        async function generateDailySummary() {
-            if (!firebaseInitialized) {
-                showStatus("Sin conexión a la base de datos", "error");
+            
+            const amount = parseFloat(document.getElementById('payment-amount').value);
+            if (!amount || amount <= 0) {
+                showStatus("Ingrese un monto válido", "error");
                 return;
             }
-
-            setProcessingState(true);
-
-            try {
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
-                
-                const salesSnapshot = await db.collection('ventas').where('date', '>=', today).get();
-
-                let cashTotal = 0;
-                let creditTotal = 0;
-                let paymentsTotal = 0;
-
-                salesSnapshot.forEach(doc => {
-                    const sale = doc.data();
-                    if (sale.paymentType === 'contado') {
-                        cashTotal += sale.total;
-                    } else {
-                        creditTotal += sale.total;
-                    }
-                });
-
-                const creditsSnapshot = await db.collection('creditos').get();
-                creditsSnapshot.forEach(doc => {
-                    const credit = doc.data();
-                    if (credit.payments) {
-                        credit.payments.forEach(payment => {
-                            const paymentDate = payment.date.toDate ? payment.date.toDate() : new Date(payment.date);
-                            if (paymentDate >= today) {
-                                paymentsTotal += payment.amount;
-                            }
-                        });
-                    }
-                });
-
-                document.getElementById('cash-total').textContent = `$${cashTotal.toFixed(2)}`;
-                document.getElementById('credit-total').textContent = `$${creditTotal.toFixed(2)}`;
-                document.getElementById('payments-total').textContent = `$${paymentsTotal.toFixed(2)}`;
-
-                showStatus("Resumen diario generado correctamente", "success");
-
-            } catch (error) {
-                console.error("Error generating daily summary:", error);
-                showStatus("Error generando resumen: " + error.message, "error");
-            } finally {
-                setProcessingState(false);
-            }
-        }
-
-        // Generar resumen para cierre diario
-        async function generateClosureSummary() {
-            if (!firebaseInitialized) {
-                showStatus("Sin conexión a la base de datos", "error");
+            
+            const credit = pendingCredits.find(c => c.id === selectedCreditId);
+            if (amount > credit.pendingAmount) {
+                showStatus("El monto excede el saldo pendiente", "error");
                 return;
             }
-
-            setProcessingState(true);
-
-            try {
-                const closureDate = new Date(document.getElementById('closure-date').value);
-                closureDate.setHours(0, 0, 0, 0);
-                const nextDate = new Date(closureDate);
-                nextDate.setDate(nextDate.getDate() + 1);
-
-                const salesSnapshot = await db.collection('ventas')
-                    .where('date', '>=', closureDate)
-                    .where('date', '<', nextDate)
-                    .get();
-
-                let cashTotal = 0;
-                let creditTotal = 0;
-                let paymentsTotal = 0;
-
-                salesSnapshot.forEach(doc => {
-                    const sale = doc.data();
-                    if (sale.paymentType === 'contado') {
-                        cashTotal += sale.total;
-                    } else {
-                        creditTotal += sale.total;
-                    }
-                });
-
-                // Calcular abonos del día de cierre
-                const creditsSnapshot = await db.collection('creditos').get();
-                creditsSnapshot.forEach(doc => {
-                    const credit = doc.data();
-                    if (credit.payments) {
-                        credit.payments.forEach(payment => {
-                            const paymentDate = payment.date.toDate ? payment.date.toDate() : new Date(payment.date);
-                            if (paymentDate >= closureDate && paymentDate < nextDate) {
-                                paymentsTotal += payment.amount;
-                            }
-                        });
-                    }
-                });
-
-                const totalGeneral = cashTotal + paymentsTotal;
-
-                document.getElementById('closure-cash').textContent = `Ventas Contado: $${cashTotal.toFixed(2)}`;
-                document.getElementById('closure-credit').textContent = `Ventas Pendientes: $${creditTotal.toFixed(2)}`;
-                document.getElementById('closure-payments').textContent = `Abonos Recibidos: $${paymentsTotal.toFixed(2)}`;
-                document.getElementById('closure-total').textContent = `Total General: $${totalGeneral.toFixed(2)}`;
-
-                showStatus("Resumen de cierre generado correctamente", "success");
-
-            } catch (error) {
-                console.error("Error generating closure summary:", error);
-                showStatus("Error generando resumen de cierre: " + error.message, "error");
-            } finally {
-                setProcessingState(false);
+            
+            const newBalance = credit.pendingAmount - amount;
+            
+            credit.pendingAmount = newBalance;
+            if (newBalance === 0) {
+                credit.status = 'pagado';
             }
+            
+            if (!credit.payments) {
+                credit.payments = [];
+            }
+            
+            credit.payments.push({
+                amount: amount,
+                date: new Date(),
+                previousBalance: credit.pendingAmount + amount,
+                newBalance: newBalance
+            });
+
+            showStatus(`Abono de $${amount.toFixed(2)} registrado correctamente`, "success");
+            
+            document.getElementById('payment-amount').value = '';
+            document.getElementById('credit-details').style.display = 'none';
+            document.getElementById('payment-history').style.display = 'none';
+
+            displayPendingCredits();
+            updateCreditSelect();
+            displayEquiposConPendientes();
         }
 
-        // Procesar cierre diario
-        async function processDailyClosure() {
-            if (!firebaseInitialized) {
-                showStatus("Sin conexión a la base de datos", "error");
+        function printInvoice(creditId) {
+            const credit = pendingCredits.find(c => c.id === creditId);
+            if (!credit) {
+                showStatus("Factura no encontrada", "error");
                 return;
             }
-
-            setProcessingState(true);
-
-            try {
-                const closureDate = new Date(document.getElementById('closure-date').value);
-                closureDate.setHours(0, 0, 0, 0);
-                const nextDate = new Date(closureDate);
-                nextDate.setDate(nextDate.getDate() + 1);
-
-                const salesSnapshot = await db.collection('ventas')
-                    .where('date', '>=', closureDate)
-                    .where('date', '<', nextDate)
-                    .get();
-
-                let cashTotal = 0;
-                let creditTotal = 0;
-                let paymentsTotal = 0;
-
-                salesSnapshot.forEach(doc => {
-                    const sale = doc.data();
-                    if (sale.paymentType === 'contado') {
-                        cashTotal += sale.total;
-                    } else {
-                        creditTotal += sale.total;
-                    }
-                });
-
-                // Calcular abonos del día de cierre
-                const creditsSnapshot = await db.collection('creditos').get();
-                creditsSnapshot.forEach(doc => {
-                    const credit = doc.data();
-                    if (credit.payments) {
-                        credit.payments.forEach(payment => {
-                            const paymentDate = payment.date.toDate ? payment.date.toDate() : new Date(payment.date);
-                            if (paymentDate >= closureDate && paymentDate < nextDate) {
-                                paymentsTotal += payment.amount;
-                            }
-                        });
-                    }
-                });
-
-                const totalGeneral = cashTotal + paymentsTotal;
-
-                // Guardar cierre en la base de datos
-                const closureRef = db.collection('cierres_diarios').doc();
-                await closureRef.set({
-                    date: closureDate,
-                    cashSales: cashTotal,
-                    creditSales: creditTotal,
-                    paymentsReceived: paymentsTotal,
-                    total: totalGeneral,
-                    processedAt: new Date()
-                });
-
-                showStatus("Cierre diario procesado correctamente", "success");
-                loadClosuresHistory();
-
-            } catch (error) {
-                console.error("Error processing daily closure:", error);
-                showStatus("Error procesando cierre diario: " + error.message, "error");
-            } finally {
-                setProcessingState(false);
-            }
-        }
-
-        // Cargar historial de cierres
-        async function loadClosuresHistory() {
-            if (!firebaseInitialized) return;
-
-            try {
-                const snapshot = await db.collection('cierres_diarios')
-                    .orderBy('date', 'desc')
-                    .limit(10)
-                    .get();
-
-                const tbody = document.getElementById('closures-body');
-                tbody.innerHTML = '';
-
-                if (snapshot.empty) {
-                    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; font-size: 0.8rem;">No hay cierres registrados</td></tr>';
-                    return;
-                }
-
-                snapshot.forEach(doc => {
-                    const closure = doc.data();
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td>${closure.date.toDate ? closure.date.toDate().toLocaleDateString() : 'N/A'}</td>
-                        <td>$${closure.cashSales.toFixed(2)}</td>
-                        <td>$${closure.creditSales.toFixed(2)}</td>
-                        <td>$${closure.paymentsReceived.toFixed(2)}</td>
-                        <td>$${closure.total.toFixed(2)}</td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-
-            } catch (error) {
-                console.error("Error loading closures history:", error);
-            }
-        }
-
-        // Cargar historial de ventas por fecha
-        async function loadSalesHistory() {
-            const dateInput = document.getElementById('history-date').value;
-            if (!dateInput) {
-                showStatus("Seleccione una fecha", "error");
+            
+            const sale = dailySales.find(s => s.id === credit.saleId);
+            if (!sale) {
+                showStatus("Información de venta no encontrada", "error");
                 return;
             }
+            
+            const printWindow = window.open('', '_blank', 'width=350,height=600');
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Factura ${credit.saleNumber}</title>
+                    <style>
+                        body { 
+                            font-family: 'Courier New', monospace; 
+                            margin: 5px; 
+                            padding: 5px; 
+                            width: 340px;
+                            font-size: 14px;
+                            font-weight: bold;
+                        }
+                        @media print { 
+                            body { margin: 0; padding: 0; } 
+                            @page { size: auto; margin: 0; } 
+                        }
+                        .header { 
+                            text-align: center; 
+                            border-bottom: 2px dashed #000; 
+                            padding-bottom: 8px; 
+                            margin-bottom: 10px; 
+                        }
+                        .title { 
+                            font-size: 18px; 
+                            font-weight: bold; 
+                            margin: 5px 0; 
+                        }
+                        .subtitle {
+                            font-size: 16px;
+                            font-weight: bold;
+                            margin: 4px 0;
+                        }
+                        .info { 
+                            font-size: 12px; 
+                            margin: 3px 0; 
+                        }
+                        .details { 
+                            margin-bottom: 15px; 
+                            padding: 8px;
+                            background: #f9f9f9;
+                            border-radius: 4px;
+                        }
+                        .table { 
+                            width: 100%; 
+                            border-collapse: collapse; 
+                            margin-bottom: 15px; 
+                            font-size: 12px;
+                        }
+                        .table th, .table td { 
+                            border: 1px solid #ddd; 
+                            padding: 6px; 
+                            text-align: left; 
+                        }
+                        .table th { 
+                            background-color: #f2f2f2; 
+                        }
+                        .total { 
+                            text-align: center; 
+                            font-size: 16px; 
+                            font-weight: bold; 
+                            margin-top: 15px;
+                            padding: 10px;
+                            background: #ffffcc;
+                            border: 2px solid #000;
+                        }
+                        .footer { 
+                            margin-top: 20px; 
+                            text-align: center; 
+                            font-size: 12px; 
+                            color: #666; 
+                        }
+                        .product-code {
+                            font-size: 10px;
+                            color: #666;
+                            font-style: italic;
+                        }
+                        .date-large {
+                            font-size: 16px;
+                            font-weight: bold;
+                            margin: 8px 0;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <div class="title">TALLER WILIAN</div>
+                        <div class="subtitle">FACTURA ${credit.saleNumber}</div>
+                        <div class="date-large">${sale.date.toLocaleDateString('es-ES', { 
+                            weekday: 'long', 
+                            year: 'numeric', 
+                            month: 'long', 
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        })}</div>
+                        <div class="info">Tel: 7587-6928</div>
+                    </div>
+                    <div class="details">
+                        <p><strong>Cliente:</strong> ${credit.clientName}</p>
+                        <p><strong>Estado:</strong> ${credit.status === 'pendiente' ? 'PENDIENTE' : 'PAGADO'}</p>
+                        <p><strong>Saldo Pendiente:</strong> $${credit.pendingAmount.toFixed(2)}</p>
+                    </div>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Producto</th>
+                                <th>Cant</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${sale.products.map(product => `
+                                <tr>
+                                    <td>
+                                        <div>${product.description}</div>
+                                        <div class="product-code">Cód: ${product.code}</div>
+                                    </td>
+                                    <td>${product.quantity}</td>
+                                    <td>$${(product.quantity * product.price).toFixed(2)}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                    <div class="total">
+                        TOTAL: $${sale.total.toFixed(2)}
+                    </div>
+                    ${credit.payments && credit.payments.length > 0 ? `
+                        <div style="margin-top: 15px;">
+                            <div style="text-align: center; font-weight: bold; margin-bottom: 8px;">HISTORIAL DE ABONOS</div>
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Monto</th>
+                                        <th>Saldo</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${credit.payments.map(payment => `
+                                        <tr>
+                                            <td>${payment.date.toLocaleDateString('es-ES')}</td>
+                                            <td>$${payment.amount.toFixed(2)}</td>
+                                            <td>$${payment.newBalance.toFixed(2)}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    ` : ''}
+                    <div class="footer">
+                        <p>¡Gracias por su preferencia!</p>
+                        <p>Taller Wilian - Tel: 7587-6928</p>
+                    </div>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+            printWindow.print();
+        }
 
-            if (!firebaseInitialized) {
-                showStatus("Sin conexión a la base de datos", "error");
-                return;
-            }
+        function viewSale(saleId) {
+            showStatus("Función de visualización en desarrollo", "info");
+        }
 
-            setProcessingState(true);
+        function deleteSale(saleId) {
+            if (!confirm("¿Está seguro de eliminar esta venta?")) return;
+            showStatus("Función de eliminación en desarrollo", "info");
+        }
 
-            try {
-                const selectedDate = new Date(dateInput);
-                const nextDate = new Date(selectedDate);
-                nextDate.setDate(nextDate.getDate() + 1);
+        function viewCreditDetails(creditId) {
+            showStatus("Función de detalles en desarrollo", "info");
+        }
 
-                const snapshot = await db.collection('ventas')
-                    .where('date', '>=', selectedDate)
-                    .where('date', '<', nextDate)
-                    .get();
+        function cancelPendingSale() {
+            showStatus("Función de cancelación en desarrollo", "info");
+        }
 
-                const tbody = document.getElementById('history-body');
-                tbody.innerHTML = '';
-
-                if (snapshot.empty) {
-                    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; font-size: 0.8rem;">No hay ventas en esta fecha</td></tr>';
-                    return;
-                }
-
-                snapshot.forEach(doc => {
-                    const sale = doc.data();
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td><strong>${sale.saleNumber || 'N/A'}</strong></td>
-                        <td>${sale.clientName}</td>
-                        <td>${sale.products.length}</td>
-                        <td>$${sale.total.toFixed(2)}</td>
-                        <td>${sale.paymentType === 'contado' ? 'Contado' : 'Pendiente'}</td>
-                        <td>${sale.status || 'completado'}</td>
-                        <td>${sale.date ? sale.date.toLocaleTimeString('es-ES', {hour: '2-digit', minute:'2-digit'}) : 'N/A'}</td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-
-            } catch (error) {
-                console.error("Error loading sales history:", error);
-                showStatus("Error cargando historial: " + error.message, "error");
-            } finally {
-                setProcessingState(false);
+        function updateConnectionStatus(connected) {
+            const statusElement = document.getElementById('connection-status');
+            if (connected) {
+                statusElement.textContent = '🟢 Conectado';
+                statusElement.className = 'connection-status online';
+            } else {
+                statusElement.textContent = '🔴 Sin conexión';
+                statusElement.className = 'connection-status offline';
             }
         }
 
-        // Función para mostrar mensajes de estado
-        function showStatus(message, type) {
-            const statusElement = document.getElementById('status-message');
-            statusElement.textContent = message;
-            statusElement.className = `status ${type}`;
-            statusElement.style.display = 'block';
-
-            setTimeout(() => {
-                statusElement.style.display = 'none';
-            }, 5000);
+        function generateDailySummary() {
+            showStatus("Función de resumen en desarrollo", "info");
         }
 
+        function generateClosureSummary() {
+            showStatus("Función de cierre en desarrollo", "info");
+        }
+
+        function processDailyClosure() {
+            showStatus("Función de cierre diario en desarrollo", "info");
+        }
     </script>
 </body>
 </html>
