@@ -314,6 +314,30 @@
             background-color: #fff3cd;
             border-left: 4px solid #ffc107;
         }
+
+        .abono-section {
+            background: #e8f5e8;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+            border-left: 4px solid #27ae60;
+        }
+
+        .abono-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .saldo-info {
+            background: #fff3cd;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            text-align: center;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -415,13 +439,14 @@
                         <th>Factura</th>
                         <th>Cliente/Equipo</th>
                         <th>Total</th>
+                        <th>Saldo</th>
                         <th>Fecha</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
                 <tbody id="pendientes-body">
                     <tr>
-                        <td colspan="5" class="empty-cart">Cargando facturas pendientes...</td>
+                        <td colspan="6" class="empty-cart">Cargando facturas pendientes...</td>
                     </tr>
                 </tbody>
             </table>
@@ -431,6 +456,21 @@
             <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 8px; width: 90%; max-width: 600px; max-height: 80vh; overflow-y: auto;">
                 <div id="invoice-modal-content"></div>
                 <button class="btn btn-primary" onclick="closeInvoiceModal()" style="margin-top: 15px; width: 100%;">CERRAR</button>
+            </div>
+        </div>
+
+        <div id="abono-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000;">
+            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 8px; width: 90%; max-width: 400px;">
+                <h3 style="margin-bottom: 15px; text-align: center;">Registrar Abono</h3>
+                <div id="abono-modal-content"></div>
+                <div class="form-group">
+                    <label for="monto-abono">Monto del Abono:</label>
+                    <input type="number" id="monto-abono" step="0.01" min="0.01" placeholder="0.00">
+                </div>
+                <div style="display: flex; gap: 10px; margin-top: 15px;">
+                    <button class="btn btn-success" onclick="SalesService.processAbono()" style="flex: 1;">PROCESAR ABONO</button>
+                    <button class="btn btn-danger" onclick="closeAbonoModal()" style="flex: 1;">CANCELAR</button>
+                </div>
             </div>
         </div>
     </div>
@@ -455,7 +495,8 @@
             saleCounter: 0,
             currentEditingInvoice: null,
             historial: [],
-            pendientes: []
+            pendientes: [],
+            currentAbonoInvoice: null
         };
 
         const DataService = {
@@ -542,6 +583,18 @@
                     return snapshot.size;
                 } else {
                     return 0;
+                }
+            },
+
+            async addAbono(invoiceId, abonoData) {
+                if (AppState.firebaseInitialized) {
+                    const ventaRef = AppState.db.collection("VENTAS").doc(invoiceId);
+                    await ventaRef.update({
+                        abonos: firebase.firestore.FieldValue.arrayUnion(abonoData),
+                        saldoPendiente: firebase.firestore.FieldValue.increment(-abonoData.monto)
+                    });
+                } else {
+                    throw new Error("No hay conexión a la base de datos");
                 }
             }
         };
@@ -704,7 +757,7 @@
                 if (pendientes.length === 0) {
                     pendientesBody.innerHTML = `
                         <tr>
-                            <td colspan="5" class="empty-cart">No hay facturas pendientes</td>
+                            <td colspan="6" class="empty-cart">No hay facturas pendientes</td>
                         </tr>
                     `;
                     return;
@@ -714,12 +767,14 @@
                 
                 pendientes.forEach(venta => {
                     const fecha = venta.timestamp ? new Date(venta.timestamp.toDate ? venta.timestamp.toDate() : venta.timestamp).toLocaleDateString('es-ES') : 'N/A';
+                    const saldoPendiente = venta.saldoPendiente !== undefined ? venta.saldoPendiente : venta.total;
                     
                     pendientesHTML += `
                         <tr>
                             <td><strong>${venta.invoiceNumber || 'N/A'}</strong></td>
                             <td>${venta.clientName || 'N/A'}<br><small>Equipo: ${venta.equipoNumber || 'N/A'}</small></td>
                             <td>$${(venta.total || 0).toFixed(2)}</td>
+                            <td>$${saldoPendiente.toFixed(2)}</td>
                             <td>${fecha}</td>
                             <td>
                                 <button class="action-btn btn-primary" onclick="SalesService.viewInvoice('${venta.id}')">
@@ -727,6 +782,9 @@
                                 </button>
                                 <button class="action-btn btn-success" onclick="SalesService.editInvoice('${venta.id}')">
                                     EDITAR
+                                </button>
+                                <button class="action-btn btn-info" onclick="SalesService.registrarAbono('${venta.id}')" style="background-color: #17a2b8; color: white;">
+                                    ABONO
                                 </button>
                                 <button class="action-btn btn-danger" onclick="SalesService.deleteInvoice('${venta.id}')">
                                     ELIMINAR
@@ -742,6 +800,13 @@
             showInvoiceModal(content) {
                 document.getElementById('invoice-modal-content').innerHTML = content;
                 document.getElementById('invoice-modal').style.display = 'block';
+            },
+
+            showAbonoModal(content) {
+                document.getElementById('abono-modal-content').innerHTML = content;
+                document.getElementById('abono-modal').style.display = 'block';
+                document.getElementById('monto-abono').value = '';
+                document.getElementById('monto-abono').focus();
             }
         };
 
@@ -844,6 +909,11 @@
                         date: new Date().toISOString().split('T')[0],
                         status: paymentType === 'contado' ? 'pagado' : 'pendiente'
                     };
+
+                    if (paymentType === 'pendiente') {
+                        saleData.saldoPendiente = saleData.total;
+                        saleData.abonos = [];
+                    }
                     
                     await DataService.saveSale(saleData);
                     this.printTicket(saleData);
@@ -927,6 +997,27 @@
                         `;
                     });
                 }
+
+                let abonosHTML = '';
+                if (venta.abonos && venta.abonos.length > 0) {
+                    abonosHTML += `<div class="abono-section">
+                        <h4>Historial de Abonos:</h4>`;
+                    venta.abonos.forEach(abono => {
+                        const fechaAbono = abono.fecha ? new Date(abono.fecha.toDate ? abono.fecha.toDate() : abono.fecha).toLocaleString('es-ES') : 'N/A';
+                        abonosHTML += `
+                            <div class="abono-item">
+                                <div>${fechaAbono}</div>
+                                <div>$${abono.monto.toFixed(2)}</div>
+                            </div>
+                        `;
+                    });
+                    abonosHTML += `</div>`;
+                }
+
+                const saldoInfo = venta.paymentType === 'pendiente' ? 
+                    `<div class="saldo-info">
+                        Saldo Pendiente: $${(venta.saldoPendiente || venta.total).toFixed(2)}
+                    </div>` : '';
                 
                 const fecha = venta.timestamp ? new Date(venta.timestamp.toDate ? venta.timestamp.toDate() : venta.timestamp).toLocaleString('es-ES') : 'N/A';
                 const tipo = venta.paymentType === 'contado' ? 'CONTADO' : 'PENDIENTE';
@@ -940,8 +1031,10 @@
                         <strong>Fecha:</strong> ${fecha}<br>
                         <strong>Total:</strong> $${(venta.total || 0).toFixed(2)}
                     </div>
+                    ${saldoInfo}
                     <h4 style="margin: 15px 0 10px 0;">Productos:</h4>
                     ${productsHTML || '<p>No hay productos</p>'}
+                    ${abonosHTML}
                 `;
                 
                 UIService.showInvoiceModal(modalContent);
@@ -1033,6 +1126,64 @@
                 }
             },
 
+            async registrarAbono(invoiceId) {
+                const venta = AppState.pendientes.find(v => v.id === invoiceId);
+                if (!venta) return;
+                
+                AppState.currentAbonoInvoice = venta;
+                
+                const saldoPendiente = venta.saldoPendiente !== undefined ? venta.saldoPendiente : venta.total;
+                
+                const modalContent = `
+                    <div class="invoice-details">
+                        <strong>Factura:</strong> ${venta.invoiceNumber}<br>
+                        <strong>Cliente:</strong> ${venta.clientName}<br>
+                        <strong>Total:</strong> $${venta.total.toFixed(2)}<br>
+                        <strong>Saldo Pendiente:</strong> $${saldoPendiente.toFixed(2)}
+                    </div>
+                `;
+                
+                UIService.showAbonoModal(modalContent);
+            },
+
+            async processAbono() {
+                const montoInput = document.getElementById('monto-abono');
+                const monto = parseFloat(montoInput.value);
+                
+                if (!monto || monto <= 0) {
+                    UIService.showStatus("Ingrese un monto válido", "error");
+                    return;
+                }
+                
+                const venta = AppState.currentAbonoInvoice;
+                const saldoPendiente = venta.saldoPendiente !== undefined ? venta.saldoPendiente : venta.total;
+                
+                if (monto > saldoPendiente) {
+                    UIService.showStatus("El monto del abono no puede ser mayor al saldo pendiente", "error");
+                    return;
+                }
+                
+                try {
+                    const abonoData = {
+                        monto: monto,
+                        fecha: new Date(),
+                        fechaString: new Date().toLocaleString('es-ES')
+                    };
+                    
+                    await DataService.addAbono(venta.id, abonoData);
+                    
+                    this.printAbonoTicket(venta, abonoData, saldoPendiente - monto);
+                    
+                    UIService.showStatus(`Abono de $${monto.toFixed(2)} registrado correctamente`, "success");
+                    
+                    closeAbonoModal();
+                    await this.loadHistorial();
+                    
+                } catch (error) {
+                    UIService.showStatus("Error al procesar abono: " + error.message, "error");
+                }
+            },
+
             printTicket(saleData) {
                 const printWindow = window.open('', '_blank');
                 
@@ -1053,25 +1204,17 @@
                             .header { text-align: center; margin-bottom: 12px; }
                             .line { border-bottom: 2px dashed #000; margin: 4px 0; }
                             .product-row { 
-                                display: flex; 
-                                justify-content: space-between; 
-                                margin: 3px 0;
+                                margin: 4px 0;
                                 font-size: 20px;
                             }
                             .product-desc { 
                                 font-size: 18px;
-                                flex: 1;
-                                margin-right: 5px;
+                                margin-bottom: 2px;
                             }
-                            .product-total { 
-                                text-align: right;
-                                font-size: 20px;
-                                white-space: nowrap;
-                            }
-                            .quantity-line {
+                            .product-info {
+                                display: flex;
+                                justify-content: space-between;
                                 font-size: 18px;
-                                text-align: right;
-                                margin-top: 2px;
                             }
                             .total { font-weight: bold; text-align: center; margin-top: 12px; font-size: 24px; }
                             .footer { text-align: center; margin-top: 12px; font-size: 18px; font-weight: bold; }
@@ -1082,12 +1225,12 @@
                             .medium-text { font-size: 20px; }
                             .large-text { font-size: 26px; }
                             .thank-you { text-align: center; margin-top: 15px; font-weight: bold; font-size: 20px; }
-                            .desc-header { 
-                                display: flex; 
-                                justify-content: space-between;
-                                font-weight: bold;
-                                margin-bottom: 5px;
-                                font-size: 20px;
+                            .abono-info {
+                                background: #f0f0f0;
+                                padding: 8px;
+                                margin: 8px 0;
+                                border-radius: 4px;
+                                font-size: 18px;
                             }
                         </style>
                     </head>
@@ -1108,18 +1251,15 @@
                         
                         <div class="line"></div>
                         
-                        <div class="desc-header">
-                            <div>Descripción</div>
-                            <div>Total</div>
-                        </div>
-                        
                         <div style="margin: 8px 0;">
                             ${saleData.products.map(p => `
                                 <div class="product-row">
                                     <div class="product-desc">${p.descripcion}</div>
-                                    <div class="product-total">$${(p.precio * p.cantidad).toFixed(2)}</div>
+                                    <div class="product-info">
+                                        <div>x${p.cantidad}</div>
+                                        <div>$${(p.precio * p.cantidad).toFixed(2)}</div>
+                                    </div>
                                 </div>
-                                <div class="quantity-line">x${p.cantidad}</div>
                                 <div class="dotted-line"></div>
                             `).join('')}
                         </div>
@@ -1129,14 +1269,104 @@
                         <div class="total large-text">
                             TOTAL: $${saleData.total.toFixed(2)}
                         </div>
+
+                        ${saleData.paymentType === 'pendiente' ? `
+                            <div class="abono-info">
+                                <div>SALDO PENDIENTE:</div>
+                                <div class="large-text">$${(saleData.saldoPendiente || saleData.total).toFixed(2)}</div>
+                            </div>
+                        ` : ''}
                         
                         <div class="thank-you">
                             GRACIAS POR PREFERIRNOS
                         </div>
+                    </body>
+                    </html>
+                `);
+                
+                printWindow.document.close();
+                printWindow.focus();
+                
+                setTimeout(() => {
+                    printWindow.print();
+                    setTimeout(() => {
+                        printWindow.close();
+                    }, 500);
+                }, 500);
+            },
+
+            printAbonoTicket(venta, abonoData, nuevoSaldo) {
+                const printWindow = window.open('', '_blank');
+                
+                printWindow.document.write(`
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <title>Abono #${venta.invoiceNumber}</title>
+                        <style>
+                            body { 
+                                font-family: 'Courier New', monospace; 
+                                font-size: 22px; 
+                                margin: 0; 
+                                padding: 6px;
+                                width: 58mm;
+                                font-weight: bold;
+                            }
+                            .header { text-align: center; margin-bottom: 12px; }
+                            .line { border-bottom: 2px dashed #000; margin: 4px 0; }
+                            .abono-detail { 
+                                margin: 8px 0;
+                                font-size: 20px;
+                            }
+                            .total { font-weight: bold; text-align: center; margin-top: 12px; font-size: 24px; }
+                            .footer { text-align: center; margin-top: 12px; font-size: 18px; font-weight: bold; }
+                            .text-center { text-align: center; }
+                            .small-text { font-size: 18px; }
+                            .medium-text { font-size: 20px; }
+                            .large-text { font-size: 26px; }
+                            .thank-you { text-align: center; margin-top: 15px; font-weight: bold; font-size: 20px; }
+                            .saldo-info {
+                                background: #f0f0f0;
+                                padding: 8px;
+                                margin: 8px 0;
+                                border-radius: 4px;
+                                font-size: 18px;
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="header">
+                            <h3 style="margin: 2px 0; font-size: 26px;">TALLER WILIAN</h3>
+                            <div class="small-text">COMPROBANTE DE ABONO</div>
+                            <div class="small-text">${abonoData.fechaString}</div>
+                        </div>
                         
-                        <div class="footer">
-                            <div>EQUIPO: ${saleData.equipoNumber || 'N/A'}</div>
-                            <div>${new Date().toLocaleDateString('es-ES')}</div>
+                        <div class="line"></div>
+                        
+                        <div class="medium-text">
+                            <strong>Factura:</strong> ${venta.invoiceNumber}<br>
+                            <strong>Cliente:</strong> ${venta.clientName}<br>
+                            <strong>Equipo:</strong> ${venta.equipoNumber}
+                        </div>
+                        
+                        <div class="line"></div>
+                        
+                        <div class="abono-detail">
+                            <div style="text-align: center; font-size: 24px; margin: 10px 0;">
+                                MONTO DEL ABONO
+                            </div>
+                            <div style="text-align: center; font-size: 28px; font-weight: bold;">
+                                $${abonoData.monto.toFixed(2)}
+                            </div>
+                        </div>
+
+                        <div class="saldo-info">
+                            <div>SALDO ANTERIOR: $${(venta.saldoPendiente || venta.total).toFixed(2)}</div>
+                            <div>NUEVO SALDO: $${nuevoSaldo.toFixed(2)}</div>
+                        </div>
+                        
+                        <div class="thank-you">
+                            GRACIAS POR PREFERIRNOS
                         </div>
                     </body>
                     </html>
@@ -1270,6 +1500,11 @@
 
         function closeInvoiceModal() {
             document.getElementById('invoice-modal').style.display = 'none';
+        }
+
+        function closeAbonoModal() {
+            document.getElementById('abono-modal').style.display = 'none';
+            AppState.currentAbonoInvoice = null;
         }
 
         document.addEventListener('DOMContentLoaded', function() {
