@@ -3,26 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Ventas - Taller Wilian</title>
+    <title>Sistema Avanzado de Ventas - Taller Wilian</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
     <style>
-        :root {
-            --primary-color: #3498db;
-            --secondary-color: #2c3e50;
-            --accent-color: #2980b9;
-            --success-color: #27ae60;
-            --warning-color: #f39c12;
-            --danger-color: #e74c3c;
-            --light-color: #ecf0f1;
-            --dark-color: #2c3e50;
-            --text-color: #333;
-            --bg-color: #f5f7fa;
-            --panel-bg: white;
-            --border-color: #ddd;
-            --header-gradient: linear-gradient(135deg, #3498db, #2c3e50);
-        }
-
         * {
             margin: 0;
             padding: 0;
@@ -31,273 +15,212 @@
         }
 
         body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
+            background-color: #f5f7fa;
+            color: #333;
             line-height: 1.4;
             font-size: 14px;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
             padding: 10px;
         }
 
-        header {
-            background: var(--header-gradient);
-            color: white;
-            padding: 10px 0;
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
             border-radius: 8px;
-            margin-bottom: 15px;
+            padding: 15px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
-        header h1 {
+        header {
+            background: linear-gradient(135deg, #3498db, #2c3e50);
+            color: white;
+            padding: 15px 0;
+            border-radius: 8px;
+            margin-bottom: 20px;
             text-align: center;
+        }
+
+        header h1 {
             font-size: 1.5rem;
             margin-bottom: 5px;
         }
 
         .header-info {
-            display: flex;
-            justify-content: space-between;
-            padding: 0 15px;
             font-size: 0.8rem;
             opacity: 0.9;
         }
 
-        .sales-process-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 15px;
-        }
-
-        .sales-form-container, .pending-invoices-container {
-            background: var(--panel-bg);
+        .tabs {
+            display: flex;
+            background: #ecf0f1;
             border-radius: 8px;
-            padding: 15px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            border: 1px solid var(--border-color);
+            padding: 4px;
+            margin-bottom: 20px;
         }
 
-        .panel {
-            background: var(--panel-bg);
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 15px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            border: 1px solid var(--border-color);
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            color: #333;
+            flex: 1;
+            text-align: center;
         }
 
-        .panel h2 {
-            color: var(--text-color);
-            margin-bottom: 12px;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 8px;
-            font-size: 1.2rem;
+        .tab.active {
+            background: #3498db;
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
         }
 
         .form-group {
-            margin-bottom: 12px;
+            margin-bottom: 15px;
         }
 
         .form-group label {
             display: block;
-            margin-bottom: 4px;
+            margin-bottom: 5px;
             font-weight: 600;
-            color: var(--text-color);
-            font-size: 0.85rem;
+            color: #333;
+            font-size: 0.9rem;
         }
 
         .form-group input, .form-group select {
             width: 100%;
-            padding: 8px;
-            border: 1px solid var(--border-color);
+            padding: 10px;
+            border: 1px solid #ddd;
             border-radius: 4px;
-            font-size: 0.85rem;
-            background: var(--panel-bg);
-            color: var(--text-color);
+            font-size: 0.9rem;
+            background: white;
+            color: #333;
         }
 
         .form-group input:focus, .form-group select:focus {
             outline: none;
-            border-color: var(--primary-color);
-        }
-
-        .client-fields {
-            display: grid;
-            grid-template-columns: 80px 1fr;
-            gap: 8px;
-            margin-bottom: 15px;
-            align-items: end;
+            border-color: #3498db;
         }
 
         .search-container {
-            display: grid;
-            grid-template-columns: 1fr auto;
-            gap: 8px;
-            align-items: end;
-        }
-
-        .quantity-input {
-            width: 60px;
-            text-align: center;
-        }
-
-        .btn {
-            padding: 8px 16px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            font-size: 0.85rem;
-        }
-
-        .btn-primary { background-color: var(--primary-color); color: white; }
-        .btn-primary:hover { background-color: var(--accent-color); }
-
-        .btn-success { background-color: var(--success-color); color: white; }
-        .btn-success:hover { background-color: #219a52; }
-
-        .btn-danger { background-color: var(--danger-color); color: white; }
-        .btn-danger:hover { background-color: #c0392b; }
-
-        .btn-warning { background-color: var(--warning-color); color: white; }
-        .btn-warning:hover { background-color: #d35400; }
-
-        .btn-info { background-color: #17a2b8; color: white; }
-        .btn-info:hover { background-color: #138496; }
-
-        .payment-buttons {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-            margin-top: 12px;
-        }
-
-        .payment-btn {
-            padding: 10px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 0.9rem;
-            transition: all 0.3s ease;
-        }
-
-        .payment-btn.contado {
-            background-color: var(--success-color);
-            color: white;
-        }
-
-        .payment-btn.contado:hover {
-            background-color: #219a52;
-        }
-
-        .payment-btn.pendiente {
-            background-color: var(--warning-color);
-            color: white;
-        }
-
-        .payment-btn.pendiente:hover {
-            background-color: #d35400;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 8px;
-            font-size: 0.8rem;
-        }
-
-        th, td {
-            padding: 8px 10px;
-            text-align: left;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        thead {
-            background-color: var(--secondary-color);
-            color: white;
-        }
-
-        tbody tr:hover {
-            background-color: rgba(0, 0, 0, 0.05);
-        }
-
-        .compact-table {
-            font-size: 0.75rem;
-        }
-
-        .compact-table th, 
-        .compact-table td {
-            padding: 6px 8px;
-        }
-
-        .product-item {
-            background: var(--light-color);
-            padding: 8px;
-            border-radius: 4px;
-            margin-bottom: 8px;
-            border-left: 3px solid var(--primary-color);
-            font-size: 0.8rem;
+            position: relative;
         }
 
         .search-dropdown {
             position: absolute;
-            background: var(--panel-bg);
-            border: 1px solid var(--border-color);
+            background: white;
+            border: 1px solid #ddd;
             border-radius: 4px;
             max-height: 200px;
             overflow-y: auto;
-            width: calc(100% - 100px);
+            width: 100%;
             z-index: 1000;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             font-size: 0.8rem;
+            display: none;
         }
 
         .search-dropdown-item {
-            padding: 8px;
+            padding: 10px;
             cursor: pointer;
-            border-bottom: 1px solid var(--border-color);
+            border-bottom: 1px solid #ddd;
             transition: background-color 0.2s;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
         }
 
         .search-dropdown-item:hover {
-            background-color: var(--primary-color);
+            background-color: #3498db;
             color: white;
         }
 
-        .product-info {
-            flex: 1;
+        .products-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 0.9rem;
         }
 
-        .product-quantity {
-            display: flex;
-            align-items: center;
-            gap: 8px;
+        .products-table th,
+        .products-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
         }
 
-        .quantity-controls {
-            display: flex;
-            align-items: center;
-            gap: 4px;
+        .products-table th {
+            background-color: #2c3e50;
+            color: white;
+            font-weight: 600;
         }
 
-        .quantity-btn {
-            width: 25px;
-            height: 25px;
+        .products-table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .total-row {
+            background-color: #ecf0f1;
+            font-weight: bold;
+        }
+
+        .total-row td {
+            border-top: 2px solid #3498db;
+            font-size: 1.1rem;
+        }
+
+        .btn {
+            padding: 12px 24px;
             border: none;
-            border-radius: 3px;
-            background: var(--primary-color);
-            color: white;
+            border-radius: 4px;
             cursor: pointer;
-            font-size: 0.7rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .btn-primary {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+
+        .btn-success {
+            background-color: #27ae60;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background-color: #219a52;
+        }
+
+        .btn-warning {
+            background-color: #f39c12;
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background-color: #d35400;
+        }
+
+        .btn-danger {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #c0392b;
+        }
+
+        .btn-full {
+            width: 100%;
         }
 
         .status {
@@ -324,198 +247,72 @@
             border: 1px solid #f5c6cb;
         }
 
-        .summary-total {
-            font-size: 1.3rem;
-            font-weight: bold;
-            color: var(--success-color);
+        .empty-cart {
             text-align: center;
-            margin: 15px 0;
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            padding: 20px;
         }
 
-        .actions {
-            display: flex;
-            gap: 4px;
-            flex-wrap: wrap;
-        }
-
-        .actions button {
-            padding: 4px 8px;
-            font-size: 0.75rem;
-        }
-
-        /* Nuevos estilos para equipos */
-        .equipos-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-            gap: 10px;
-            margin-top: 10px;
-            max-height: 300px;
-            overflow-y: auto;
-        }
-
-        .equipo-card {
-            background: var(--light-color);
-            border-radius: 6px;
-            padding: 12px;
-            text-align: center;
+        .action-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 3px;
             cursor: pointer;
-            transition: all 0.3s ease;
-            border: 1px solid var(--border-color);
-        }
-
-        .equipo-card:hover {
-            background: var(--primary-color);
-            color: white;
-            transform: translateY(-2px);
-        }
-
-        .equipo-card.active {
-            background: var(--primary-color);
-            color: white;
-            border-color: var(--accent-color);
-        }
-
-        .equipo-card.pagado {
-            border-left: 4px solid var(--success-color);
-        }
-
-        .equipo-card.pendiente {
-            border-left: 4px solid var(--warning-color);
-        }
-
-        .equipo-number {
-            font-weight: bold;
-            font-size: 1rem;
-            margin-bottom: 4px;
-        }
-
-        .equipo-saldo {
-            font-size: 0.8rem;
-            font-weight: bold;
-        }
-
-        .equipo-count {
             font-size: 0.7rem;
-            opacity: 0.8;
+            margin: 2px;
         }
 
-        .equipo-invoices {
-            margin-top: 15px;
-            max-height: 400px;
-            overflow-y: auto;
-            display: none;
+        .quantity-input, .price-input {
+            width: 80px;
+            padding: 6px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            text-align: center;
         }
 
-        .equipo-invoices.active {
-            display: block;
-        }
-
-        .invoice-item {
-            background: var(--light-color);
-            padding: 12px;
-            border-radius: 6px;
-            margin-bottom: 12px;
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
             font-size: 0.8rem;
         }
 
-        .invoice-item.pagado {
-            border-left: 4px solid var(--success-color);
-            opacity: 0.7;
+        .history-table th,
+        .history-table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
         }
 
-        .invoice-item.pendiente {
-            border-left: 4px solid var(--warning-color);
+        .history-table th {
+            background-color: #2c3e50;
+            color: white;
+            font-weight: 600;
         }
 
-        .invoice-header {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 8px;
-            align-items: center;
+        .history-table tbody tr:hover {
+            background-color: #f8f9fa;
         }
 
-        .invoice-number {
-            font-weight: bold;
-            font-size: 1rem;
-        }
-
-        .invoice-total {
-            color: var(--warning-color);
-            font-weight: bold;
-            font-size: 1.1rem;
+        .payment-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 20px;
         }
 
         .invoice-details {
-            font-size: 0.75rem;
-            opacity: 0.8;
-            margin-bottom: 8px;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+            border-left: 4px solid #3498db;
         }
 
-        .invoice-products {
-            background: rgba(255, 255, 255, 0.5);
-            padding: 8px;
-            border-radius: 4px;
-            margin: 8px 0;
-            font-size: 0.75rem;
-        }
-
-        .product-detail {
-            display: flex;
-            justify-content: space-between;
-            padding: 2px 0;
-            border-bottom: 1px dotted var(--border-color);
-        }
-
-        .product-detail:last-child {
-            border-bottom: none;
-        }
-
-        .payment-history {
-            background: var(--light-color);
-            padding: 8px;
-            border-radius: 4px;
-            margin-top: 8px;
-            font-size: 0.8rem;
-        }
-
-        .file-actions {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 10px;
-        }
-
-        .file-actions button {
-            flex: 1;
-        }
-
-        @media (max-width: 768px) {
-            .sales-process-container {
-                grid-template-columns: 1fr;
-            }
-            
-            .client-fields, .search-container {
-                grid-template-columns: 1fr;
-            }
-            
-            .search-dropdown {
-                width: 100%;
-            }
-
-            .container {
-                padding: 5px;
-            }
-
-            .panel {
-                padding: 10px;
-            }
-
-            .equipos-grid {
-                grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-            }
-
-            .file-actions {
-                flex-direction: column;
-            }
+        .edit-mode {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
         }
     </style>
 </head>
@@ -524,110 +321,120 @@
     
     <div class="container">
         <header>
-            <h1>Sistema de Ventas - Taller Wilian</h1>
+            <h1>Sistema Avanzado de Ventas</h1>
             <div class="header-info">
-                <span>Fecha: <span id="current-date"></span></span>
-                <span>Vendedor: <span id="current-user">Usuario</span></span>
+                Taller Wilian - <span id="current-date"></span>
             </div>
         </header>
 
-        <div class="sales-process-container">
-            <div class="sales-form-container">
-                <h2>Proceso de Venta</h2>
-                
-                <div class="client-fields">
-                    <div class="form-group">
-                        <label for="equipo-number">N° Equipo</label>
-                        <input type="text" id="equipo-number" placeholder="000000" maxlength="6" pattern="[0-9]*">
-                    </div>
-                    <div class="form-group">
-                        <label for="client-name">Cliente/Equipo</label>
-                        <input type="text" id="client-name" placeholder="Nombre cliente o equipo">
-                    </div>
-                </div>
-                
-                <div class="form-group">
-                    <label for="search-product">Buscar Producto</label>
-                    <div class="search-container">
-                        <div style="position: relative;">
-                            <input type="text" id="search-product" placeholder="Código o descripción">
-                            <div id="search-dropdown" class="search-dropdown" style="display: none;"></div>
-                        </div>
-                        <button class="btn btn-primary" id="add-product-btn">
-                            AGREGAR
-                        </button>
-                    </div>
-                </div>
-                
-                <h3 style="margin: 15px 0 8px 0; color: var(--text-color); font-size: 1rem;">Carrito</h3>
-                
-                <div id="cart-items" style="max-height: 200px; overflow-y: auto;">
-                    <p style="text-align: center; color: #7f8c8d; font-size: 0.8rem;">No hay productos</p>
-                </div>
-                
-                <div style="margin-top: 15px;">
-                    <div class="summary-total">
-                        Total: <span id="total-amount">$0.00</span>
-                    </div>
-                    
-                    <div class="payment-buttons">
-                        <button class="payment-btn contado" id="contado-btn">
-                            CONTADO
-                        </button>
-                        <button class="payment-btn pendiente" id="pendiente-btn">
-                            PENDIENTE
-                        </button>
-                    </div>
+        <div class="tabs">
+            <div class="tab active" data-tab="ventas">Nueva Venta</div>
+            <div class="tab" data-tab="historial">Historial</div>
+            <div class="tab" data-tab="pendientes">Pendientes</div>
+        </div>
+
+        <!-- PESTAÑA NUEVA VENTA -->
+        <div class="tab-content active" id="ventas-tab">
+            <div class="form-group">
+                <label for="equipo">Equipo</label>
+                <input type="text" id="equipo" placeholder="Número de equipo" maxlength="6">
+            </div>
+
+            <div class="form-group">
+                <label for="cliente">Nombre de Cliente</label>
+                <input type="text" id="cliente" placeholder="Nombre del cliente">
+            </div>
+
+            <div class="form-group">
+                <label for="buscar-producto">Buscar Producto</label>
+                <div class="search-container">
+                    <input type="text" id="buscar-producto" placeholder="Código o descripción del producto">
+                    <div id="search-dropdown" class="search-dropdown"></div>
                 </div>
             </div>
 
-            <div class="pending-invoices-container">
-                <h2>Facturas Pendientes por Equipo</h2>
-                
-                <div class="file-actions">
-                    <button class="btn btn-info" id="save-pending-btn">
-                        Guardar Pendientes
-                    </button>
-                    <button class="btn btn-warning" id="load-pending-btn">
-                        Cargar Pendientes
-                    </button>
-                    <input type="file" id="pending-file-input" accept=".json" style="display: none;">
-                </div>
-                
-                <div class="equipos-grid" id="equipos-grid">
-                    <div style="grid-column: 1 / -1; text-align: center; color: #7f8c8d; font-size: 0.8rem;">
-                        Cargando equipos...
-                    </div>
-                </div>
-                
-                <div id="equipo-invoices-container" class="equipo-invoices">
-                </div>
+            <table class="products-table">
+                <thead>
+                    <tr>
+                        <th width="100">CANTIDAD</th>
+                        <th>DESCRIPCIÓN</th>
+                        <th width="120">PRECIO UNIT.</th>
+                        <th width="120">SUBTOTAL</th>
+                        <th width="150">ACCIONES</th>
+                    </tr>
+                </thead>
+                <tbody id="cart-items">
+                    <tr>
+                        <td colspan="5" class="empty-cart">No hay productos agregados</td>
+                    </tr>
+                </tbody>
+                <tfoot>
+                    <tr class="total-row">
+                        <td colspan="3"><strong>TOTAL</strong></td>
+                        <td colspan="2" id="total-amount"><strong>$0.00</strong></td>
+                    </tr>
+                </tfoot>
+            </table>
+
+            <div class="payment-buttons">
+                <button class="btn btn-success" id="contado-btn">
+                    GUARDAR CONTADO
+                </button>
+                <button class="btn btn-warning" id="pendiente-btn">
+                    GUARDAR PENDIENTE
+                </button>
             </div>
         </div>
 
-        <div class="panel">
-            <h2>Ventas del Día</h2>
-            <div id="daily-sales">
-                <table class="compact-table">
-                    <thead>
-                        <tr>
-                            <th>Factura</th>
-                            <th>Cliente/Equipo</th>
-                            <th>Productos</th>
-                            <th>Total</th>
-                            <th>Tipo</th>
-                            <th>Hora</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody id="daily-sales-body">
-                        <tr>
-                            <td colspan="7" style="text-align: center; color: #7f8c8d; font-size: 0.8rem;">
-                                Cargando ventas...
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+        <!-- PESTAÑA HISTORIAL -->
+        <div class="tab-content" id="historial-tab">
+            <div class="form-group">
+                <input type="text" id="filter-historial" placeholder="Filtrar por cliente, equipo o factura...">
+            </div>
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th>Factura</th>
+                        <th>Cliente/Equipo</th>
+                        <th>Total</th>
+                        <th>Tipo</th>
+                        <th>Fecha</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="historial-body">
+                    <tr>
+                        <td colspan="6" class="empty-cart">Cargando historial...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- PESTAÑA PENDIENTES -->
+        <div class="tab-content" id="pendientes-tab">
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th>Factura</th>
+                        <th>Cliente/Equipo</th>
+                        <th>Total</th>
+                        <th>Fecha</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="pendientes-body">
+                    <tr>
+                        <td colspan="5" class="empty-cart">Cargando facturas pendientes...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- MODAL DETALLES FACTURA -->
+        <div id="invoice-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000;">
+            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 8px; width: 90%; max-width: 600px; max-height: 80vh; overflow-y: auto;">
+                <div id="invoice-modal-content"></div>
+                <button class="btn btn-primary" onclick="closeInvoiceModal()" style="margin-top: 15px; width: 100%;">CERRAR</button>
             </div>
         </div>
     </div>
@@ -648,21 +455,24 @@
             firebaseInitialized: false,
             db: null,
             cart: [],
-            dailySales: [],
-            pendingCredits: [],
-            equiposConPendientes: [],
             searchResults: [],
-            isProcessingSale: false,
             saleCounter: 0,
-            selectedProduct: null,
-            selectedQuantity: 1,
-            selectedEquipo: null
+            currentEditingInvoice: null,
+            historial: [],
+            pendientes: []
         };
 
         const DataService = {
             async searchProducts(query) {
                 if (!AppState.firebaseInitialized) {
-                    throw new Error("No hay conexión a la base de datos");
+                    // Si no hay conexión, crear producto manual
+                    return [{
+                        id: 'manual-' + Date.now(),
+                        codigo: 'MANUAL',
+                        descripcion: query,
+                        precio: 0,
+                        cantidad: 1
+                    }];
                 }
 
                 const searchTerm = query.toLowerCase().trim();
@@ -678,112 +488,67 @@
                         results.push(product);
                     }
                 });
+
+                // Si no se encuentran productos, agregar opción manual
+                if (results.length === 0 && query.trim() !== '') {
+                    results.push({
+                        id: 'manual-' + Date.now(),
+                        codigo: 'MANUAL',
+                        descripcion: query,
+                        precio: 0,
+                        cantidad: 1
+                    });
+                }
                 
                 return results;
             },
 
-            saveSale(saleData) {
-                const sales = this.loadFromLocalStorage("dailySales") || [];
-                const newItem = { ...saleData, localId: Date.now().toString() };
-                sales.push(newItem);
-                localStorage.setItem("dailySales", JSON.stringify(sales));
-                return newItem.localId;
-            },
-
-            loadDailySales(date = new Date().toISOString().split('T')[0]) {
-                const sales = this.loadFromLocalStorage("dailySales") || [];
-                return sales.filter(sale => sale.date === date);
-            },
-
-            deleteSale(saleId) {
-                const sales = this.loadFromLocalStorage("dailySales");
-                const updatedSales = sales.filter(item => item.localId !== saleId);
-                localStorage.setItem("dailySales", JSON.stringify(updatedSales));
-                
-                // También eliminar de créditos pendientes si existe
-                this.deleteCredit(saleId);
-            },
-
-            saveCredit(creditData) {
-                const credits = this.loadFromLocalStorage("pendingCredits") || [];
-                const newItem = { ...creditData, localId: Date.now().toString() };
-                credits.push(newItem);
-                localStorage.setItem("pendingCredits", JSON.stringify(credits));
-                return newItem.localId;
-            },
-
-            loadPendingCredits() {
-                const credits = this.loadFromLocalStorage("pendingCredits") || [];
-                return credits;
-            },
-
-            addPayment(creditId, paymentData) {
-                const credits = this.loadFromLocalStorage("pendingCredits");
-                const creditIndex = credits.findIndex(c => c.localId === creditId);
-                
-                if (creditIndex === -1) throw new Error("No se encontró el crédito");
-                
-                const credit = credits[creditIndex];
-                const totalPaid = credit.payments ? credit.payments.reduce((sum, payment) => sum + payment.amount, 0) : 0;
-                const newTotalPaid = totalPaid + paymentData.amount;
-                
-                if (newTotalPaid > credit.total) {
-                    throw new Error("El abono excede el total pendiente");
+            async saveSale(saleData) {
+                if (AppState.firebaseInitialized) {
+                    const docRef = await AppState.db.collection("VENTAS").add(saleData);
+                    return docRef.id;
+                } else {
+                    throw new Error("No hay conexión a la base de datos");
                 }
-                
-                if (!credit.payments) credit.payments = [];
-                credit.payments.push(paymentData);
-                
-                if (newTotalPaid >= credit.total) {
-                    credit.status = 'pagado';
+            },
+
+            async updateSale(saleId, saleData) {
+                if (AppState.firebaseInitialized) {
+                    await AppState.db.collection("VENTAS").doc(saleId).update(saleData);
+                } else {
+                    throw new Error("No hay conexión a la base de datos");
                 }
-                
-                credits[creditIndex] = credit;
-                localStorage.setItem("pendingCredits", JSON.stringify(credits));
-                
-                return newTotalPaid;
             },
 
-            deleteCredit(creditId) {
-                const credits = this.loadFromLocalStorage("pendingCredits");
-                const updatedCredits = credits.filter(item => item.localId !== creditId);
-                localStorage.setItem("pendingCredits", JSON.stringify(updatedCredits));
+            async deleteSale(saleId) {
+                if (AppState.firebaseInitialized) {
+                    await AppState.db.collection("VENTAS").doc(saleId).delete();
+                } else {
+                    throw new Error("No hay conexión a la base de datos");
+                }
             },
 
-            deleteSaleAndCredit(saleId) {
-                // Eliminar de ventas diarias
-                this.deleteSale(saleId);
-                
-                // Eliminar de créditos pendientes
-                this.deleteCredit(saleId);
+            async loadSales() {
+                if (AppState.firebaseInitialized) {
+                    const snapshot = await AppState.db.collection("VENTAS")
+                        .orderBy("timestamp", "desc")
+                        .get();
+                    
+                    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                } else {
+                    return [];
+                }
             },
 
-            exportPendingCredits() {
-                const credits = this.loadFromLocalStorage("pendingCredits") || [];
-                const dataStr = JSON.stringify(credits, null, 2);
-                const dataBlob = new Blob([dataStr], {type: 'application/json'});
-                return URL.createObjectURL(dataBlob);
-            },
-
-            importPendingCredits(file) {
-                return new Promise((resolve, reject) => {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        try {
-                            const credits = JSON.parse(e.target.result);
-                            localStorage.setItem("pendingCredits", JSON.stringify(credits));
-                            resolve(credits);
-                        } catch (error) {
-                            reject(new Error("Archivo inválido"));
-                        }
-                    };
-                    reader.onerror = () => reject(new Error("Error al leer el archivo"));
-                    reader.readAsText(file);
-                });
-            },
-
-            loadFromLocalStorage(key) {
-                return JSON.parse(localStorage.getItem(key) || '[]');
+            async loadSaleCounter(date = new Date().toISOString().split('T')[0]) {
+                if (AppState.firebaseInitialized) {
+                    const snapshot = await AppState.db.collection("VENTAS")
+                        .where("date", "==", date)
+                        .get();
+                    return snapshot.size;
+                } else {
+                    return 0;
+                }
             }
         };
 
@@ -804,8 +569,12 @@
                 const totalAmount = document.getElementById('total-amount');
                 
                 if (AppState.cart.length === 0) {
-                    cartItems.innerHTML = '<p style="text-align: center; color: #7f8c8d; font-size: 0.8rem;">No hay productos</p>';
-                    totalAmount.textContent = '$0.00';
+                    cartItems.innerHTML = `
+                        <tr>
+                            <td colspan="5" class="empty-cart">No hay productos agregados</td>
+                        </tr>
+                    `;
+                    totalAmount.innerHTML = '<strong>$0.00</strong>';
                     return;
                 }
                 
@@ -813,31 +582,32 @@
                 let itemsHTML = '';
                 
                 AppState.cart.forEach((item, index) => {
-                    const itemTotal = item.precio * item.quantity;
+                    const itemTotal = item.precio * item.cantidad;
                     total += itemTotal;
                     
                     itemsHTML += `
-                        <div class="product-item">
-                            <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <div>
-                                    <strong>${item.descripcion}</strong>
-                                    <div style="font-size: 0.7rem; margin-top: 2px;">
-                                        Cód: ${item.codigo} | $${item.precio.toFixed(2)} x ${item.quantity}
-                                    </div>
-                                </div>
-                                <div style="display: flex; align-items: center;">
-                                    <span style="margin-right: 8px; font-weight: bold;">$${itemTotal.toFixed(2)}</span>
-                                    <button class="btn btn-danger" data-remove-index="${index}" style="padding: 2px 6px; font-size: 0.7rem;">
-                                        X
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
+                        <tr>
+                            <td>
+                                <input type="number" class="quantity-input" value="${item.cantidad}" 
+                                       min="1" data-index="${index}" onchange="SalesService.updateQuantity(${index}, this.value)">
+                            </td>
+                            <td>${item.descripcion}</td>
+                            <td>
+                                <input type="number" class="price-input" value="${item.precio.toFixed(2)}" 
+                                       step="0.01" min="0" data-index="${index}" onchange="SalesService.updatePrice(${index}, this.value)">
+                            </td>
+                            <td>$${itemTotal.toFixed(2)}</td>
+                            <td>
+                                <button class="action-btn btn-danger" onclick="SalesService.removeFromCart(${index})">
+                                    ELIMINAR
+                                </button>
+                            </td>
+                        </tr>
                     `;
                 });
                 
                 cartItems.innerHTML = itemsHTML;
-                totalAmount.textContent = `$${total.toFixed(2)}`;
+                totalAmount.innerHTML = `<strong>$${total.toFixed(2)}</strong>`;
             },
 
             showSearchResults(results) {
@@ -847,34 +617,30 @@
                 if (results.length === 0) {
                     const item = document.createElement('div');
                     item.className = 'search-dropdown-item';
-                    item.textContent = 'No se encontraron productos';
+                    item.textContent = 'No se encontraron productos - Presione para agregar manualmente';
+                    item.addEventListener('click', () => {
+                        const searchInput = document.getElementById('buscar-producto');
+                        SalesService.addManualProduct(searchInput.value);
+                        dropdown.style.display = 'none';
+                        searchInput.value = '';
+                    });
                     dropdown.appendChild(item);
                 } else {
                     results.forEach(product => {
                         const item = document.createElement('div');
                         item.className = 'search-dropdown-item';
-                        
-                        const quantity = AppState.selectedProduct?.id === product.id ? AppState.selectedQuantity : 1;
-                        
+                        const isManual = product.id.startsWith('manual-');
                         item.innerHTML = `
-                            <div class="product-info">
-                                <strong>${product.descripcion || 'Sin descripción'}</strong>
-                                <div style="font-size: 0.7rem; margin-top: 2px;">
-                                    Cód: ${product.codigo || 'N/A'} | Stock: ${product.cantidad || 0} | $${(product.precio || 0).toFixed(2)}
-                                </div>
-                            </div>
-                            <div class="product-quantity">
-                                <div class="quantity-controls">
-                                    <button class="quantity-btn" data-action="decrease" data-product-id="${product.id}">-</button>
-                                    <input type="number" class="quantity-input" value="${quantity}" min="1" max="${product.cantidad || 99}" 
-                                           data-product-id="${product.id}" style="width: 40px; padding: 2px;">
-                                    <button class="quantity-btn" data-action="increase" data-product-id="${product.id}">+</button>
-                                </div>
-                                <button class="btn btn-success" data-add-product="${product.id}" style="padding: 4px 8px; font-size: 0.7rem;">
-                                    Agregar
-                                </button>
+                            <strong>${product.descripcion || 'Sin descripción'}</strong>
+                            <div style="font-size: 0.7rem; margin-top: 2px;">
+                                ${isManual ? 'PRODUCTO MANUAL' : `Cód: ${product.codigo || 'N/A'} | Stock: ${product.cantidad || 0}`} | $${(product.precio || 0).toFixed(2)}
                             </div>
                         `;
+                        item.addEventListener('click', () => {
+                            SalesService.addToCart(product);
+                            dropdown.style.display = 'none';
+                            document.getElementById('buscar-producto').value = '';
+                        });
                         dropdown.appendChild(item);
                     });
                 }
@@ -882,90 +648,138 @@
                 dropdown.style.display = 'block';
             },
 
-            updateEquiposGrid() {
-                const grid = document.getElementById('equipos-grid');
+            updateHistorial(ventas) {
+                const historialBody = document.getElementById('historial-body');
+                AppState.historial = ventas;
                 
-                if (AppState.equiposConPendientes.length === 0) {
-                    grid.innerHTML = `
-                        <div style="grid-column: 1 / -1; text-align: center; color: #7f8c8d; font-size: 0.8rem;">
-                            No hay equipos con facturas pendientes
-                        </div>
+                if (ventas.length === 0) {
+                    historialBody.innerHTML = `
+                        <tr>
+                            <td colspan="6" class="empty-cart">No hay ventas registradas</td>
+                        </tr>
                     `;
                     return;
                 }
                 
-                let gridHTML = '';
+                let historialHTML = '';
                 
-                AppState.equiposConPendientes.forEach(equipo => {
-                    const statusClass = equipo.totalPendiente > 0 ? 'pendiente' : 'pagado';
-                    const isActive = AppState.selectedEquipo === equipo.number ? 'active' : '';
+                ventas.forEach(venta => {
+                    const fecha = venta.timestamp ? new Date(venta.timestamp.toDate ? venta.timestamp.toDate() : venta.timestamp).toLocaleDateString('es-ES') : 'N/A';
+                    const tipo = venta.paymentType === 'contado' ? 'CONTADO' : 'PENDIENTE';
+                    const tipoClass = venta.paymentType === 'contado' ? 'btn-success' : 'btn-warning';
                     
-                    gridHTML += `
-                        <div class="equipo-card ${statusClass} ${isActive}" 
-                             data-equipo="${equipo.number}">
-                            <div class="equipo-number">${equipo.number}</div>
-                            <div class="equipo-saldo">$${equipo.totalPendiente.toFixed(2)}</div>
-                            <div class="equipo-count">${equipo.count} factura(s)</div>
-                        </div>
+                    historialHTML += `
+                        <tr>
+                            <td><strong>${venta.invoiceNumber || 'N/A'}</strong></td>
+                            <td>${venta.clientName || 'N/A'}<br><small>Equipo: ${venta.equipoNumber || 'N/A'}</small></td>
+                            <td>$${(venta.total || 0).toFixed(2)}</td>
+                            <td><span class="action-btn ${tipoClass}" style="cursor: default;">${tipo}</span></td>
+                            <td>${fecha}</td>
+                            <td>
+                                <button class="action-btn btn-primary" onclick="SalesService.viewInvoice('${venta.id}')">
+                                    VER
+                                </button>
+                                <button class="action-btn btn-warning" onclick="SalesService.reprintInvoice('${venta.id}')">
+                                    REIMPRIMIR
+                                </button>
+                                ${venta.paymentType === 'contado' ? `
+                                    <button class="action-btn btn-danger" onclick="SalesService.deleteInvoice('${venta.id}')">
+                                        ELIMINAR
+                                    </button>
+                                ` : `
+                                    <button class="action-btn btn-success" onclick="SalesService.editInvoice('${venta.id}')">
+                                        EDITAR
+                                    </button>
+                                    <button class="action-btn btn-danger" onclick="SalesService.deleteInvoice('${venta.id}')">
+                                        ELIMINAR
+                                    </button>
+                                `}
+                            </td>
+                        </tr>
                     `;
                 });
                 
-                grid.innerHTML = gridHTML;
+                historialBody.innerHTML = historialHTML;
+            },
+
+            updatePendientes(ventas) {
+                const pendientesBody = document.getElementById('pendientes-body');
+                const pendientes = ventas.filter(v => v.paymentType === 'pendiente');
+                AppState.pendientes = pendientes;
+                
+                if (pendientes.length === 0) {
+                    pendientesBody.innerHTML = `
+                        <tr>
+                            <td colspan="5" class="empty-cart">No hay facturas pendientes</td>
+                        </tr>
+                    `;
+                    return;
+                }
+                
+                let pendientesHTML = '';
+                
+                pendientes.forEach(venta => {
+                    const fecha = venta.timestamp ? new Date(venta.timestamp.toDate ? venta.timestamp.toDate() : venta.timestamp).toLocaleDateString('es-ES') : 'N/A';
+                    
+                    pendientesHTML += `
+                        <tr>
+                            <td><strong>${venta.invoiceNumber || 'N/A'}</strong></td>
+                            <td>${venta.clientName || 'N/A'}<br><small>Equipo: ${venta.equipoNumber || 'N/A'}</small></td>
+                            <td>$${(venta.total || 0).toFixed(2)}</td>
+                            <td>${fecha}</td>
+                            <td>
+                                <button class="action-btn btn-primary" onclick="SalesService.viewInvoice('${venta.id}')">
+                                    VER
+                                </button>
+                                <button class="action-btn btn-success" onclick="SalesService.editInvoice('${venta.id}')">
+                                    EDITAR
+                                </button>
+                                <button class="action-btn btn-danger" onclick="SalesService.deleteInvoice('${venta.id}')">
+                                    ELIMINAR
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+                
+                pendientesBody.innerHTML = pendientesHTML;
+            },
+
+            showInvoiceModal(content) {
+                document.getElementById('invoice-modal-content').innerHTML = content;
+                document.getElementById('invoice-modal').style.display = 'block';
             }
         };
 
         const SalesService = {
-            setSelectedProduct(product, quantity = 1) {
-                AppState.selectedProduct = product;
-                AppState.selectedQuantity = quantity;
-            },
-
-            addToCart(productId, quantity) {
-                let productToAdd;
-                let quantityToAdd;
-
-                if (productId && quantity) {
-                    productToAdd = AppState.searchResults.find(p => p.id === productId);
-                    quantityToAdd = quantity;
-                } else if (AppState.selectedProduct) {
-                    productToAdd = AppState.selectedProduct;
-                    quantityToAdd = AppState.selectedQuantity;
-                } else {
-                    UIService.showStatus("Seleccione un producto primero", "error");
-                    return;
-                }
-
-                if (!productToAdd) {
-                    UIService.showStatus("Producto no encontrado", "error");
-                    return;
-                }
-
-                if (!productToAdd.precio || productToAdd.precio <= 0) {
-                    UIService.showStatus("El producto no tiene precio válido", "error");
-                    return;
-                }
+            addToCart(product) {
+                // Siempre cantidad 1 por defecto
+                const cartItem = {
+                    id: product.id,
+                    codigo: product.codigo || 'MANUAL',
+                    descripcion: product.descripcion || 'Sin descripción',
+                    precio: product.precio || 0,
+                    cantidad: 1
+                };
                 
-                const existingItem = AppState.cart.find(item => item.id === productToAdd.id);
-                
-                if (existingItem) {
-                    existingItem.quantity += quantityToAdd;
-                } else {
-                    AppState.cart.push({
-                        id: productToAdd.id,
-                        codigo: productToAdd.codigo || 'N/A',
-                        descripcion: productToAdd.descripcion || 'Sin descripción',
-                        precio: productToAdd.precio,
-                        quantity: quantityToAdd
-                    });
-                }
-                
+                AppState.cart.push(cartItem);
                 UIService.updateCartDisplay();
                 UIService.showStatus("Producto agregado al carrito", "success");
+            },
+
+            addManualProduct(descripcion) {
+                if (!descripcion.trim()) {
+                    UIService.showStatus("Ingrese una descripción para el producto", "error");
+                    return;
+                }
                 
-                AppState.selectedProduct = null;
-                AppState.selectedQuantity = 1;
-                document.getElementById('search-product').value = '';
-                document.getElementById('search-dropdown').style.display = 'none';
+                this.addToCart({
+                    id: 'manual-' + Date.now(),
+                    codigo: 'MANUAL',
+                    descripcion: descripcion,
+                    precio: 0,
+                    cantidad: 1
+                });
             },
 
             removeFromCart(index) {
@@ -973,76 +787,24 @@
                 UIService.updateCartDisplay();
             },
 
-            async processSale(paymentType) {
-                if (AppState.isProcessingSale) {
-                    UIService.showStatus("Procesando venta anterior...", "error");
+            updateQuantity(index, newQuantity) {
+                const quantity = parseInt(newQuantity) || 1;
+                if (quantity < 1) {
+                    UIService.showStatus("La cantidad debe ser al menos 1", "error");
                     return;
                 }
+                AppState.cart[index].cantidad = quantity;
+                UIService.updateCartDisplay();
+            },
 
-                if (AppState.cart.length === 0) {
-                    UIService.showStatus("El carrito está vacío", "error");
+            updatePrice(index, newPrice) {
+                const price = parseFloat(newPrice) || 0;
+                if (price < 0) {
+                    UIService.showStatus("El precio no puede ser negativo", "error");
                     return;
                 }
-                
-                const equipoNumber = document.getElementById('equipo-number').value.trim();
-                const clientName = document.getElementById('client-name').value.trim();
-                
-                if (!equipoNumber && !clientName) {
-                    UIService.showStatus("Ingrese un número de equipo o nombre de cliente", "error");
-                    return;
-                }
-                
-                const finalClientName = clientName || `Equipo ${equipoNumber}`;
-                const finalEquipoNumber = equipoNumber || '000000';
-                
-                AppState.isProcessingSale = true;
-                
-                try {
-                    const saleData = {
-                        invoiceNumber: this.generateInvoiceNumber(),
-                        equipoNumber: finalEquipoNumber,
-                        clientName: finalClientName,
-                        products: AppState.cart.map(item => ({
-                            id: item.id,
-                            codigo: item.codigo,
-                            descripcion: item.descripcion,
-                            precio: item.precio,
-                            cantidad: item.quantity
-                        })),
-                        total: AppState.cart.reduce((sum, item) => sum + (item.precio * item.quantity), 0),
-                        paymentType: paymentType,
-                        timestamp: new Date(),
-                        date: new Date().toISOString().split('T')[0],
-                        status: paymentType === 'contado' ? 'pagado' : 'pendiente'
-                    };
-                    
-                    const saleId = await DataService.saveSale(saleData);
-                    
-                    if (paymentType === 'pendiente') {
-                        const creditData = {
-                            ...saleData,
-                            localId: saleId,
-                            payments: [],
-                            status: 'pendiente'
-                        };
-                        await DataService.saveCredit(creditData);
-                    }
-                    
-                    UIService.showStatus(`Venta procesada - Factura #${saleData.invoiceNumber}`, "success");
-                    
-                    AppState.cart = [];
-                    UIService.updateCartDisplay();
-                    document.getElementById('client-name').value = '';
-                    document.getElementById('equipo-number').value = '';
-                    
-                    await this.loadDailySales();
-                    await this.loadPendingCredits();
-                    
-                } catch (error) {
-                    UIService.showStatus("Error al procesar la venta: " + error.message, "error");
-                } finally {
-                    AppState.isProcessingSale = false;
-                }
+                AppState.cart[index].precio = price;
+                UIService.updateCartDisplay();
             },
 
             generateInvoiceNumber() {
@@ -1052,6 +814,241 @@
                                now.getDate().toString().padStart(2, '0');
                 const counterPart = (AppState.saleCounter + 1).toString().padStart(4, '0');
                 return datePart + counterPart;
+            },
+
+            async processSale(paymentType) {
+                if (AppState.cart.length === 0) {
+                    UIService.showStatus("El carrito está vacío", "error");
+                    return;
+                }
+                
+                const equipo = document.getElementById('equipo').value.trim();
+                const cliente = document.getElementById('cliente').value.trim();
+                
+                if (!equipo && !cliente) {
+                    UIService.showStatus("Ingrese un número de equipo o nombre de cliente", "error");
+                    return;
+                }
+                
+                const finalCliente = cliente || `Equipo ${equipo}`;
+                const finalEquipo = equipo || '000000';
+                
+                try {
+                    const saleData = {
+                        invoiceNumber: this.generateInvoiceNumber(),
+                        equipoNumber: finalEquipo,
+                        clientName: finalCliente,
+                        products: AppState.cart.map(item => ({
+                            id: item.id,
+                            codigo: item.codigo,
+                            descripcion: item.descripcion,
+                            precio: item.precio,
+                            cantidad: item.cantidad
+                        })),
+                        total: AppState.cart.reduce((sum, item) => sum + (item.precio * item.cantidad), 0),
+                        paymentType: paymentType,
+                        timestamp: new Date(),
+                        date: new Date().toISOString().split('T')[0],
+                        status: paymentType === 'contado' ? 'pagado' : 'pendiente'
+                    };
+                    
+                    await DataService.saveSale(saleData);
+                    this.printTicket(saleData);
+                    
+                    UIService.showStatus(`Venta ${paymentType === 'contado' ? 'CONTADO' : 'PENDIENTE'} procesada - Factura #${saleData.invoiceNumber}`, "success");
+                    
+                    // Limpiar carrito después de guardar
+                    AppState.cart = [];
+                    UIService.updateCartDisplay();
+                    document.getElementById('equipo').value = '';
+                    document.getElementById('cliente').value = '';
+                    
+                    // Actualizar contador y recargar historial
+                    AppState.saleCounter = await DataService.loadSaleCounter();
+                    await this.loadHistorial();
+                    
+                } catch (error) {
+                    UIService.showStatus("Error al procesar la venta: " + error.message, "error");
+                }
+            },
+
+            async updateInvoice(invoiceId) {
+                if (AppState.cart.length === 0) {
+                    UIService.showStatus("El carrito está vacío", "error");
+                    return;
+                }
+                
+                try {
+                    const saleData = {
+                        products: AppState.cart.map(item => ({
+                            id: item.id,
+                            codigo: item.codigo,
+                            descripcion: item.descripcion,
+                            precio: item.precio,
+                            cantidad: item.cantidad
+                        })),
+                        total: AppState.cart.reduce((sum, item) => sum + (item.precio * item.cantidad), 0),
+                        timestamp: new Date()
+                    };
+                    
+                    await DataService.updateSale(invoiceId, saleData);
+                    
+                    UIService.showStatus("Factura actualizada correctamente", "success");
+                    
+                    // Limpiar y salir del modo edición
+                    AppState.cart = [];
+                    AppState.currentEditingInvoice = null;
+                    UIService.updateCartDisplay();
+                    document.getElementById('equipo').value = '';
+                    document.getElementById('cliente').value = '';
+                    
+                    // Recargar historial
+                    await this.loadHistorial();
+                    UIService.activateTab('historial');
+                    
+                } catch (error) {
+                    UIService.showStatus("Error al actualizar la factura: " + error.message, "error");
+                }
+            },
+
+            async loadHistorial() {
+                try {
+                    const ventas = await DataService.loadSales();
+                    UIService.updateHistorial(ventas);
+                    UIService.updatePendientes(ventas);
+                } catch (error) {
+                    UIService.showStatus("Error al cargar historial: " + error.message, "error");
+                }
+            },
+
+            async viewInvoice(invoiceId) {
+                const venta = AppState.historial.find(v => v.id === invoiceId) || 
+                             AppState.pendientes.find(v => v.id === invoiceId);
+                
+                if (!venta) return;
+                
+                let productsHTML = '';
+                if (venta.products && venta.products.length > 0) {
+                    venta.products.forEach(product => {
+                        productsHTML += `
+                            <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #eee;">
+                                <div>${product.descripcion} (x${product.cantidad})</div>
+                                <div>$${(product.precio * product.cantidad).toFixed(2)}</div>
+                            </div>
+                        `;
+                    });
+                }
+                
+                const fecha = venta.timestamp ? new Date(venta.timestamp.toDate ? venta.timestamp.toDate() : venta.timestamp).toLocaleString('es-ES') : 'N/A';
+                const tipo = venta.paymentType === 'contado' ? 'CONTADO' : 'PENDIENTE';
+                
+                const modalContent = `
+                    <h3 style="margin-bottom: 15px; text-align: center;">Factura #${venta.invoiceNumber}</h3>
+                    <div class="invoice-details">
+                        <strong>Cliente:</strong> ${venta.clientName || 'N/A'}<br>
+                        <strong>Equipo:</strong> ${venta.equipoNumber || 'N/A'}<br>
+                        <strong>Tipo:</strong> ${tipo}<br>
+                        <strong>Fecha:</strong> ${fecha}<br>
+                        <strong>Total:</strong> $${(venta.total || 0).toFixed(2)}
+                    </div>
+                    <h4 style="margin: 15px 0 10px 0;">Productos:</h4>
+                    ${productsHTML || '<p>No hay productos</p>'}
+                `;
+                
+                UIService.showInvoiceModal(modalContent);
+            },
+
+            async editInvoice(invoiceId) {
+                const venta = AppState.pendientes.find(v => v.id === invoiceId);
+                if (!venta) return;
+                
+                // Cargar productos en el carrito
+                AppState.cart = venta.products.map(p => ({
+                    id: p.id,
+                    codigo: p.codigo,
+                    descripcion: p.descripcion,
+                    precio: p.precio,
+                    cantidad: p.cantidad
+                }));
+                
+                // Llenar campos del formulario
+                document.getElementById('equipo').value = venta.equipoNumber || '';
+                document.getElementById('cliente').value = venta.clientName || '';
+                
+                // Guardar referencia de la factura en edición
+                AppState.currentEditingInvoice = invoiceId;
+                
+                // Cambiar a pestaña de ventas y mostrar modo edición
+                UIService.activateTab('ventas');
+                UIService.updateCartDisplay();
+                
+                // Cambiar botones para modo edición
+                document.getElementById('contado-btn').style.display = 'none';
+                document.getElementById('pendiente-btn').style.display = 'none';
+                
+                const updateBtn = document.createElement('button');
+                updateBtn.className = 'btn btn-success btn-full';
+                updateBtn.id = 'update-btn';
+                updateBtn.textContent = 'ACTUALIZAR FACTURA';
+                updateBtn.onclick = () => this.updateInvoice(invoiceId);
+                
+                const cancelBtn = document.createElement('button');
+                cancelBtn.className = 'btn btn-danger';
+                cancelBtn.style.marginTop = '10px';
+                cancelBtn.textContent = 'CANCELAR EDICIÓN';
+                cancelBtn.onclick = this.cancelEdit;
+                
+                const paymentButtons = document.querySelector('.payment-buttons');
+                paymentButtons.innerHTML = '';
+                paymentButtons.appendChild(updateBtn);
+                paymentButtons.appendChild(cancelBtn);
+                
+                UIService.showStatus("Modo edición activado - Editando factura pendiente", "success");
+            },
+
+            cancelEdit() {
+                AppState.cart = [];
+                AppState.currentEditingInvoice = null;
+                UIService.updateCartDisplay();
+                document.getElementById('equipo').value = '';
+                document.getElementById('cliente').value = '';
+                
+                // Restaurar botones normales
+                const paymentButtons = document.querySelector('.payment-buttons');
+                paymentButtons.innerHTML = `
+                    <button class="btn btn-success" id="contado-btn">
+                        GUARDAR CONTADO
+                    </button>
+                    <button class="btn btn-warning" id="pendiente-btn">
+                        GUARDAR PENDIENTE
+                    </button>
+                `;
+                
+                // Re-asignar event listeners
+                document.getElementById('contado-btn').onclick = () => SalesService.processSale('contado');
+                document.getElementById('pendiente-btn').onclick = () => SalesService.processSale('pendiente');
+            },
+
+            async deleteInvoice(invoiceId) {
+                if (!confirm("¿Está seguro de eliminar esta factura?")) return;
+                
+                try {
+                    await DataService.deleteSale(invoiceId);
+                    UIService.showStatus("Factura eliminada correctamente", "success");
+                    await this.loadHistorial();
+                } catch (error) {
+                    UIService.showStatus("Error al eliminar factura: " + error.message, "error");
+                }
+            },
+
+            async reprintInvoice(invoiceId) {
+                const venta = AppState.historial.find(v => v.id === invoiceId) || 
+                             AppState.pendientes.find(v => v.id === invoiceId);
+                
+                if (venta) {
+                    this.printTicket(venta);
+                    UIService.showStatus("Ticket reimpreso", "success");
+                }
             },
 
             printTicket(saleData) {
@@ -1065,38 +1062,40 @@
                         <style>
                             body { 
                                 font-family: 'Courier New', monospace; 
-                                font-size: 11px; 
+                                font-size: 22px; 
                                 margin: 0; 
-                                padding: 3px;
-                                width: 54mm;
+                                padding: 6px;
+                                width: 58mm;
                             }
-                            .header { text-align: center; margin-bottom: 6px; }
-                            .line { border-bottom: 1px dashed #000; margin: 2px 0; }
-                            .product { margin: 1px 0; font-size: 10px; }
+                            .header { text-align: center; margin-bottom: 12px; }
+                            .line { border-bottom: 2px dashed #000; margin: 4px 0; }
+                            .product { margin: 2px 0; font-size: 20px; }
                             .product-name { 
                                 white-space: nowrap;
                                 overflow: hidden;
                                 text-overflow: ellipsis;
-                                max-width: 32mm;
+                                max-width: 35mm;
                             }
-                            .total { font-weight: bold; text-align: center; margin-top: 6px; font-size: 12px; }
-                            .footer { text-align: center; margin-top: 6px; font-size: 9px; }
+                            .total { font-weight: bold; text-align: center; margin-top: 12px; font-size: 24px; }
+                            .footer { text-align: center; margin-top: 12px; font-size: 18px; }
                             .text-center { text-align: center; }
                             .text-right { text-align: right; }
-                            .dotted-line { border-bottom: 1px dotted #000; margin: 1px 0; }
-                            .small-text { font-size: 9px; }
+                            .dotted-line { border-bottom: 2px dotted #000; margin: 2px 0; }
+                            .small-text { font-size: 18px; }
+                            .medium-text { font-size: 20px; }
+                            .large-text { font-size: 26px; }
                         </style>
                     </head>
                     <body>
                         <div class="header">
-                            <h3 style="margin: 1px 0; font-size: 13px;">TALLER WILIAN</h3>
+                            <h3 style="margin: 2px 0; font-size: 26px;">TALLER WILIAN</h3>
                             <div class="small-text">Factura: ${saleData.invoiceNumber}</div>
-                            <div class="small-text">${new Date(saleData.timestamp).toLocaleString('es-ES')}</div>
+                            <div class="small-text">${new Date(saleData.timestamp.toDate ? saleData.timestamp.toDate() : saleData.timestamp).toLocaleString('es-ES')}</div>
                         </div>
                         
                         <div class="line"></div>
                         
-                        <div class="small-text">
+                        <div class="medium-text">
                             <strong>Cliente:</strong> ${saleData.clientName}<br>
                             <strong>Equipo:</strong> ${saleData.equipoNumber}<br>
                             <strong>Tipo:</strong> ${saleData.paymentType.toUpperCase()}
@@ -1104,7 +1103,7 @@
                         
                         <div class="line"></div>
                         
-                        <div style="margin: 4px 0;">
+                        <div style="margin: 8px 0;">
                             ${saleData.products.map(p => `
                                 <div class="product" style="display: flex; justify-content: space-between;">
                                     <div class="product-name">${p.descripcion}</div>
@@ -1119,7 +1118,7 @@
                         
                         <div class="line"></div>
                         
-                        <div class="total">
+                        <div class="total large-text">
                             TOTAL: $${saleData.total.toFixed(2)}
                         </div>
                         
@@ -1140,105 +1139,6 @@
                         printWindow.close();
                     }, 500);
                 }, 500);
-            },
-
-            async loadDailySales() {
-                try {
-                    AppState.dailySales = await DataService.loadDailySales();
-                    this.renderDailySales();
-                } catch (error) {
-                    UIService.showStatus("Error al cargar ventas del día", "error");
-                }
-            },
-
-            async loadPendingCredits() {
-                try {
-                    AppState.pendingCredits = await DataService.loadPendingCredits();
-                    this.processEquiposConPendientes();
-                    UIService.updateEquiposGrid();
-                } catch (error) {
-                    UIService.showStatus("Error al cargar créditos pendientes", "error");
-                }
-            },
-
-            processEquiposConPendientes() {
-                const equiposMap = new Map();
-                
-                AppState.pendingCredits.forEach(credit => {
-                    const equipoNumber = credit.equipoNumber || '000000';
-                    const totalPaid = credit.payments ? credit.payments.reduce((sum, payment) => sum + payment.amount, 0) : 0;
-                    const pendingAmount = credit.total - totalPaid;
-                    
-                    if (equiposMap.has(equipoNumber)) {
-                        const existing = equiposMap.get(equipoNumber);
-                        existing.totalPendiente += pendingAmount;
-                        existing.count += 1;
-                    } else {
-                        equiposMap.set(equipoNumber, {
-                            number: equipoNumber,
-                            clientName: credit.clientName,
-                            totalPendiente: pendingAmount,
-                            count: 1
-                        });
-                    }
-                });
-                
-                AppState.equiposConPendientes = Array.from(equiposMap.values())
-                    .sort((a, b) => a.number.localeCompare(b.number));
-            },
-
-            renderDailySales() {
-                const salesBody = document.getElementById('daily-sales-body');
-                
-                if (AppState.dailySales.length === 0) {
-                    salesBody.innerHTML = `
-                        <tr>
-                            <td colspan="7" style="text-align: center; color: #7f8c8d; font-size: 0.8rem;">
-                                No hay ventas registradas hoy
-                            </td>
-                        </tr>
-                    `;
-                    return;
-                }
-                
-                let salesHTML = '';
-                
-                AppState.dailySales.forEach(sale => {
-                    const time = sale.timestamp ? new Date(sale.timestamp).toLocaleTimeString('es-ES', { 
-                        hour: '2-digit', minute: '2-digit' 
-                    }) : 'N/A';
-                    
-                    const productsList = sale.products ? sale.products.map(p => 
-                        `${p.descripcion} (x${p.cantidad})`
-                    ).join(', ') : 'N/A';
-                    
-                    salesHTML += `
-                        <tr>
-                            <td>${sale.invoiceNumber || 'N/A'}</td>
-                            <td>${sale.clientName || 'N/A'}</td>
-                            <td>${productsList}</td>
-                            <td>$${(sale.total || 0).toFixed(2)}</td>
-                            <td>
-                                <span style="padding: 2px 6px; border-radius: 3px; font-size: 0.7rem; 
-                                    background-color: ${sale.paymentType === 'contado' ? '#27ae60' : '#f39c12'}; 
-                                    color: white;">
-                                    ${sale.paymentType === 'contado' ? 'CONTADO' : 'PENDIENTE'}
-                                </span>
-                            </td>
-                            <td>${time}</td>
-                            <td class="actions">
-                                <button class="btn btn-info" data-print-sale="${sale.localId}" style="padding: 4px 8px; font-size: 0.75rem;">
-                                    Imprimir
-                                </button>
-                                <button class="btn btn-danger" data-delete-sale="${sale.localId}" style="padding: 4px 8px; font-size: 0.75rem;">
-                                    Eliminar
-                                </button>
-                            </td>
-                        </tr>
-                    `;
-                });
-                
-                salesBody.innerHTML = salesHTML;
             }
         };
 
@@ -1274,24 +1174,42 @@
                 const now = new Date();
                 document.getElementById('current-date').textContent = now.toLocaleDateString('es-ES');
                 
-                const sales = DataService.loadFromLocalStorage("dailySales") || [];
-                const today = new Date().toISOString().split('T')[0];
-                AppState.saleCounter = sales.filter(sale => sale.date === today).length;
+                // Configurar tabs
+                UIService.activateTab = function(tabName) {
+                    document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+                    
+                    document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+                    document.getElementById(`${tabName}-tab`).classList.add('active');
+                    
+                    if (tabName === 'historial' || tabName === 'pendientes') {
+                        SalesService.loadHistorial();
+                    }
+                };
             },
 
             async loadInitialData() {
-                await SalesService.loadDailySales();
-                await SalesService.loadPendingCredits();
+                AppState.saleCounter = await DataService.loadSaleCounter();
+                await SalesService.loadHistorial();
             },
 
             setupEventListeners() {
+                // Tabs
+                document.querySelectorAll('.tab').forEach(tab => {
+                    tab.addEventListener('click', () => {
+                        UIService.activateTab(tab.getAttribute('data-tab'));
+                    });
+                });
+
+                // Cerrar dropdown al hacer clic fuera
                 document.addEventListener('click', (e) => {
                     if (!e.target.closest('.search-container')) {
                         document.getElementById('search-dropdown').style.display = 'none';
                     }
                 });
 
-                const searchInput = document.getElementById('search-product');
+                // Búsqueda de productos
+                const searchInput = document.getElementById('buscar-producto');
                 let searchTimeout;
                 
                 searchInput.addEventListener('input', (e) => {
@@ -1315,17 +1233,15 @@
                     }, 300);
                 });
 
-                document.getElementById('add-product-btn').addEventListener('click', () => {
-                    SalesService.addToCart();
-                });
-
-                document.getElementById('equipo-number').addEventListener('input', (e) => {
+                // Validación de equipo (solo números)
+                document.getElementById('equipo').addEventListener('input', (e) => {
                     e.target.value = e.target.value.replace(/[^0-9]/g, '');
                     if (e.target.value.length > 6) {
                         e.target.value = e.target.value.substring(0, 6);
                     }
                 });
 
+                // Botones de pago
                 document.getElementById('contado-btn').addEventListener('click', () => {
                     SalesService.processSale('contado');
                 });
@@ -1334,321 +1250,22 @@
                     SalesService.processSale('pendiente');
                 });
 
-                document.getElementById('save-pending-btn').addEventListener('click', () => {
-                    this.savePendingCredits();
+                // Filtro de historial
+                document.getElementById('filter-historial').addEventListener('input', (e) => {
+                    const filter = e.target.value.toLowerCase();
+                    const filtered = AppState.historial.filter(venta => 
+                        venta.clientName?.toLowerCase().includes(filter) ||
+                        venta.equipoNumber?.includes(filter) ||
+                        venta.invoiceNumber?.includes(filter)
+                    );
+                    UIService.updateHistorial(filtered);
                 });
-
-                document.getElementById('load-pending-btn').addEventListener('click', () => {
-                    document.getElementById('pending-file-input').click();
-                });
-
-                document.getElementById('pending-file-input').addEventListener('change', (e) => {
-                    this.loadPendingCredits(e.target.files[0]);
-                });
-
-                document.addEventListener('click', async (e) => {
-                    const target = e.target;
-                    
-                    if (target.hasAttribute('data-remove-index')) {
-                        const index = parseInt(target.getAttribute('data-remove-index'));
-                        SalesService.removeFromCart(index);
-                    }
-                    
-                    if (target.hasAttribute('data-delete-sale')) {
-                        const saleId = target.getAttribute('data-delete-sale');
-                        this.deleteSale(saleId);
-                    }
-                    
-                    if (target.hasAttribute('data-add-payment')) {
-                        const creditId = target.getAttribute('data-add-payment');
-                        const totalAmount = parseFloat(target.getAttribute('data-total-amount'));
-                        this.addPayment(creditId, totalAmount);
-                    }
-                    
-                    if (target.hasAttribute('data-delete-credit')) {
-                        const creditId = target.getAttribute('data-delete-credit');
-                        this.deleteCredit(creditId);
-                    }
-                    
-                    if (target.hasAttribute('data-add-product')) {
-                        const productId = target.getAttribute('data-add-product');
-                        const quantityInput = document.querySelector(`input[data-product-id="${productId}"]`);
-                        const quantity = parseInt(quantityInput.value) || 1;
-                        SalesService.addToCart(productId, quantity);
-                    }
-                    
-                    if (target.hasAttribute('data-action')) {
-                        const action = target.getAttribute('data-action');
-                        const productId = target.getAttribute('data-product-id');
-                        const quantityInput = document.querySelector(`input[data-product-id="${productId}"]`);
-                        let quantity = parseInt(quantityInput.value) || 1;
-                        
-                        if (action === 'increase') {
-                            const product = AppState.searchResults.find(p => p.id === productId);
-                            const maxStock = product?.cantidad || 99;
-                            if (quantity < maxStock) {
-                                quantity++;
-                            }
-                        } else if (action === 'decrease') {
-                            if (quantity > 1) {
-                                quantity--;
-                            }
-                        }
-                        
-                        quantityInput.value = quantity;
-                        
-                        const product = AppState.searchResults.find(p => p.id === productId);
-                        if (product) {
-                            SalesService.setSelectedProduct(product, quantity);
-                        }
-                    }
-                    
-                    if (target.closest('.equipo-card')) {
-                        const equipoCard = target.closest('.equipo-card');
-                        const equipoNumber = equipoCard.getAttribute('data-equipo');
-                        this.selectEquipo(equipoNumber);
-                    }
-                    
-                    if (target.hasAttribute('data-print-sale')) {
-                        const saleId = target.getAttribute('data-print-sale');
-                        this.printSale(saleId);
-                    }
-                    
-                    if (target.hasAttribute('data-print-credit')) {
-                        const creditId = target.getAttribute('data-print-credit');
-                        this.printCredit(creditId);
-                    }
-                });
-
-                document.addEventListener('change', (e) => {
-                    if (e.target.classList.contains('quantity-input')) {
-                        const productId = e.target.getAttribute('data-product-id');
-                        const quantity = parseInt(e.target.value) || 1;
-                        const product = AppState.searchResults.find(p => p.id === productId);
-                        if (product) {
-                            SalesService.setSelectedProduct(product, quantity);
-                        }
-                    }
-                });
-            },
-
-            async selectEquipo(equipoNumber) {
-                AppState.selectedEquipo = equipoNumber;
-                
-                document.querySelectorAll('.equipo-card').forEach(card => {
-                    card.classList.remove('active');
-                });
-                document.querySelector(`[data-equipo="${equipoNumber}"]`).classList.add('active');
-                
-                await this.showEquipoInvoices(equipoNumber);
-            },
-
-            async showEquipoInvoices(equipoNumber) {
-                const container = document.getElementById('equipo-invoices-container');
-                const equipoCredits = AppState.pendingCredits.filter(credit => 
-                    credit.equipoNumber === equipoNumber
-                );
-                
-                if (equipoCredits.length === 0) {
-                    container.innerHTML = `
-                        <p style="text-align: center; color: #7f8c8d; font-size: 0.8rem;">
-                            No hay facturas para este equipo
-                        </p>
-                    `;
-                    container.className = 'equipo-invoices active';
-                    return;
-                }
-                
-                let invoicesHTML = '';
-                
-                equipoCredits.forEach(credit => {
-                    let productsHTML = '';
-                    if (credit.products && credit.products.length > 0) {
-                        credit.products.forEach(product => {
-                            productsHTML += `
-                                <div class="product-detail">
-                                    <span>${product.descripcion} (x${product.cantidad})</span>
-                                    <span>$${(product.precio * product.cantidad).toFixed(2)}</span>
-                                </div>
-                            `;
-                        });
-                    }
-                    
-                    const date = credit.timestamp ? new Date(credit.timestamp).toLocaleDateString('es-ES') : 'N/A';
-                    const totalPaid = credit.payments ? credit.payments.reduce((sum, payment) => sum + payment.amount, 0) : 0;
-                    const pendingAmount = credit.total - totalPaid;
-                    const status = pendingAmount > 0 ? 'pendiente' : 'pagado';
-                    const statusText = pendingAmount > 0 ? 'PENDIENTE' : 'PAGADO';
-                    
-                    let paymentsHTML = '';
-                    if (credit.payments && credit.payments.length > 0) {
-                        paymentsHTML = `
-                            <div class="payment-history">
-                                <strong>Abonos:</strong>
-                                ${credit.payments.map(payment => `
-                                    <div style="display: flex; justify-content: space-between; margin-top: 4px;">
-                                        <span>${new Date(payment.timestamp).toLocaleDateString('es-ES')}</span>
-                                        <span>$${payment.amount.toFixed(2)}</span>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        `;
-                    }
-                    
-                    invoicesHTML += `
-                        <div class="invoice-item ${status}">
-                            <div class="invoice-header">
-                                <div class="invoice-number">Factura #${credit.invoiceNumber}</div>
-                                <div class="invoice-total">$${credit.total.toFixed(2)}</div>
-                            </div>
-                            <div class="invoice-details">
-                                Fecha: ${date} | 
-                                Abonado: $${totalPaid.toFixed(2)} | 
-                                Pendiente: $${pendingAmount.toFixed(2)} |
-                                Estado: ${statusText}
-                            </div>
-                            <div class="invoice-products">
-                                ${productsHTML}
-                            </div>
-                            ${paymentsHTML}
-                            <div class="actions">
-                                <button class="btn btn-success" data-add-payment="${credit.localId}" data-total-amount="${pendingAmount}" style="padding: 6px 12px; font-size: 0.8rem;">
-                                    Abonar
-                                </button>
-                                <button class="btn btn-primary" data-print-credit="${credit.localId}" style="padding: 6px 12px; font-size: 0.8rem;">
-                                    Imprimir
-                                </button>
-                                <button class="btn btn-danger" data-delete-credit="${credit.localId}" style="padding: 6px 12px; font-size: 0.8rem;">
-                                    Eliminar
-                                </button>
-                            </div>
-                        </div>
-                    `;
-                });
-                
-                container.innerHTML = invoicesHTML;
-                container.className = 'equipo-invoices active';
-            },
-
-            async addPayment(creditId, totalAmount) {
-                const amount = prompt(`Ingrese el monto del abono (Total pendiente: $${totalAmount.toFixed(2)})`);
-                
-                if (!amount || isNaN(amount) || parseFloat(amount) <= 0) {
-                    UIService.showStatus("Monto inválido", "error");
-                    return;
-                }
-                
-                const paymentAmount = parseFloat(amount);
-                
-                try {
-                    const paymentData = {
-                        amount: paymentAmount,
-                        timestamp: new Date(),
-                        date: new Date().toISOString().split('T')[0]
-                    };
-                    
-                    const totalPaid = await DataService.addPayment(creditId, paymentData);
-                    
-                    UIService.showStatus(`Abono registrado. Total pagado: $${totalPaid.toFixed(2)}`, "success");
-                    
-                    await SalesService.loadPendingCredits();
-                    
-                    if (AppState.selectedEquipo) {
-                        await this.showEquipoInvoices(AppState.selectedEquipo);
-                    }
-                    
-                } catch (error) {
-                    UIService.showStatus("Error al registrar abono: " + error.message, "error");
-                }
-            },
-
-            async deleteSale(saleId) {
-                if (!confirm("¿Está seguro de eliminar esta venta?")) return;
-                
-                try {
-                    // Eliminar de ambos contenedores
-                    await DataService.deleteSaleAndCredit(saleId);
-                    UIService.showStatus("Venta eliminada exitosamente de ambos contenedores", "success");
-                    await SalesService.loadDailySales();
-                    await SalesService.loadPendingCredits();
-                    
-                    // Actualizar la vista si hay un equipo seleccionado
-                    if (AppState.selectedEquipo) {
-                        await this.showEquipoInvoices(AppState.selectedEquipo);
-                    }
-                } catch (error) {
-                    UIService.showStatus("Error al eliminar venta", "error");
-                }
-            },
-
-            async deleteCredit(creditId) {
-                if (!confirm("¿Está seguro de eliminar este crédito pendiente?")) return;
-                
-                try {
-                    await DataService.deleteCredit(creditId);
-                    UIService.showStatus("Crédito eliminado exitosamente", "success");
-                    await SalesService.loadPendingCredits();
-                    
-                    if (AppState.selectedEquipo) {
-                        await this.showEquipoInvoices(AppState.selectedEquipo);
-                    }
-                } catch (error) {
-                    UIService.showStatus("Error al eliminar crédito", "error");
-                }
-            },
-
-            savePendingCredits() {
-                const credits = DataService.loadFromLocalStorage("pendingCredits");
-                if (credits.length === 0) {
-                    UIService.showStatus("No hay facturas pendientes para guardar", "error");
-                    return;
-                }
-                
-                const url = DataService.exportPendingCredits();
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `facturas-pendientes-${new Date().toISOString().split('T')[0]}.json`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-                
-                UIService.showStatus("Facturas pendientes guardadas exitosamente", "success");
-            },
-
-            async loadPendingCredits(file) {
-                if (!file) return;
-                
-                try {
-                    await DataService.importPendingCredits(file);
-                    UIService.showStatus("Facturas pendientes cargadas exitosamente", "success");
-                    await SalesService.loadPendingCredits();
-                    
-                    if (AppState.selectedEquipo) {
-                        await this.showEquipoInvoices(AppState.selectedEquipo);
-                    }
-                    
-                    document.getElementById('pending-file-input').value = '';
-                    
-                } catch (error) {
-                    UIService.showStatus("Error al cargar facturas: " + error.message, "error");
-                }
-            },
-
-            printSale(saleId) {
-                const sale = AppState.dailySales.find(s => s.localId === saleId);
-                if (sale) {
-                    SalesService.printTicket(sale);
-                }
-            },
-
-            printCredit(creditId) {
-                const credit = AppState.pendingCredits.find(c => c.localId === creditId);
-                if (credit) {
-                    SalesService.printTicket(credit);
-                }
             }
         };
+
+        function closeInvoiceModal() {
+            document.getElementById('invoice-modal').style.display = 'none';
+        }
 
         document.addEventListener('DOMContentLoaded', function() {
             App.init();
