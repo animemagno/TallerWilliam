@@ -219,6 +219,15 @@
             background-color: #c0392b;
         }
 
+        .btn-info {
+            background-color: #17a2b8;
+            color: white;
+        }
+
+        .btn-info:hover {
+            background-color: #138496;
+        }
+
         .btn-full {
             width: 100%;
         }
@@ -338,6 +347,13 @@
             text-align: center;
             font-weight: bold;
         }
+
+        .historial-actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 15px;
+            gap: 10px;
+        }
     </style>
 </head>
 <body>
@@ -408,6 +424,11 @@
             </div>
 
             <div style="margin-top: 40px;">
+                <div class="historial-actions">
+                    <button class="btn btn-info" onclick="SalesService.printHistorialDiario()">
+                        IMPRIMIR HISTORIAL DEL DÍA
+                    </button>
+                </div>
                 <h3 style="margin-bottom: 15px; color: #2c3e50;">Historial de Ventas</h3>
                 <div class="form-group">
                     <input type="text" id="filter-historial" placeholder="Filtrar por cliente, equipo o factura...">
@@ -566,6 +587,19 @@
             async loadSales() {
                 if (AppState.firebaseInitialized) {
                     const snapshot = await AppState.db.collection("VENTAS")
+                        .orderBy("timestamp", "desc")
+                        .get();
+                    
+                    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                } else {
+                    return [];
+                }
+            },
+
+            async loadSalesByDate(date = new Date().toISOString().split('T')[0]) {
+                if (AppState.firebaseInitialized) {
+                    const snapshot = await AppState.db.collection("VENTAS")
+                        .where("date", "==", date)
                         .orderBy("timestamp", "desc")
                         .get();
                     
@@ -916,7 +950,11 @@
                     }
                     
                     await DataService.saveSale(saleData);
-                    this.printTicket(saleData);
+                    
+                    // SOLO imprimir ticket si es venta de CONTADO
+                    if (paymentType === 'contado') {
+                        this.printTicket(saleData);
+                    }
                     
                     UIService.showStatus(`Venta ${paymentType === 'contado' ? 'CONTADO' : 'PENDIENTE'} procesada - Factura #${saleData.invoiceNumber}`, "success");
                     
@@ -1182,6 +1220,367 @@
                 } catch (error) {
                     UIService.showStatus("Error al procesar abono: " + error.message, "error");
                 }
+            },
+
+            async printHistorialDiario() {
+                try {
+                    const today = new Date().toISOString().split('T')[0];
+                    const ventasDelDia = await DataService.loadSalesByDate(today);
+                    
+                    if (ventasDelDia.length === 0) {
+                        UIService.showStatus("No hay ventas registradas para hoy", "warning");
+                        return;
+                    }
+                    
+                    this.printHistorialReport(ventasDelDia, today);
+                    
+                } catch (error) {
+                    UIService.showStatus("Error al cargar historial del día: " + error.message, "error");
+                }
+            },
+
+            printHistorialReport(ventas, fecha) {
+                const printWindow = window.open('', '_blank');
+                
+                // Agrupar ventas por equipo
+                const ventasPorEquipo = {};
+                ventas.forEach(venta => {
+                    const equipo = venta.equipoNumber || 'SIN EQUIPO';
+                    if (!ventasPorEquipo[equipo]) {
+                        ventasPorEquipo[equipo] = [];
+                    }
+                    ventasPorEquipo[equipo].push(venta);
+                });
+                
+                let reportHTML = `
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <title>Historial Diario - ${fecha}</title>
+                        <style>
+                            @media print {
+                                body { 
+                                    font-family: 'Arial', sans-serif; 
+                                    font-size: 10px; 
+                                    margin: 0;
+                                    padding: 10px;
+                                    color: #000;
+                                }
+                                .header { 
+                                    text-align: center; 
+                                    margin-bottom: 15px;
+                                    border-bottom: 1px solid #333;
+                                    padding-bottom: 8px;
+                                }
+                                .header h1 {
+                                    font-size: 16px;
+                                    margin: 5px 0;
+                                }
+                                .header h2 {
+                                    font-size: 14px;
+                                    margin: 3px 0;
+                                }
+                                .header h3 {
+                                    font-size: 12px;
+                                    margin: 2px 0;
+                                    color: #666;
+                                }
+                                .equipos-grid {
+                                    display: grid;
+                                    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+                                    gap: 8px;
+                                    margin-bottom: 15px;
+                                }
+                                .equipo-card {
+                                    border: 1px solid #ccc;
+                                    border-radius: 4px;
+                                    padding: 6px;
+                                    page-break-inside: avoid;
+                                    background: white;
+                                }
+                                .equipo-header {
+                                    background: #2c3e50;
+                                    color: white;
+                                    padding: 4px 6px;
+                                    border-radius: 3px;
+                                    margin-bottom: 6px;
+                                    font-weight: bold;
+                                    font-size: 9px;
+                                    text-align: center;
+                                }
+                                .venta-item {
+                                    margin-bottom: 8px;
+                                    padding: 5px;
+                                    border: 1px solid #e0e0e0;
+                                    border-radius: 3px;
+                                    page-break-inside: avoid;
+                                    font-size: 8px;
+                                }
+                                .venta-header {
+                                    display: flex;
+                                    justify-content: space-between;
+                                    background: #f8f9fa;
+                                    padding: 3px 5px;
+                                    border-radius: 2px;
+                                    margin-bottom: 4px;
+                                    font-weight: bold;
+                                }
+                                .producto-item {
+                                    display: flex;
+                                    justify-content: space-between;
+                                    padding: 1px 0;
+                                    border-bottom: 1px dotted #eee;
+                                    font-size: 7px;
+                                }
+                                .contado { border-left: 3px solid #27ae60; }
+                                .pendiente { border-left: 3px solid #f39c12; }
+                                .tipo-badge {
+                                    padding: 1px 4px;
+                                    border-radius: 2px;
+                                    font-size: 7px;
+                                    font-weight: bold;
+                                }
+                                .contado-badge { background: #27ae60; color: white; }
+                                .pendiente-badge { background: #f39c12; color: white; }
+                                .total-section {
+                                    text-align: right;
+                                    margin-top: 3px;
+                                    font-weight: bold;
+                                    font-size: 8px;
+                                }
+                                .resumen-section {
+                                    margin-top: 20px;
+                                    padding: 10px;
+                                    background: #f8f9fa;
+                                    border-radius: 4px;
+                                    page-break-before: always;
+                                    font-size: 10px;
+                                }
+                                .resumen-grid {
+                                    display: grid;
+                                    grid-template-columns: 1fr 1fr;
+                                    gap: 8px;
+                                    margin-top: 8px;
+                                }
+                                @page {
+                                    size: letter;
+                                    margin: 0.5cm;
+                                }
+                            }
+                            body { 
+                                font-family: 'Arial', sans-serif; 
+                                font-size: 10px; 
+                                margin: 0;
+                                padding: 10px;
+                                color: #000;
+                            }
+                            .header { 
+                                text-align: center; 
+                                margin-bottom: 15px;
+                                border-bottom: 1px solid #333;
+                                padding-bottom: 8px;
+                            }
+                            .header h1 {
+                                font-size: 16px;
+                                margin: 5px 0;
+                            }
+                            .header h2 {
+                                font-size: 14px;
+                                margin: 3px 0;
+                            }
+                            .header h3 {
+                                font-size: 12px;
+                                margin: 2px 0;
+                                color: #666;
+                            }
+                            .equipos-grid {
+                                display: grid;
+                                grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+                                gap: 8px;
+                                margin-bottom: 15px;
+                            }
+                            .equipo-card {
+                                border: 1px solid #ccc;
+                                border-radius: 4px;
+                                padding: 6px;
+                                background: white;
+                            }
+                            .equipo-header {
+                                background: #2c3e50;
+                                color: white;
+                                padding: 4px 6px;
+                                border-radius: 3px;
+                                margin-bottom: 6px;
+                                font-weight: bold;
+                                font-size: 9px;
+                                text-align: center;
+                            }
+                            .venta-item {
+                                margin-bottom: 8px;
+                                padding: 5px;
+                                border: 1px solid #e0e0e0;
+                                border-radius: 3px;
+                                font-size: 8px;
+                            }
+                            .venta-header {
+                                display: flex;
+                                justify-content: space-between;
+                                background: #f8f9fa;
+                                padding: 3px 5px;
+                                border-radius: 2px;
+                                margin-bottom: 4px;
+                                font-weight: bold;
+                            }
+                            .producto-item {
+                                display: flex;
+                                justify-content: space-between;
+                                padding: 1px 0;
+                                border-bottom: 1px dotted #eee;
+                                font-size: 7px;
+                            }
+                            .contado { border-left: 3px solid #27ae60; }
+                            .pendiente { border-left: 3px solid #f39c12; }
+                            .tipo-badge {
+                                padding: 1px 4px;
+                                border-radius: 2px;
+                                font-size: 7px;
+                                font-weight: bold;
+                            }
+                            .contado-badge { background: #27ae60; color: white; }
+                            .pendiente-badge { background: #f39c12; color: white; }
+                            .total-section {
+                                text-align: right;
+                                margin-top: 3px;
+                                font-weight: bold;
+                                font-size: 8px;
+                            }
+                            .resumen-section {
+                                margin-top: 20px;
+                                padding: 10px;
+                                background: #f8f9fa;
+                                border-radius: 4px;
+                                font-size: 10px;
+                            }
+                            .resumen-grid {
+                                display: grid;
+                                grid-template-columns: 1fr 1fr;
+                                gap: 8px;
+                                margin-top: 8px;
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="header">
+                            <h1>TALLER WILIAN</h1>
+                            <h2>HISTORIAL DIARIO DE VENTAS</h2>
+                            <h3>${new Date(fecha).toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</h3>
+                        </div>
+                `;
+                
+                // Calcular totales
+                let totalContado = 0;
+                let totalPendiente = 0;
+                let totalGeneral = 0;
+                
+                // Generar grid de equipos
+                reportHTML += `<div class="equipos-grid">`;
+                
+                Object.keys(ventasPorEquipo).sort().forEach(equipo => {
+                    reportHTML += `
+                        <div class="equipo-card">
+                            <div class="equipo-header">
+                                EQUIPO: ${equipo}
+                            </div>
+                    `;
+                    
+                    ventasPorEquipo[equipo].forEach(venta => {
+                        const tipoClass = venta.paymentType === 'contado' ? 'contado' : 'pendiente';
+                        const tipoBadge = venta.paymentType === 'contado' ? 'contado-badge' : 'pendiente-badge';
+                        const tipoText = venta.paymentType === 'contado' ? 'CONTADO' : 'PENDIENTE';
+                        const fechaVenta = venta.timestamp ? new Date(venta.timestamp.toDate ? venta.timestamp.toDate() : venta.timestamp).toLocaleTimeString('es-ES', {hour: '2-digit', minute:'2-digit'}) : 'N/A';
+                        
+                        // Acumular totales
+                        if (venta.paymentType === 'contado') {
+                            totalContado += venta.total || 0;
+                        } else {
+                            totalPendiente += venta.total || 0;
+                        }
+                        totalGeneral += venta.total || 0;
+                        
+                        let productosHTML = '';
+                        if (venta.products && venta.products.length > 0) {
+                            venta.products.forEach(producto => {
+                                productosHTML += `
+                                    <div class="producto-item">
+                                        <div>${producto.descripcion}</div>
+                                        <div>x${producto.cantidad}</div>
+                                        <div>$${(producto.precio * producto.cantidad).toFixed(2)}</div>
+                                    </div>
+                                `;
+                            });
+                        }
+                        
+                        reportHTML += `
+                            <div class="venta-item ${tipoClass}">
+                                <div class="venta-header">
+                                    <div>${venta.invoiceNumber}</div>
+                                    <div><span class="tipo-badge ${tipoBadge}">${tipoText}</span></div>
+                                </div>
+                                <div style="margin-bottom: 3px; font-size: 7px;">
+                                    <strong>${venta.clientName || 'N/A'}</strong><br>
+                                    <span style="color: #666;">${fechaVenta}</span>
+                                </div>
+                                ${productosHTML}
+                                <div class="total-section">
+                                    Total: $${(venta.total || 0).toFixed(2)}
+                                    ${venta.paymentType === 'pendiente' ? `<br>Saldo: $${(venta.saldoPendiente || venta.total).toFixed(2)}` : ''}
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    reportHTML += `</div>`;
+                });
+                
+                reportHTML += `</div>`; // Cierra equipos-grid
+                
+                // Sección de resumen
+                reportHTML += `
+                    <div class="resumen-section">
+                        <h3 style="margin: 0 0 8px 0; text-align: center;">RESUMEN DEL DÍA</h3>
+                        <div class="resumen-grid">
+                            <div>
+                                <strong>Ventas al Contado:</strong><br>
+                                <span style="font-size: 12px; font-weight: bold;">$${totalContado.toFixed(2)}</span>
+                            </div>
+                            <div>
+                                <strong>Ventas Pendientes:</strong><br>
+                                <span style="font-size: 12px; font-weight: bold;">$${totalPendiente.toFixed(2)}</span>
+                            </div>
+                        </div>
+                        <div style="text-align: center; font-size: 14px; font-weight: bold; margin-top: 10px; padding-top: 8px; border-top: 1px solid #ccc;">
+                            TOTAL GENERAL: $${totalGeneral.toFixed(2)}
+                        </div>
+                        <div style="margin-top: 8px; font-size: 9px; text-align: center; color: #666;">
+                            Total de ventas: ${ventas.length} | 
+                            Equipos atendidos: ${Object.keys(ventasPorEquipo).length}
+                        </div>
+                    </div>
+                `;
+                
+                reportHTML += `
+                    </body>
+                    </html>
+                `;
+                
+                printWindow.document.write(reportHTML);
+                printWindow.document.close();
+                printWindow.focus();
+                
+                setTimeout(() => {
+                    printWindow.print();
+                    UIService.showStatus("Historial diario enviado a impresión", "success");
+                }, 500);
             },
 
             printTicket(saleData) {
