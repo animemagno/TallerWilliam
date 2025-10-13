@@ -329,11 +329,9 @@
 
         <div class="tabs">
             <div class="tab active" data-tab="ventas">Nueva Venta</div>
-            <div class="tab" data-tab="historial">Historial</div>
             <div class="tab" data-tab="pendientes">Pendientes</div>
         </div>
 
-        <!-- PESTAÑA NUEVA VENTA -->
         <div class="tab-content active" id="ventas-tab">
             <div class="form-group">
                 <label for="equipo">Equipo</label>
@@ -384,33 +382,32 @@
                     GUARDAR PENDIENTE
                 </button>
             </div>
-        </div>
 
-        <!-- PESTAÑA HISTORIAL -->
-        <div class="tab-content" id="historial-tab">
-            <div class="form-group">
-                <input type="text" id="filter-historial" placeholder="Filtrar por cliente, equipo o factura...">
+            <div style="margin-top: 40px;">
+                <h3 style="margin-bottom: 15px; color: #2c3e50;">Historial de Ventas</h3>
+                <div class="form-group">
+                    <input type="text" id="filter-historial" placeholder="Filtrar por cliente, equipo o factura...">
+                </div>
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th>Factura</th>
+                            <th>Cliente/Equipo</th>
+                            <th>Total</th>
+                            <th>Tipo</th>
+                            <th>Fecha</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historial-body">
+                        <tr>
+                            <td colspan="6" class="empty-cart">Cargando historial...</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
-            <table class="history-table">
-                <thead>
-                    <tr>
-                        <th>Factura</th>
-                        <th>Cliente/Equipo</th>
-                        <th>Total</th>
-                        <th>Tipo</th>
-                        <th>Fecha</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody id="historial-body">
-                    <tr>
-                        <td colspan="6" class="empty-cart">Cargando historial...</td>
-                    </tr>
-                </tbody>
-            </table>
         </div>
 
-        <!-- PESTAÑA PENDIENTES -->
         <div class="tab-content" id="pendientes-tab">
             <table class="history-table">
                 <thead>
@@ -430,7 +427,6 @@
             </table>
         </div>
 
-        <!-- MODAL DETALLES FACTURA -->
         <div id="invoice-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000;">
             <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 8px; width: 90%; max-width: 600px; max-height: 80vh; overflow-y: auto;">
                 <div id="invoice-modal-content"></div>
@@ -465,7 +461,6 @@
         const DataService = {
             async searchProducts(query) {
                 if (!AppState.firebaseInitialized) {
-                    // Si no hay conexión, crear producto manual
                     return [{
                         id: 'manual-' + Date.now(),
                         codigo: 'MANUAL',
@@ -489,7 +484,6 @@
                     }
                 });
 
-                // Si no se encuentran productos, agregar opción manual
                 if (results.length === 0 && query.trim() !== '') {
                     results.push({
                         id: 'manual-' + Date.now(),
@@ -753,7 +747,6 @@
 
         const SalesService = {
             addToCart(product) {
-                // Siempre cantidad 1 por defecto
                 const cartItem = {
                     id: product.id,
                     codigo: product.codigo || 'MANUAL',
@@ -857,13 +850,11 @@
                     
                     UIService.showStatus(`Venta ${paymentType === 'contado' ? 'CONTADO' : 'PENDIENTE'} procesada - Factura #${saleData.invoiceNumber}`, "success");
                     
-                    // Limpiar carrito después de guardar
                     AppState.cart = [];
                     UIService.updateCartDisplay();
                     document.getElementById('equipo').value = '';
                     document.getElementById('cliente').value = '';
                     
-                    // Actualizar contador y recargar historial
                     AppState.saleCounter = await DataService.loadSaleCounter();
                     await this.loadHistorial();
                     
@@ -895,16 +886,14 @@
                     
                     UIService.showStatus("Factura actualizada correctamente", "success");
                     
-                    // Limpiar y salir del modo edición
                     AppState.cart = [];
                     AppState.currentEditingInvoice = null;
                     UIService.updateCartDisplay();
                     document.getElementById('equipo').value = '';
                     document.getElementById('cliente').value = '';
                     
-                    // Recargar historial
                     await this.loadHistorial();
-                    UIService.activateTab('historial');
+                    UIService.activateTab('ventas');
                     
                 } catch (error) {
                     UIService.showStatus("Error al actualizar la factura: " + error.message, "error");
@@ -962,7 +951,6 @@
                 const venta = AppState.pendientes.find(v => v.id === invoiceId);
                 if (!venta) return;
                 
-                // Cargar productos en el carrito
                 AppState.cart = venta.products.map(p => ({
                     id: p.id,
                     codigo: p.codigo,
@@ -971,18 +959,14 @@
                     cantidad: p.cantidad
                 }));
                 
-                // Llenar campos del formulario
                 document.getElementById('equipo').value = venta.equipoNumber || '';
                 document.getElementById('cliente').value = venta.clientName || '';
                 
-                // Guardar referencia de la factura en edición
                 AppState.currentEditingInvoice = invoiceId;
                 
-                // Cambiar a pestaña de ventas y mostrar modo edición
                 UIService.activateTab('ventas');
                 UIService.updateCartDisplay();
                 
-                // Cambiar botones para modo edición
                 document.getElementById('contado-btn').style.display = 'none';
                 document.getElementById('pendiente-btn').style.display = 'none';
                 
@@ -1013,7 +997,6 @@
                 document.getElementById('equipo').value = '';
                 document.getElementById('cliente').value = '';
                 
-                // Restaurar botones normales
                 const paymentButtons = document.querySelector('.payment-buttons');
                 paymentButtons.innerHTML = `
                     <button class="btn btn-success" id="contado-btn">
@@ -1024,7 +1007,6 @@
                     </button>
                 `;
                 
-                // Re-asignar event listeners
                 document.getElementById('contado-btn').onclick = () => SalesService.processSale('contado');
                 document.getElementById('pendiente-btn').onclick = () => SalesService.processSale('pendiente');
             },
@@ -1062,214 +1044,243 @@
                         <style>
                             body { 
                                 font-family: 'Courier New', monospace; 
-                                font-size: 22px; 
                                 margin: 0; 
-                                padding: 6px;
-                                width: 58mm;
+                                padding: 10px; 
+                                font-size: 12px;
+                                color: #000;
+                                background: white;
                             }
-                            .header { text-align: center; margin-bottom: 12px; }
-                            .line { border-bottom: 2px dashed #000; margin: 4px 0; }
-                            .product { margin: 2px 0; font-size: 20px; }
-                            .product-name { 
-                                white-space: nowrap;
-                                overflow: hidden;
-                                text-overflow: ellipsis;
-                                max-width: 35mm;
+                            .ticket { 
+                                width: 70mm; 
+                                margin: 0 auto; 
                             }
-                            .total { font-weight: bold; text-align: center; margin-top: 12px; font-size: 24px; }
-                            .footer { text-align: center; margin-top: 12px; font-size: 18px; }
-                            .text-center { text-align: center; }
-                            .text-right { text-align: right; }
-                            .dotted-line { border-bottom: 2px dotted #000; margin: 2px 0; }
-                            .small-text { font-size: 18px; }
-                            .medium-text { font-size: 20px; }
-                            .large-text { font-size: 26px; }
+                            .header { 
+                                text-align: center; 
+                                margin-bottom: 10px; 
+                                padding-bottom: 10px; 
+                                border-bottom: 1px dashed #000; 
+                            }
+                            .header h1 { 
+                                font-size: 14px; 
+                                margin: 5px 0; 
+                                font-weight: bold;
+                            }
+                            .header p { 
+                                margin: 2px 0; 
+                                font-size: 10px; 
+                            }
+                            .info { 
+                                margin: 8px 0; 
+                                padding: 5px 0; 
+                                border-bottom: 1px dashed #000; 
+                            }
+                            .products { 
+                                margin: 10px 0; 
+                            }
+                            .product-row { 
+                                display: flex; 
+                                justify-content: space-between; 
+                                margin: 5px 0; 
+                                font-size: 11px;
+                            }
+                            .product-desc { 
+                                flex: 1; 
+                                margin-right: 10px; 
+                            }
+                            .product-total { 
+                                text-align: right; 
+                                white-space: nowrap; 
+                            }
+                            .total { 
+                                text-align: center; 
+                                margin: 15px 0; 
+                                padding-top: 10px; 
+                                border-top: 2px solid #000; 
+                                font-weight: bold; 
+                                font-size: 14px;
+                            }
+                            .footer { 
+                                text-align: center; 
+                                margin-top: 15px; 
+                                padding-top: 10px; 
+                                border-top: 1px dashed #000; 
+                                font-size: 10px; 
+                            }
+                            .bold { 
+                                font-weight: bold; 
+                            }
+                            .small { 
+                                font-size: 10px; 
+                            }
+                            .thank-you {
+                                text-align: center;
+                                margin: 15px 0;
+                                font-weight: bold;
+                                font-size: 12px;
+                            }
                         </style>
                     </head>
                     <body>
-                        <div class="header">
-                            <h3 style="margin: 2px 0; font-size: 26px;">TALLER WILIAN</h3>
-                            <div class="small-text">Factura: ${saleData.invoiceNumber}</div>
-                            <div class="small-text">${new Date(saleData.timestamp.toDate ? saleData.timestamp.toDate() : saleData.timestamp).toLocaleString('es-ES')}</div>
-                        </div>
-                        
-                        <div class="line"></div>
-                        
-                        <div class="medium-text">
-                            <strong>Cliente:</strong> ${saleData.clientName}<br>
-                            <strong>Equipo:</strong> ${saleData.equipoNumber}<br>
-                            <strong>Tipo:</strong> ${saleData.paymentType.toUpperCase()}
-                        </div>
-                        
-                        <div class="line"></div>
-                        
-                        <div style="margin: 8px 0;">
-                            ${saleData.products.map(p => `
-                                <div class="product" style="display: flex; justify-content: space-between;">
-                                    <div class="product-name">${p.descripcion}</div>
-                                    <div style="text-align: right;">
-                                        <div>${p.cantidad} x $${p.precio.toFixed(2)}</div>
-                                        <div>$${(p.precio * p.cantidad).toFixed(2)}</div>
+                        <div class="ticket">
+                            <div class="header">
+                                <h1>TALLER WILIAN</h1>
+                                <p>Sistema Avanzado de Ventas</p>
+                            </div>
+                            
+                            <div class="info">
+                                <div><strong>FACTURA:</strong> ${saleData.invoiceNumber}</div>
+                                <div><strong>CLIENTE:</strong> ${saleData.clientName || 'N/A'}</div>
+                                <div><strong>TIPO:</strong> ${saleData.paymentType === 'contado' ? 'CONTADO' : 'PENDIENTE'}</div>
+                                <div><strong>FECHA:</strong> ${new Date().toLocaleString('es-ES')}</div>
+                            </div>
+                            
+                            <div class="products">
+                                ${saleData.products ? saleData.products.map(product => `
+                                    <div class="product-row">
+                                        <div class="product-desc" style="font-size: 10px;">* ${product.descripcion}</div>
+                                        <div class="product-total">
+                                            ${product.cantidad}x $${(product.precio * product.cantidad).toFixed(2)}
+                                        </div>
                                     </div>
-                                </div>
-                                <div class="dotted-line"></div>
-                            `).join('')}
-                        </div>
-                        
-                        <div class="line"></div>
-                        
-                        <div class="total large-text">
-                            TOTAL: $${saleData.total.toFixed(2)}
-                        </div>
-                        
-                        <div class="footer">
-                            <div>¡Gracias por su compra!</div>
-                            <div>Taller Wilian</div>
+                                `).join('') : ''}
+                            </div>
+                            
+                            <div class="total">
+                                TOTAL: $${(saleData.total || 0).toFixed(2)}
+                            </div>
+                            
+                            <div class="footer">
+                                <div class="bold">EQUIPO: ${saleData.equipoNumber || 'N/A'}</div>
+                                <div class="bold">${new Date().toLocaleDateString('es-ES')}</div>
+                            </div>
+                            
+                            <div class="thank-you">
+                                GRACIAS POR PREFERIRNOS
+                            </div>
                         </div>
                     </body>
                     </html>
                 `);
                 
                 printWindow.document.close();
-                printWindow.focus();
-                
                 setTimeout(() => {
                     printWindow.print();
-                    setTimeout(() => {
-                        printWindow.close();
-                    }, 500);
-                }, 500);
+                    printWindow.close();
+                }, 250);
             }
         };
 
-        const App = {
-            async init() {
-                try {
-                    await this.initializeFirebase();
-                    this.setupUI();
-                    await this.loadInitialData();
-                    this.setupEventListeners();
-                    UIService.showStatus("Sistema inicializado correctamente", "success");
-                } catch (error) {
-                    console.error("Error en inicialización:", error);
-                    UIService.showStatus("Error al inicializar: " + error.message, "error");
-                }
-            },
-
-            async initializeFirebase() {
-                try {
-                    if (firebase.apps.length === 0) {
-                        firebase.initializeApp(CONFIG.firebase);
-                    }
-                    AppState.db = firebase.firestore();
-                    AppState.firebaseInitialized = true;
-                } catch (error) {
-                    console.error("Error inicializando Firebase:", error);
-                    AppState.firebaseInitialized = false;
-                    UIService.showStatus("Modo offline activado", "warning");
-                }
-            },
-
-            setupUI() {
-                const now = new Date();
-                document.getElementById('current-date').textContent = now.toLocaleDateString('es-ES');
-                
-                // Configurar tabs
-                UIService.activateTab = function(tabName) {
-                    document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
-                    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-                    
-                    document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
-                    document.getElementById(`${tabName}-tab`).classList.add('active');
-                    
-                    if (tabName === 'historial' || tabName === 'pendientes') {
-                        SalesService.loadHistorial();
-                    }
-                };
-            },
-
-            async loadInitialData() {
-                AppState.saleCounter = await DataService.loadSaleCounter();
-                await SalesService.loadHistorial();
-            },
-
-            setupEventListeners() {
-                // Tabs
-                document.querySelectorAll('.tab').forEach(tab => {
-                    tab.addEventListener('click', () => {
-                        UIService.activateTab(tab.getAttribute('data-tab'));
-                    });
+        const EventHandlers = {
+            init() {
+                document.getElementById('current-date').textContent = new Date().toLocaleDateString('es-ES', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
                 });
-
-                // Cerrar dropdown al hacer clic fuera
+                
+                document.getElementById('buscar-producto').addEventListener('input', async (e) => {
+                    const query = e.target.value;
+                    if (query.length >= 2) {
+                        const results = await DataService.searchProducts(query);
+                        AppState.searchResults = results;
+                        UIService.showSearchResults(results);
+                    } else {
+                        document.getElementById('search-dropdown').style.display = 'none';
+                    }
+                });
+                
+                document.getElementById('contado-btn').addEventListener('click', () => {
+                    SalesService.processSale('contado');
+                });
+                
+                document.getElementById('pendiente-btn').addEventListener('click', () => {
+                    SalesService.processSale('pendiente');
+                });
+                
+                document.getElementById('filter-historial').addEventListener('input', (e) => {
+                    const filter = e.target.value.toLowerCase();
+                    const filtered = AppState.historial.filter(venta => 
+                        venta.clientName?.toLowerCase().includes(filter) ||
+                        venta.equipoNumber?.toLowerCase().includes(filter) ||
+                        venta.invoiceNumber?.toLowerCase().includes(filter)
+                    );
+                    UIService.updateHistorial(filtered);
+                });
+                
                 document.addEventListener('click', (e) => {
                     if (!e.target.closest('.search-container')) {
                         document.getElementById('search-dropdown').style.display = 'none';
                     }
                 });
-
-                // Búsqueda de productos
-                const searchInput = document.getElementById('buscar-producto');
-                let searchTimeout;
                 
-                searchInput.addEventListener('input', (e) => {
-                    clearTimeout(searchTimeout);
-                    const query = e.target.value.trim();
-                    
-                    searchTimeout = setTimeout(async () => {
-                        if (query.length >= 2) {
-                            try {
-                                AppState.searchResults = await DataService.searchProducts(query);
-                                UIService.showSearchResults(AppState.searchResults);
-                            } catch (error) {
-                                document.getElementById('search-dropdown').style.display = 'none';
-                                if (query.length > 0) {
-                                    UIService.showStatus("Error en búsqueda: " + error.message, "error");
-                                }
-                            }
-                        } else {
-                            document.getElementById('search-dropdown').style.display = 'none';
-                        }
-                    }, 300);
+                document.querySelectorAll('.tab').forEach(tab => {
+                    tab.addEventListener('click', () => {
+                        const tabId = tab.getAttribute('data-tab');
+                        UIService.activateTab(tabId);
+                    });
                 });
-
-                // Validación de equipo (solo números)
-                document.getElementById('equipo').addEventListener('input', (e) => {
-                    e.target.value = e.target.value.replace(/[^0-9]/g, '');
-                    if (e.target.value.length > 6) {
-                        e.target.value = e.target.value.substring(0, 6);
+                
+                document.getElementById('equipo').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        document.getElementById('cliente').focus();
                     }
                 });
-
-                // Botones de pago
-                document.getElementById('contado-btn').addEventListener('click', () => {
-                    SalesService.processSale('contado');
+                
+                document.getElementById('cliente').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        document.getElementById('buscar-producto').focus();
+                    }
                 });
-
-                document.getElementById('pendiente-btn').addEventListener('click', () => {
-                    SalesService.processSale('pendiente');
-                });
-
-                // Filtro de historial
-                document.getElementById('filter-historial').addEventListener('input', (e) => {
-                    const filter = e.target.value.toLowerCase();
-                    const filtered = AppState.historial.filter(venta => 
-                        venta.clientName?.toLowerCase().includes(filter) ||
-                        venta.equipoNumber?.includes(filter) ||
-                        venta.invoiceNumber?.includes(filter)
-                    );
-                    UIService.updateHistorial(filtered);
+                
+                document.getElementById('buscar-producto').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        const query = e.target.value.trim();
+                        if (query) {
+                            SalesService.addManualProduct(query);
+                        }
+                    }
                 });
             }
+        };
+
+        UIService.activateTab = function(tabId) {
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            document.querySelector(`[data-tab="${tabId}"]`).classList.add('active');
+            document.getElementById(`${tabId}-tab`).classList.add('active');
         };
 
         function closeInvoiceModal() {
             document.getElementById('invoice-modal').style.display = 'none';
         }
 
-        document.addEventListener('DOMContentLoaded', function() {
-            App.init();
-        });
+        async function initializeApp() {
+            try {
+                firebase.initializeApp(CONFIG.firebase);
+                AppState.db = firebase.firestore();
+                AppState.firebaseInitialized = true;
+                
+                AppState.saleCounter = await DataService.loadSaleCounter();
+                await SalesService.loadHistorial();
+                
+                UIService.showStatus("Sistema conectado a la base de datos", "success");
+            } catch (error) {
+                UIService.showStatus("Modo sin conexión - Los datos se perderán al recargar", "error");
+            }
+            
+            EventHandlers.init();
+        }
+
+        window.onload = initializeApp;
+        window.SalesService = SalesService;
+        window.closeInvoiceModal = closeInvoiceModal;
     </script>
 </body>
 </html>
