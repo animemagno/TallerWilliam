@@ -7,13 +7,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
         :root {
             --primary-color: #3498db;
             --secondary-color: #2c3e50;
@@ -30,32 +23,22 @@
             --header-gradient: linear-gradient(135deg, #3498db, #2c3e50);
         }
 
-        [data-theme="dark"] {
-            --primary-color: #1a1a1a;
-            --secondary-color: #000000;
-            --accent-color: #333333;
-            --success-color: #2ecc71;
-            --warning-color: #e67e22;
-            --danger-color: #c0392b;
-            --light-color: #2d2d2d;
-            --dark-color: #ecf0f1;
-            --text-color: #e0e0e0;
-            --bg-color: #121212;
-            --panel-bg: #1e1e1e;
-            --border-color: #444444;
-            --header-gradient: linear-gradient(135deg, #000000, #333333);
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         body {
             background-color: var(--bg-color);
             color: var(--text-color);
             line-height: 1.4;
-            transition: all 0.3s ease;
             font-size: 14px;
         }
 
         .container {
-            max-width: 1400px;
+            max-width: 1200px;
             margin: 0 auto;
             padding: 10px;
         }
@@ -67,7 +50,6 @@
             border-radius: 8px;
             margin-bottom: 15px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            position: relative;
         }
 
         header h1 {
@@ -84,60 +66,19 @@
             opacity: 0.9;
         }
 
-        .theme-toggle {
-            position: absolute;
-            top: 10px;
-            right: 15px;
-            background: rgba(255, 255, 255, 0.2);
-            border: none;
-            border-radius: 50%;
-            width: 35px;
-            height: 35px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 1rem;
-            transition: all 0.3s ease;
+        .sales-process-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
         }
 
-        .theme-toggle:hover {
-            background: rgba(255, 255, 255, 0.3);
-        }
-
-        .tabs {
-            display: flex;
+        .sales-form-container, .pending-invoices-container {
             background: var(--panel-bg);
             border-radius: 8px;
-            padding: 4px;
-            margin-bottom: 15px;
+            padding: 15px;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            flex-wrap: wrap;
-        }
-
-        .tab {
-            padding: 8px 16px;
-            cursor: pointer;
-            border-radius: 6px;
-            transition: all 0.3s ease;
-            font-weight: 600;
-            color: var(--text-color);
-            font-size: 0.85rem;
-            margin: 2px;
-        }
-
-        .tab.active {
-            background: var(--primary-color);
-            color: white;
-        }
-
-        .tab-content {
-            display: none;
-        }
-
-        .tab-content.active {
-            display: block;
+            border: 1px solid var(--border-color);
         }
 
         .panel {
@@ -155,21 +96,6 @@
             border-bottom: 1px solid var(--border-color);
             padding-bottom: 8px;
             font-size: 1.2rem;
-        }
-
-        .sales-process-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 15px;
-        }
-
-        .sales-form-container, .pending-invoices-container {
-            background: var(--panel-bg);
-            border-radius: 8px;
-            padding: 15px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            border: 1px solid var(--border-color);
         }
 
         .form-group {
@@ -192,7 +118,6 @@
             font-size: 0.85rem;
             background: var(--panel-bg);
             color: var(--text-color);
-            transition: border-color 0.3s ease;
         }
 
         .form-group input:focus, .form-group select:focus {
@@ -215,6 +140,11 @@
             align-items: end;
         }
 
+        .quantity-input {
+            width: 60px;
+            text-align: center;
+        }
+
         .btn {
             padding: 8px 16px;
             border: none;
@@ -225,114 +155,20 @@
             font-size: 0.85rem;
         }
 
-        .btn-primary {
-            background-color: var(--primary-color);
-            color: white;
-        }
+        .btn-primary { background-color: var(--primary-color); color: white; }
+        .btn-primary:hover { background-color: var(--accent-color); }
 
-        .btn-primary:hover {
-            background-color: var(--accent-color);
-        }
+        .btn-success { background-color: var(--success-color); color: white; }
+        .btn-success:hover { background-color: #219a52; }
 
-        .btn-success {
-            background-color: var(--success-color);
-            color: white;
-        }
+        .btn-danger { background-color: var(--danger-color); color: white; }
+        .btn-danger:hover { background-color: #c0392b; }
 
-        .btn-success:hover {
-            background-color: #219a52;
-        }
+        .btn-warning { background-color: var(--warning-color); color: white; }
+        .btn-warning:hover { background-color: #d35400; }
 
-        .btn-danger {
-            background-color: var(--danger-color);
-            color: white;
-        }
-
-        .btn-danger:hover {
-            background-color: #c0392b;
-        }
-
-        .btn-warning {
-            background-color: var(--warning-color);
-            color: white;
-        }
-
-        .btn-warning:hover {
-            background-color: #d35400;
-        }
-
-        .btn-info {
-            background-color: #17a2b8;
-            color: white;
-        }
-
-        .btn-info:hover {
-            background-color: #138496;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 8px;
-            font-size: 0.8rem;
-        }
-
-        th, td {
-            padding: 8px 10px;
-            text-align: left;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        thead {
-            background-color: var(--secondary-color);
-            color: white;
-        }
-
-        tbody tr:hover {
-            background-color: rgba(0, 0, 0, 0.05);
-        }
-
-        [data-theme="dark"] tbody tr:hover {
-            background-color: rgba(255, 255, 255, 0.05);
-        }
-
-        .product-item {
-            background: var(--light-color);
-            padding: 8px;
-            border-radius: 4px;
-            margin-bottom: 8px;
-            border-left: 3px solid var(--primary-color);
-            font-size: 0.8rem;
-        }
-
-        .search-dropdown {
-            position: absolute;
-            background: var(--panel-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
-            max-height: 200px;
-            overflow-y: auto;
-            width: calc(100% - 100px);
-            z-index: 1000;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            font-size: 0.8rem;
-        }
-
-        .search-dropdown-item {
-            padding: 6px;
-            cursor: pointer;
-            border-bottom: 1px solid var(--border-color);
-            transition: background-color 0.2s;
-        }
-
-        .search-dropdown-item:hover {
-            background-color: var(--primary-color);
-            color: white;
-        }
-
-        .search-dropdown-item:last-child {
-            border-bottom: none;
-        }
+        .btn-info { background-color: #17a2b8; color: white; }
+        .btn-info:hover { background-color: #138496; }
 
         .payment-buttons {
             display: grid;
@@ -369,13 +205,111 @@
             background-color: #d35400;
         }
 
-        .status {
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 8px;
+            font-size: 0.8rem;
+        }
+
+        th, td {
+            padding: 8px 10px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        thead {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+
+        tbody tr:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+
+        .compact-table {
+            font-size: 0.75rem;
+        }
+
+        .compact-table th, 
+        .compact-table td {
+            padding: 6px 8px;
+        }
+
+        .product-item {
+            background: var(--light-color);
             padding: 8px;
             border-radius: 4px;
-            margin-bottom: 15px;
-            text-align: center;
-            display: none;
+            margin-bottom: 8px;
+            border-left: 3px solid var(--primary-color);
+            font-size: 0.8rem;
+        }
+
+        .search-dropdown {
+            position: absolute;
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            max-height: 200px;
+            overflow-y: auto;
+            width: calc(100% - 100px);
+            z-index: 1000;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            font-size: 0.8rem;
+        }
+
+        .search-dropdown-item {
+            padding: 8px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border-color);
+            transition: background-color 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .search-dropdown-item:hover {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .product-info {
+            flex: 1;
+        }
+
+        .product-quantity {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .quantity-controls {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .quantity-btn {
+            width: 25px;
+            height: 25px;
+            border: none;
+            border-radius: 3px;
+            background: var(--primary-color);
+            color: white;
+            cursor: pointer;
+            font-size: 0.7rem;
+        }
+
+        .status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 6px;
+            z-index: 10000;
             font-size: 0.85rem;
+            display: none;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
         }
 
         .status.success {
@@ -384,29 +318,18 @@
             border: 1px solid #c3e6cb;
         }
 
-        [data-theme="dark"] .status.success {
-            background-color: rgba(46, 204, 113, 0.2);
-            color: #90ee90;
-            border: 1px solid #2ecc71;
-        }
-
         .status.error {
             background-color: #f8d7da;
             color: #721c24;
             border: 1px solid #f5c6cb;
         }
 
-        [data-theme="dark"] .status.error {
-            background-color: rgba(192, 57, 43, 0.2);
-            color: #ff6b6b;
-            border: 1px solid #c0392b;
-        }
-
-        .loading {
+        .summary-total {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: var(--success-color);
             text-align: center;
-            padding: 15px;
-            font-size: 1rem;
-            color: var(--primary-color);
+            margin: 15px 0;
         }
 
         .actions {
@@ -420,72 +343,10 @@
             font-size: 0.75rem;
         }
 
-        .credit-status {
-            background: rgba(243, 156, 18, 0.1);
-            padding: 8px;
-            border-radius: 4px;
-            margin: 8px 0;
-            border: 1px solid var(--warning-color);
-            font-size: 0.8rem;
-        }
-
-        [data-theme="dark"] .credit-status {
-            background: rgba(230, 126, 34, 0.1);
-        }
-
-        .payment-history {
-            background: var(--light-color);
-            padding: 8px;
-            border-radius: 4px;
-            margin-top: 8px;
-            font-size: 0.8rem;
-        }
-
-        .compact-table {
-            font-size: 0.75rem;
-        }
-
-        .compact-table th, 
-        .compact-table td {
-            padding: 6px 8px;
-        }
-
-        .daily-closure {
-            background: rgba(52, 152, 219, 0.1);
-            padding: 12px;
-            border-radius: 6px;
-            border: 1px solid var(--primary-color);
-            margin-top: 15px;
-        }
-
-        .processing {
-            opacity: 0.6;
-            pointer-events: none;
-        }
-
-        .connection-status {
-            position: fixed;
-            top: 10px;
-            right: 10px;
-            padding: 5px 10px;
-            border-radius: 4px;
-            font-size: 0.7rem;
-            z-index: 10000;
-        }
-
-        .connection-status.online {
-            background-color: var(--success-color);
-            color: white;
-        }
-
-        .connection-status.offline {
-            background-color: var(--danger-color);
-            color: white;
-        }
-
-        .pending-equipos-grid {
+        /* Nuevos estilos para equipos */
+        .equipos-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
             gap: 10px;
             margin-top: 10px;
             max-height: 300px;
@@ -495,7 +356,7 @@
         .equipo-card {
             background: var(--light-color);
             border-radius: 6px;
-            padding: 10px;
+            padding: 12px;
             text-align: center;
             cursor: pointer;
             transition: all 0.3s ease;
@@ -514,9 +375,23 @@
             border-color: var(--accent-color);
         }
 
+        .equipo-card.pagado {
+            border-left: 4px solid var(--success-color);
+        }
+
+        .equipo-card.pendiente {
+            border-left: 4px solid var(--warning-color);
+        }
+
         .equipo-number {
             font-weight: bold;
             font-size: 1rem;
+            margin-bottom: 4px;
+        }
+
+        .equipo-saldo {
+            font-size: 0.8rem;
+            font-weight: bold;
         }
 
         .equipo-count {
@@ -540,8 +415,16 @@
             padding: 12px;
             border-radius: 6px;
             margin-bottom: 12px;
-            border-left: 4px solid var(--warning-color);
             font-size: 0.8rem;
+        }
+
+        .invoice-item.pagado {
+            border-left: 4px solid var(--success-color);
+            opacity: 0.7;
+        }
+
+        .invoice-item.pendiente {
+            border-left: 4px solid var(--warning-color);
         }
 
         .invoice-header {
@@ -587,65 +470,27 @@
             border-bottom: none;
         }
 
-        .global-summary {
-            background: rgba(52, 152, 219, 0.1);
-            padding: 12px;
-            border-radius: 6px;
-            margin: 15px 0;
-            border: 1px solid var(--primary-color);
-        }
-
-        .summary-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 4px;
-        }
-
-        .summary-total-global {
-            font-weight: bold;
-            font-size: 1.2rem;
-            color: var(--primary-color);
-            text-align: center;
+        .payment-history {
+            background: var(--light-color);
+            padding: 8px;
+            border-radius: 4px;
             margin-top: 8px;
-            padding-top: 8px;
-            border-top: 1px solid var(--border-color);
+            font-size: 0.8rem;
         }
 
-        .payment-section {
-            background: rgba(39, 174, 96, 0.1);
-            padding: 12px;
-            border-radius: 6px;
-            margin-top: 12px;
-            border: 1px solid var(--success-color);
+        .file-actions {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
         }
 
-        .summary-total {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: var(--success-color);
-            text-align: center;
-            margin: 15px 0;
+        .file-actions button {
+            flex: 1;
         }
 
         @media (max-width: 768px) {
             .sales-process-container {
                 grid-template-columns: 1fr;
-            }
-            
-            .tabs {
-                flex-direction: column;
-            }
-            
-            .payment-buttons {
-                grid-template-columns: 1fr 1fr;
-            }
-            
-            th, td {
-                padding: 6px 8px;
-            }
-            
-            .actions {
-                flex-direction: column;
             }
             
             .client-fields, .search-container {
@@ -664,25 +509,21 @@
                 padding: 10px;
             }
 
-            .connection-status {
-                position: relative;
-                top: 0;
-                right: 0;
-                margin: 5px;
+            .equipos-grid {
+                grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
             }
 
-            .pending-equipos-grid {
-                grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+            .file-actions {
+                flex-direction: column;
             }
         }
     </style>
 </head>
 <body>
-    <div class="connection-status" id="connection-status">Conectando...</div>
+    <div class="status" id="status-message"></div>
     
     <div class="container">
         <header>
-            <button class="theme-toggle" id="theme-toggle">🌙</button>
             <h1>Sistema de Ventas - Taller Wilian</h1>
             <div class="header-info">
                 <span>Fecha: <span id="current-date"></span></span>
@@ -690,2100 +531,994 @@
             </div>
         </header>
 
-        <div class="status" id="status-message"></div>
-
-        <div class="tabs">
-            <div class="tab active" data-tab="sales">Ventas</div>
-            <div class="tab" data-tab="summary">Resumen</div>
-            <div class="tab" data-tab="equipos">Equipos</div>
-            <div class="tab" data-tab="cierre">Cierre Diario</div>
-        </div>
-
-        <div class="tab-content active" id="sales-tab">
-            <div class="sales-process-container">
-                <div class="sales-form-container">
-                    <h2>Proceso de Venta</h2>
-                    
-                    <div class="client-fields">
-                        <div class="form-group">
-                            <label for="equipo-number">N° Equipo</label>
-                            <input type="text" id="equipo-number" placeholder="000000" maxlength="6" pattern="[0-9]*">
-                        </div>
-                        <div class="form-group">
-                            <label for="client-name">Cliente/Equipo</label>
-                            <input type="text" id="client-name" placeholder="Nombre cliente o equipo">
-                        </div>
-                    </div>
-                    
+        <div class="sales-process-container">
+            <div class="sales-form-container">
+                <h2>Proceso de Venta</h2>
+                
+                <div class="client-fields">
                     <div class="form-group">
-                        <label for="search-product">Buscar Producto</label>
-                        <div class="search-container">
-                            <div style="position: relative;">
-                                <input type="text" id="search-product" placeholder="Código o descripción">
-                                <div id="search-dropdown" class="search-dropdown" style="display: none;"></div>
-                            </div>
-                            <button class="btn btn-primary" onclick="addProductFromSearch()" id="add-product-btn">
-                                AGREGAR
-                            </button>
-                        </div>
+                        <label for="equipo-number">N° Equipo</label>
+                        <input type="text" id="equipo-number" placeholder="000000" maxlength="6" pattern="[0-9]*">
                     </div>
-                    
-                    <h3 style="margin: 15px 0 8px 0; color: var(--text-color); font-size: 1rem;">Carrito</h3>
-                    
-                    <div id="cart-items" style="max-height: 200px; overflow-y: auto;">
-                        <p style="text-align: center; color: #7f8c8d; font-size: 0.8rem;">No hay productos</p>
-                    </div>
-                    
-                    <div style="margin-top: 15px;">
-                        <div class="summary-total" style="font-size: 1.3rem;">
-                            Total: <span id="total-amount">$0.00</span>
-                        </div>
-                        
-                        <div class="payment-buttons">
-                            <button class="payment-btn contado" onclick="processSale('contado')" id="contado-btn">
-                                CONTADO
-                            </button>
-                            <button class="payment-btn pendiente" onclick="processSale('pendiente')" id="pendiente-btn">
-                                PENDIENTE
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="pending-invoices-container">
-                    <h2>Facturas Pendientes</h2>
-                    <p style="font-size: 0.8rem; margin-bottom: 10px; color: var(--text-color);">
-                        Seleccione un equipo para ver sus facturas pendientes
-                    </p>
-                    
-                    <div class="pending-equipos-grid" id="pending-equipos-grid">
-                        <div class="loading">Cargando equipos...</div>
-                    </div>
-                    
-                    <div id="equipo-invoices-container">
-                    </div>
-                </div>
-            </div>
-
-            <div class="panel">
-                <h2>Ventas del Día</h2>
-                <div id="daily-sales">
-                    <table class="compact-table">
-                        <thead>
-                            <tr>
-                                <th>Factura</th>
-                                <th>Cliente/Equipo</th>
-                                <th>Productos</th>
-                                <th>Total</th>
-                                <th>Tipo</th>
-                                <th>Hora</th>
-                                <th>Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody id="daily-sales-body">
-                            <tr>
-                                <td colspan="7" class="loading">Cargando ventas...</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <div class="tab-content" id="summary-tab">
-            <div class="panel">
-                <h2>Resumen del Día</h2>
-                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
-                    <div style="background: rgba(39, 174, 96, 0.1); padding: 12px; border-radius: 6px; border: 1px solid var(--success-color);">
-                        <h3 style="font-size: 0.9rem;">Ventas Contado</h3>
-                        <div class="summary-total" style="font-size: 1.2rem;" id="cash-total">$0.00</div>
-                    </div>
-                    <div style="background: rgba(39, 174, 96, 0.1); padding: 12px; border-radius: 6px; border: 1px solid var(--success-color);">
-                        <h3 style="font-size: 0.9rem;">Ventas Pendientes</h3>
-                        <div class="summary-total" style="font-size: 1.2rem;" id="credit-total">$0.00</div>
-                    </div>
-                    <div style="background: rgba(39, 174, 96, 0.1); padding: 12px; border-radius: 6px; border: 1px solid var(--success-color);">
-                        <h3 style="font-size: 0.9rem;">Abonos Recibidos</h3>
-                        <div class="summary-total" style="font-size: 1.2rem;" id="payments-total">$0.00</div>
+                    <div class="form-group">
+                        <label for="client-name">Cliente/Equipo</label>
+                        <input type="text" id="client-name" placeholder="Nombre cliente o equipo">
                     </div>
                 </div>
                 
-                <button class="btn btn-primary" onclick="generateDailySummary()" style="margin-top: 15px; width: 100%;" id="generate-summary-btn">
-                    Generar Resumen
-                </button>
-            </div>
-        </div>
-
-        <div class="tab-content" id="equipos-tab">
-            <div class="panel">
-                <h2>Facturas por Equipo</h2>
                 <div class="form-group">
-                    <label for="equipo-filter">Filtrar por N° Equipo</label>
-                    <input type="text" id="equipo-filter" placeholder="Número equipo" maxlength="6" pattern="[0-9]*">
+                    <label for="search-product">Buscar Producto</label>
+                    <div class="search-container">
+                        <div style="position: relative;">
+                            <input type="text" id="search-product" placeholder="Código o descripción">
+                            <div id="search-dropdown" class="search-dropdown" style="display: none;"></div>
+                        </div>
+                        <button class="btn btn-primary" id="add-product-btn">
+                            AGREGAR
+                        </button>
+                    </div>
                 </div>
-                <div id="equipos-summary">
-                    <table class="compact-table">
-                        <thead>
-                            <tr>
-                                <th>Equipo</th>
-                                <th>Total</th>
-                                <th>Facturas</th>
-                                <th>Última</th>
-                                <th>Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody id="equipos-body">
-                            <tr>
-                                <td colspan="5" class="loading">Cargando equipos...</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                
+                <h3 style="margin: 15px 0 8px 0; color: var(--text-color); font-size: 1rem;">Carrito</h3>
+                
+                <div id="cart-items" style="max-height: 200px; overflow-y: auto;">
+                    <p style="text-align: center; color: #7f8c8d; font-size: 0.8rem;">No hay productos</p>
+                </div>
+                
+                <div style="margin-top: 15px;">
+                    <div class="summary-total">
+                        Total: <span id="total-amount">$0.00</span>
+                    </div>
+                    
+                    <div class="payment-buttons">
+                        <button class="payment-btn contado" id="contado-btn">
+                            CONTADO
+                        </button>
+                        <button class="payment-btn pendiente" id="pendiente-btn">
+                            PENDIENTE
+                        </button>
+                    </div>
                 </div>
             </div>
 
-            <div class="panel" id="equipo-details-panel" style="display: none;">
-                <h2 id="equipo-details-title" style="font-size: 1.1rem;">Detalles del Equipo</h2>
-                <div id="equipo-details-content">
+            <div class="pending-invoices-container">
+                <h2>Facturas Pendientes por Equipo</h2>
+                
+                <div class="file-actions">
+                    <button class="btn btn-info" id="save-pending-btn">
+                        Guardar Pendientes
+                    </button>
+                    <button class="btn btn-warning" id="load-pending-btn">
+                        Cargar Pendientes
+                    </button>
+                    <input type="file" id="pending-file-input" accept=".json" style="display: none;">
+                </div>
+                
+                <div class="equipos-grid" id="equipos-grid">
+                    <div style="grid-column: 1 / -1; text-align: center; color: #7f8c8d; font-size: 0.8rem;">
+                        Cargando equipos...
+                    </div>
+                </div>
+                
+                <div id="equipo-invoices-container" class="equipo-invoices">
                 </div>
             </div>
         </div>
 
-        <div class="tab-content" id="cierre-tab">
-            <div class="compact-grid">
-                <div class="panel">
-                    <h2>Cierre del Día</h2>
-                    <div class="daily-closure">
-                        <div class="form-group">
-                            <label for="closure-date">Fecha de Cierre</label>
-                            <input type="date" id="closure-date">
-                        </div>
-                        
-                        <div id="closure-summary">
-                            <div class="credit-status">
-                                <strong>Resumen del Día:</strong><br>
-                                <span id="closure-cash">Ventas Contado: $0.00</span><br>
-                                <span id="closure-credit">Ventas Pendientes: $0.00</span><br>
-                                <span id="closure-payments">Abonos Recibidos: $0.00</span><br>
-                                <span id="closure-total">Total General: $0.00</span>
-                            </div>
-                        </div>
-                        
-                        <div class="actions" style="margin-top: 15px;">
-                            <button class="btn btn-primary" onclick="generateClosureSummary()" id="generate-closure-btn">
-                                Generar Resumen de Cierre
-                            </button>
-                            <button class="btn btn-success" onclick="processDailyClosure()" id="process-closure-btn">
-                                Procesar Cierre Diario
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="panel">
-                    <h2>Historial de Cierres</h2>
-                    <div id="closures-history">
-                        <table class="compact-table">
-                            <thead>
-                                <tr>
-                                    <th>Fecha</th>
-                                    <th>Ventas Contado</th>
-                                    <th>Ventas Crédito</th>
-                                    <th>Abonos</th>
-                                    <th>Total</th>
-                                </tr>
-                            </thead>
-                            <tbody id="closures-body">
-                                <tr>
-                                    <td colspan="5" class="loading">Cargando cierres...</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+        <div class="panel">
+            <h2>Ventas del Día</h2>
+            <div id="daily-sales">
+                <table class="compact-table">
+                    <thead>
+                        <tr>
+                            <th>Factura</th>
+                            <th>Cliente/Equipo</th>
+                            <th>Productos</th>
+                            <th>Total</th>
+                            <th>Tipo</th>
+                            <th>Hora</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="daily-sales-body">
+                        <tr>
+                            <td colspan="7" style="text-align: center; color: #7f8c8d; font-size: 0.8rem;">
+                                Cargando ventas...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
 
     <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyDh074AarXaYCc-Htw-lsCeIc_95QQNSnY",
-            authDomain: "tallerwilliam-732b3.firebaseapp.com",
-            projectId: "tallerwilliam-732b3",
-            storageBucket: "tallerwilliam-732b3.firebasestorage.app",
-            messagingSenderId: "822262666247",
-            appId: "1:822262666247:web:6680487bbf1108006b86a2"
+        const CONFIG = {
+            firebase: {
+                apiKey: "AIzaSyDh074AarXaYCc-Htw-lsCeIc_95QQNSnY",
+                authDomain: "tallerwilliam-732b3.firebaseapp.com",
+                projectId: "tallerwilliam-732b3",
+                storageBucket: "tallerwilliam-732b3.firebasestorage.app",
+                messagingSenderId: "822262666247",
+                appId: "1:822262666247:web:6680487bbf1108006b86a2"
+            }
         };
 
-        let firebaseInitialized = false;
-        let db = null;
+        const AppState = {
+            firebaseInitialized: false,
+            db: null,
+            cart: [],
+            dailySales: [],
+            pendingCredits: [],
+            equiposConPendientes: [],
+            searchResults: [],
+            isProcessingSale: false,
+            saleCounter: 0,
+            selectedProduct: null,
+            selectedQuantity: 1,
+            selectedEquipo: null
+        };
 
-        try {
-            firebase.initializeApp(firebaseConfig);
-            db = firebase.firestore();
-            firebaseInitialized = true;
-            updateConnectionStatus(true);
-        } catch (error) {
-            showStatus("Error de conexión con la base de datos", "error");
-            updateConnectionStatus(false);
-        }
-
-        let cart = [];
-        let dailySales = [];
-        let pendingCredits = [];
-        let searchResults = [];
-        let selectedCreditId = null;
-        let currentTheme = 'light';
-        let equiposConPendientes = [];
-        let selectedEquipo = null;
-        let isPrinting = false;
-        let isProcessingSale = false;
-        let saleCounter = 0;
-
-        document.addEventListener('DOMContentLoaded', function() {
-            const now = new Date();
-            document.getElementById('current-date').textContent = now.toLocaleDateString('es-ES');
-            document.getElementById('closure-date').valueAsDate = now;
-            
-            const savedTheme = localStorage.getItem('theme') || 'light';
-            setTheme(savedTheme);
-            
-            checkFirebaseConnection();
-            
-            if (firebaseInitialized) {
-                loadSaleCounter();
-                loadDailySales();
-                loadPendingCredits();
-                loadClosuresHistory();
-            }
-            
-            setupTabs();
-            
-            document.getElementById('search-product').addEventListener('input', function(e) {
-                if (this.value.length >= 2) {
-                    searchProducts(this.value);
-                } else {
-                    document.getElementById('search-dropdown').style.display = 'none';
+        const DataService = {
+            async searchProducts(query) {
+                if (!AppState.firebaseInitialized) {
+                    throw new Error("No hay conexión a la base de datos");
                 }
-            });
-            
-            document.getElementById('equipo-number').addEventListener('input', function(e) {
-                this.value = this.value.replace(/[^0-9]/g, '');
-                if (this.value.length > 6) {
-                    this.value = this.value.substring(0, 6);
-                }
-            });
-            
-            document.getElementById('equipo-filter').addEventListener('input', function(e) {
-                filterEquipos(this.value);
-            });
-            
-            document.getElementById('closure-date').addEventListener('change', function() {
-                generateClosureSummary();
-            });
-        });
 
-        function checkFirebaseConnection() {
-            if (!firebaseInitialized) {
-                return false;
-            }
-            
-            db.collection("INVENTARIO").limit(1).get()
-                .then(() => {
-                    updateConnectionStatus(true);
-                    return true;
-                })
-                .catch(error => {
-                    updateConnectionStatus(false);
-                    return false;
-                });
-        }
-
-        function updateConnectionStatus(connected) {
-            const statusElement = document.getElementById('connection-status');
-            if (connected) {
-                statusElement.textContent = "Conectado";
-                statusElement.className = "connection-status online";
-            } else {
-                statusElement.textContent = "Sin conexión";
-                statusElement.className = "connection-status offline";
-            }
-        }
-
-        function setupTabs() {
-            const tabs = document.querySelectorAll('.tab');
-            tabs.forEach(tab => {
-                tab.addEventListener('click', function() {
-                    const tabId = this.getAttribute('data-tab');
+                const searchTerm = query.toLowerCase().trim();
+                const snapshot = await AppState.db.collection("INVENTARIO").get();
+                
+                const results = [];
+                snapshot.forEach(doc => {
+                    const product = { id: doc.id, ...doc.data() };
+                    const codigo = (product.codigo || '').toLowerCase();
+                    const descripcion = (product.descripcion || '').toLowerCase();
                     
-                    tabs.forEach(t => t.classList.remove('active'));
-                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-                    
-                    this.classList.add('active');
-                    document.getElementById(tabId + '-tab').classList.add('active');
-                    
-                    if (tabId === 'summary') {
-                        generateDailySummary();
-                    } else if (tabId === 'equipos') {
-                        loadEquiposSummary();
+                    if (codigo.includes(searchTerm) || descripcion.includes(searchTerm)) {
+                        results.push(product);
                     }
                 });
-            });
-        }
+                
+                return results;
+            },
 
-        function setTheme(theme) {
-            currentTheme = theme;
-            document.documentElement.setAttribute('data-theme', theme);
-            localStorage.setItem('theme', theme);
-            
-            const themeToggle = document.getElementById('theme-toggle');
-            if (theme === 'dark') {
-                themeToggle.textContent = '☀️';
-            } else {
-                themeToggle.textContent = '🌙';
-            }
-        }
+            saveSale(saleData) {
+                const sales = this.loadFromLocalStorage("dailySales") || [];
+                const newItem = { ...saleData, localId: Date.now().toString() };
+                sales.push(newItem);
+                localStorage.setItem("dailySales", JSON.stringify(sales));
+                return newItem.localId;
+            },
 
-        document.getElementById('theme-toggle').addEventListener('click', function() {
-            if (currentTheme === 'light') {
-                setTheme('dark');
-            } else {
-                setTheme('light');
-            }
-        });
+            loadDailySales(date = new Date().toISOString().split('T')[0]) {
+                const sales = this.loadFromLocalStorage("dailySales") || [];
+                return sales.filter(sale => sale.date === date);
+            },
 
-        function searchProducts(query) {
-            if (!firebaseInitialized) {
-                showStatus("No hay conexión a la base de datos", "error");
-                return;
+            deleteSale(saleId) {
+                const sales = this.loadFromLocalStorage("dailySales");
+                const updatedSales = sales.filter(item => item.localId !== saleId);
+                localStorage.setItem("dailySales", JSON.stringify(updatedSales));
+                
+                // También eliminar de créditos pendientes si existe
+                this.deleteCredit(saleId);
+            },
+
+            saveCredit(creditData) {
+                const credits = this.loadFromLocalStorage("pendingCredits") || [];
+                const newItem = { ...creditData, localId: Date.now().toString() };
+                credits.push(newItem);
+                localStorage.setItem("pendingCredits", JSON.stringify(credits));
+                return newItem.localId;
+            },
+
+            loadPendingCredits() {
+                const credits = this.loadFromLocalStorage("pendingCredits") || [];
+                return credits;
+            },
+
+            addPayment(creditId, paymentData) {
+                const credits = this.loadFromLocalStorage("pendingCredits");
+                const creditIndex = credits.findIndex(c => c.localId === creditId);
+                
+                if (creditIndex === -1) throw new Error("No se encontró el crédito");
+                
+                const credit = credits[creditIndex];
+                const totalPaid = credit.payments ? credit.payments.reduce((sum, payment) => sum + payment.amount, 0) : 0;
+                const newTotalPaid = totalPaid + paymentData.amount;
+                
+                if (newTotalPaid > credit.total) {
+                    throw new Error("El abono excede el total pendiente");
+                }
+                
+                if (!credit.payments) credit.payments = [];
+                credit.payments.push(paymentData);
+                
+                if (newTotalPaid >= credit.total) {
+                    credit.status = 'pagado';
+                }
+                
+                credits[creditIndex] = credit;
+                localStorage.setItem("pendingCredits", JSON.stringify(credits));
+                
+                return newTotalPaid;
+            },
+
+            deleteCredit(creditId) {
+                const credits = this.loadFromLocalStorage("pendingCredits");
+                const updatedCredits = credits.filter(item => item.localId !== creditId);
+                localStorage.setItem("pendingCredits", JSON.stringify(updatedCredits));
+            },
+
+            deleteSaleAndCredit(saleId) {
+                // Eliminar de ventas diarias
+                this.deleteSale(saleId);
+                
+                // Eliminar de créditos pendientes
+                this.deleteCredit(saleId);
+            },
+
+            exportPendingCredits() {
+                const credits = this.loadFromLocalStorage("pendingCredits") || [];
+                const dataStr = JSON.stringify(credits, null, 2);
+                const dataBlob = new Blob([dataStr], {type: 'application/json'});
+                return URL.createObjectURL(dataBlob);
+            },
+
+            importPendingCredits(file) {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        try {
+                            const credits = JSON.parse(e.target.result);
+                            localStorage.setItem("pendingCredits", JSON.stringify(credits));
+                            resolve(credits);
+                        } catch (error) {
+                            reject(new Error("Archivo inválido"));
+                        }
+                    };
+                    reader.onerror = () => reject(new Error("Error al leer el archivo"));
+                    reader.readAsText(file);
+                });
+            },
+
+            loadFromLocalStorage(key) {
+                return JSON.parse(localStorage.getItem(key) || '[]');
             }
-            
-            const searchTerm = query.toLowerCase().trim();
-            
-            db.collection("INVENTARIO").get()
-                .then(querySnapshot => {
-                    searchResults = [];
-                    const dropdown = document.getElementById('search-dropdown');
-                    dropdown.innerHTML = '';
+        };
+
+        const UIService = {
+            showStatus(message, type = 'info') {
+                const statusElement = document.getElementById('status-message');
+                statusElement.textContent = message;
+                statusElement.className = `status ${type}`;
+                statusElement.style.display = 'block';
+                
+                setTimeout(() => {
+                    statusElement.style.display = 'none';
+                }, 4000);
+            },
+
+            updateCartDisplay() {
+                const cartItems = document.getElementById('cart-items');
+                const totalAmount = document.getElementById('total-amount');
+                
+                if (AppState.cart.length === 0) {
+                    cartItems.innerHTML = '<p style="text-align: center; color: #7f8c8d; font-size: 0.8rem;">No hay productos</p>';
+                    totalAmount.textContent = '$0.00';
+                    return;
+                }
+                
+                let total = 0;
+                let itemsHTML = '';
+                
+                AppState.cart.forEach((item, index) => {
+                    const itemTotal = item.precio * item.quantity;
+                    total += itemTotal;
                     
-                    if (querySnapshot.empty) {
+                    itemsHTML += `
+                        <div class="product-item">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <strong>${item.descripcion}</strong>
+                                    <div style="font-size: 0.7rem; margin-top: 2px;">
+                                        Cód: ${item.codigo} | $${item.precio.toFixed(2)} x ${item.quantity}
+                                    </div>
+                                </div>
+                                <div style="display: flex; align-items: center;">
+                                    <span style="margin-right: 8px; font-weight: bold;">$${itemTotal.toFixed(2)}</span>
+                                    <button class="btn btn-danger" data-remove-index="${index}" style="padding: 2px 6px; font-size: 0.7rem;">
+                                        X
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                cartItems.innerHTML = itemsHTML;
+                totalAmount.textContent = `$${total.toFixed(2)}`;
+            },
+
+            showSearchResults(results) {
+                const dropdown = document.getElementById('search-dropdown');
+                dropdown.innerHTML = '';
+                
+                if (results.length === 0) {
+                    const item = document.createElement('div');
+                    item.className = 'search-dropdown-item';
+                    item.textContent = 'No se encontraron productos';
+                    dropdown.appendChild(item);
+                } else {
+                    results.forEach(product => {
                         const item = document.createElement('div');
                         item.className = 'search-dropdown-item';
-                        item.textContent = 'No se encontraron productos';
-                        dropdown.appendChild(item);
-                        dropdown.style.display = 'block';
-                        return;
-                    }
-                    
-                    querySnapshot.forEach(doc => {
-                        const product = { id: doc.id, ...doc.data() };
-                        const codigo = (product.codigo || '').toLowerCase();
-                        const descripcion = (product.descripcion || '').toLowerCase();
                         
-                        if (codigo.includes(searchTerm) || descripcion.includes(searchTerm)) {
-                            searchResults.push(product);
-                            
-                            const item = document.createElement('div');
-                            item.className = 'search-dropdown-item';
-                            item.innerHTML = `
+                        const quantity = AppState.selectedProduct?.id === product.id ? AppState.selectedQuantity : 1;
+                        
+                        item.innerHTML = `
+                            <div class="product-info">
                                 <strong>${product.descripcion || 'Sin descripción'}</strong>
                                 <div style="font-size: 0.7rem; margin-top: 2px;">
                                     Cód: ${product.codigo || 'N/A'} | Stock: ${product.cantidad || 0} | $${(product.precio || 0).toFixed(2)}
                                 </div>
-                            `;
-                            item.addEventListener('click', function() {
-                                addToCart(product.id);
-                                dropdown.style.display = 'none';
-                            });
-                            
-                            dropdown.appendChild(item);
-                        }
-                    });
-                    
-                    if (searchResults.length > 0) {
-                        dropdown.style.display = 'block';
-                    } else {
-                        const item = document.createElement('div');
-                        item.className = 'search-dropdown-item';
-                        item.textContent = 'No se encontraron productos';
-                        dropdown.appendChild(item);
-                        dropdown.style.display = 'block';
-                    }
-                })
-                .catch(error => {
-                    showStatus("Error al buscar productos", "error");
-                });
-        }
-
-        function addProductFromSearch() {
-            const searchInput = document.getElementById('search-product');
-            const searchTerm = searchInput.value.trim();
-            
-            if (!searchTerm) {
-                showStatus("Ingrese un término de búsqueda", "error");
-                return;
-            }
-
-            if (searchResults.length === 0) {
-                showStatus("No hay productos que coincidan con la búsqueda", "error");
-                return;
-            }
-
-            addToCart(searchResults[0].id);
-            searchInput.value = '';
-            document.getElementById('search-dropdown').style.display = 'none';
-        }
-
-        function addToCart(productId) {
-            if (!firebaseInitialized) {
-                showStatus("No hay conexión a la base de datos", "error");
-                return;
-            }
-            
-            db.collection("INVENTARIO").doc(productId).get()
-                .then(doc => {
-                    if (!doc.exists) {
-                        showStatus("Producto no encontrado", "error");
-                        return;
-                    }
-                    
-                    const product = { id: doc.id, ...doc.data() };
-                    
-                    if (!product.precio || product.precio <= 0) {
-                        showStatus("El producto no tiene precio válido", "error");
-                        return;
-                    }
-                    
-                    const existingItem = cart.find(item => item.id === productId);
-                    
-                    if (existingItem) {
-                        existingItem.quantity += 1;
-                    } else {
-                        cart.push({
-                            id: product.id,
-                            codigo: product.codigo || 'N/A',
-                            descripcion: product.descripcion || 'Sin descripción',
-                            precio: product.precio,
-                            cantidad: product.cantidad || 0,
-                            quantity: 1
-                        });
-                    }
-                    
-                    updateCartDisplay();
-                    showStatus("Producto agregado al carrito", "success");
-                })
-                .catch(error => {
-                    showStatus("Error al agregar producto", "error");
-                });
-        }
-
-        function updateCartDisplay() {
-            const cartItems = document.getElementById('cart-items');
-            const totalAmount = document.getElementById('total-amount');
-            
-            if (cart.length === 0) {
-                cartItems.innerHTML = '<p style="text-align: center; color: #7f8c8d; font-size: 0.8rem;">No hay productos</p>';
-                totalAmount.textContent = '$0.00';
-                return;
-            }
-            
-            let total = 0;
-            let itemsHTML = '';
-            
-            cart.forEach((item, index) => {
-                const itemTotal = item.precio * item.quantity;
-                total += itemTotal;
-                
-                itemsHTML += `
-                    <div class="product-item">
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <div>
-                                <strong>${item.descripcion}</strong>
-                                <div style="font-size: 0.7rem; margin-top: 2px;">
-                                    Cód: ${item.codigo} | $${item.precio.toFixed(2)} x ${item.quantity}
-                                </div>
                             </div>
-                            <div style="display: flex; align-items: center;">
-                                <span style="margin-right: 8px; font-weight: bold;">$${itemTotal.toFixed(2)}</span>
-                                <button class="btn btn-danger" onclick="removeFromCart(${index})" style="padding: 2px 6px; font-size: 0.7rem;">
-                                    X
+                            <div class="product-quantity">
+                                <div class="quantity-controls">
+                                    <button class="quantity-btn" data-action="decrease" data-product-id="${product.id}">-</button>
+                                    <input type="number" class="quantity-input" value="${quantity}" min="1" max="${product.cantidad || 99}" 
+                                           data-product-id="${product.id}" style="width: 40px; padding: 2px;">
+                                    <button class="quantity-btn" data-action="increase" data-product-id="${product.id}">+</button>
+                                </div>
+                                <button class="btn btn-success" data-add-product="${product.id}" style="padding: 4px 8px; font-size: 0.7rem;">
+                                    Agregar
                                 </button>
                             </div>
+                        `;
+                        dropdown.appendChild(item);
+                    });
+                }
+                
+                dropdown.style.display = 'block';
+            },
+
+            updateEquiposGrid() {
+                const grid = document.getElementById('equipos-grid');
+                
+                if (AppState.equiposConPendientes.length === 0) {
+                    grid.innerHTML = `
+                        <div style="grid-column: 1 / -1; text-align: center; color: #7f8c8d; font-size: 0.8rem;">
+                            No hay equipos con facturas pendientes
                         </div>
-                    </div>
-                `;
-            });
-            
-            cartItems.innerHTML = itemsHTML;
-            totalAmount.textContent = `$${total.toFixed(2)}`;
-        }
+                    `;
+                    return;
+                }
+                
+                let gridHTML = '';
+                
+                AppState.equiposConPendientes.forEach(equipo => {
+                    const statusClass = equipo.totalPendiente > 0 ? 'pendiente' : 'pagado';
+                    const isActive = AppState.selectedEquipo === equipo.number ? 'active' : '';
+                    
+                    gridHTML += `
+                        <div class="equipo-card ${statusClass} ${isActive}" 
+                             data-equipo="${equipo.number}">
+                            <div class="equipo-number">${equipo.number}</div>
+                            <div class="equipo-saldo">$${equipo.totalPendiente.toFixed(2)}</div>
+                            <div class="equipo-count">${equipo.count} factura(s)</div>
+                        </div>
+                    `;
+                });
+                
+                grid.innerHTML = gridHTML;
+            }
+        };
 
-        function removeFromCart(index) {
-            cart.splice(index, 1);
-            updateCartDisplay();
-        }
+        const SalesService = {
+            setSelectedProduct(product, quantity = 1) {
+                AppState.selectedProduct = product;
+                AppState.selectedQuantity = quantity;
+            },
 
-        function processSale(paymentType) {
-            if (isProcessingSale) {
-                showStatus("Procesando venta anterior...", "error");
-                return;
-            }
+            addToCart(productId, quantity) {
+                let productToAdd;
+                let quantityToAdd;
 
-            if (cart.length === 0) {
-                showStatus("El carrito está vacío", "error");
-                return;
-            }
-            
-            const equipoNumber = document.getElementById('equipo-number').value.trim();
-            const clientName = document.getElementById('client-name').value.trim();
-            
-            if (!equipoNumber && !clientName) {
-                showStatus("Ingrese un número de equipo o nombre de cliente", "error");
-                return;
-            }
-            
-            const finalClientName = clientName || `Equipo ${equipoNumber}`;
-            const finalEquipoNumber = equipoNumber || '000000';
-            
-            isProcessingSale = true;
-            document.getElementById('contado-btn').classList.add('processing');
-            document.getElementById('pendiente-btn').classList.add('processing');
-            
-            const saleData = {
-                invoiceNumber: generateInvoiceNumber(),
-                equipoNumber: finalEquipoNumber,
-                clientName: finalClientName,
-                products: cart.map(item => ({
-                    id: item.id,
-                    codigo: item.codigo,
-                    descripcion: item.descripcion,
-                    precio: item.precio,
-                    cantidad: item.quantity
-                })),
-                total: cart.reduce((sum, item) => sum + (item.precio * item.quantity), 0),
-                paymentType: paymentType,
-                timestamp: new Date(),
-                date: new Date().toISOString().split('T')[0],
-                status: paymentType === 'contado' ? 'pagado' : 'pendiente'
-            };
-            
-            if (!firebaseInitialized) {
-                saveSaleToLocalStorage(saleData);
-                return;
-            }
-            
-            db.collection("VENTAS").add(saleData)
-                .then(() => {
-                    updateProductStock();
+                if (productId && quantity) {
+                    productToAdd = AppState.searchResults.find(p => p.id === productId);
+                    quantityToAdd = quantity;
+                } else if (AppState.selectedProduct) {
+                    productToAdd = AppState.selectedProduct;
+                    quantityToAdd = AppState.selectedQuantity;
+                } else {
+                    UIService.showStatus("Seleccione un producto primero", "error");
+                    return;
+                }
+
+                if (!productToAdd) {
+                    UIService.showStatus("Producto no encontrado", "error");
+                    return;
+                }
+
+                if (!productToAdd.precio || productToAdd.precio <= 0) {
+                    UIService.showStatus("El producto no tiene precio válido", "error");
+                    return;
+                }
+                
+                const existingItem = AppState.cart.find(item => item.id === productToAdd.id);
+                
+                if (existingItem) {
+                    existingItem.quantity += quantityToAdd;
+                } else {
+                    AppState.cart.push({
+                        id: productToAdd.id,
+                        codigo: productToAdd.codigo || 'N/A',
+                        descripcion: productToAdd.descripcion || 'Sin descripción',
+                        precio: productToAdd.precio,
+                        quantity: quantityToAdd
+                    });
+                }
+                
+                UIService.updateCartDisplay();
+                UIService.showStatus("Producto agregado al carrito", "success");
+                
+                AppState.selectedProduct = null;
+                AppState.selectedQuantity = 1;
+                document.getElementById('search-product').value = '';
+                document.getElementById('search-dropdown').style.display = 'none';
+            },
+
+            removeFromCart(index) {
+                AppState.cart.splice(index, 1);
+                UIService.updateCartDisplay();
+            },
+
+            async processSale(paymentType) {
+                if (AppState.isProcessingSale) {
+                    UIService.showStatus("Procesando venta anterior...", "error");
+                    return;
+                }
+
+                if (AppState.cart.length === 0) {
+                    UIService.showStatus("El carrito está vacío", "error");
+                    return;
+                }
+                
+                const equipoNumber = document.getElementById('equipo-number').value.trim();
+                const clientName = document.getElementById('client-name').value.trim();
+                
+                if (!equipoNumber && !clientName) {
+                    UIService.showStatus("Ingrese un número de equipo o nombre de cliente", "error");
+                    return;
+                }
+                
+                const finalClientName = clientName || `Equipo ${equipoNumber}`;
+                const finalEquipoNumber = equipoNumber || '000000';
+                
+                AppState.isProcessingSale = true;
+                
+                try {
+                    const saleData = {
+                        invoiceNumber: this.generateInvoiceNumber(),
+                        equipoNumber: finalEquipoNumber,
+                        clientName: finalClientName,
+                        products: AppState.cart.map(item => ({
+                            id: item.id,
+                            codigo: item.codigo,
+                            descripcion: item.descripcion,
+                            precio: item.precio,
+                            cantidad: item.quantity
+                        })),
+                        total: AppState.cart.reduce((sum, item) => sum + (item.precio * item.quantity), 0),
+                        paymentType: paymentType,
+                        timestamp: new Date(),
+                        date: new Date().toISOString().split('T')[0],
+                        status: paymentType === 'contado' ? 'pagado' : 'pendiente'
+                    };
+                    
+                    const saleId = await DataService.saveSale(saleData);
                     
                     if (paymentType === 'pendiente') {
-                        savePendingCredit(saleData);
+                        const creditData = {
+                            ...saleData,
+                            localId: saleId,
+                            payments: [],
+                            status: 'pendiente'
+                        };
+                        await DataService.saveCredit(creditData);
                     }
                     
-                    showStatus(`Venta procesada exitosamente - Factura #${saleData.invoiceNumber}`, "success");
+                    UIService.showStatus(`Venta procesada - Factura #${saleData.invoiceNumber}`, "success");
                     
-                    cart = [];
-                    updateCartDisplay();
+                    AppState.cart = [];
+                    UIService.updateCartDisplay();
                     document.getElementById('client-name').value = '';
                     document.getElementById('equipo-number').value = '';
                     
-                    loadDailySales();
-                    loadPendingCredits();
-                })
-                .catch(error => {
-                    showStatus("Error al procesar la venta", "error");
-                })
-                .finally(() => {
-                    isProcessingSale = false;
-                    document.getElementById('contado-btn').classList.remove('processing');
-                    document.getElementById('pendiente-btn').classList.remove('processing');
-                });
-        }
+                    await this.loadDailySales();
+                    await this.loadPendingCredits();
+                    
+                } catch (error) {
+                    UIService.showStatus("Error al procesar la venta: " + error.message, "error");
+                } finally {
+                    AppState.isProcessingSale = false;
+                }
+            },
 
-        function generateInvoiceNumber() {
-            const now = new Date();
-            const datePart = now.getFullYear().toString().substr(-2) + 
-                           (now.getMonth() + 1).toString().padStart(2, '0') + 
-                           now.getDate().toString().padStart(2, '0');
-            const counterPart = (saleCounter + 1).toString().padStart(4, '0');
-            return datePart + counterPart;
-        }
+            generateInvoiceNumber() {
+                const now = new Date();
+                const datePart = now.getFullYear().toString().substr(-2) + 
+                               (now.getMonth() + 1).toString().padStart(2, '0') + 
+                               now.getDate().toString().padStart(2, '0');
+                const counterPart = (AppState.saleCounter + 1).toString().padStart(4, '0');
+                return datePart + counterPart;
+            },
 
-        function loadSaleCounter() {
-            if (!firebaseInitialized) return;
-            
-            const today = new Date().toISOString().split('T')[0];
-            db.collection("VENTAS").where("date", "==", today).get()
-                .then(querySnapshot => {
-                    saleCounter = querySnapshot.size;
-                })
-                .catch(error => {
-                    saleCounter = 0;
-                });
-        }
-
-        function updateProductStock() {
-            if (!firebaseInitialized) return;
-            
-            const batch = db.batch();
-            
-            cart.forEach(item => {
-                const productRef = db.collection("INVENTARIO").doc(item.id);
-                const newStock = (item.cantidad || 0) - item.quantity;
+            printTicket(saleData) {
+                const printWindow = window.open('', '_blank');
                 
-                batch.update(productRef, {
-                    cantidad: Math.max(0, newStock)
-                });
-            });
-            
-            batch.commit().catch(error => {
-                showStatus("Error al actualizar stock", "error");
-            });
-        }
-
-        function savePendingCredit(saleData) {
-            if (!firebaseInitialized) return;
-            
-            const creditData = {
-                invoiceNumber: saleData.invoiceNumber,
-                equipoNumber: saleData.equipoNumber,
-                clientName: saleData.clientName,
-                total: saleData.total,
-                products: saleData.products,
-                timestamp: saleData.timestamp,
-                date: saleData.date,
-                payments: []
-            };
-            
-            db.collection("CREDITOS").add(creditData)
-                .catch(error => {
-                    showStatus("Error al guardar crédito pendiente", "error");
-                });
-        }
-
-        function loadDailySales() {
-            if (!firebaseInitialized) {
-                loadDailySalesFromLocalStorage();
-                return;
-            }
-            
-            const today = new Date().toISOString().split('T')[0];
-            
-            db.collection("VENTAS").where("date", "==", today).orderBy("timestamp", "desc").get()
-                .then(querySnapshot => {
-                    dailySales = [];
-                    const salesBody = document.getElementById('daily-sales-body');
-                    
-                    if (querySnapshot.empty) {
-                        salesBody.innerHTML = `
-                            <tr>
-                                <td colspan="7" style="text-align: center; color: #7f8c8d; font-size: 0.8rem;">
-                                    No hay ventas registradas hoy
-                                </td>
-                            </tr>
-                        `;
-                        return;
-                    }
-                    
-                    let salesHTML = '';
-                    
-                    querySnapshot.forEach(doc => {
-                        const sale = { id: doc.id, ...doc.data() };
-                        dailySales.push(sale);
-                        
-                        const time = sale.timestamp ? sale.timestamp.toDate().toLocaleTimeString('es-ES', { 
-                            hour: '2-digit', minute: '2-digit' 
-                        }) : 'N/A';
-                        
-                        const productsList = sale.products ? sale.products.map(p => 
-                            `${p.descripcion} (x${p.cantidad})`
-                        ).join(', ') : 'N/A';
-                        
-                        salesHTML += `
-                            <tr>
-                                <td>${sale.invoiceNumber || 'N/A'}</td>
-                                <td>${sale.clientName || 'N/A'}</td>
-                                <td>${productsList}</td>
-                                <td>$${(sale.total || 0).toFixed(2)}</td>
-                                <td>
-                                    <span style="padding: 2px 6px; border-radius: 3px; font-size: 0.7rem; 
-                                        background-color: ${sale.paymentType === 'contado' ? '#27ae60' : '#f39c12'}; 
-                                        color: white;">
-                                        ${sale.paymentType === 'contado' ? 'CONTADO' : 'PENDIENTE'}
-                                    </span>
-                                </td>
-                                <td>${time}</td>
-                                <td class="actions">
-                                    <button class="btn btn-info" onclick="printInvoice('${doc.id}')" style="padding: 4px 8px; font-size: 0.75rem;">
-                                        Imprimir
-                                    </button>
-                                    <button class="btn btn-danger" onclick="deleteSale('${doc.id}')" style="padding: 4px 8px; font-size: 0.75rem;">
-                                        Eliminar
-                                    </button>
-                                </td>
-                            </tr>
-                        `;
-                    });
-                    
-                    salesBody.innerHTML = salesHTML;
-                })
-                .catch(error => {
-                    showStatus("Error al cargar ventas del día", "error");
-                });
-        }
-
-        function deleteSale(saleId) {
-            if (!confirm("¿Está seguro de eliminar esta venta?")) return;
-            
-            if (!firebaseInitialized) {
-                deleteSaleFromLocalStorage(saleId);
-                return;
-            }
-            
-            db.collection("VENTAS").doc(saleId).delete()
-                .then(() => {
-                    showStatus("Venta eliminada exitosamente", "success");
-                    loadDailySales();
-                })
-                .catch(error => {
-                    showStatus("Error al eliminar la venta", "error");
-                });
-        }
-
-        function printInvoice(saleId) {
-            if (isPrinting) return;
-            
-            const sale = dailySales.find(s => s.id === saleId);
-            if (!sale) {
-                showStatus("No se encontró la venta", "error");
-                return;
-            }
-            
-            isPrinting = true;
-            
-            const printWindow = window.open('', '_blank');
-            const invoiceNumber = sale.invoiceNumber || 'N/A';
-            const clientName = sale.clientName || 'N/A';
-            const equipoNumber = sale.equipoNumber || 'N/A';
-            const date = sale.timestamp ? sale.timestamp.toDate().toLocaleDateString('es-ES') : new Date().toLocaleDateString('es-ES');
-            const time = sale.timestamp ? sale.timestamp.toDate().toLocaleTimeString('es-ES') : new Date().toLocaleTimeString('es-ES');
-            const paymentType = sale.paymentType === 'contado' ? 'CONTADO' : 'PENDIENTE';
-            
-            let productsHTML = '';
-            if (sale.products && sale.products.length > 0) {
-                sale.products.forEach(product => {
-                    productsHTML += `
-                        <tr>
-                            <td style="border: 1px solid #ddd; padding: 6px;">${product.descripcion || 'N/A'}</td>
-                            <td style="border: 1px solid #ddd; padding: 6px; text-align: center;">${product.cantidad || 0}</td>
-                            <td style="border: 1px solid #ddd; padding: 6px; text-align: right;">$${(product.precio || 0).toFixed(2)}</td>
-                            <td style="border: 1px solid #ddd; padding: 6px; text-align: right;">$${((product.precio || 0) * (product.cantidad || 0)).toFixed(2)}</td>
-                        </tr>
-                    `;
-                });
-            } else {
-                productsHTML = `
-                    <tr>
-                        <td colspan="4" style="border: 1px solid #ddd; padding: 6px; text-align: center;">No hay productos</td>
-                    </tr>
-                `;
-            }
-            
-            printWindow.document.write(`
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <title>Factura #${invoiceNumber}</title>
-                    <style>
-                        body { font-family: Arial, sans-serif; margin: 20px; font-size: 14px; }
-                        .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 10px; }
-                        .invoice-info { margin-bottom: 15px; }
-                        .invoice-info table { width: 100%; border-collapse: collapse; }
-                        .invoice-info td { padding: 4px; }
-                        .products-table { width: 100%; border-collapse: collapse; margin: 15px 0; }
-                        .products-table th { background-color: #f2f2f2; border: 1px solid #ddd; padding: 8px; text-align: left; }
-                        .total { text-align: right; font-size: 16px; font-weight: bold; margin-top: 15px; }
-                        .footer { margin-top: 30px; text-align: center; font-size: 12px; color: #666; }
-                        @media print { body { margin: 0; } }
-                    </style>
-                </head>
-                <body>
-                    <div class="header">
-                        <h1>Taller Wilian</h1>
-                        <h2>FACTURA #${invoiceNumber}</h2>
-                    </div>
-                    
-                    <div class="invoice-info">
-                        <table>
-                            <tr>
-                                <td><strong>Cliente:</strong> ${clientName}</td>
-                                <td><strong>Fecha:</strong> ${date}</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Equipo:</strong> ${equipoNumber}</td>
-                                <td><strong>Hora:</strong> ${time}</td>
-                            </tr>
-                            <tr>
-                                <td colspan="2"><strong>Tipo de Pago:</strong> ${paymentType}</td>
-                            </tr>
-                        </table>
-                    </div>
-                    
-                    <table class="products-table">
-                        <thead>
-                            <tr>
-                                <th style="width: 50%;">Descripción</th>
-                                <th style="width: 15%;">Cantidad</th>
-                                <th style="width: 15%;">Precio</th>
-                                <th style="width: 20%;">Total</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${productsHTML}
-                        </tbody>
-                    </table>
-                    
-                    <div class="total">
-                        TOTAL: $${(sale.total || 0).toFixed(2)}
-                    </div>
-                    
-                    <div class="footer">
-                        <p>¡Gracias por su compra!</p>
-                        <p>Taller Wilian - Sistema de Ventas</p>
-                    </div>
-                </body>
-                </html>
-            `);
-            
-            printWindow.document.close();
-            printWindow.focus();
-            
-            setTimeout(() => {
-                printWindow.print();
-                isPrinting = false;
-            }, 500);
-        }
-
-        function loadPendingCredits() {
-            if (!firebaseInitialized) {
-                loadPendingCreditsFromLocalStorage();
-                return;
-            }
-            
-            db.collection("CREDITOS").where("status", "==", "pendiente").get()
-                .then(querySnapshot => {
-                    pendingCredits = [];
-                    equiposConPendientes = [];
-                    
-                    if (querySnapshot.empty) {
-                        updatePendingEquiposGrid();
-                        return;
-                    }
-                    
-                    querySnapshot.forEach(doc => {
-                        const credit = { id: doc.id, ...doc.data() };
-                        pendingCredits.push(credit);
-                        
-                        if (credit.equipoNumber && credit.equipoNumber !== '000000') {
-                            const existingEquipo = equiposConPendientes.find(e => e.number === credit.equipoNumber);
-                            
-                            if (existingEquipo) {
-                                existingEquipo.total += credit.total;
-                                existingEquipo.count += 1;
-                            } else {
-                                equiposConPendientes.push({
-                                    number: credit.equipoNumber,
-                                    clientName: credit.clientName,
-                                    total: credit.total,
-                                    count: 1
-                                });
+                printWindow.document.write(`
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <title>Ticket #${saleData.invoiceNumber}</title>
+                        <style>
+                            body { 
+                                font-family: 'Courier New', monospace; 
+                                font-size: 11px; 
+                                margin: 0; 
+                                padding: 3px;
+                                width: 54mm;
                             }
-                        }
-                    });
-                    
-                    updatePendingEquiposGrid();
-                })
-                .catch(error => {
-                    showStatus("Error al cargar créditos pendientes", "error");
-                });
-        }
-
-        function updatePendingEquiposGrid() {
-            const grid = document.getElementById('pending-equipos-grid');
-            
-            if (equiposConPendientes.length === 0) {
-                grid.innerHTML = `
-                    <div style="grid-column: 1 / -1; text-align: center; color: #7f8c8d; font-size: 0.8rem;">
-                        No hay equipos con facturas pendientes
-                    </div>
-                `;
-                return;
-            }
-            
-            let gridHTML = '';
-            
-            equiposConPendientes.forEach(equipo => {
-                gridHTML += `
-                    <div class="equipo-card ${selectedEquipo === equipo.number ? 'active' : ''}" 
-                         onclick="selectEquipo('${equipo.number}')">
-                        <div class="equipo-number">${equipo.number}</div>
-                        <div class="equipo-count">${equipo.count} factura(s)</div>
-                        <div style="font-size: 0.7rem; margin-top: 4px;">$${equipo.total.toFixed(2)}</div>
-                    </div>
-                `;
-            });
-            
-            grid.innerHTML = gridHTML;
-        }
-
-        function selectEquipo(equipoNumber) {
-            selectedEquipo = equipoNumber;
-            
-            const equipoCards = document.querySelectorAll('.equipo-card');
-            equipoCards.forEach(card => {
-                card.classList.remove('active');
-            });
-            
-            document.querySelectorAll('.equipo-card').forEach(card => {
-                if (card.querySelector('.equipo-number').textContent === equipoNumber) {
-                    card.classList.add('active');
-                }
-            });
-            
-            showEquipoInvoices(equipoNumber);
-        }
-
-        function showEquipoInvoices(equipoNumber) {
-            const container = document.getElementById('equipo-invoices-container');
-            const equipoCredits = pendingCredits.filter(credit => credit.equipoNumber === equipoNumber);
-            
-            if (equipoCredits.length === 0) {
-                container.innerHTML = `
-                    <div class="equipo-invoices">
-                        <p style="text-align: center; color: #7f8c8d; font-size: 0.8rem;">
-                            No hay facturas pendientes para este equipo
-                        </p>
-                    </div>
-                `;
-                return;
-            }
-            
-            let invoicesHTML = `
-                <div class="equipo-invoices active">
-                    <h3 style="font-size: 1rem; margin-bottom: 10px;">Facturas Pendientes - Equipo ${equipoNumber}</h3>
-            `;
-            
-            equipoCredits.forEach(credit => {
-                let productsHTML = '';
-                if (credit.products && credit.products.length > 0) {
-                    credit.products.forEach(product => {
-                        productsHTML += `
-                            <div class="product-detail">
-                                <span>${product.descripcion} (x${product.cantidad})</span>
-                                <span>$${(product.precio * product.cantidad).toFixed(2)}</span>
-                            </div>
-                        `;
-                    });
-                }
-                
-                const date = credit.timestamp ? credit.timestamp.toDate().toLocaleDateString('es-ES') : 'N/A';
-                
-                invoicesHTML += `
-                    <div class="invoice-item">
-                        <div class="invoice-header">
-                            <div class="invoice-number">Factura #${credit.invoiceNumber}</div>
-                            <div class="invoice-total">$${credit.total.toFixed(2)}</div>
-                        </div>
-                        <div class="invoice-details">
-                            Cliente: ${credit.clientName} | Fecha: ${date}
-                        </div>
-                        <div class="invoice-products">
-                            ${productsHTML}
-                        </div>
-                        <div class="actions">
-                            <button class="btn btn-success" onclick="addPayment('${credit.id}', ${credit.total})" style="padding: 6px 12px; font-size: 0.8rem;">
-                                Abonar
-                            </button>
-                            <button class="btn btn-primary" onclick="printInvoiceFromCredit('${credit.id}')" style="padding: 6px 12px; font-size: 0.8rem;">
-                                Imprimir
-                            </button>
-                            <button class="btn btn-danger" onclick="deleteCredit('${credit.id}')" style="padding: 6px 12px; font-size: 0.8rem;">
-                                Eliminar
-                            </button>
-                        </div>
-                    </div>
-                `;
-            });
-            
-            invoicesHTML += '</div>';
-            container.innerHTML = invoicesHTML;
-        }
-
-        function addPayment(creditId, totalAmount) {
-            const amount = prompt(`Ingrese el monto del abono (Total pendiente: $${totalAmount.toFixed(2)})`);
-            
-            if (!amount || isNaN(amount) || parseFloat(amount) <= 0) {
-                showStatus("Monto inválido", "error");
-                return;
-            }
-            
-            const paymentAmount = parseFloat(amount);
-            
-            if (!firebaseInitialized) {
-                addPaymentToLocalStorage(creditId, paymentAmount);
-                return;
-            }
-            
-            const paymentData = {
-                amount: paymentAmount,
-                timestamp: new Date(),
-                date: new Date().toISOString().split('T')[0]
-            };
-            
-            const creditRef = db.collection("CREDITOS").doc(creditId);
-            
-            db.runTransaction(transaction => {
-                return transaction.get(creditRef).then(creditDoc => {
-                    if (!creditDoc.exists) {
-                        throw new Error("El crédito no existe");
-                    }
-                    
-                    const creditData = creditDoc.data();
-                    const currentPayments = creditData.payments || [];
-                    const totalPaid = currentPayments.reduce((sum, payment) => sum + payment.amount, 0);
-                    const newTotalPaid = totalPaid + paymentAmount;
-                    
-                    if (newTotalPaid > creditData.total) {
-                        throw new Error("El abono excede el total pendiente");
-                    }
-                    
-                    currentPayments.push(paymentData);
-                    
-                    const newStatus = newTotalPaid >= creditData.total ? 'pagado' : 'pendiente';
-                    
-                    transaction.update(creditRef, {
-                        payments: currentPayments,
-                        status: newStatus
-                    });
-                    
-                    return newTotalPaid;
-                });
-            })
-            .then(totalPaid => {
-                showStatus(`Abono registrado exitosamente. Total pagado: $${totalPaid.toFixed(2)}`, "success");
-                loadPendingCredits();
-                
-                if (selectedEquipo) {
-                    showEquipoInvoices(selectedEquipo);
-                }
-            })
-            .catch(error => {
-                showStatus("Error al registrar el abono: " + error.message, "error");
-            });
-        }
-
-        function deleteCredit(creditId) {
-            if (!confirm("¿Está seguro de eliminar este crédito pendiente?")) return;
-            
-            if (!firebaseInitialized) {
-                deleteCreditFromLocalStorage(creditId);
-                return;
-            }
-            
-            db.collection("CREDITOS").doc(creditId).delete()
-                .then(() => {
-                    showStatus("Crédito eliminado exitosamente", "success");
-                    loadPendingCredits();
-                    
-                    if (selectedEquipo) {
-                        showEquipoInvoices(selectedEquipo);
-                    }
-                })
-                .catch(error => {
-                    showStatus("Error al eliminar el crédito", "error");
-                });
-        }
-
-        function printInvoiceFromCredit(creditId) {
-            if (isPrinting) return;
-            
-            const credit = pendingCredits.find(c => c.id === creditId);
-            if (!credit) {
-                showStatus("No se encontró la factura", "error");
-                return;
-            }
-            
-            isPrinting = true;
-            
-            const printWindow = window.open('', '_blank');
-            const invoiceNumber = credit.invoiceNumber || 'N/A';
-            const clientName = credit.clientName || 'N/A';
-            const equipoNumber = credit.equipoNumber || 'N/A';
-            const date = credit.timestamp ? credit.timestamp.toDate().toLocaleDateString('es-ES') : new Date().toLocaleDateString('es-ES');
-            const time = credit.timestamp ? credit.timestamp.toDate().toLocaleTimeString('es-ES') : new Date().toLocaleTimeString('es-ES');
-            
-            let productsHTML = '';
-            if (credit.products && credit.products.length > 0) {
-                credit.products.forEach(product => {
-                    productsHTML += `
-                        <tr>
-                            <td style="border: 1px solid #ddd; padding: 6px;">${product.descripcion || 'N/A'}</td>
-                            <td style="border: 1px solid #ddd; padding: 6px; text-align: center;">${product.cantidad || 0}</td>
-                            <td style="border: 1px solid #ddd; padding: 6px; text-align: right;">$${(product.precio || 0).toFixed(2)}</td>
-                            <td style="border: 1px solid #ddd; padding: 6px; text-align: right;">$${((product.precio || 0) * (product.cantidad || 0)).toFixed(2)}</td>
-                        </tr>
-                    `;
-                });
-            } else {
-                productsHTML = `
-                    <tr>
-                        <td colspan="4" style="border: 1px solid #ddd; padding: 6px; text-align: center;">No hay productos</td>
-                    </tr>
-                `;
-            }
-            
-            let paymentsHTML = '';
-            const totalPaid = credit.payments ? credit.payments.reduce((sum, payment) => sum + payment.amount, 0) : 0;
-            const pendingAmount = credit.total - totalPaid;
-            
-            if (credit.payments && credit.payments.length > 0) {
-                paymentsHTML = `
-                    <h3 style="margin-top: 20px; font-size: 14px;">Historial de Abonos</h3>
-                    <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
-                        <thead>
-                            <tr>
-                                <th style="border: 1px solid #ddd; padding: 6px; background-color: #f2f2f2;">Fecha</th>
-                                <th style="border: 1px solid #ddd; padding: 6px; background-color: #f2f2f2; text-align: right;">Monto</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                `;
-                
-                credit.payments.forEach(payment => {
-                    const paymentDate = payment.timestamp ? payment.timestamp.toDate().toLocaleDateString('es-ES') : 'N/A';
-                    paymentsHTML += `
-                        <tr>
-                            <td style="border: 1px solid #ddd; padding: 6px;">${paymentDate}</td>
-                            <td style="border: 1px solid #ddd; padding: 6px; text-align: right;">$${payment.amount.toFixed(2)}</td>
-                        </tr>
-                    `;
-                });
-                
-                paymentsHTML += `
-                        </tbody>
-                    </table>
-                `;
-            }
-            
-            printWindow.document.write(`
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <title>Factura #${invoiceNumber}</title>
-                    <style>
-                        body { font-family: Arial, sans-serif; margin: 20px; font-size: 14px; }
-                        .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 10px; }
-                        .invoice-info { margin-bottom: 15px; }
-                        .invoice-info table { width: 100%; border-collapse: collapse; }
-                        .invoice-info td { padding: 4px; }
-                        .products-table { width: 100%; border-collapse: collapse; margin: 15px 0; }
-                        .products-table th { background-color: #f2f2f2; border: 1px solid #ddd; padding: 8px; text-align: left; }
-                        .total { text-align: right; font-size: 16px; font-weight: bold; margin-top: 15px; }
-                        .payment-info { margin-top: 20px; }
-                        .footer { margin-top: 30px; text-align: center; font-size: 12px; color: #666; }
-                        @media print { body { margin: 0; } }
-                    </style>
-                </head>
-                <body>
-                    <div class="header">
-                        <h1>Taller Wilian</h1>
-                        <h2>FACTURA #${invoiceNumber}</h2>
-                    </div>
-                    
-                    <div class="invoice-info">
-                        <table>
-                            <tr>
-                                <td><strong>Cliente:</strong> ${clientName}</td>
-                                <td><strong>Fecha:</strong> ${date}</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Equipo:</strong> ${equipoNumber}</td>
-                                <td><strong>Hora:</strong> ${time}</td>
-                            </tr>
-                            <tr>
-                                <td colspan="2"><strong>Estado:</strong> PENDIENTE</td>
-                            </tr>
-                        </table>
-                    </div>
-                    
-                    <table class="products-table">
-                        <thead>
-                            <tr>
-                                <th style="width: 50%;">Descripción</th>
-                                <th style="width: 15%;">Cantidad</th>
-                                <th style="width: 15%;">Precio</th>
-                                <th style="width: 20%;">Total</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${productsHTML}
-                        </tbody>
-                    </table>
-                    
-                    <div class="total">
-                        TOTAL: $${(credit.total || 0).toFixed(2)}<br>
-                        ABONADO: $${totalPaid.toFixed(2)}<br>
-                        PENDIENTE: $${pendingAmount.toFixed(2)}
-                    </div>
-                    
-                    ${paymentsHTML}
-                    
-                    <div class="footer">
-                        <p>¡Gracias por su compra!</p>
-                        <p>Taller Wilian - Sistema de Ventas</p>
-                    </div>
-                </body>
-                </html>
-            `);
-            
-            printWindow.document.close();
-            printWindow.focus();
-            
-            setTimeout(() => {
-                printWindow.print();
-                isPrinting = false;
-            }, 500);
-        }
-
-        function generateDailySummary() {
-            if (!firebaseInitialized) {
-                generateDailySummaryFromLocalStorage();
-                return;
-            }
-            
-            const today = new Date().toISOString().split('T')[0];
-            
-            Promise.all([
-                db.collection("VENTAS").where("date", "==", today).get(),
-                db.collection("CREDITOS").where("date", "==", today).get()
-            ])
-            .then(([salesSnapshot, creditsSnapshot]) => {
-                let cashTotal = 0;
-                let creditTotal = 0;
-                let paymentsTotal = 0;
-                
-                salesSnapshot.forEach(doc => {
-                    const sale = doc.data();
-                    if (sale.paymentType === 'contado') {
-                        cashTotal += sale.total || 0;
-                    } else if (sale.paymentType === 'pendiente') {
-                        creditTotal += sale.total || 0;
-                    }
-                });
-                
-                creditsSnapshot.forEach(doc => {
-                    const credit = doc.data();
-                    if (credit.payments) {
-                        const creditPayments = credit.payments.reduce((sum, payment) => sum + payment.amount, 0);
-                        paymentsTotal += creditPayments;
-                    }
-                });
-                
-                document.getElementById('cash-total').textContent = `$${cashTotal.toFixed(2)}`;
-                document.getElementById('credit-total').textContent = `$${creditTotal.toFixed(2)}`;
-                document.getElementById('payments-total').textContent = `$${paymentsTotal.toFixed(2)}`;
-            })
-            .catch(error => {
-                showStatus("Error al generar resumen", "error");
-            });
-        }
-
-        function loadEquiposSummary() {
-            if (!firebaseInitialized) {
-                loadEquiposSummaryFromLocalStorage();
-                return;
-            }
-            
-            db.collection("CREDITOS").where("status", "==", "pendiente").get()
-                .then(querySnapshot => {
-                    const equiposMap = new Map();
-                    
-                    querySnapshot.forEach(doc => {
-                        const credit = doc.data();
-                        const equipoNumber = credit.equipoNumber || '000000';
-                        
-                        if (equiposMap.has(equipoNumber)) {
-                            const existing = equiposMap.get(equipoNumber);
-                            existing.total += credit.total || 0;
-                            existing.count += 1;
-                            if (credit.timestamp > existing.lastDate) {
-                                existing.lastDate = credit.timestamp;
+                            .header { text-align: center; margin-bottom: 6px; }
+                            .line { border-bottom: 1px dashed #000; margin: 2px 0; }
+                            .product { margin: 1px 0; font-size: 10px; }
+                            .product-name { 
+                                white-space: nowrap;
+                                overflow: hidden;
+                                text-overflow: ellipsis;
+                                max-width: 32mm;
                             }
-                        } else {
-                            equiposMap.set(equipoNumber, {
-                                number: equipoNumber,
-                                clientName: credit.clientName || 'N/A',
-                                total: credit.total || 0,
-                                count: 1,
-                                lastDate: credit.timestamp
-                            });
-                        }
-                    });
-                    
-                    const equiposBody = document.getElementById('equipos-body');
-                    
-                    if (equiposMap.size === 0) {
-                        equiposBody.innerHTML = `
-                            <tr>
-                                <td colspan="5" style="text-align: center; color: #7f8c8d; font-size: 0.8rem;">
-                                    No hay equipos con facturas pendientes
-                                </td>
-                            </tr>
-                        `;
-                        return;
-                    }
-                    
-                    let equiposHTML = '';
-                    const equiposArray = Array.from(equiposMap.values());
-                    
-                    equiposArray.sort((a, b) => a.number.localeCompare(b.number));
-                    
-                    equiposArray.forEach(equipo => {
-                        const lastDate = equipo.lastDate ? 
-                            equipo.lastDate.toDate().toLocaleDateString('es-ES') : 'N/A';
-                            
-                        equiposHTML += `
-                            <tr>
-                                <td>
-                                    <strong>${equipo.number}</strong><br>
-                                    <small>${equipo.clientName}</small>
-                                </td>
-                                <td>$${equipo.total.toFixed(2)}</td>
-                                <td>${equipo.count}</td>
-                                <td>${lastDate}</td>
-                                <td class="actions">
-                                    <button class="btn btn-info" onclick="viewEquipoDetails('${equipo.number}')" style="padding: 4px 8px; font-size: 0.75rem;">
-                                        Ver
-                                    </button>
-                                </td>
-                            </tr>
-                        `;
-                    });
-                    
-                    equiposBody.innerHTML = equiposHTML;
-                })
-                .catch(error => {
-                    showStatus("Error al cargar resumen de equipos", "error");
-                });
-        }
+                            .total { font-weight: bold; text-align: center; margin-top: 6px; font-size: 12px; }
+                            .footer { text-align: center; margin-top: 6px; font-size: 9px; }
+                            .text-center { text-align: center; }
+                            .text-right { text-align: right; }
+                            .dotted-line { border-bottom: 1px dotted #000; margin: 1px 0; }
+                            .small-text { font-size: 9px; }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="header">
+                            <h3 style="margin: 1px 0; font-size: 13px;">TALLER WILIAN</h3>
+                            <div class="small-text">Factura: ${saleData.invoiceNumber}</div>
+                            <div class="small-text">${new Date(saleData.timestamp).toLocaleString('es-ES')}</div>
+                        </div>
+                        
+                        <div class="line"></div>
+                        
+                        <div class="small-text">
+                            <strong>Cliente:</strong> ${saleData.clientName}<br>
+                            <strong>Equipo:</strong> ${saleData.equipoNumber}<br>
+                            <strong>Tipo:</strong> ${saleData.paymentType.toUpperCase()}
+                        </div>
+                        
+                        <div class="line"></div>
+                        
+                        <div style="margin: 4px 0;">
+                            ${saleData.products.map(p => `
+                                <div class="product" style="display: flex; justify-content: space-between;">
+                                    <div class="product-name">${p.descripcion}</div>
+                                    <div style="text-align: right;">
+                                        <div>${p.cantidad} x $${p.precio.toFixed(2)}</div>
+                                        <div>$${(p.precio * p.cantidad).toFixed(2)}</div>
+                                    </div>
+                                </div>
+                                <div class="dotted-line"></div>
+                            `).join('')}
+                        </div>
+                        
+                        <div class="line"></div>
+                        
+                        <div class="total">
+                            TOTAL: $${saleData.total.toFixed(2)}
+                        </div>
+                        
+                        <div class="footer">
+                            <div>¡Gracias por su compra!</div>
+                            <div>Taller Wilian</div>
+                        </div>
+                    </body>
+                    </html>
+                `);
+                
+                printWindow.document.close();
+                printWindow.focus();
+                
+                setTimeout(() => {
+                    printWindow.print();
+                    setTimeout(() => {
+                        printWindow.close();
+                    }, 500);
+                }, 500);
+            },
 
-        function filterEquipos(filter) {
-            const rows = document.querySelectorAll('#equipos-body tr');
-            
-            rows.forEach(row => {
-                const equipoCell = row.cells[0];
-                if (!equipoCell) return;
-                
-                const equipoNumber = equipoCell.querySelector('strong')?.textContent || '';
-                const clientName = equipoCell.querySelector('small')?.textContent || '';
-                
-                if (equipoNumber.includes(filter) || clientName.toLowerCase().includes(filter.toLowerCase())) {
-                    row.style.display = '';
-                } else {
-                    row.style.display = 'none';
+            async loadDailySales() {
+                try {
+                    AppState.dailySales = await DataService.loadDailySales();
+                    this.renderDailySales();
+                } catch (error) {
+                    UIService.showStatus("Error al cargar ventas del día", "error");
                 }
-            });
-        }
+            },
 
-        function viewEquipoDetails(equipoNumber) {
-            if (!firebaseInitialized) {
-                showStatus("No hay conexión a la base de datos", "error");
-                return;
-            }
-            
-            db.collection("CREDITOS")
-                .where("equipoNumber", "==", equipoNumber)
-                .where("status", "==", "pendiente")
-                .get()
-                .then(querySnapshot => {
-                    const panel = document.getElementById('equipo-details-panel');
-                    const title = document.getElementById('equipo-details-title');
-                    const content = document.getElementById('equipo-details-content');
+            async loadPendingCredits() {
+                try {
+                    AppState.pendingCredits = await DataService.loadPendingCredits();
+                    this.processEquiposConPendientes();
+                    UIService.updateEquiposGrid();
+                } catch (error) {
+                    UIService.showStatus("Error al cargar créditos pendientes", "error");
+                }
+            },
+
+            processEquiposConPendientes() {
+                const equiposMap = new Map();
+                
+                AppState.pendingCredits.forEach(credit => {
+                    const equipoNumber = credit.equipoNumber || '000000';
+                    const totalPaid = credit.payments ? credit.payments.reduce((sum, payment) => sum + payment.amount, 0) : 0;
+                    const pendingAmount = credit.total - totalPaid;
                     
-                    title.textContent = `Detalles del Equipo ${equipoNumber}`;
-                    
-                    if (querySnapshot.empty) {
-                        content.innerHTML = `
-                            <p style="text-align: center; color: #7f8c8d; font-size: 0.8rem;">
-                                No hay facturas pendientes para este equipo
-                            </p>
-                        `;
+                    if (equiposMap.has(equipoNumber)) {
+                        const existing = equiposMap.get(equipoNumber);
+                        existing.totalPendiente += pendingAmount;
+                        existing.count += 1;
                     } else {
-                        let detailsHTML = '';
-                        let totalPendiente = 0;
-                        
-                        querySnapshot.forEach(doc => {
-                            const credit = doc.data();
-                            totalPendiente += credit.total || 0;
-                            
-                            const date = credit.timestamp ? 
-                                credit.timestamp.toDate().toLocaleDateString('es-ES') : 'N/A';
-                                
-                            const totalPaid = credit.payments ? 
-                                credit.payments.reduce((sum, payment) => sum + payment.amount, 0) : 0;
-                                
-                            const pendingAmount = (credit.total || 0) - totalPaid;
-                            
-                            let productsList = '';
-                            if (credit.products && credit.products.length > 0) {
-                                productsList = credit.products.map(p => 
-                                    `${p.descripcion} (x${p.cantidad})`
-                                ).join(', ');
-                            }
-                            
-                            detailsHTML += `
-                                <div class="invoice-item">
-                                    <div class="invoice-header">
-                                        <div class="invoice-number">Factura #${credit.invoiceNumber}</div>
-                                        <div class="invoice-total">$${credit.total.toFixed(2)}</div>
-                                    </div>
-                                    <div class="invoice-details">
-                                        Fecha: ${date} | Abonado: $${totalPaid.toFixed(2)} | Pendiente: $${pendingAmount.toFixed(2)}
-                                    </div>
-                                    <div class="invoice-products">
-                                        <strong>Productos:</strong> ${productsList}
-                                    </div>
-                                    <div class="actions">
-                                        <button class="btn btn-success" onclick="addPayment('${doc.id}', ${pendingAmount})" style="padding: 4px 8px; font-size: 0.75rem;">
-                                            Abonar
-                                        </button>
-                                        <button class="btn btn-primary" onclick="printInvoiceFromCredit('${doc.id}')" style="padding: 4px 8px; font-size: 0.75rem;">
-                                            Imprimir
-                                        </button>
-                                        <button class="btn btn-danger" onclick="deleteCredit('${doc.id}')" style="padding: 4px 8px; font-size: 0.75rem;">
-                                            Eliminar
-                                        </button>
-                                    </div>
-                                </div>
-                            `;
-                        });
-                        
-                        detailsHTML = `
-                            <div class="global-summary">
-                                <div class="summary-row">
-                                    <span>Total Pendiente:</span>
-                                    <span style="font-weight: bold; color: var(--warning-color);">$${totalPendiente.toFixed(2)}</span>
-                                </div>
-                                <div class="summary-row">
-                                    <span>Número de Facturas:</span>
-                                    <span>${querySnapshot.size}</span>
-                                </div>
-                            </div>
-                            ${detailsHTML}
-                        `;
-                        
-                        content.innerHTML = detailsHTML;
-                    }
-                    
-                    panel.style.display = 'block';
-                    
-                    panel.scrollIntoView({ behavior: 'smooth' });
-                })
-                .catch(error => {
-                    showStatus("Error al cargar detalles del equipo", "error");
-                });
-        }
-
-        function generateClosureSummary() {
-            const closureDate = document.getElementById('closure-date').value;
-            
-            if (!closureDate) {
-                showStatus("Seleccione una fecha", "error");
-                return;
-            }
-            
-            if (!firebaseInitialized) {
-                generateClosureSummaryFromLocalStorage(closureDate);
-                return;
-            }
-            
-            Promise.all([
-                db.collection("VENTAS").where("date", "==", closureDate).get(),
-                db.collection("CREDITOS").where("date", "==", closureDate).get()
-            ])
-            .then(([salesSnapshot, creditsSnapshot]) => {
-                let cashTotal = 0;
-                let creditTotal = 0;
-                let paymentsTotal = 0;
-                
-                salesSnapshot.forEach(doc => {
-                    const sale = doc.data();
-                    if (sale.paymentType === 'contado') {
-                        cashTotal += sale.total || 0;
-                    } else if (sale.paymentType === 'pendiente') {
-                        creditTotal += sale.total || 0;
-                    }
-                });
-                
-                creditsSnapshot.forEach(doc => {
-                    const credit = doc.data();
-                    if (credit.payments) {
-                        const creditPayments = credit.payments.filter(payment => {
-                            const paymentDate = payment.timestamp ? 
-                                payment.timestamp.toDate().toISOString().split('T')[0] : 
-                                new Date(payment.timestamp).toISOString().split('T')[0];
-                            return paymentDate === closureDate;
-                        }).reduce((sum, payment) => sum + payment.amount, 0);
-                        
-                        paymentsTotal += creditPayments;
-                    }
-                });
-                
-                const totalGeneral = cashTotal + paymentsTotal;
-                
-                document.getElementById('closure-cash').textContent = `Ventas Contado: $${cashTotal.toFixed(2)}`;
-                document.getElementById('closure-credit').textContent = `Ventas Pendientes: $${creditTotal.toFixed(2)}`;
-                document.getElementById('closure-payments').textContent = `Abonos Recibidos: $${paymentsTotal.toFixed(2)}`;
-                document.getElementById('closure-total').textContent = `Total General: $${totalGeneral.toFixed(2)}`;
-            })
-            .catch(error => {
-                showStatus("Error al generar resumen de cierre", "error");
-            });
-        }
-
-        function processDailyClosure() {
-            const closureDate = document.getElementById('closure-date').value;
-            
-            if (!closureDate) {
-                showStatus("Seleccione una fecha", "error");
-                return;
-            }
-            
-            if (!firebaseInitialized) {
-                showStatus("No hay conexión a la base de datos", "error");
-                return;
-            }
-            
-            generateClosureSummary();
-            
-            const cashElement = document.getElementById('closure-cash');
-            const creditElement = document.getElementById('closure-credit');
-            const paymentsElement = document.getElementById('closure-payments');
-            const totalElement = document.getElementById('closure-total');
-            
-            const cashText = cashElement.textContent.replace('Ventas Contado: ', '');
-            const creditText = creditElement.textContent.replace('Ventas Pendientes: ', '');
-            const paymentsText = paymentsElement.textContent.replace('Abonos Recibidos: ', '');
-            const totalText = totalElement.textContent.replace('Total General: ', '');
-            
-            const closureData = {
-                date: closureDate,
-                cashSales: cashText,
-                creditSales: creditText,
-                paymentsReceived: paymentsText,
-                total: totalText,
-                timestamp: new Date()
-            };
-            
-            db.collection("CIERRES").add(closureData)
-                .then(() => {
-                    showStatus("Cierre diario procesado exitosamente", "success");
-                    loadClosuresHistory();
-                })
-                .catch(error => {
-                    showStatus("Error al procesar el cierre diario", "error");
-                });
-        }
-
-        function loadClosuresHistory() {
-            if (!firebaseInitialized) {
-                loadClosuresHistoryFromLocalStorage();
-                return;
-            }
-            
-            db.collection("CIERRES").orderBy("timestamp", "desc").limit(10).get()
-                .then(querySnapshot => {
-                    const closuresBody = document.getElementById('closures-body');
-                    
-                    if (querySnapshot.empty) {
-                        closuresBody.innerHTML = `
-                            <tr>
-                                <td colspan="5" style="text-align: center; color: #7f8c8d; font-size: 0.8rem;">
-                                    No hay cierres registrados
-                                </td>
-                            </tr>
-                        `;
-                        return;
-                    }
-                    
-                    let closuresHTML = '';
-                    
-                    querySnapshot.forEach(doc => {
-                        const closure = doc.data();
-                        
-                        closuresHTML += `
-                            <tr>
-                                <td>${closure.date}</td>
-                                <td>${closure.cashSales}</td>
-                                <td>${closure.creditSales}</td>
-                                <td>${closure.paymentsReceived}</td>
-                                <td><strong>${closure.total}</strong></td>
-                            </tr>
-                        `;
-                    });
-                    
-                    closuresBody.innerHTML = closuresHTML;
-                })
-                .catch(error => {
-                    showStatus("Error al cargar historial de cierres", "error");
-                });
-        }
-
-        function showStatus(message, type) {
-            const statusElement = document.getElementById('status-message');
-            statusElement.textContent = message;
-            statusElement.className = 'status ' + type;
-            statusElement.style.display = 'block';
-            
-            setTimeout(() => {
-                statusElement.style.display = 'none';
-            }, 5000);
-        }
-
-        function saveSaleToLocalStorage(saleData) {
-            let sales = JSON.parse(localStorage.getItem('dailySales') || '[]');
-            sales.push(saleData);
-            localStorage.setItem('dailySales', JSON.stringify(sales));
-            
-            showStatus(`Venta procesada exitosamente (Modo offline) - Factura #${saleData.invoiceNumber}`, "success");
-            
-            cart = [];
-            updateCartDisplay();
-            document.getElementById('client-name').value = '';
-            document.getElementById('equipo-number').value = '';
-            
-            loadDailySalesFromLocalStorage();
-        }
-
-        function loadDailySalesFromLocalStorage() {
-            const sales = JSON.parse(localStorage.getItem('dailySales') || '[]');
-            const salesBody = document.getElementById('daily-sales-body');
-            
-            if (sales.length === 0) {
-                salesBody.innerHTML = `
-                    <tr>
-                        <td colspan="7" style="text-align: center; color: #7f8c8d; font-size: 0.8rem;">
-                            No hay ventas registradas hoy
-                        </td>
-                    </tr>
-                `;
-                return;
-            }
-            
-            let salesHTML = '';
-            
-            sales.forEach((sale, index) => {
-                const time = sale.timestamp ? new Date(sale.timestamp).toLocaleTimeString('es-ES', { 
-                    hour: '2-digit', minute: '2-digit' 
-                }) : 'N/A';
-                
-                const productsList = sale.products ? sale.products.map(p => 
-                    `${p.descripcion} (x${p.cantidad})`
-                ).join(', ') : 'N/A';
-                
-                salesHTML += `
-                    <tr>
-                        <td>${sale.invoiceNumber || 'N/A'}</td>
-                        <td>${sale.clientName || 'N/A'}</td>
-                        <td>${productsList}</td>
-                        <td>$${(sale.total || 0).toFixed(2)}</td>
-                        <td>
-                            <span style="padding: 2px 6px; border-radius: 3px; font-size: 0.7rem; 
-                                background-color: ${sale.paymentType === 'contado' ? '#27ae60' : '#f39c12'}; 
-                                color: white;">
-                                ${sale.paymentType === 'contado' ? 'CONTADO' : 'PENDIENTE'}
-                            </span>
-                        </td>
-                        <td>${time}</td>
-                        <td class="actions">
-                            <button class="btn btn-info" onclick="printInvoiceFromLocalStorage(${index})" style="padding: 4px 8px; font-size: 0.75rem;">
-                                Imprimir
-                            </button>
-                            <button class="btn btn-danger" onclick="deleteSaleFromLocalStorage(${index})" style="padding: 4px 8px; font-size: 0.75rem;">
-                                Eliminar
-                            </button>
-                        </td>
-                    </tr>
-                `;
-            });
-            
-            salesBody.innerHTML = salesHTML;
-        }
-
-        function deleteSaleFromLocalStorage(index) {
-            if (!confirm("¿Está seguro de eliminar esta venta?")) return;
-            
-            let sales = JSON.parse(localStorage.getItem('dailySales') || '[]');
-            sales.splice(index, 1);
-            localStorage.setItem('dailySales', JSON.stringify(sales));
-            
-            showStatus("Venta eliminada exitosamente", "success");
-            loadDailySalesFromLocalStorage();
-        }
-
-        function printInvoiceFromLocalStorage(index) {
-            if (isPrinting) return;
-            
-            const sales = JSON.parse(localStorage.getItem('dailySales') || '[]');
-            const sale = sales[index];
-            
-            if (!sale) {
-                showStatus("No se encontró la venta", "error");
-                return;
-            }
-            
-            isPrinting = true;
-            
-            const printWindow = window.open('', '_blank');
-            const invoiceNumber = sale.invoiceNumber || 'N/A';
-            const clientName = sale.clientName || 'N/A';
-            const equipoNumber = sale.equipoNumber || 'N/A';
-            const date = sale.timestamp ? new Date(sale.timestamp).toLocaleDateString('es-ES') : new Date().toLocaleDateString('es-ES');
-            const time = sale.timestamp ? new Date(sale.timestamp).toLocaleTimeString('es-ES') : new Date().toLocaleTimeString('es-ES');
-            const paymentType = sale.paymentType === 'contado' ? 'CONTADO' : 'PENDIENTE';
-            
-            let productsHTML = '';
-            if (sale.products && sale.products.length > 0) {
-                sale.products.forEach(product => {
-                    productsHTML += `
-                        <tr>
-                            <td style="border: 1px solid #ddd; padding: 6px;">${product.descripcion || 'N/A'}</td>
-                            <td style="border: 1px solid #ddd; padding: 6px; text-align: center;">${product.cantidad || 0}</td>
-                            <td style="border: 1px solid #ddd; padding: 6px; text-align: right;">$${(product.precio || 0).toFixed(2)}</td>
-                            <td style="border: 1px solid #ddd; padding: 6px; text-align: right;">$${((product.precio || 0) * (product.cantidad || 0)).toFixed(2)}</td>
-                        </tr>
-                    `;
-                });
-            } else {
-                productsHTML = `
-                    <tr>
-                        <td colspan="4" style="border: 1px solid #ddd; padding: 6px; text-align: center;">No hay productos</td>
-                    </tr>
-                `;
-            }
-            
-            printWindow.document.write(`
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <title>Factura #${invoiceNumber}</title>
-                    <style>
-                        body { font-family: Arial, sans-serif; margin: 20px; font-size: 14px; }
-                        .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 10px; }
-                        .invoice-info { margin-bottom: 15px; }
-                        .invoice-info table { width: 100%; border-collapse: collapse; }
-                        .invoice-info td { padding: 4px; }
-                        .products-table { width: 100%; border-collapse: collapse; margin: 15px 0; }
-                        .products-table th { background-color: #f2f2f2; border: 1px solid #ddd; padding: 8px; text-align: left; }
-                        .total { text-align: right; font-size: 16px; font-weight: bold; margin-top: 15px; }
-                        .footer { margin-top: 30px; text-align: center; font-size: 12px; color: #666; }
-                        @media print { body { margin: 0; } }
-                    </style>
-                </head>
-                <body>
-                    <div class="header">
-                        <h1>Taller Wilian</h1>
-                        <h2>FACTURA #${invoiceNumber}</h2>
-                    </div>
-                    
-                    <div class="invoice-info">
-                        <table>
-                            <tr>
-                                <td><strong>Cliente:</strong> ${clientName}</td>
-                                <td><strong>Fecha:</strong> ${date}</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Equipo:</strong> ${equipoNumber}</td>
-                                <td><strong>Hora:</strong> ${time}</td>
-                            </tr>
-                            <tr>
-                                <td colspan="2"><strong>Tipo de Pago:</strong> ${paymentType}</td>
-                            </tr>
-                        </table>
-                    </div>
-                    
-                    <table class="products-table">
-                        <thead>
-                            <tr>
-                                <th style="width: 50%;">Descripción</th>
-                                <th style="width: 15%;">Cantidad</th>
-                                <th style="width: 15%;">Precio</th>
-                                <th style="width: 20%;">Total</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${productsHTML}
-                        </tbody>
-                    </table>
-                    
-                    <div class="total">
-                        TOTAL: $${(sale.total || 0).toFixed(2)}
-                    </div>
-                    
-                    <div class="footer">
-                        <p>¡Gracias por su compra!</p>
-                        <p>Taller Wilian - Sistema de Ventas</p>
-                    </div>
-                </body>
-                </html>
-            `);
-            
-            printWindow.document.close();
-            printWindow.focus();
-            
-            setTimeout(() => {
-                printWindow.print();
-                isPrinting = false;
-            }, 500);
-        }
-
-        function loadPendingCreditsFromLocalStorage() {
-            const credits = JSON.parse(localStorage.getItem('pendingCredits') || '[]');
-            pendingCredits = credits;
-            equiposConPendientes = [];
-            
-            credits.forEach(credit => {
-                if (credit.equipoNumber && credit.equipoNumber !== '000000') {
-                    const existingEquipo = equiposConPendientes.find(e => e.number === credit.equipoNumber);
-                    
-                    if (existingEquipo) {
-                        existingEquipo.total += credit.total;
-                        existingEquipo.count += 1;
-                    } else {
-                        equiposConPendientes.push({
-                            number: credit.equipoNumber,
+                        equiposMap.set(equipoNumber, {
+                            number: equipoNumber,
                             clientName: credit.clientName,
-                            total: credit.total,
+                            totalPendiente: pendingAmount,
                             count: 1
                         });
                     }
-                }
-            });
-            
-            updatePendingEquiposGrid();
-        }
-
-        function addPaymentToLocalStorage(creditId, amount) {
-            const credits = JSON.parse(localStorage.getItem('pendingCredits') || '[]');
-            const creditIndex = credits.findIndex(c => c.id === creditId);
-            
-            if (creditIndex === -1) {
-                showStatus("No se encontró el crédito", "error");
-                return;
-            }
-            
-            const credit = credits[creditIndex];
-            const totalPaid = credit.payments ? credit.payments.reduce((sum, payment) => sum + payment.amount, 0) : 0;
-            const newTotalPaid = totalPaid + amount;
-            
-            if (newTotalPaid > credit.total) {
-                showStatus("El abono excede el total pendiente", "error");
-                return;
-            }
-            
-            if (!credit.payments) {
-                credit.payments = [];
-            }
-            
-            credit.payments.push({
-                amount: amount,
-                timestamp: new Date(),
-                date: new Date().toISOString().split('T')[0]
-            });
-            
-            if (newTotalPaid >= credit.total) {
-                credit.status = 'pagado';
-            }
-            
-            credits[creditIndex] = credit;
-            localStorage.setItem('pendingCredits', JSON.stringify(credits));
-            
-            showStatus(`Abono registrado exitosamente. Total pagado: $${newTotalPaid.toFixed(2)}`, "success");
-            loadPendingCreditsFromLocalStorage();
-            
-            if (selectedEquipo) {
-                showEquipoInvoices(selectedEquipo);
-            }
-        }
-
-        function deleteCreditFromLocalStorage(creditId) {
-            if (!confirm("¿Está seguro de eliminar este crédito pendiente?")) return;
-            
-            const credits = JSON.parse(localStorage.getItem('pendingCredits') || '[]');
-            const updatedCredits = credits.filter(c => c.id !== creditId);
-            localStorage.setItem('pendingCredits', JSON.stringify(updatedCredits));
-            
-            showStatus("Crédito eliminado exitosamente", "success");
-            loadPendingCreditsFromLocalStorage();
-            
-            if (selectedEquipo) {
-                showEquipoInvoices(selectedEquipo);
-            }
-        }
-
-        function generateDailySummaryFromLocalStorage() {
-            const sales = JSON.parse(localStorage.getItem('dailySales') || '[]');
-            const credits = JSON.parse(localStorage.getItem('pendingCredits') || '[]');
-            
-            let cashTotal = 0;
-            let creditTotal = 0;
-            let paymentsTotal = 0;
-            
-            sales.forEach(sale => {
-                if (sale.paymentType === 'contado') {
-                    cashTotal += sale.total || 0;
-                } else if (sale.paymentType === 'pendiente') {
-                    creditTotal += sale.total || 0;
-                }
-            });
-            
-            credits.forEach(credit => {
-                if (credit.payments) {
-                    const creditPayments = credit.payments.reduce((sum, payment) => sum + payment.amount, 0);
-                    paymentsTotal += creditPayments;
-                }
-            });
-            
-            document.getElementById('cash-total').textContent = `$${cashTotal.toFixed(2)}`;
-            document.getElementById('credit-total').textContent = `$${creditTotal.toFixed(2)}`;
-            document.getElementById('payments-total').textContent = `$${paymentsTotal.toFixed(2)}`;
-        }
-
-        function loadEquiposSummaryFromLocalStorage() {
-            const credits = JSON.parse(localStorage.getItem('pendingCredits') || '[]');
-            const equiposMap = new Map();
-            
-            credits.forEach(credit => {
-                const equipoNumber = credit.equipoNumber || '000000';
+                });
                 
-                if (equiposMap.has(equipoNumber)) {
-                    const existing = equiposMap.get(equipoNumber);
-                    existing.total += credit.total || 0;
-                    existing.count += 1;
-                    if (credit.timestamp > existing.lastDate) {
-                        existing.lastDate = credit.timestamp;
-                    }
-                } else {
-                    equiposMap.set(equipoNumber, {
-                        number: equipoNumber,
-                        clientName: credit.clientName || 'N/A',
-                        total: credit.total || 0,
-                        count: 1,
-                        lastDate: credit.timestamp
-                    });
-                }
-            });
-            
-            const equiposBody = document.getElementById('equipos-body');
-            
-            if (equiposMap.size === 0) {
-                equiposBody.innerHTML = `
-                    <tr>
-                        <td colspan="5" style="text-align: center; color: #7f8c8d; font-size: 0.8rem;">
-                            No hay equipos con facturas pendientes
-                        </td>
-                    </tr>
-                `;
-                return;
-            }
-            
-            let equiposHTML = '';
-            const equiposArray = Array.from(equiposMap.values());
-            
-            equiposArray.sort((a, b) => a.number.localeCompare(b.number));
-            
-            equiposArray.forEach(equipo => {
-                const lastDate = equipo.lastDate ? 
-                    new Date(equipo.lastDate).toLocaleDateString('es-ES') : 'N/A';
-                    
-                equiposHTML += `
-                    <tr>
-                        <td>
-                            <strong>${equipo.number}</strong><br>
-                            <small>${equipo.clientName}</small>
-                        </td>
-                        <td>$${equipo.total.toFixed(2)}</td>
-                        <td>${equipo.count}</td>
-                        <td>${lastDate}</td>
-                        <td class="actions">
-                            <button class="btn btn-info" onclick="viewEquipoDetailsFromLocalStorage('${equipo.number}')" style="padding: 4px 8px; font-size: 0.75rem;">
-                                Ver
-                            </button>
-                        </td>
-                    </tr>
-                `;
-            });
-            
-            equiposBody.innerHTML = equiposHTML;
-        }
+                AppState.equiposConPendientes = Array.from(equiposMap.values())
+                    .sort((a, b) => a.number.localeCompare(b.number));
+            },
 
-        function viewEquipoDetailsFromLocalStorage(equipoNumber) {
-            const credits = JSON.parse(localStorage.getItem('pendingCredits') || '[]');
-            const equipoCredits = credits.filter(credit => credit.equipoNumber === equipoNumber);
-            
-            const panel = document.getElementById('equipo-details-panel');
-            const title = document.getElementById('equipo-details-title');
-            const content = document.getElementById('equipo-details-content');
-            
-            title.textContent = `Detalles del Equipo ${equipoNumber}`;
-            
-            if (equipoCredits.length === 0) {
-                content.innerHTML = `
-                    <p style="text-align: center; color: #7f8c8d; font-size: 0.8rem;">
-                        No hay facturas pendientes para este equipo
-                    </p>
-                `;
-            } else {
-                let detailsHTML = '';
-                let totalPendiente = 0;
+            renderDailySales() {
+                const salesBody = document.getElementById('daily-sales-body');
+                
+                if (AppState.dailySales.length === 0) {
+                    salesBody.innerHTML = `
+                        <tr>
+                            <td colspan="7" style="text-align: center; color: #7f8c8d; font-size: 0.8rem;">
+                                No hay ventas registradas hoy
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+                
+                let salesHTML = '';
+                
+                AppState.dailySales.forEach(sale => {
+                    const time = sale.timestamp ? new Date(sale.timestamp).toLocaleTimeString('es-ES', { 
+                        hour: '2-digit', minute: '2-digit' 
+                    }) : 'N/A';
+                    
+                    const productsList = sale.products ? sale.products.map(p => 
+                        `${p.descripcion} (x${p.cantidad})`
+                    ).join(', ') : 'N/A';
+                    
+                    salesHTML += `
+                        <tr>
+                            <td>${sale.invoiceNumber || 'N/A'}</td>
+                            <td>${sale.clientName || 'N/A'}</td>
+                            <td>${productsList}</td>
+                            <td>$${(sale.total || 0).toFixed(2)}</td>
+                            <td>
+                                <span style="padding: 2px 6px; border-radius: 3px; font-size: 0.7rem; 
+                                    background-color: ${sale.paymentType === 'contado' ? '#27ae60' : '#f39c12'}; 
+                                    color: white;">
+                                    ${sale.paymentType === 'contado' ? 'CONTADO' : 'PENDIENTE'}
+                                </span>
+                            </td>
+                            <td>${time}</td>
+                            <td class="actions">
+                                <button class="btn btn-info" data-print-sale="${sale.localId}" style="padding: 4px 8px; font-size: 0.75rem;">
+                                    Imprimir
+                                </button>
+                                <button class="btn btn-danger" data-delete-sale="${sale.localId}" style="padding: 4px 8px; font-size: 0.75rem;">
+                                    Eliminar
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+                
+                salesBody.innerHTML = salesHTML;
+            }
+        };
+
+        const App = {
+            async init() {
+                try {
+                    await this.initializeFirebase();
+                    this.setupUI();
+                    await this.loadInitialData();
+                    this.setupEventListeners();
+                    UIService.showStatus("Sistema inicializado correctamente", "success");
+                } catch (error) {
+                    console.error("Error en inicialización:", error);
+                    UIService.showStatus("Error al inicializar: " + error.message, "error");
+                }
+            },
+
+            async initializeFirebase() {
+                try {
+                    if (firebase.apps.length === 0) {
+                        firebase.initializeApp(CONFIG.firebase);
+                    }
+                    AppState.db = firebase.firestore();
+                    AppState.firebaseInitialized = true;
+                } catch (error) {
+                    console.error("Error inicializando Firebase:", error);
+                    AppState.firebaseInitialized = false;
+                    UIService.showStatus("Modo offline activado", "warning");
+                }
+            },
+
+            setupUI() {
+                const now = new Date();
+                document.getElementById('current-date').textContent = now.toLocaleDateString('es-ES');
+                
+                const sales = DataService.loadFromLocalStorage("dailySales") || [];
+                const today = new Date().toISOString().split('T')[0];
+                AppState.saleCounter = sales.filter(sale => sale.date === today).length;
+            },
+
+            async loadInitialData() {
+                await SalesService.loadDailySales();
+                await SalesService.loadPendingCredits();
+            },
+
+            setupEventListeners() {
+                document.addEventListener('click', (e) => {
+                    if (!e.target.closest('.search-container')) {
+                        document.getElementById('search-dropdown').style.display = 'none';
+                    }
+                });
+
+                const searchInput = document.getElementById('search-product');
+                let searchTimeout;
+                
+                searchInput.addEventListener('input', (e) => {
+                    clearTimeout(searchTimeout);
+                    const query = e.target.value.trim();
+                    
+                    searchTimeout = setTimeout(async () => {
+                        if (query.length >= 2) {
+                            try {
+                                AppState.searchResults = await DataService.searchProducts(query);
+                                UIService.showSearchResults(AppState.searchResults);
+                            } catch (error) {
+                                document.getElementById('search-dropdown').style.display = 'none';
+                                if (query.length > 0) {
+                                    UIService.showStatus("Error en búsqueda: " + error.message, "error");
+                                }
+                            }
+                        } else {
+                            document.getElementById('search-dropdown').style.display = 'none';
+                        }
+                    }, 300);
+                });
+
+                document.getElementById('add-product-btn').addEventListener('click', () => {
+                    SalesService.addToCart();
+                });
+
+                document.getElementById('equipo-number').addEventListener('input', (e) => {
+                    e.target.value = e.target.value.replace(/[^0-9]/g, '');
+                    if (e.target.value.length > 6) {
+                        e.target.value = e.target.value.substring(0, 6);
+                    }
+                });
+
+                document.getElementById('contado-btn').addEventListener('click', () => {
+                    SalesService.processSale('contado');
+                });
+
+                document.getElementById('pendiente-btn').addEventListener('click', () => {
+                    SalesService.processSale('pendiente');
+                });
+
+                document.getElementById('save-pending-btn').addEventListener('click', () => {
+                    this.savePendingCredits();
+                });
+
+                document.getElementById('load-pending-btn').addEventListener('click', () => {
+                    document.getElementById('pending-file-input').click();
+                });
+
+                document.getElementById('pending-file-input').addEventListener('change', (e) => {
+                    this.loadPendingCredits(e.target.files[0]);
+                });
+
+                document.addEventListener('click', async (e) => {
+                    const target = e.target;
+                    
+                    if (target.hasAttribute('data-remove-index')) {
+                        const index = parseInt(target.getAttribute('data-remove-index'));
+                        SalesService.removeFromCart(index);
+                    }
+                    
+                    if (target.hasAttribute('data-delete-sale')) {
+                        const saleId = target.getAttribute('data-delete-sale');
+                        this.deleteSale(saleId);
+                    }
+                    
+                    if (target.hasAttribute('data-add-payment')) {
+                        const creditId = target.getAttribute('data-add-payment');
+                        const totalAmount = parseFloat(target.getAttribute('data-total-amount'));
+                        this.addPayment(creditId, totalAmount);
+                    }
+                    
+                    if (target.hasAttribute('data-delete-credit')) {
+                        const creditId = target.getAttribute('data-delete-credit');
+                        this.deleteCredit(creditId);
+                    }
+                    
+                    if (target.hasAttribute('data-add-product')) {
+                        const productId = target.getAttribute('data-add-product');
+                        const quantityInput = document.querySelector(`input[data-product-id="${productId}"]`);
+                        const quantity = parseInt(quantityInput.value) || 1;
+                        SalesService.addToCart(productId, quantity);
+                    }
+                    
+                    if (target.hasAttribute('data-action')) {
+                        const action = target.getAttribute('data-action');
+                        const productId = target.getAttribute('data-product-id');
+                        const quantityInput = document.querySelector(`input[data-product-id="${productId}"]`);
+                        let quantity = parseInt(quantityInput.value) || 1;
+                        
+                        if (action === 'increase') {
+                            const product = AppState.searchResults.find(p => p.id === productId);
+                            const maxStock = product?.cantidad || 99;
+                            if (quantity < maxStock) {
+                                quantity++;
+                            }
+                        } else if (action === 'decrease') {
+                            if (quantity > 1) {
+                                quantity--;
+                            }
+                        }
+                        
+                        quantityInput.value = quantity;
+                        
+                        const product = AppState.searchResults.find(p => p.id === productId);
+                        if (product) {
+                            SalesService.setSelectedProduct(product, quantity);
+                        }
+                    }
+                    
+                    if (target.closest('.equipo-card')) {
+                        const equipoCard = target.closest('.equipo-card');
+                        const equipoNumber = equipoCard.getAttribute('data-equipo');
+                        this.selectEquipo(equipoNumber);
+                    }
+                    
+                    if (target.hasAttribute('data-print-sale')) {
+                        const saleId = target.getAttribute('data-print-sale');
+                        this.printSale(saleId);
+                    }
+                    
+                    if (target.hasAttribute('data-print-credit')) {
+                        const creditId = target.getAttribute('data-print-credit');
+                        this.printCredit(creditId);
+                    }
+                });
+
+                document.addEventListener('change', (e) => {
+                    if (e.target.classList.contains('quantity-input')) {
+                        const productId = e.target.getAttribute('data-product-id');
+                        const quantity = parseInt(e.target.value) || 1;
+                        const product = AppState.searchResults.find(p => p.id === productId);
+                        if (product) {
+                            SalesService.setSelectedProduct(product, quantity);
+                        }
+                    }
+                });
+            },
+
+            async selectEquipo(equipoNumber) {
+                AppState.selectedEquipo = equipoNumber;
+                
+                document.querySelectorAll('.equipo-card').forEach(card => {
+                    card.classList.remove('active');
+                });
+                document.querySelector(`[data-equipo="${equipoNumber}"]`).classList.add('active');
+                
+                await this.showEquipoInvoices(equipoNumber);
+            },
+
+            async showEquipoInvoices(equipoNumber) {
+                const container = document.getElementById('equipo-invoices-container');
+                const equipoCredits = AppState.pendingCredits.filter(credit => 
+                    credit.equipoNumber === equipoNumber
+                );
+                
+                if (equipoCredits.length === 0) {
+                    container.innerHTML = `
+                        <p style="text-align: center; color: #7f8c8d; font-size: 0.8rem;">
+                            No hay facturas para este equipo
+                        </p>
+                    `;
+                    container.className = 'equipo-invoices active';
+                    return;
+                }
+                
+                let invoicesHTML = '';
                 
                 equipoCredits.forEach(credit => {
-                    totalPendiente += credit.total || 0;
-                    
-                    const date = credit.timestamp ? 
-                        new Date(credit.timestamp).toLocaleDateString('es-ES') : 'N/A';
-                        
-                    const totalPaid = credit.payments ? 
-                        credit.payments.reduce((sum, payment) => sum + payment.amount, 0) : 0;
-                        
-                    const pendingAmount = (credit.total || 0) - totalPaid;
-                    
-                    let productsList = '';
+                    let productsHTML = '';
                     if (credit.products && credit.products.length > 0) {
-                        productsList = credit.products.map(p => 
-                            `${p.descripcion} (x${p.cantidad})`
-                        ).join(', ');
+                        credit.products.forEach(product => {
+                            productsHTML += `
+                                <div class="product-detail">
+                                    <span>${product.descripcion} (x${product.cantidad})</span>
+                                    <span>$${(product.precio * product.cantidad).toFixed(2)}</span>
+                                </div>
+                            `;
+                        });
                     }
                     
-                    detailsHTML += `
-                        <div class="invoice-item">
+                    const date = credit.timestamp ? new Date(credit.timestamp).toLocaleDateString('es-ES') : 'N/A';
+                    const totalPaid = credit.payments ? credit.payments.reduce((sum, payment) => sum + payment.amount, 0) : 0;
+                    const pendingAmount = credit.total - totalPaid;
+                    const status = pendingAmount > 0 ? 'pendiente' : 'pagado';
+                    const statusText = pendingAmount > 0 ? 'PENDIENTE' : 'PAGADO';
+                    
+                    let paymentsHTML = '';
+                    if (credit.payments && credit.payments.length > 0) {
+                        paymentsHTML = `
+                            <div class="payment-history">
+                                <strong>Abonos:</strong>
+                                ${credit.payments.map(payment => `
+                                    <div style="display: flex; justify-content: space-between; margin-top: 4px;">
+                                        <span>${new Date(payment.timestamp).toLocaleDateString('es-ES')}</span>
+                                        <span>$${payment.amount.toFixed(2)}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        `;
+                    }
+                    
+                    invoicesHTML += `
+                        <div class="invoice-item ${status}">
                             <div class="invoice-header">
                                 <div class="invoice-number">Factura #${credit.invoiceNumber}</div>
                                 <div class="invoice-total">$${credit.total.toFixed(2)}</div>
                             </div>
                             <div class="invoice-details">
-                                Fecha: ${date} | Abonado: $${totalPaid.toFixed(2)} | Pendiente: $${pendingAmount.toFixed(2)}
+                                Fecha: ${date} | 
+                                Abonado: $${totalPaid.toFixed(2)} | 
+                                Pendiente: $${pendingAmount.toFixed(2)} |
+                                Estado: ${statusText}
                             </div>
                             <div class="invoice-products">
-                                <strong>Productos:</strong> ${productsList}
+                                ${productsHTML}
                             </div>
+                            ${paymentsHTML}
                             <div class="actions">
-                                <button class="btn btn-success" onclick="addPaymentToLocalStorage('${credit.id}', ${pendingAmount})" style="padding: 4px 8px; font-size: 0.75rem;">
+                                <button class="btn btn-success" data-add-payment="${credit.localId}" data-total-amount="${pendingAmount}" style="padding: 6px 12px; font-size: 0.8rem;">
                                     Abonar
                                 </button>
-                                <button class="btn btn-primary" onclick="printInvoiceFromLocalStorageCredit('${credit.id}')" style="padding: 4px 8px; font-size: 0.75rem;">
+                                <button class="btn btn-primary" data-print-credit="${credit.localId}" style="padding: 6px 12px; font-size: 0.8rem;">
                                     Imprimir
                                 </button>
-                                <button class="btn btn-danger" onclick="deleteCreditFromLocalStorage('${credit.id}')" style="padding: 4px 8px; font-size: 0.75rem;">
+                                <button class="btn btn-danger" data-delete-credit="${credit.localId}" style="padding: 6px 12px; font-size: 0.8rem;">
                                     Eliminar
                                 </button>
                             </div>
@@ -2791,255 +1526,133 @@
                     `;
                 });
                 
-                detailsHTML = `
-                    <div class="global-summary">
-                        <div class="summary-row">
-                            <span>Total Pendiente:</span>
-                            <span style="font-weight: bold; color: var(--warning-color);">$${totalPendiente.toFixed(2)}</span>
-                        </div>
-                        <div class="summary-row">
-                            <span>Número de Facturas:</span>
-                            <span>${equipoCredits.length}</span>
-                        </div>
-                    </div>
-                    ${detailsHTML}
-                `;
-                
-                content.innerHTML = detailsHTML;
-            }
-            
-            panel.style.display = 'block';
-            panel.scrollIntoView({ behavior: 'smooth' });
-        }
+                container.innerHTML = invoicesHTML;
+                container.className = 'equipo-invoices active';
+            },
 
-        function printInvoiceFromLocalStorageCredit(creditId) {
-            if (isPrinting) return;
-            
-            const credits = JSON.parse(localStorage.getItem('pendingCredits') || '[]');
-            const credit = credits.find(c => c.id === creditId);
-            
-            if (!credit) {
-                showStatus("No se encontró la factura", "error");
-                return;
-            }
-            
-            isPrinting = true;
-            
-            const printWindow = window.open('', '_blank');
-            const invoiceNumber = credit.invoiceNumber || 'N/A';
-            const clientName = credit.clientName || 'N/A';
-            const equipoNumber = credit.equipoNumber || 'N/A';
-            const date = credit.timestamp ? new Date(credit.timestamp).toLocaleDateString('es-ES') : new Date().toLocaleDateString('es-ES');
-            const time = credit.timestamp ? new Date(credit.timestamp).toLocaleTimeString('es-ES') : new Date().toLocaleTimeString('es-ES');
-            
-            let productsHTML = '';
-            if (credit.products && credit.products.length > 0) {
-                credit.products.forEach(product => {
-                    productsHTML += `
-                        <tr>
-                            <td style="border: 1px solid #ddd; padding: 6px;">${product.descripcion || 'N/A'}</td>
-                            <td style="border: 1px solid #ddd; padding: 6px; text-align: center;">${product.cantidad || 0}</td>
-                            <td style="border: 1px solid #ddd; padding: 6px; text-align: right;">$${(product.precio || 0).toFixed(2)}</td>
-                            <td style="border: 1px solid #ddd; padding: 6px; text-align: right;">$${((product.precio || 0) * (product.cantidad || 0)).toFixed(2)}</td>
-                        </tr>
-                    `;
-                });
-            } else {
-                productsHTML = `
-                    <tr>
-                        <td colspan="4" style="border: 1px solid #ddd; padding: 6px; text-align: center;">No hay productos</td>
-                    </tr>
-                `;
-            }
-            
-            let paymentsHTML = '';
-            const totalPaid = credit.payments ? credit.payments.reduce((sum, payment) => sum + payment.amount, 0) : 0;
-            const pendingAmount = credit.total - totalPaid;
-            
-            if (credit.payments && credit.payments.length > 0) {
-                paymentsHTML = `
-                    <h3 style="margin-top: 20px; font-size: 14px;">Historial de Abonos</h3>
-                    <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
-                        <thead>
-                            <tr>
-                                <th style="border: 1px solid #ddd; padding: 6px; background-color: #f2f2f2;">Fecha</th>
-                                <th style="border: 1px solid #ddd; padding: 6px; background-color: #f2f2f2; text-align: right;">Monto</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                `;
+            async addPayment(creditId, totalAmount) {
+                const amount = prompt(`Ingrese el monto del abono (Total pendiente: $${totalAmount.toFixed(2)})`);
                 
-                credit.payments.forEach(payment => {
-                    const paymentDate = payment.timestamp ? 
-                        new Date(payment.timestamp).toLocaleDateString('es-ES') : 'N/A';
-                    paymentsHTML += `
-                        <tr>
-                            <td style="border: 1px solid #ddd; padding: 6px;">${paymentDate}</td>
-                            <td style="border: 1px solid #ddd; padding: 6px; text-align: right;">$${payment.amount.toFixed(2)}</td>
-                        </tr>
-                    `;
-                });
+                if (!amount || isNaN(amount) || parseFloat(amount) <= 0) {
+                    UIService.showStatus("Monto inválido", "error");
+                    return;
+                }
                 
-                paymentsHTML += `
-                        </tbody>
-                    </table>
-                `;
-            }
-            
-            printWindow.document.write(`
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <title>Factura #${invoiceNumber}</title>
-                    <style>
-                        body { font-family: Arial, sans-serif; margin: 20px; font-size: 14px; }
-                        .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 10px; }
-                        .invoice-info { margin-bottom: 15px; }
-                        .invoice-info table { width: 100%; border-collapse: collapse; }
-                        .invoice-info td { padding: 4px; }
-                        .products-table { width: 100%; border-collapse: collapse; margin: 15px 0; }
-                        .products-table th { background-color: #f2f2f2; border: 1px solid #ddd; padding: 8px; text-align: left; }
-                        .total { text-align: right; font-size: 16px; font-weight: bold; margin-top: 15px; }
-                        .payment-info { margin-top: 20px; }
-                        .footer { margin-top: 30px; text-align: center; font-size: 12px; color: #666; }
-                        @media print { body { margin: 0; } }
-                    </style>
-                </head>
-                <body>
-                    <div class="header">
-                        <h1>Taller Wilian</h1>
-                        <h2>FACTURA #${invoiceNumber}</h2>
-                    </div>
+                const paymentAmount = parseFloat(amount);
+                
+                try {
+                    const paymentData = {
+                        amount: paymentAmount,
+                        timestamp: new Date(),
+                        date: new Date().toISOString().split('T')[0]
+                    };
                     
-                    <div class="invoice-info">
-                        <table>
-                            <tr>
-                                <td><strong>Cliente:</strong> ${clientName}</td>
-                                <td><strong>Fecha:</strong> ${date}</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Equipo:</strong> ${equipoNumber}</td>
-                                <td><strong>Hora:</strong> ${time}</td>
-                            </tr>
-                            <tr>
-                                <td colspan="2"><strong>Estado:</strong> PENDIENTE</td>
-                            </tr>
-                        </table>
-                    </div>
+                    const totalPaid = await DataService.addPayment(creditId, paymentData);
                     
-                    <table class="products-table">
-                        <thead>
-                            <tr>
-                                <th style="width: 50%;">Descripción</th>
-                                <th style="width: 15%;">Cantidad</th>
-                                <th style="width: 15%;">Precio</th>
-                                <th style="width: 20%;">Total</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${productsHTML}
-                        </tbody>
-                    </table>
+                    UIService.showStatus(`Abono registrado. Total pagado: $${totalPaid.toFixed(2)}`, "success");
                     
-                    <div class="total">
-                        TOTAL: $${(credit.total || 0).toFixed(2)}<br>
-                        ABONADO: $${totalPaid.toFixed(2)}<br>
-                        PENDIENTE: $${pendingAmount.toFixed(2)}
-                    </div>
+                    await SalesService.loadPendingCredits();
                     
-                    ${paymentsHTML}
-                    
-                    <div class="footer">
-                        <p>¡Gracias por su compra!</p>
-                        <p>Taller Wilian - Sistema de Ventas</p>
-                    </div>
-                </body>
-                </html>
-            `);
-            
-            printWindow.document.close();
-            printWindow.focus();
-            
-            setTimeout(() => {
-                printWindow.print();
-                isPrinting = false;
-            }, 500);
-        }
-
-        function generateClosureSummaryFromLocalStorage(closureDate) {
-            const sales = JSON.parse(localStorage.getItem('dailySales') || '[]');
-            const credits = JSON.parse(localStorage.getItem('pendingCredits') || '[]');
-            
-            let cashTotal = 0;
-            let creditTotal = 0;
-            let paymentsTotal = 0;
-            
-            sales.forEach(sale => {
-                const saleDate = sale.timestamp ? 
-                    new Date(sale.timestamp).toISOString().split('T')[0] : 
-                    new Date().toISOString().split('T')[0];
-                    
-                if (saleDate === closureDate) {
-                    if (sale.paymentType === 'contado') {
-                        cashTotal += sale.total || 0;
-                    } else if (sale.paymentType === 'pendiente') {
-                        creditTotal += sale.total || 0;
+                    if (AppState.selectedEquipo) {
+                        await this.showEquipoInvoices(AppState.selectedEquipo);
                     }
-                }
-            });
-            
-            credits.forEach(credit => {
-                if (credit.payments) {
-                    const creditPayments = credit.payments.filter(payment => {
-                        const paymentDate = payment.timestamp ? 
-                            new Date(payment.timestamp).toISOString().split('T')[0] : 
-                            new Date(payment.timestamp).toISOString().split('T')[0];
-                        return paymentDate === closureDate;
-                    }).reduce((sum, payment) => sum + payment.amount, 0);
                     
-                    paymentsTotal += creditPayments;
+                } catch (error) {
+                    UIService.showStatus("Error al registrar abono: " + error.message, "error");
                 }
-            });
-            
-            const totalGeneral = cashTotal + paymentsTotal;
-            
-            document.getElementById('closure-cash').textContent = `Ventas Contado: $${cashTotal.toFixed(2)}`;
-            document.getElementById('closure-credit').textContent = `Ventas Pendientes: $${creditTotal.toFixed(2)}`;
-            document.getElementById('closure-payments').textContent = `Abonos Recibidos: $${paymentsTotal.toFixed(2)}`;
-            document.getElementById('closure-total').textContent = `Total General: $${totalGeneral.toFixed(2)}`;
-        }
+            },
 
-        function loadClosuresHistoryFromLocalStorage() {
-            const closures = JSON.parse(localStorage.getItem('closuresHistory') || '[]');
-            const closuresBody = document.getElementById('closures-body');
-            
-            if (closures.length === 0) {
-                closuresBody.innerHTML = `
-                    <tr>
-                        <td colspan="5" style="text-align: center; color: #7f8c8d; font-size: 0.8rem;">
-                            No hay cierres registrados
-                        </td>
-                    </tr>
-                `;
-                return;
+            async deleteSale(saleId) {
+                if (!confirm("¿Está seguro de eliminar esta venta?")) return;
+                
+                try {
+                    // Eliminar de ambos contenedores
+                    await DataService.deleteSaleAndCredit(saleId);
+                    UIService.showStatus("Venta eliminada exitosamente de ambos contenedores", "success");
+                    await SalesService.loadDailySales();
+                    await SalesService.loadPendingCredits();
+                    
+                    // Actualizar la vista si hay un equipo seleccionado
+                    if (AppState.selectedEquipo) {
+                        await this.showEquipoInvoices(AppState.selectedEquipo);
+                    }
+                } catch (error) {
+                    UIService.showStatus("Error al eliminar venta", "error");
+                }
+            },
+
+            async deleteCredit(creditId) {
+                if (!confirm("¿Está seguro de eliminar este crédito pendiente?")) return;
+                
+                try {
+                    await DataService.deleteCredit(creditId);
+                    UIService.showStatus("Crédito eliminado exitosamente", "success");
+                    await SalesService.loadPendingCredits();
+                    
+                    if (AppState.selectedEquipo) {
+                        await this.showEquipoInvoices(AppState.selectedEquipo);
+                    }
+                } catch (error) {
+                    UIService.showStatus("Error al eliminar crédito", "error");
+                }
+            },
+
+            savePendingCredits() {
+                const credits = DataService.loadFromLocalStorage("pendingCredits");
+                if (credits.length === 0) {
+                    UIService.showStatus("No hay facturas pendientes para guardar", "error");
+                    return;
+                }
+                
+                const url = DataService.exportPendingCredits();
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `facturas-pendientes-${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                UIService.showStatus("Facturas pendientes guardadas exitosamente", "success");
+            },
+
+            async loadPendingCredits(file) {
+                if (!file) return;
+                
+                try {
+                    await DataService.importPendingCredits(file);
+                    UIService.showStatus("Facturas pendientes cargadas exitosamente", "success");
+                    await SalesService.loadPendingCredits();
+                    
+                    if (AppState.selectedEquipo) {
+                        await this.showEquipoInvoices(AppState.selectedEquipo);
+                    }
+                    
+                    document.getElementById('pending-file-input').value = '';
+                    
+                } catch (error) {
+                    UIService.showStatus("Error al cargar facturas: " + error.message, "error");
+                }
+            },
+
+            printSale(saleId) {
+                const sale = AppState.dailySales.find(s => s.localId === saleId);
+                if (sale) {
+                    SalesService.printTicket(sale);
+                }
+            },
+
+            printCredit(creditId) {
+                const credit = AppState.pendingCredits.find(c => c.localId === creditId);
+                if (credit) {
+                    SalesService.printTicket(credit);
+                }
             }
-            
-            let closuresHTML = '';
-            
-            closures.forEach(closure => {
-                closuresHTML += `
-                    <tr>
-                        <td>${closure.date}</td>
-                        <td>${closure.cashSales}</td>
-                        <td>${closure.creditSales}</td>
-                        <td>${closure.paymentsReceived}</td>
-                        <td><strong>${closure.total}</strong></td>
-                    </tr>
-                `;
-            });
-            
-            closuresBody.innerHTML = closuresHTML;
-        }
+        };
+
+        document.addEventListener('DOMContentLoaded', function() {
+            App.init();
+        });
     </script>
 </body>
 </html>
