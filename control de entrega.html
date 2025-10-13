@@ -973,8 +973,9 @@
                     return;
                 }
                 
-                if (monto <= 0) {
-                    alert('Por favor, ingrese un monto válido.');
+                // MODIFICACIÓN: Permitir monto 0
+                if (monto < 0) {
+                    alert('Por favor, ingrese un monto válido (no puede ser negativo).');
                     montoRapidoInput.focus();
                     return;
                 }
@@ -1067,16 +1068,16 @@
                     listaEquipos.appendChild(equipoItem);
                 });
                 
-                // Agregar event listeners para botones de eliminar
-                document.querySelectorAll('#lista-equipos .delete-btn').forEach(btn => {
+                // Agregar event listeners para los botones de eliminar
+                document.querySelectorAll('.delete-btn').forEach(btn => {
                     btn.addEventListener('click', function() {
                         const id = this.getAttribute('data-id');
                         eliminarEquipo(id);
                     });
                 });
                 
-                // Agregar event listeners para botones de editar
-                document.querySelectorAll('#lista-equipos .edit-btn').forEach(btn => {
+                // Agregar event listeners para los botones de editar
+                document.querySelectorAll('.edit-btn').forEach(btn => {
                     btn.addEventListener('click', function() {
                         const id = this.getAttribute('data-id');
                         editarEquipo(id);
@@ -1084,27 +1085,188 @@
                 });
             }
             
+            // Función para eliminar un equipo
+            async function eliminarEquipo(id) {
+                if (!confirm('¿Está seguro de que desea eliminar este equipo?')) {
+                    return;
+                }
+                
+                // Eliminar de Firebase
+                const exito = await eliminarDeFirebase('equipos', id);
+                
+                if (exito) {
+                    // Eliminar localmente
+                    const equipos = JSON.parse(localStorage.getItem('equiposMototaxis')) || [];
+                    const equiposActualizados = equipos.filter(equipo => equipo.id !== id);
+                    localStorage.setItem('equiposMototaxis', JSON.stringify(equiposActualizados));
+                    
+                    // Actualizar lista
+                    cargarListaEquipos();
+                    
+                    alert('Equipo eliminado correctamente.');
+                } else {
+                    alert('Error al eliminar el equipo de Firebase. Se eliminará solo localmente.');
+                    
+                    // Eliminar solo localmente
+                    const equipos = JSON.parse(localStorage.getItem('equiposMototaxis')) || [];
+                    const equiposActualizados = equipos.filter(equipo => equipo.id !== id);
+                    localStorage.setItem('equiposMototaxis', JSON.stringify(equiposActualizados));
+                    
+                    // Actualizar lista
+                    cargarListaEquipos();
+                }
+            }
+            
+            // Función para editar un equipo
+            function editarEquipo(id) {
+                const equipos = JSON.parse(localStorage.getItem('equiposMototaxis')) || [];
+                const equipo = equipos.find(e => e.id === id);
+                
+                if (!equipo) return;
+                
+                document.getElementById('numero-equipo').value = equipo.numero;
+                document.getElementById('placa').value = equipo.placa;
+                document.getElementById('nombre').value = equipo.nombre;
+                document.getElementById('dui').value = equipo.dui;
+                
+                // Cambiar el texto del botón
+                guardarEquipoBtn.textContent = 'Actualizar Equipo';
+                
+                // Cambiar el evento del botón
+                guardarEquipoBtn.onclick = async function() {
+                    const numero = parseInt(document.getElementById('numero-equipo').value) || 0;
+                    const placa = document.getElementById('placa').value.trim();
+                    const nombre = document.getElementById('nombre').value.trim();
+                    const dui = document.getElementById('dui').value.trim();
+                    
+                    // Validaciones
+                    if (numero <= 0) {
+                        alert('Por favor, ingrese un número de equipo válido.');
+                        return;
+                    }
+                    
+                    // Verificar si ya existe el número de equipo (excluyendo el actual)
+                    if (equipos.some(e => e.numero === numero && e.id !== id)) {
+                        alert('Ya existe un equipo con ese número.');
+                        return;
+                    }
+                    
+                    // Actualizar equipo
+                    equipo.numero = numero;
+                    equipo.placa = placa || 'No registrada';
+                    equipo.nombre = nombre || 'No registrado';
+                    equipo.dui = dui || 'No registrado';
+                    
+                    // Guardar en Firebase
+                    const exito = await guardarEnFirebase('equipos', equipo, id);
+                    
+                    if (exito) {
+                        // Actualizar localmente
+                        localStorage.setItem('equiposMototaxis', JSON.stringify(equipos));
+                        
+                        // Actualizar lista
+                        cargarListaEquipos();
+                        
+                        // Limpiar formulario
+                        document.getElementById('numero-equipo').value = '';
+                        document.getElementById('placa').value = '';
+                        document.getElementById('nombre').value = '';
+                        document.getElementById('dui').value = '';
+                        
+                        // Restaurar botón
+                        guardarEquipoBtn.textContent = 'Guardar Equipo';
+                        guardarEquipoBtn.onclick = guardarEquipo;
+                        
+                        alert('Equipo actualizado correctamente.');
+                    } else {
+                        alert('Error al actualizar el equipo en Firebase. Se actualizará solo localmente.');
+                        
+                        // Actualizar solo localmente
+                        localStorage.setItem('equiposMototaxis', JSON.stringify(equipos));
+                        
+                        // Actualizar lista
+                        cargarListaEquipos();
+                        
+                        // Limpiar formulario
+                        document.getElementById('numero-equipo').value = '';
+                        document.getElementById('placa').value = '';
+                        document.getElementById('nombre').value = '';
+                        document.getElementById('dui').value = '';
+                        
+                        // Restaurar botón
+                        guardarEquipoBtn.textContent = 'Guardar Equipo';
+                        guardarEquipoBtn.onclick = guardarEquipo;
+                    }
+                };
+            }
+            
+            // Función para actualizar el resumen de equipos con saldo
+            function actualizarResumenEquiposSaldos() {
+                const resumenEquiposSaldos = document.getElementById('resumen-equipos-saldos');
+                const equipos = JSON.parse(localStorage.getItem('equiposMototaxis')) || [];
+                const ingresos = JSON.parse(localStorage.getItem('ingresosMototaxis')) || [];
+                
+                if (equipos.length === 0) {
+                    resumenEquiposSaldos.innerHTML = '<div class="empty-message">No hay equipos registrados</div>';
+                    return;
+                }
+                
+                // Calcular totales por equipo
+                const totalesPorEquipo = {};
+                const ultimaFechaPorEquipo = {};
+                
+                ingresos.forEach(ingreso => {
+                    if (!totalesPorEquipo[ingreso.equipo]) {
+                        totalesPorEquipo[ingreso.equipo] = 0;
+                    }
+                    totalesPorEquipo[ingreso.equipo] += ingreso.monto;
+                    
+                    // Guardar la última fecha de pago
+                    if (!ultimaFechaPorEquipo[ingreso.equipo] || ingreso.fecha > ultimaFechaPorEquipo[ingreso.equipo]) {
+                        ultimaFechaPorEquipo[ingreso.equipo] = ingreso.fecha;
+                    }
+                });
+                
+                // Ordenar equipos por número
+                equipos.sort((a, b) => a.numero - b.numero);
+                
+                resumenEquiposSaldos.innerHTML = '';
+                
+                equipos.forEach(equipo => {
+                    const total = totalesPorEquipo[equipo.numero] || 0;
+                    const ultimaFecha = ultimaFechaPorEquipo[equipo.numero] || 'Nunca';
+                    
+                    const equipoCard = document.createElement('div');
+                    equipoCard.className = 'equipo-saldo-card';
+                    equipoCard.innerHTML = `
+                        <div class="equipo-saldo-header">
+                            <div class="equipo-saldo-numero">Equipo #${equipo.numero}</div>
+                            <div class="equipo-saldo-total">$${total.toFixed(2)}</div>
+                        </div>
+                        <div class="equipo-saldo-info">${equipo.nombre}</div>
+                        <div class="equipo-saldo-info">${equipo.placa}</div>
+                        <div class="equipo-saldo-fecha">Último pago: ${ultimaFecha !== 'Nunca' ? formatearFecha(ultimaFecha) : 'Nunca'}</div>
+                    `;
+                    resumenEquiposSaldos.appendChild(equipoCard);
+                });
+            }
+            
             // Función para cargar el historial de ingresos
             function cargarHistorialIngresos() {
                 const historialIngresos = document.getElementById('historial-ingresos');
                 const ingresos = JSON.parse(localStorage.getItem('ingresosMototaxis')) || [];
+                const filtroEquipo = document.getElementById('filtro-equipo').value;
+                const filtroFecha = document.getElementById('filtro-fecha').value;
                 
-                // Aplicar filtros
+                // Filtrar ingresos
                 let ingresosFiltrados = [...ingresos];
                 
-                const filtroEquipo = document.getElementById('filtro-equipo').value;
                 if (filtroEquipo) {
-                    ingresosFiltrados = ingresosFiltrados.filter(ingreso => ingreso.equipo === parseInt(filtroEquipo));
+                    ingresosFiltrados = ingresosFiltrados.filter(ingreso => ingreso.equipo == filtroEquipo);
                 }
                 
-                const filtroFecha = document.getElementById('filtro-fecha').value;
                 if (filtroFecha) {
-                    ingresosFiltrados = ingresosFiltrados.filter(ingreso => {
-                        const fechaIngreso = new Date(ingreso.fecha);
-                        const año = fechaIngreso.getFullYear();
-                        const mes = String(fechaIngreso.getMonth() + 1).padStart(2, '0');
-                        return `${año}-${mes}` === filtroFecha;
-                    });
+                    ingresosFiltrados = ingresosFiltrados.filter(ingreso => ingreso.fecha.startsWith(filtroFecha));
                 }
                 
                 // Ordenar por fecha (más reciente primero)
@@ -1120,14 +1282,12 @@
                 let totalGeneral = 0;
                 
                 ingresosFiltrados.forEach(ingreso => {
-                    const ingresoItem = document.createElement('div');
-                    ingresoItem.className = 'ingreso-item';
-                    
-                    const fechaFormateada = formatearFecha(ingreso.fecha);
                     totalGeneral += ingreso.monto;
                     
+                    const ingresoItem = document.createElement('div');
+                    ingresoItem.className = 'ingreso-item';
                     ingresoItem.innerHTML = `
-                        <div class="ingreso-fecha">${fechaFormateada}</div>
+                        <div class="ingreso-fecha">${formatearFecha(ingreso.fecha)}</div>
                         <div class="ingreso-equipo">#${ingreso.equipo}</div>
                         <div class="ingreso-cliente">${ingreso.nombreEquipo}</div>
                         <div class="ingreso-monto">$${ingreso.monto.toFixed(2)}</div>
@@ -1144,16 +1304,16 @@
                 totalDiv.textContent = `Total General: $${totalGeneral.toFixed(2)}`;
                 historialIngresos.appendChild(totalDiv);
                 
-                // Agregar event listeners para botones de eliminar
-                document.querySelectorAll('#historial-ingresos .delete-btn').forEach(btn => {
+                // Agregar event listeners para los botones de eliminar
+                document.querySelectorAll('.delete-btn').forEach(btn => {
                     btn.addEventListener('click', function() {
                         const id = this.getAttribute('data-id');
                         eliminarIngreso(id);
                     });
                 });
                 
-                // Agregar event listeners para botones de editar
-                document.querySelectorAll('#historial-ingresos .edit-btn').forEach(btn => {
+                // Agregar event listeners para los botones de editar
+                document.querySelectorAll('.edit-btn').forEach(btn => {
                     btn.addEventListener('click', function() {
                         const id = this.getAttribute('data-id');
                         editarIngreso(id);
@@ -1161,63 +1321,137 @@
                 });
             }
             
-            // Función para actualizar el resumen de equipos con saldo
-            function actualizarResumenEquiposSaldos() {
-                const resumenEquiposSaldos = document.getElementById('resumen-equipos-saldos');
-                const equipos = JSON.parse(localStorage.getItem('equiposMototaxis')) || [];
-                const ingresos = JSON.parse(localStorage.getItem('ingresosMototaxis')) || [];
-                
-                if (equipos.length === 0) {
-                    resumenEquiposSaldos.innerHTML = '<div class="empty-message">No hay equipos registrados</div>';
+            // Función para eliminar un ingreso
+            async function eliminarIngreso(id) {
+                if (!confirm('¿Está seguro de que desea eliminar este ingreso?')) {
                     return;
                 }
                 
-                resumenEquiposSaldos.innerHTML = '';
+                // Eliminar de Firebase
+                const exito = await eliminarDeFirebase('ingresos', id);
                 
-                // Calcular totales por equipo
-                const equiposConSaldo = equipos.map(equipo => {
-                    const ingresosEquipo = ingresos.filter(ingreso => ingreso.equipo === equipo.numero);
-                    const total = ingresosEquipo.reduce((sum, ingreso) => sum + ingreso.monto, 0);
+                if (exito) {
+                    // Eliminar localmente
+                    const ingresos = JSON.parse(localStorage.getItem('ingresosMototaxis')) || [];
+                    const ingresosActualizados = ingresos.filter(ingreso => ingreso.id !== id);
+                    localStorage.setItem('ingresosMototaxis', JSON.stringify(ingresosActualizados));
                     
-                    // Obtener la última fecha de abono
-                    let ultimaFecha = null;
-                    if (ingresosEquipo.length > 0) {
-                        const fechas = ingresosEquipo.map(i => new Date(i.fecha));
-                        const fechaMasReciente = new Date(Math.max(...fechas));
-                        ultimaFecha = formatearFecha(fechaMasReciente.toISOString().split('T')[0]);
+                    // Actualizar historial y resumen
+                    cargarHistorialIngresos();
+                    actualizarResumenEquiposSaldos();
+                    
+                    alert('Ingreso eliminado correctamente.');
+                } else {
+                    alert('Error al eliminar el ingreso de Firebase. Se eliminará solo localmente.');
+                    
+                    // Eliminar solo localmente
+                    const ingresos = JSON.parse(localStorage.getItem('ingresosMototaxis')) || [];
+                    const ingresosActualizados = ingresos.filter(ingreso => ingreso.id !== id);
+                    localStorage.setItem('ingresosMototaxis', JSON.stringify(ingresosActualizados));
+                    
+                    // Actualizar historial y resumen
+                    cargarHistorialIngresos();
+                    actualizarResumenEquiposSaldos();
+                }
+            }
+            
+            // Función para editar un ingreso
+            function editarIngreso(id) {
+                const ingresos = JSON.parse(localStorage.getItem('ingresosMototaxis')) || [];
+                const ingreso = ingresos.find(i => i.id === id);
+                
+                if (!ingreso) return;
+                
+                // Cambiar a la pestaña de ingresos
+                document.querySelector('[data-tab="ingresos"]').click();
+                
+                // Llenar el formulario con los datos del ingreso
+                document.getElementById('fecha').value = ingreso.fecha;
+                equipoRapidoInput.value = ingreso.equipo;
+                nombreRapidoInput.value = ingreso.nombreEquipo;
+                montoRapidoInput.value = ingreso.monto;
+                observacionRapidaInput.value = ingreso.observacion || '';
+                
+                // Cambiar el texto del botón
+                guardarRapidoBtn.textContent = 'Actualizar Ingreso';
+                
+                // Cambiar el evento del botón
+                guardarRapidoBtn.onclick = async function() {
+                    const fecha = document.getElementById('fecha').value;
+                    const equipo = parseInt(equipoRapidoInput.value) || 0;
+                    const monto = parseFloat(montoRapidoInput.value) || 0;
+                    const observacion = observacionRapidaInput.value.trim();
+                    
+                    // Validaciones
+                    if (!fecha) {
+                        alert('Por favor, seleccione una fecha.');
+                        return;
                     }
                     
-                    return {
-                        ...equipo,
-                        total: total,
-                        ultimaFecha: ultimaFecha
-                    };
-                }).filter(equipo => equipo.total > 0); // Solo mostrar equipos con saldo
-                
-                if (equiposConSaldo.length === 0) {
-                    resumenEquiposSaldos.innerHTML = '<div class="empty-message">No hay equipos con saldo</div>';
-                    return;
-                }
-                
-                // Ordenar por número de equipo
-                equiposConSaldo.sort((a, b) => a.numero - b.numero);
-                
-                equiposConSaldo.forEach(equipo => {
-                    const equipoCard = document.createElement('div');
-                    equipoCard.className = 'equipo-saldo-card';
+                    if (equipo <= 0) {
+                        alert('Por favor, ingrese un número de equipo válido.');
+                        return;
+                    }
                     
-                    equipoCard.innerHTML = `
-                        <div class="equipo-saldo-header">
-                            <div class="equipo-saldo-numero">Equipo #${equipo.numero}</div>
-                            <div class="equipo-saldo-total">$${equipo.total.toFixed(2)}</div>
-                        </div>
-                        <div class="equipo-saldo-info">${equipo.nombre}</div>
-                        <div class="equipo-saldo-info">${equipo.placa}</div>
-                        ${equipo.ultimaFecha ? `<div class="equipo-saldo-fecha">Último abono: ${equipo.ultimaFecha}</div>` : ''}
-                    `;
+                    // MODIFICACIÓN: Permitir monto 0
+                    if (monto < 0) {
+                        alert('Por favor, ingrese un monto válido (no puede ser negativo).');
+                        return;
+                    }
                     
-                    resumenEquiposSaldos.appendChild(equipoCard);
-                });
+                    // Obtener nombre del equipo
+                    const equipos = JSON.parse(localStorage.getItem('equiposMototaxis')) || [];
+                    const equipoEncontrado = equipos.find(e => e.numero === equipo);
+                    const nombreEquipo = equipoEncontrado ? equipoEncontrado.nombre : 'No registrado';
+                    
+                    // Actualizar ingreso
+                    ingreso.fecha = fecha;
+                    ingreso.equipo = equipo;
+                    ingreso.nombreEquipo = nombreEquipo;
+                    ingreso.monto = monto;
+                    ingreso.observacion = observacion;
+                    
+                    // Guardar en Firebase
+                    const exito = await guardarEnFirebase('ingresos', ingreso, id);
+                    
+                    if (exito) {
+                        // Actualizar localmente
+                        localStorage.setItem('ingresosMototaxis', JSON.stringify(ingresos));
+                        
+                        // Limpiar formulario
+                        equipoRapidoInput.value = '';
+                        nombreRapidoInput.value = '';
+                        montoRapidoInput.value = '';
+                        observacionRapidaInput.value = '';
+                        
+                        // Restaurar botón
+                        guardarRapidoBtn.textContent = 'Registrar';
+                        guardarRapidoBtn.onclick = guardarIngresoRapido;
+                        
+                        // Actualizar resumen
+                        actualizarResumenEquiposSaldos();
+                        
+                        alert('Ingreso actualizado correctamente.');
+                    } else {
+                        alert('Error al actualizar el ingreso en Firebase. Se actualizará solo localmente.');
+                        
+                        // Actualizar solo localmente
+                        localStorage.setItem('ingresosMototaxis', JSON.stringify(ingresos));
+                        
+                        // Limpiar formulario
+                        equipoRapidoInput.value = '';
+                        nombreRapidoInput.value = '';
+                        montoRapidoInput.value = '';
+                        observacionRapidaInput.value = '';
+                        
+                        // Restaurar botón
+                        guardarRapidoBtn.textContent = 'Registrar';
+                        guardarRapidoBtn.onclick = guardarIngresoRapido;
+                        
+                        // Actualizar resumen
+                        actualizarResumenEquiposSaldos();
+                    }
+                };
             }
             
             // Función para cargar depósitos por equipo
@@ -1225,13 +1459,12 @@
                 const depositosListaEquipos = document.getElementById('depositos-lista-equipos');
                 const equipos = JSON.parse(localStorage.getItem('equiposMototaxis')) || [];
                 const ingresos = JSON.parse(localStorage.getItem('ingresosMototaxis')) || [];
-                
-                // Aplicar filtro
                 const filtroEquipo = document.getElementById('filtro-equipo-depositos').value;
-                let equiposFiltrados = [...equipos];
                 
+                // Filtrar equipos si hay un filtro
+                let equiposFiltrados = [...equipos];
                 if (filtroEquipo) {
-                    equiposFiltrados = equiposFiltrados.filter(equipo => equipo.numero === parseInt(filtroEquipo));
+                    equiposFiltrados = equiposFiltrados.filter(equipo => equipo.numero == filtroEquipo);
                 }
                 
                 if (equiposFiltrados.length === 0) {
@@ -1241,136 +1474,59 @@
                 
                 depositosListaEquipos.innerHTML = '';
                 
+                // Ordenar equipos por número
+                equiposFiltrados.sort((a, b) => a.numero - b.numero);
+                
                 equiposFiltrados.forEach(equipo => {
+                    // Filtrar ingresos del equipo
                     const ingresosEquipo = ingresos.filter(ingreso => ingreso.equipo === equipo.numero);
                     
-                    if (ingresosEquipo.length === 0) {
-                        return; // No mostrar equipos sin ingresos
-                    }
+                    // Ordenar ingresos por fecha
+                    ingresosEquipo.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
                     
-                    // Ordenar ingresos por fecha (más reciente primero)
-                    ingresosEquipo.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
-                    
+                    // Calcular total
                     const totalEquipo = ingresosEquipo.reduce((sum, ingreso) => sum + ingreso.monto, 0);
                     
                     const depositoCard = document.createElement('div');
                     depositoCard.className = 'deposito-equipo-card depositos-print';
-                    
-                    let ingresosHTML = '';
-                    ingresosEquipo.forEach(ingreso => {
-                        const fechaFormateada = formatearFecha(ingreso.fecha);
-                        ingresosHTML += `
-                            <div class="deposito-item">
-                                <div class="deposito-fecha">${fechaFormateada}</div>
-                                <div class="deposito-monto">$${ingreso.monto.toFixed(2)}</div>
-                            </div>
-                        `;
-                    });
-                    
                     depositoCard.innerHTML = `
                         <div class="deposito-equipo-header">
                             <div class="deposito-equipo-numero">Equipo #${equipo.numero}</div>
                             <div class="deposito-equipo-total">$${totalEquipo.toFixed(2)}</div>
                         </div>
-                        <div class="deposito-equipo-info">${equipo.nombre}</div>
-                        <div class="deposito-equipo-info">${equipo.placa}</div>
-                        ${ingresosHTML}
+                        <div>${equipo.nombre}</div>
+                        <div>${equipo.placa} - ${equipo.dui}</div>
+                        <div class="deposito-total-detalle">
+                            ${ingresosEquipo.map(ingreso => `
+                                <div class="deposito-item">
+                                    <div class="deposito-fecha">${formatearFecha(ingreso.fecha)}</div>
+                                    <div class="deposito-monto">$${ingreso.monto.toFixed(2)}</div>
+                                </div>
+                            `).join('')}
+                        </div>
                         <div class="deposito-total">Total: $${totalEquipo.toFixed(2)}</div>
                     `;
-                    
                     depositosListaEquipos.appendChild(depositoCard);
                 });
             }
             
-            // Función para actualizar el filtro de equipos
-            function actualizarFiltroEquipos(selectorId) {
-                const filtroEquipo = document.getElementById(selectorId);
+            // Función para actualizar los filtros de equipos
+            function actualizarFiltroEquipos(idFiltro) {
+                const filtro = document.getElementById(idFiltro);
                 const equipos = JSON.parse(localStorage.getItem('equiposMototaxis')) || [];
                 
                 // Limpiar opciones actuales (excepto la primera)
-                while (filtroEquipo.options.length > 1) {
-                    filtroEquipo.remove(1);
+                while (filtro.options.length > 1) {
+                    filtro.remove(1);
                 }
                 
-                // Agregar opciones de equipos
+                // Agregar equipos al filtro
                 equipos.forEach(equipo => {
                     const option = document.createElement('option');
                     option.value = equipo.numero;
                     option.textContent = `Equipo ${equipo.numero} - ${equipo.nombre}`;
-                    filtroEquipo.appendChild(option);
+                    filtro.appendChild(option);
                 });
-            }
-            
-            // Funciones para eliminar registros
-            async function eliminarEquipo(id) {
-                if (confirm('¿Está seguro de que desea eliminar este equipo?')) {
-                    // Eliminar de Firebase
-                    const exito = await eliminarDeFirebase('equipos', id);
-                    
-                    if (exito) {
-                        // Eliminar localmente
-                        const equipos = JSON.parse(localStorage.getItem('equiposMototaxis')) || [];
-                        const nuevosEquipos = equipos.filter(equipo => equipo.id !== id);
-                        localStorage.setItem('equiposMototaxis', JSON.stringify(nuevosEquipos));
-                        
-                        // Actualizar interfaces
-                        cargarListaEquipos();
-                        actualizarResumenEquiposSaldos();
-                        
-                        alert('Equipo eliminado correctamente.');
-                    } else {
-                        alert('Error al eliminar el equipo de la base de datos. Se eliminará solo localmente.');
-                        
-                        // Eliminar solo localmente
-                        const equipos = JSON.parse(localStorage.getItem('equiposMototaxis')) || [];
-                        const nuevosEquipos = equipos.filter(equipo => equipo.id !== id);
-                        localStorage.setItem('equiposMototaxis', JSON.stringify(nuevosEquipos));
-                        
-                        // Actualizar interfaces
-                        cargarListaEquipos();
-                        actualizarResumenEquiposSaldos();
-                    }
-                }
-            }
-            
-            async function eliminarIngreso(id) {
-                if (confirm('¿Está seguro de que desea eliminar este ingreso?')) {
-                    // Eliminar de Firebase
-                    const exito = await eliminarDeFirebase('ingresos', id);
-                    
-                    if (exito) {
-                        // Eliminar localmente
-                        const ingresos = JSON.parse(localStorage.getItem('ingresosMototaxis')) || [];
-                        const nuevosIngresos = ingresos.filter(ingreso => ingreso.id !== id);
-                        localStorage.setItem('ingresosMototaxis', JSON.stringify(nuevosIngresos));
-                        
-                        // Actualizar interfaces
-                        cargarHistorialIngresos();
-                        actualizarResumenEquiposSaldos();
-                        
-                        alert('Ingreso eliminado correctamente.');
-                    } else {
-                        alert('Error al eliminar el ingreso de la base de datos. Se eliminará solo localmente.');
-                        
-                        // Eliminar solo localmente
-                        const ingresos = JSON.parse(localStorage.getItem('ingresosMototaxis')) || [];
-                        const nuevosIngresos = ingresos.filter(ingreso => ingreso.id !== id);
-                        localStorage.setItem('ingresosMototaxis', JSON.stringify(nuevosIngresos));
-                        
-                        // Actualizar interfaces
-                        cargarHistorialIngresos();
-                        actualizarResumenEquiposSaldos();
-                    }
-                }
-            }
-            
-            // Funciones para editar registros (simplificadas)
-            function editarEquipo(id) {
-                alert('Funcionalidad de edición en desarrollo. Por ahora, elimine y vuelva a crear el equipo.');
-            }
-            
-            function editarIngreso(id) {
-                alert('Funcionalidad de edición en desarrollo. Por ahora, elimine y vuelva a crear el ingreso.');
             }
         });
     </script>
