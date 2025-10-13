@@ -1052,13 +1052,26 @@
                             }
                             .header { text-align: center; margin-bottom: 12px; }
                             .line { border-bottom: 2px dashed #000; margin: 4px 0; }
-                            .product { margin: 2px 0; font-size: 20px; }
-                            .product-name { 
-                                white-space: nowrap;
-                                overflow: hidden;
-                                text-overflow: ellipsis;
-                                max-width: 35mm;
+                            .product-row { 
+                                display: flex; 
+                                justify-content: space-between; 
+                                margin: 3px 0;
                                 font-size: 20px;
+                            }
+                            .product-desc { 
+                                font-size: 18px;
+                                flex: 1;
+                                margin-right: 5px;
+                            }
+                            .product-total { 
+                                text-align: right;
+                                font-size: 20px;
+                                white-space: nowrap;
+                            }
+                            .quantity-line {
+                                font-size: 18px;
+                                text-align: right;
+                                margin-top: 2px;
                             }
                             .total { font-weight: bold; text-align: center; margin-top: 12px; font-size: 24px; }
                             .footer { text-align: center; margin-top: 12px; font-size: 18px; font-weight: bold; }
@@ -1069,6 +1082,13 @@
                             .medium-text { font-size: 20px; }
                             .large-text { font-size: 26px; }
                             .thank-you { text-align: center; margin-top: 15px; font-weight: bold; font-size: 20px; }
+                            .desc-header { 
+                                display: flex; 
+                                justify-content: space-between;
+                                font-weight: bold;
+                                margin-bottom: 5px;
+                                font-size: 20px;
+                            }
                         </style>
                     </head>
                     <body>
@@ -1088,15 +1108,18 @@
                         
                         <div class="line"></div>
                         
+                        <div class="desc-header">
+                            <div>Descripción</div>
+                            <div>Total</div>
+                        </div>
+                        
                         <div style="margin: 8px 0;">
                             ${saleData.products.map(p => `
-                                <div class="product" style="display: flex; justify-content: space-between;">
-                                    <div class="product-name">${p.descripcion}</div>
-                                    <div style="text-align: right;">
-                                        <div>${p.cantidad} x $${p.precio.toFixed(2)}</div>
-                                        <div>$${(p.precio * p.cantidad).toFixed(2)}</div>
-                                    </div>
+                                <div class="product-row">
+                                    <div class="product-desc">${p.descripcion}</div>
+                                    <div class="product-total">$${(p.precio * p.cantidad).toFixed(2)}</div>
                                 </div>
+                                <div class="quantity-line">x${p.cantidad}</div>
                                 <div class="dotted-line"></div>
                             `).join('')}
                         </div>
