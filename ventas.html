@@ -354,6 +354,16 @@
             margin-bottom: 15px;
             gap: 10px;
         }
+
+        .cache-info {
+            background: #e8f4fd;
+            padding: 8px 12px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-size: 0.8rem;
+            text-align: center;
+            border-left: 4px solid #3498db;
+        }
     </style>
 </head>
 <body>
@@ -361,9 +371,12 @@
     
     <div class="container">
         <header>
-            <h1>Sistema Avanzado de Ventas</h1>
+            <h1>Sistema Avanzado de Ventas - OPTIMIZADO</h1>
             <div class="header-info">
                 Taller Wilian - <span id="current-date"></span>
+                <div class="cache-info" id="cache-info" style="display: none;">
+                    Cache activo: <span id="cache-count">0</span> productos cargados
+                </div>
             </div>
         </header>
 
@@ -428,8 +441,11 @@
                     <button class="btn btn-info" onclick="SalesService.printHistorialDiario()">
                         IMPRIMIR HISTORIAL DEL DÍA
                     </button>
+                    <button class="btn btn-primary" onclick="ProductCache.refresh()">
+                        ACTUALIZAR CACHE
+                    </button>
                 </div>
-                <h3 style="margin-bottom: 15px; color: #2c3e50;">Historial de Ventas</h3>
+                <h3 style="margin-bottom: 15px; color: #2c3e50;">Historial de Ventas (Últimas 100)</h3>
                 <div class="form-group">
                     <input type="text" id="filter-historial" placeholder="Filtrar por cliente, equipo o factura...">
                 </div>
@@ -508,6 +524,83 @@
             }
         };
 
+        // ========== SISTEMA DE CACHE OPTIMIZADO ==========
+        const ProductCache = {
+            data: new Map(),
+            lastUpdate: null,
+            ttl: 10 * 60 * 1000, // 10 minutos de cache
+            
+            isExpired() {
+                return !this.lastUpdate || (Date.now() - this.lastUpdate) > this.ttl;
+            },
+            
+            async initialize() {
+                if (this.isExpired() || this.data.size === 0) {
+                    await this.refresh();
+                }
+                this.updateUI();
+            },
+            
+            async refresh() {
+                try {
+                    if (!AppState.firebaseInitialized) return;
+                    
+                    const snapshot = await AppState.db.collection("INVENTARIO").get();
+                    this.data.clear();
+                    snapshot.forEach(doc => {
+                        this.data.set(doc.id, { id: doc.id, ...doc.data() });
+                    });
+                    this.lastUpdate = Date.now();
+                    this.updateUI();
+                    console.log(`✅ Cache actualizado: ${this.data.size} productos`);
+                    UIService.showStatus(`Cache actualizado: ${this.data.size} productos`, "success");
+                } catch (error) {
+                    console.error("❌ Error actualizando cache:", error);
+                    UIService.showStatus("Error actualizando cache", "error");
+                }
+            },
+            
+            search(query) {
+                const results = [];
+                const searchTerm = query.toLowerCase().trim();
+                
+                if (!searchTerm) return results;
+                
+                this.data.forEach(product => {
+                    const codigo = (product.codigo || '').toLowerCase();
+                    const descripcion = (product.descripcion || '').toLowerCase();
+                    
+                    if (codigo.includes(searchTerm) || descripcion.includes(searchTerm)) {
+                        results.push(product);
+                    }
+                });
+                
+                return results;
+            },
+            
+            getByCode(codigo) {
+                let found = null;
+                this.data.forEach(product => {
+                    if (product.codigo === codigo) {
+                        found = product;
+                    }
+                });
+                return found;
+            },
+            
+            updateUI() {
+                const cacheInfo = document.getElementById('cache-info');
+                const cacheCount = document.getElementById('cache-count');
+                
+                if (this.data.size > 0) {
+                    cacheInfo.style.display = 'block';
+                    cacheCount.textContent = this.data.size;
+                } else {
+                    cacheInfo.style.display = 'none';
+                }
+            }
+        };
+
         const AppState = {
             firebaseInitialized: false,
             db: null,
@@ -532,19 +625,8 @@
                     }];
                 }
 
-                const searchTerm = query.toLowerCase().trim();
-                const snapshot = await AppState.db.collection("INVENTARIO").get();
-                
-                const results = [];
-                snapshot.forEach(doc => {
-                    const product = { id: doc.id, ...doc.data() };
-                    const codigo = (product.codigo || '').toLowerCase();
-                    const descripcion = (product.descripcion || '').toLowerCase();
-                    
-                    if (codigo.includes(searchTerm) || descripcion.includes(searchTerm)) {
-                        results.push(product);
-                    }
-                });
+                await ProductCache.initialize();
+                let results = ProductCache.search(query);
 
                 if (results.length === 0 && query.trim() !== '') {
                     results.push({
@@ -561,10 +643,59 @@
 
             async saveSale(saleData) {
                 if (AppState.firebaseInitialized) {
+                    // VERIFICAR que no exista el número de factura
+                    const existingInvoice = await this.checkInvoiceExists(saleData.invoiceNumber);
+                    if (existingInvoice) {
+                        throw new Error(`La factura ${saleData.invoiceNumber} ya existe`);
+                    }
+                    
                     const docRef = await AppState.db.collection("VENTAS").add(saleData);
+                    
+                    // ACTUALIZAR CONTADOR de forma segura
+                    await this.updateSaleCounter(saleData.date);
+                    
                     return docRef.id;
                 } else {
                     throw new Error("No hay conexión a la base de datos");
+                }
+            },
+
+            async checkInvoiceExists(invoiceNumber) {
+                const snapshot = await AppState.db.collection("VENTAS")
+                    .where("invoiceNumber", "==", invoiceNumber)
+                    .limit(1)
+                    .get();
+                return !snapshot.empty;
+            },
+
+            async updateSaleCounter(date = new Date().toISOString().split('T')[0]) {
+                try {
+                    const counterRef = AppState.db.collection("COUNTERS").doc("sales");
+                    await counterRef.set({
+                        [date]: firebase.firestore.FieldValue.increment(1),
+                        lastUpdate: new Date()
+                    }, { merge: true });
+                } catch (error) {
+                    console.error("Error actualizando contador:", error);
+                }
+            },
+
+            async getSaleCounter(date = new Date().toISOString().split('T')[0]) {
+                try {
+                    const counterRef = AppState.db.collection("COUNTERS").doc("sales");
+                    const doc = await counterRef.get();
+                    
+                    if (doc.exists) {
+                        return doc.data()[date] || 0;
+                    }
+                    return 0;
+                } catch (error) {
+                    console.error("Error obteniendo contador, usando fallback:", error);
+                    // Fallback: contar manualmente (solo si es necesario)
+                    const snapshot = await AppState.db.collection("VENTAS")
+                        .where("date", "==", date)
+                        .get();
+                    return snapshot.size;
                 }
             },
 
@@ -584,10 +715,11 @@
                 }
             },
 
-            async loadSales() {
+            async loadSales(limit = 100) {
                 if (AppState.firebaseInitialized) {
                     const snapshot = await AppState.db.collection("VENTAS")
                         .orderBy("timestamp", "desc")
+                        .limit(limit)
                         .get();
                     
                     return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -596,27 +728,17 @@
                 }
             },
 
-            async loadSalesByDate(date = new Date().toISOString().split('T')[0]) {
+            async loadSalesByDate(date = new Date().toISOString().split('T')[0], limit = 200) {
                 if (AppState.firebaseInitialized) {
                     const snapshot = await AppState.db.collection("VENTAS")
                         .where("date", "==", date)
                         .orderBy("timestamp", "desc")
+                        .limit(limit)
                         .get();
                     
                     return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 } else {
                     return [];
-                }
-            },
-
-            async loadSaleCounter(date = new Date().toISOString().split('T')[0]) {
-                if (AppState.firebaseInitialized) {
-                    const snapshot = await AppState.db.collection("VENTAS")
-                        .where("date", "==", date)
-                        .get();
-                    return snapshot.size;
-                } else {
-                    return 0;
                 }
             },
 
@@ -899,13 +1021,32 @@
                 UIService.updateCartDisplay();
             },
 
-            generateInvoiceNumber() {
+            async generateInvoiceNumber() {
                 const now = new Date();
-                const datePart = now.getFullYear().toString().substr(-2) + 
-                               (now.getMonth() + 1).toString().padStart(2, '0') + 
-                               now.getDate().toString().padStart(2, '0');
-                const counterPart = (AppState.saleCounter + 1).toString().padStart(4, '0');
-                return datePart + counterPart;
+                const date = now.toISOString().split('T')[0];
+                const datePart = date.replace(/-/g, '').substring(2); // YYMMDD
+                
+                try {
+                    // Obtener contador ACTUALIZADO
+                    const currentCounter = await DataService.getSaleCounter(date);
+                    const counterPart = (currentCounter + 1).toString().padStart(4, '0');
+                    
+                    const invoiceNumber = datePart + counterPart;
+                    
+                    // VERIFICAR que no exista
+                    const exists = await DataService.checkInvoiceExists(invoiceNumber);
+                    if (exists) {
+                        // Si existe, incrementar y probar nuevamente
+                        return await this.generateInvoiceNumber();
+                    }
+                    
+                    return invoiceNumber;
+                } catch (error) {
+                    // Fallback: usar timestamp
+                    const fallback = datePart + now.getTime().toString().substr(-4);
+                    console.error("Error generando factura, usando fallback:", fallback);
+                    return fallback;
+                }
             },
 
             async processSale(paymentType) {
@@ -926,8 +1067,11 @@
                 const finalEquipo = equipo || '000000';
                 
                 try {
+                    // GENERAR número de factura ANTES de guardar
+                    const invoiceNumber = await this.generateInvoiceNumber();
+                    
                     const saleData = {
-                        invoiceNumber: this.generateInvoiceNumber(),
+                        invoiceNumber: invoiceNumber,
                         equipoNumber: finalEquipo,
                         clientName: finalCliente,
                         products: AppState.cart.map(item => ({
@@ -951,23 +1095,27 @@
                     
                     await DataService.saveSale(saleData);
                     
-                    // SOLO imprimir ticket si es venta de CONTADO
                     if (paymentType === 'contado') {
                         this.printTicket(saleData);
                     }
                     
                     UIService.showStatus(`Venta ${paymentType === 'contado' ? 'CONTADO' : 'PENDIENTE'} procesada - Factura #${saleData.invoiceNumber}`, "success");
                     
+                    // LIMPIAR y actualizar
                     AppState.cart = [];
                     UIService.updateCartDisplay();
                     document.getElementById('equipo').value = '';
                     document.getElementById('cliente').value = '';
                     
-                    AppState.saleCounter = await DataService.loadSaleCounter();
+                    // ACTUALIZAR cache de productos si se afectó inventario
+                    await ProductCache.refresh();
+                    
+                    // Cargar historial (con límite)
                     await this.loadHistorial();
                     
                 } catch (error) {
                     UIService.showStatus("Error al procesar la venta: " + error.message, "error");
+                    console.error("Error en processSale:", error);
                 }
             },
 
@@ -1010,7 +1158,8 @@
 
             async loadHistorial() {
                 try {
-                    const ventas = await DataService.loadSales();
+                    // Cargar SOLO las últimas 100 ventas para mejor rendimiento
+                    const ventas = await DataService.loadSales(100);
                     UIService.updateHistorial(ventas);
                     UIService.updatePendientes(ventas);
                 } catch (error) {
@@ -1790,7 +1939,7 @@
                     this.setupUI();
                     await this.loadInitialData();
                     this.setupEventListeners();
-                    UIService.showStatus("Sistema inicializado correctamente", "success");
+                    UIService.showStatus("Sistema optimizado inicializado correctamente", "success");
                 } catch (error) {
                     console.error("Error en inicialización:", error);
                     UIService.showStatus("Error al inicializar: " + error.message, "error");
@@ -1804,8 +1953,9 @@
                     }
                     AppState.db = firebase.firestore();
                     AppState.firebaseInitialized = true;
+                    console.log("✅ Firebase inicializado correctamente");
                 } catch (error) {
-                    console.error("Error inicializando Firebase:", error);
+                    console.error("❌ Error inicializando Firebase:", error);
                     AppState.firebaseInitialized = false;
                     UIService.showStatus("Modo offline activado", "warning");
                 }
@@ -1829,8 +1979,20 @@
             },
 
             async loadInitialData() {
-                AppState.saleCounter = await DataService.loadSaleCounter();
-                await SalesService.loadHistorial();
+                try {
+                    // Inicializar cache de productos UNA sola vez
+                    await ProductCache.initialize();
+                    
+                    // Cargar contador de ventas del día
+                    AppState.saleCounter = await DataService.getSaleCounter();
+                    
+                    // Cargar historial limitado
+                    await SalesService.loadHistorial();
+                    
+                    console.log("✅ Datos iniciales cargados correctamente");
+                } catch (error) {
+                    console.error("❌ Error cargando datos iniciales:", error);
+                }
             },
 
             setupEventListeners() {
@@ -1853,21 +2015,20 @@
                     clearTimeout(searchTimeout);
                     const query = e.target.value.trim();
                     
+                    // Solo buscar después de 500ms y con al menos 2 caracteres
+                    if (query.length < 2) {
+                        document.getElementById('search-dropdown').style.display = 'none';
+                        return;
+                    }
+                    
                     searchTimeout = setTimeout(async () => {
-                        if (query.length >= 2) {
-                            try {
-                                AppState.searchResults = await DataService.searchProducts(query);
-                                UIService.showSearchResults(AppState.searchResults);
-                            } catch (error) {
-                                document.getElementById('search-dropdown').style.display = 'none';
-                                if (query.length > 0) {
-                                    UIService.showStatus("Error en búsqueda: " + error.message, "error");
-                                }
-                            }
-                        } else {
+                        try {
+                            AppState.searchResults = await DataService.searchProducts(query);
+                            UIService.showSearchResults(AppState.searchResults);
+                        } catch (error) {
                             document.getElementById('search-dropdown').style.display = 'none';
                         }
-                    }, 300);
+                    }, 500);
                 });
 
                 document.getElementById('equipo').addEventListener('input', (e) => {
