@@ -364,6 +364,48 @@
             text-align: center;
             border-left: 4px solid #3498db;
         }
+        
+        .contado-badge {
+            background: #27ae60;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+        
+        .pendiente-badge {
+            background: #f39c12;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+        
+        .total-display {
+            font-weight: bold;
+        }
+        
+        .saldo-pendiente-rojo {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        
+        .saldo-pendiente-negro {
+            color: #333;
+            font-weight: bold;
+        }
+        
+        .cliente-equipo {
+            font-weight: bold;
+        }
+        
+        .cliente-nombre {
+            font-size: 0.7rem;
+            color: #666;
+            margin-top: 2px;
+        }
     </style>
 </head>
 <body>
@@ -453,9 +495,9 @@
                     <thead>
                         <tr>
                             <th>Factura</th>
-                            <th>Cliente/Equipo</th>
+                            <th>Equipo</th>
                             <th>Total</th>
-                            <th>Tipo</th>
+                            <th>Estado</th>
                             <th>Fecha</th>
                             <th>Acciones</th>
                         </tr>
@@ -474,7 +516,7 @@
                 <thead>
                     <tr>
                         <th>Factura</th>
-                        <th>Cliente/Equipo</th>
+                        <th>Equipo</th>
                         <th>Total</th>
                         <th>Saldo</th>
                         <th>Fecha</th>
@@ -745,10 +787,39 @@
             async addAbono(invoiceId, abonoData) {
                 if (AppState.firebaseInitialized) {
                     const ventaRef = AppState.db.collection("VENTAS").doc(invoiceId);
+                    
+                    // Obtener la venta actual para verificar el saldo
+                    const ventaDoc = await ventaRef.get();
+                    const venta = ventaDoc.data();
+                    
+                    // Calcular nuevo saldo
+                    const nuevoSaldo = (venta.saldoPendiente || venta.total) - abonoData.monto;
+                    
+                    // Actualizar con el nuevo abono
                     await ventaRef.update({
                         abonos: firebase.firestore.FieldValue.arrayUnion(abonoData),
-                        saldoPendiente: firebase.firestore.FieldValue.increment(-abonoData.monto)
+                        saldoPendiente: nuevoSaldo
                     });
+                    
+                    // Si el saldo llega a cero, cambiar estado a CONTADO
+                    if (nuevoSaldo <= 0) {
+                        await ventaRef.update({
+                            paymentType: 'contado',
+                            status: 'pagado'
+                        });
+                    }
+                } else {
+                    throw new Error("No hay conexión a la base de datos");
+                }
+            },
+
+            async getSaleById(invoiceId) {
+                if (AppState.firebaseInitialized) {
+                    const doc = await AppState.db.collection("VENTAS").doc(invoiceId).get();
+                    if (doc.exists) {
+                        return { id: doc.id, ...doc.data() };
+                    }
+                    return null;
                 } else {
                     throw new Error("No hay conexión a la base de datos");
                 }
@@ -868,15 +939,47 @@
                 
                 ventas.forEach(venta => {
                     const fecha = venta.timestamp ? new Date(venta.timestamp.toDate ? venta.timestamp.toDate() : venta.timestamp).toLocaleDateString('es-ES') : 'N/A';
-                    const tipo = venta.paymentType === 'contado' ? 'CONTADO' : 'PENDIENTE';
-                    const tipoClass = venta.paymentType === 'contado' ? 'btn-success' : 'btn-warning';
+                    
+                    // Determinar el estado real (si es pendiente con saldo 0, se considera CONTADO)
+                    let estadoReal = venta.paymentType;
+                    let tipoClass = 'pendiente-badge';
+                    let tipoTexto = 'PENDIENTE';
+                    
+                    if (venta.paymentType === 'contado') {
+                        tipoClass = 'contado-badge';
+                        tipoTexto = 'CONTADO';
+                    } else if (venta.paymentType === 'pendiente') {
+                        const saldoPendiente = venta.saldoPendiente !== undefined ? venta.saldoPendiente : venta.total;
+                        if (saldoPendiente <= 0) {
+                            estadoReal = 'contado';
+                            tipoClass = 'contado-badge';
+                            tipoTexto = 'CONTADO';
+                        }
+                    }
+                    
+                    // Calcular el saldo pendiente para mostrar en la columna Total
+                    let montoMostrar = venta.total || 0;
+                    let claseMonto = 'saldo-pendiente-negro';
+                    
+                    if (estadoReal === 'pendiente') {
+                        montoMostrar = venta.saldoPendiente !== undefined ? venta.saldoPendiente : venta.total;
+                        // Si tiene abonos (saldo pendiente es menor que total), mostrar en rojo
+                        if (venta.saldoPendiente < venta.total) {
+                            claseMonto = 'saldo-pendiente-rojo';
+                        }
+                    }
                     
                     historialHTML += `
                         <tr>
                             <td><strong>${venta.invoiceNumber || 'N/A'}</strong></td>
-                            <td>${venta.clientName || 'N/A'}<br><small>Equipo: ${venta.equipoNumber || 'N/A'}</small></td>
-                            <td>$${(venta.total || 0).toFixed(2)}</td>
-                            <td><span class="action-btn ${tipoClass}" style="cursor: default;">${tipo}</span></td>
+                            <td>
+                                <div class="cliente-equipo">${venta.equipoNumber || 'N/A'}</div>
+                                <div class="cliente-nombre">${venta.clientName || 'Sin nombre'}</div>
+                            </td>
+                            <td>
+                                <div class="${claseMonto}">$${montoMostrar.toFixed(2)}</div>
+                            </td>
+                            <td><span class="${tipoClass}">${tipoTexto}</span></td>
                             <td>${fecha}</td>
                             <td>
                                 <button class="action-btn btn-primary" onclick="SalesService.viewInvoice('${venta.id}')">
@@ -885,7 +988,7 @@
                                 <button class="action-btn btn-warning" onclick="SalesService.reprintInvoice('${venta.id}')">
                                     REIMPRIMIR
                                 </button>
-                                ${venta.paymentType === 'contado' ? `
+                                ${estadoReal === 'contado' ? `
                                     <button class="action-btn btn-danger" onclick="SalesService.deleteInvoice('${venta.id}')">
                                         ELIMINAR
                                     </button>
@@ -907,7 +1010,11 @@
 
             updatePendientes(ventas) {
                 const pendientesBody = document.getElementById('pendientes-body');
-                const pendientes = ventas.filter(v => v.paymentType === 'pendiente');
+                // Filtrar solo las que realmente están pendientes (con saldo > 0)
+                const pendientes = ventas.filter(v => 
+                    v.paymentType === 'pendiente' && 
+                    (v.saldoPendiente !== undefined ? v.saldoPendiente : v.total) > 0
+                );
                 AppState.pendientes = pendientes;
                 
                 if (pendientes.length === 0) {
@@ -928,7 +1035,10 @@
                     pendientesHTML += `
                         <tr>
                             <td><strong>${venta.invoiceNumber || 'N/A'}</strong></td>
-                            <td>${venta.clientName || 'N/A'}<br><small>Equipo: ${venta.equipoNumber || 'N/A'}</small></td>
+                            <td>
+                                <div class="cliente-equipo">${venta.equipoNumber || 'N/A'}</div>
+                                <div class="cliente-nombre">${venta.clientName || 'Sin nombre'}</div>
+                            </td>
                             <td>$${(venta.total || 0).toFixed(2)}</td>
                             <td>$${saldoPendiente.toFixed(2)}</td>
                             <td>${fecha}</td>
@@ -963,6 +1073,33 @@
                 document.getElementById('abono-modal').style.display = 'block';
                 document.getElementById('monto-abono').value = '';
                 document.getElementById('monto-abono').focus();
+            },
+
+            activateTab(tabName) {
+                document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+                
+                document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+                document.getElementById(`${tabName}-tab`).classList.add('active');
+                
+                if (tabName === 'historial' || tabName === 'pendientes') {
+                    SalesService.loadHistorial();
+                }
+            },
+
+            restorePaymentButtons() {
+                const paymentButtons = document.querySelector('.payment-buttons');
+                paymentButtons.innerHTML = `
+                    <button class="btn btn-success" id="contado-btn">
+                        GUARDAR CONTADO
+                    </button>
+                    <button class="btn btn-warning" id="pendiente-btn">
+                        GUARDAR PENDIENTE
+                    </button>
+                `;
+                
+                document.getElementById('contado-btn').onclick = () => SalesService.processSale('contado');
+                document.getElementById('pendiente-btn').onclick = () => SalesService.processSale('pendiente');
             }
         };
 
@@ -1126,6 +1263,21 @@
                 }
                 
                 try {
+                    // Obtener la venta actual para calcular el nuevo saldo pendiente
+                    const ventaActual = await DataService.getSaleById(invoiceId);
+                    if (!ventaActual) {
+                        throw new Error("No se encontró la factura a actualizar");
+                    }
+
+                    const nuevoTotal = AppState.cart.reduce((sum, item) => sum + (item.precio * item.cantidad), 0);
+                    
+                    // Calcular el nuevo saldo pendiente
+                    let nuevoSaldoPendiente = nuevoTotal;
+                    if (ventaActual.abonos && ventaActual.abonos.length > 0) {
+                        const totalAbonado = ventaActual.abonos.reduce((sum, abono) => sum + abono.monto, 0);
+                        nuevoSaldoPendiente = nuevoTotal - totalAbonado;
+                    }
+                    
                     const saleData = {
                         products: AppState.cart.map(item => ({
                             id: item.id,
@@ -1134,19 +1286,27 @@
                             precio: item.precio,
                             cantidad: item.cantidad
                         })),
-                        total: AppState.cart.reduce((sum, item) => sum + (item.precio * item.cantidad), 0),
+                        total: nuevoTotal,
+                        saldoPendiente: nuevoSaldoPendiente,
                         timestamp: new Date()
                     };
+                    
+                    // Si el saldo pendiente es 0 o menos, cambiar a contado
+                    if (nuevoSaldoPendiente <= 0) {
+                        saleData.paymentType = 'contado';
+                        saleData.status = 'pagado';
+                    }
                     
                     await DataService.updateSale(invoiceId, saleData);
                     
                     UIService.showStatus("Factura actualizada correctamente", "success");
                     
-                    AppState.cart = [];
-                    AppState.currentEditingInvoice = null;
-                    UIService.updateCartDisplay();
-                    document.getElementById('equipo').value = '';
-                    document.getElementById('cliente').value = '';
+                    // Reimprimir el ticket con los datos actualizados
+                    const ventaActualizada = { ...ventaActual, ...saleData };
+                    this.printTicket(ventaActualizada);
+                    
+                    // LIMPIAR COMPLETAMENTE el estado de edición
+                    this.cancelEdit();
                     
                     await this.loadHistorial();
                     UIService.activateTab('ventas');
@@ -1168,8 +1328,15 @@
             },
 
             async viewInvoice(invoiceId) {
-                const venta = AppState.historial.find(v => v.id === invoiceId) || 
-                             AppState.pendientes.find(v => v.id === invoiceId);
+                // Obtener datos frescos de la base de datos para asegurar información actualizada
+                let venta;
+                try {
+                    venta = await DataService.getSaleById(invoiceId);
+                } catch (error) {
+                    // Si falla, buscar en el estado local
+                    venta = AppState.historial.find(v => v.id === invoiceId) || 
+                           AppState.pendientes.find(v => v.id === invoiceId);
+                }
                 
                 if (!venta) return;
                 
@@ -1201,13 +1368,20 @@
                     abonosHTML += `</div>`;
                 }
 
-                const saldoInfo = venta.paymentType === 'pendiente' ? 
+                const saldoPendiente = venta.saldoPendiente !== undefined ? venta.saldoPendiente : venta.total;
+                const saldoInfo = venta.paymentType === 'pendiente' && saldoPendiente > 0 ? 
                     `<div class="saldo-info">
-                        Saldo Pendiente: $${(venta.saldoPendiente || venta.total).toFixed(2)}
+                        Saldo Pendiente: $${saldoPendiente.toFixed(2)}
                     </div>` : '';
                 
                 const fecha = venta.timestamp ? new Date(venta.timestamp.toDate ? venta.timestamp.toDate() : venta.timestamp).toLocaleString('es-ES') : 'N/A';
-                const tipo = venta.paymentType === 'contado' ? 'CONTADO' : 'PENDIENTE';
+                
+                // Determinar el estado real para mostrar
+                let estadoMostrar = venta.paymentType;
+                if (venta.paymentType === 'pendiente' && saldoPendiente <= 0) {
+                    estadoMostrar = 'contado';
+                }
+                const tipo = estadoMostrar === 'contado' ? 'CONTADO' : 'PENDIENTE';
                 
                 const modalContent = `
                     <h3 style="margin-bottom: 15px; text-align: center;">Factura #${venta.invoiceNumber}</h3>
@@ -1229,7 +1403,16 @@
 
             async editInvoice(invoiceId) {
                 const venta = AppState.pendientes.find(v => v.id === invoiceId);
-                if (!venta) return;
+                if (!venta) {
+                    // Si no está en pendientes, buscar en el historial completo
+                    const todasVentas = AppState.historial.concat(AppState.pendientes);
+                    const ventaEncontrada = todasVentas.find(v => v.id === invoiceId);
+                    if (!ventaEncontrada) {
+                        UIService.showStatus("No se encontró la factura para editar", "error");
+                        return;
+                    }
+                    venta = ventaEncontrada;
+                }
                 
                 AppState.cart = venta.products.map(p => ({
                     id: p.id,
@@ -1260,7 +1443,7 @@
                 cancelBtn.className = 'btn btn-danger';
                 cancelBtn.style.marginTop = '10px';
                 cancelBtn.textContent = 'CANCELAR EDICIÓN';
-                cancelBtn.onclick = this.cancelEdit;
+                cancelBtn.onclick = () => this.cancelEdit();
                 
                 const paymentButtons = document.querySelector('.payment-buttons');
                 paymentButtons.innerHTML = '';
@@ -1277,18 +1460,10 @@
                 document.getElementById('equipo').value = '';
                 document.getElementById('cliente').value = '';
                 
-                const paymentButtons = document.querySelector('.payment-buttons');
-                paymentButtons.innerHTML = `
-                    <button class="btn btn-success" id="contado-btn">
-                        GUARDAR CONTADO
-                    </button>
-                    <button class="btn btn-warning" id="pendiente-btn">
-                        GUARDAR PENDIENTE
-                    </button>
-                `;
+                // Restaurar completamente los botones de pago
+                UIService.restorePaymentButtons();
                 
-                document.getElementById('contado-btn').onclick = () => SalesService.processSale('contado');
-                document.getElementById('pendiente-btn').onclick = () => SalesService.processSale('pendiente');
+                UIService.showStatus("Edición cancelada", "info");
             },
 
             async deleteInvoice(invoiceId) {
@@ -1304,8 +1479,18 @@
             },
 
             async reprintInvoice(invoiceId) {
-                const venta = AppState.historial.find(v => v.id === invoiceId) || 
-                             AppState.pendientes.find(v => v.id === invoiceId);
+                // Obtener datos frescos de la base de datos
+                let venta;
+                try {
+                    venta = await DataService.getSaleById(invoiceId);
+                if (!venta) {
+                        venta = AppState.historial.find(v => v.id === invoiceId) || 
+                               AppState.pendientes.find(v => v.id === invoiceId);
+                }
+                } catch (error) {
+                    venta = AppState.historial.find(v => v.id === invoiceId) || 
+                           AppState.pendientes.find(v => v.id === invoiceId);
+                }
                 
                 if (venta) {
                     this.printTicket(venta);
@@ -1314,7 +1499,17 @@
             },
 
             async registrarAbono(invoiceId) {
-                const venta = AppState.pendientes.find(v => v.id === invoiceId);
+                // Obtener datos frescos de la base de datos
+                let venta;
+                try {
+                    venta = await DataService.getSaleById(invoiceId);
+                if (!venta) {
+                        venta = AppState.pendientes.find(v => v.id === invoiceId);
+                }
+                } catch (error) {
+                    venta = AppState.pendientes.find(v => v.id === invoiceId);
+                }
+                
                 if (!venta) return;
                 
                 AppState.currentAbonoInvoice = venta;
@@ -1364,7 +1559,26 @@
                     UIService.showStatus(`Abono de $${monto.toFixed(2)} registrado correctamente`, "success");
                     
                     closeAbonoModal();
-                    await this.loadHistorial();
+                    
+                    // ACTUALIZAR el estado local con los nuevos datos
+                    const ventaActualizada = await DataService.getSaleById(venta.id);
+                    if (ventaActualizada) {
+                        // Actualizar en historial
+                        const indexHistorial = AppState.historial.findIndex(v => v.id === venta.id);
+                        if (indexHistorial !== -1) {
+                            AppState.historial[indexHistorial] = ventaActualizada;
+                        }
+                        
+                        // Actualizar en pendientes
+                        const indexPendientes = AppState.pendientes.findIndex(v => v.id === venta.id);
+                        if (indexPendientes !== -1) {
+                            AppState.pendientes[indexPendientes] = ventaActualizada;
+                        }
+                        
+                        // Actualizar la UI
+                        UIService.updateHistorial(AppState.historial);
+                        UIService.updatePendientes(AppState.historial);
+                    }
                     
                 } catch (error) {
                     UIService.showStatus("Error al procesar abono: " + error.message, "error");
@@ -1682,7 +1896,7 @@
                                 ${productosHTML}
                                 <div class="total-section">
                                     Total: $${(venta.total || 0).toFixed(2)}
-                                    ${venta.paymentType === 'pendiente' ? `<br>Saldo: $${(venta.saldoPendiente || venta.total).toFixed(2)}` : ''}
+                                    ${venta.paymentType === 'pendiente' ? `<br>Saldo: $${(venta.saldoPendiente || venta.total).toFixed(2)}</div>` : ''}
                                 </div>
                             </div>
                         `;
@@ -1734,6 +1948,9 @@
 
             printTicket(saleData) {
                 const printWindow = window.open('', '_blank');
+                
+                // Calcular el saldo pendiente actualizado
+                const saldoPendiente = saleData.saldoPendiente !== undefined ? saleData.saldoPendiente : saleData.total;
                 
                 printWindow.document.write(`
                     <!DOCTYPE html>
@@ -1821,7 +2038,7 @@
                         ${saleData.paymentType === 'pendiente' ? `
                             <div class="abono-info">
                                 <div>SALDO PENDIENTE:</div>
-                                <div class="large-text">$${(saleData.saldoPendiente || saleData.total).toFixed(2)}</div>
+                                <div class="large-text">$${saldoPendiente.toFixed(2)}</div>
                             </div>
                         ` : ''}
                         
@@ -1869,6 +2086,7 @@
                             .total { font-weight: bold; text-align: center; margin-top: 12px; font-size: 24px; }
                             .footer { text-align: center; margin-top: 12px; font-size: 18px; font-weight: bold; }
                             .text-center { text-align: center; }
+                            .text-right { text-align: right; }
                             .small-text { font-size: 18px; }
                             .medium-text { font-size: 20px; }
                             .large-text { font-size: 26px; }
@@ -1964,18 +2182,6 @@
             setupUI() {
                 const now = new Date();
                 document.getElementById('current-date').textContent = now.toLocaleDateString('es-ES');
-                
-                UIService.activateTab = function(tabName) {
-                    document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
-                    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-                    
-                    document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
-                    document.getElementById(`${tabName}-tab`).classList.add('active');
-                    
-                    if (tabName === 'historial' || tabName === 'pendientes') {
-                        SalesService.loadHistorial();
-                    }
-                };
             },
 
             async loadInitialData() {
