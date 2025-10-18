@@ -1,3 +1,5 @@
+[file name]: ventas(5).html
+[file content begin]
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -6,6 +8,7 @@
     <title>Sistema Avanzado de Ventas - Taller Wilian</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
             margin: 0;
@@ -82,8 +85,22 @@
             display: block;
         }
 
+        .form-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
         .form-group {
             margin-bottom: 15px;
+        }
+
+        .form-group.equipo-group {
+            flex: 0 0 120px;
+        }
+
+        .form-group.grupo-group {
+            flex: 1;
         }
 
         .form-group label {
@@ -264,12 +281,91 @@
         }
 
         .action-btn {
-            padding: 6px 12px;
+            padding: 6px 10px;
             border: none;
-            border-radius: 3px;
+            border-radius: 4px;
             cursor: pointer;
             font-size: 0.7rem;
             margin: 2px;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 32px;
+            height: 28px;
+        }
+
+        .icon-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 6px;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+            margin: 0 2px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 28px;
+        }
+
+        .icon-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .btn-view {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .btn-view:hover {
+            background-color: #2980b9;
+        }
+
+        .btn-reprint {
+            background-color: #f39c12;
+            color: white;
+        }
+
+        .btn-reprint:hover {
+            background-color: #d35400;
+        }
+
+        .btn-edit {
+            background-color: #27ae60;
+            color: white;
+        }
+
+        .btn-edit:hover {
+            background-color: #219a52;
+        }
+
+        .btn-delete {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background-color: #c0392b;
+        }
+
+        .btn-abono {
+            background-color: #17a2b8;
+            color: white;
+        }
+
+        .btn-abono:hover {
+            background-color: #138496;
+        }
+
+        .btn-cancel {
+            background-color: #9b59b6;
+            color: white;
+        }
+
+        .btn-cancel:hover {
+            background-color: #8e44ad;
         }
 
         .quantity-input, .price-input {
@@ -406,6 +502,12 @@
             color: #666;
             margin-top: 2px;
         }
+
+        .action-buttons {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
     </style>
 </head>
 <body>
@@ -428,14 +530,16 @@
         </div>
 
         <div class="tab-content active" id="ventas-tab">
-            <div class="form-group">
-                <label for="equipo">Equipo</label>
-                <input type="text" id="equipo" placeholder="Número de equipo" maxlength="6">
-            </div>
+            <div class="form-row">
+                <div class="form-group equipo-group">
+                    <label for="equipo">Equipo</label>
+                    <input type="text" id="equipo" placeholder="Número" maxlength="4">
+                </div>
 
-            <div class="form-group">
-                <label for="cliente">Nombre de Cliente</label>
-                <input type="text" id="cliente" placeholder="Nombre del cliente">
+                <div class="form-group grupo-group">
+                    <label for="cliente">Grupo</label>
+                    <input type="text" id="cliente" placeholder="Nombre del grupo">
+                </div>
             </div>
 
             <div class="form-group">
@@ -499,7 +603,7 @@
                             <th>Total</th>
                             <th>Estado</th>
                             <th>Fecha</th>
-                            <th>Acciones</th>
+                            <th width="200">Acciones</th>
                         </tr>
                     </thead>
                     <tbody id="historial-body">
@@ -520,7 +624,7 @@
                         <th>Total</th>
                         <th>Saldo</th>
                         <th>Fecha</th>
-                        <th>Acciones</th>
+                        <th width="220">Acciones</th>
                     </tr>
                 </thead>
                 <tbody id="pendientes-body">
@@ -823,6 +927,22 @@
                 } else {
                     throw new Error("No hay conexión a la base de datos");
                 }
+            },
+
+            async cancelInvoice(invoiceId) {
+                if (AppState.firebaseInitialized) {
+                    const ventaRef = AppState.db.collection("VENTAS").doc(invoiceId);
+                    
+                    await ventaRef.update({
+                        paymentType: 'contado',
+                        status: 'pagado',
+                        saldoPendiente: 0,
+                        cancelada: true,
+                        fechaCancelacion: new Date()
+                    });
+                } else {
+                    throw new Error("No hay conexión a la base de datos");
+                }
             }
         };
 
@@ -873,7 +993,7 @@
                             <td>$${itemTotal.toFixed(2)}</td>
                             <td>
                                 <button class="action-btn btn-danger" onclick="SalesService.removeFromCart(${index})">
-                                    ELIMINAR
+                                    <i class="fas fa-trash"></i> ELIMINAR
                                 </button>
                             </td>
                         </tr>
@@ -982,24 +1102,29 @@
                             <td><span class="${tipoClass}">${tipoTexto}</span></td>
                             <td>${fecha}</td>
                             <td>
-                                <button class="action-btn btn-primary" onclick="SalesService.viewInvoice('${venta.id}')">
-                                    VER
-                                </button>
-                                <button class="action-btn btn-warning" onclick="SalesService.reprintInvoice('${venta.id}')">
-                                    REIMPRIMIR
-                                </button>
-                                ${estadoReal === 'contado' ? `
-                                    <button class="action-btn btn-danger" onclick="SalesService.deleteInvoice('${venta.id}')">
-                                        ELIMINAR
+                                <div class="action-buttons">
+                                    <button class="icon-btn btn-view" onclick="SalesService.viewInvoice('${venta.id}')" title="Ver factura">
+                                        <i class="fas fa-eye"></i>
                                     </button>
-                                ` : `
-                                    <button class="action-btn btn-success" onclick="SalesService.editInvoice('${venta.id}')">
-                                        EDITAR
+                                    <button class="icon-btn btn-reprint" onclick="SalesService.reprintInvoice('${venta.id}')" title="Reimprimir">
+                                        <i class="fas fa-print"></i>
                                     </button>
-                                    <button class="action-btn btn-danger" onclick="SalesService.deleteInvoice('${venta.id}')">
-                                        ELIMINAR
-                                    </button>
-                                `}
+                                    ${estadoReal === 'contado' ? `
+                                        <button class="icon-btn btn-delete" onclick="SalesService.deleteInvoice('${venta.id}')" title="Eliminar">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    ` : `
+                                        <button class="icon-btn btn-edit" onclick="SalesService.editInvoice('${venta.id}')" title="Editar">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="icon-btn btn-delete" onclick="SalesService.deleteInvoice('${venta.id}')" title="Eliminar">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                        <button class="icon-btn btn-cancel" onclick="SalesService.cancelInvoice('${venta.id}')" title="Cancelar factura">
+                                            <i class="fas fa-ban"></i>
+                                        </button>
+                                    `}
+                                </div>
                             </td>
                         </tr>
                     `;
@@ -1043,18 +1168,23 @@
                             <td>$${saldoPendiente.toFixed(2)}</td>
                             <td>${fecha}</td>
                             <td>
-                                <button class="action-btn btn-primary" onclick="SalesService.viewInvoice('${venta.id}')">
-                                    VER
-                                </button>
-                                <button class="action-btn btn-success" onclick="SalesService.editInvoice('${venta.id}')">
-                                    EDITAR
-                                </button>
-                                <button class="action-btn btn-info" onclick="SalesService.registrarAbono('${venta.id}')" style="background-color: #17a2b8; color: white;">
-                                    ABONO
-                                </button>
-                                <button class="action-btn btn-danger" onclick="SalesService.deleteInvoice('${venta.id}')">
-                                    ELIMINAR
-                                </button>
+                                <div class="action-buttons">
+                                    <button class="icon-btn btn-view" onclick="SalesService.viewInvoice('${venta.id}')" title="Ver factura">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="icon-btn btn-edit" onclick="SalesService.editInvoice('${venta.id}')" title="Editar">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="icon-btn btn-abono" onclick="SalesService.registrarAbono('${venta.id}')" title="Registrar abono">
+                                        <i class="fas fa-money-bill-wave"></i>
+                                    </button>
+                                    <button class="icon-btn btn-delete" onclick="SalesService.deleteInvoice('${venta.id}')" title="Eliminar">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                    <button class="icon-btn btn-cancel" onclick="SalesService.cancelInvoice('${venta.id}')" title="Cancelar factura">
+                                        <i class="fas fa-ban"></i>
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                     `;
@@ -1196,12 +1326,12 @@
                 const cliente = document.getElementById('cliente').value.trim();
                 
                 if (!equipo && !cliente) {
-                    UIService.showStatus("Ingrese un número de equipo o nombre de cliente", "error");
+                    UIService.showStatus("Ingrese un número de equipo o nombre de grupo", "error");
                     return;
                 }
                 
                 const finalCliente = cliente || `Equipo ${equipo}`;
-                const finalEquipo = equipo || '000000';
+                const finalEquipo = equipo || '0000';
                 
                 try {
                     // GENERAR número de factura ANTES de guardar
@@ -1386,7 +1516,7 @@
                 const modalContent = `
                     <h3 style="margin-bottom: 15px; text-align: center;">Factura #${venta.invoiceNumber}</h3>
                     <div class="invoice-details">
-                        <strong>Cliente:</strong> ${venta.clientName || 'N/A'}<br>
+                        <strong>Grupo:</strong> ${venta.clientName || 'N/A'}<br>
                         <strong>Equipo:</strong> ${venta.equipoNumber || 'N/A'}<br>
                         <strong>Tipo:</strong> ${tipo}<br>
                         <strong>Fecha:</strong> ${fecha}<br>
@@ -1478,6 +1608,18 @@
                 }
             },
 
+            async cancelInvoice(invoiceId) {
+                if (!confirm("¿Está seguro de cancelar esta factura? Se cambiará el estado a CONTADO.")) return;
+                
+                try {
+                    await DataService.cancelInvoice(invoiceId);
+                    UIService.showStatus("Factura cancelada correctamente", "success");
+                    await this.loadHistorial();
+                } catch (error) {
+                    UIService.showStatus("Error al cancelar factura: " + error.message, "error");
+                }
+            },
+
             async reprintInvoice(invoiceId) {
                 // Obtener datos frescos de la base de datos
                 let venta;
@@ -1519,7 +1661,7 @@
                 const modalContent = `
                     <div class="invoice-details">
                         <strong>Factura:</strong> ${venta.invoiceNumber}<br>
-                        <strong>Cliente:</strong> ${venta.clientName}<br>
+                        <strong>Grupo:</strong> ${venta.clientName}<br>
                         <strong>Total:</strong> $${venta.total.toFixed(2)}<br>
                         <strong>Saldo Pendiente:</strong> $${saldoPendiente.toFixed(2)}
                     </div>
@@ -2009,7 +2151,7 @@
                         <div class="line"></div>
                         
                         <div class="medium-text">
-                            <strong>Cliente:</strong> ${saleData.clientName}<br>
+                            <strong>Grupo:</strong> ${saleData.clientName}<br>
                             <strong>Equipo:</strong> ${saleData.equipoNumber}<br>
                             <strong>Tipo:</strong> ${saleData.paymentType.toUpperCase()}
                         </div>
@@ -2111,7 +2253,7 @@
                         
                         <div class="medium-text">
                             <strong>Factura:</strong> ${venta.invoiceNumber}<br>
-                            <strong>Cliente:</strong> ${venta.clientName}<br>
+                            <strong>Grupo:</strong> ${venta.clientName}<br>
                             <strong>Equipo:</strong> ${venta.equipoNumber}
                         </div>
                         
@@ -2239,8 +2381,8 @@
 
                 document.getElementById('equipo').addEventListener('input', (e) => {
                     e.target.value = e.target.value.replace(/[^0-9]/g, '');
-                    if (e.target.value.length > 6) {
-                        e.target.value = e.target.value.substring(0, 6);
+                    if (e.target.value.length > 4) {
+                        e.target.value = e.target.value.substring(0, 4);
                     }
                 });
 
@@ -2279,3 +2421,4 @@
     </script>
 </body>
 </html>
+[file content end]
