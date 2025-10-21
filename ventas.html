@@ -2169,7 +2169,7 @@
                 }
             },
 
-            async loadSales(limit = 100) {
+            async loadSales(limit = 250) {
                 if (AppState.firebaseInitialized) {
                     const snapshot = await AppState.db.collection("VENTAS")
                         .orderBy("timestamp", "desc")
