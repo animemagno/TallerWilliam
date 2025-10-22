@@ -780,8 +780,8 @@
         }
 
         .grupo-equipos {
-            display: flex;
-            flex-wrap: wrap;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
             gap: 8px;
             margin-bottom: 10px;
             justify-content: flex-start;
@@ -1232,11 +1232,25 @@
             equiposPendientes: new Map(),
             currentEditingGroup: null,
             currentGrupoDetalle: null,
+            unsubscribe: null,
             
             async initialize() {
                 await this.loadGrupos();
                 await this.loadEquiposPendientes();
+                this.setupRealTimeListener();
                 this.updateUI();
+            },
+
+            setupRealTimeListener() {
+                if (!AppState.firebaseInitialized) return;
+                
+                this.unsubscribe = AppState.db.collection("VENTAS")
+                    .where("paymentType", "==", "pendiente")
+                    .where("status", "==", "pendiente")
+                    .onSnapshot(async (snapshot) => {
+                        await this.loadEquiposPendientes();
+                        this.updateUI();
+                    });
             },
             
             async loadGrupos() {
@@ -1522,7 +1536,7 @@
                             const mostrarNombre = equipoEncontrado.cliente && !equipoEncontrado.cliente.startsWith('Equipo ');
                             
                             equiposHTML += `
-                                <div class="equipo-card" onclick="GrupoManager.mostrarDetalleEquipo('${equipoEncontrado.numero}-${equipoEncontrado.cliente}')">
+                                <div class="equipo-card" onclick="event.stopPropagation(); GrupoManager.mostrarDetalleEquipo('${equipoEncontrado.numero}-${equipoEncontrado.cliente}')">
                                     <div class="equipo-number">${equipoEncontrado.numero}</div>
                                     ${mostrarNombre ? `<div class="equipo-nombre">${equipoEncontrado.cliente}</div>` : ''}
                                     <div class="equipo-total">$${equipoEncontrado.total.toFixed(2)}</div>
@@ -1542,6 +1556,14 @@
                         <div class="grupo-card" onclick="GrupoManager.mostrarDetalleGrupoCompleto('${grupo.id}')">
                             <div class="grupo-header">
                                 <div class="grupo-name">${grupo.nombre}</div>
+                                <div class="grupo-actions">
+                                    <button class="icon-btn btn-edit" onclick="event.stopPropagation(); GrupoManager.editarGrupo('${grupo.id}')" title="Editar grupo">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="icon-btn btn-delete" onclick="event.stopPropagation(); GrupoManager.eliminarGrupo('${grupo.id}')" title="Eliminar grupo">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
                             </div>
                             <div class="grupo-equipos">
                                 ${equiposHTML}
@@ -1575,14 +1597,28 @@
                         }
                         
                         const saldoPendiente = factura.saldoPendiente !== undefined ? factura.saldoPendiente : factura.total;
+                        const tieneAbonos = factura.abonos && factura.abonos.length > 0;
+                        
+                        let abonosHTML = '';
+                        if (tieneAbonos) {
+                            factura.abonos.forEach(abono => {
+                                const fechaAbono = abono.fecha ? new Date(abono.fecha.toDate ? abono.fecha.toDate() : abono.fecha).toLocaleDateString('es-ES') : 'N/A';
+                                abonosHTML += `
+                                    <div style="font-size: 0.7rem; color: #666; margin-left: 10px;">
+                                        Abono: $${abono.monto.toFixed(2)} (${fechaAbono})
+                                    </div>
+                                `;
+                            });
+                        }
                         
                         facturasHTML += `
                             <div class="factura-item">
                                 <div><strong>Factura:</strong> ${factura.invoiceNumber}</div>
                                 <div><strong>Total:</strong> $${factura.total.toFixed(2)}</div>
-                                <div><strong>Saldo Pendiente:</strong> $${saldoPendiente.toFixed(2)}</div>
+                                ${tieneAbonos ? `<div><strong>Saldo Pendiente:</strong> $${saldoPendiente.toFixed(2)}</div>` : ''}
                                 <div><strong>Productos:</strong></div>
                                 ${productosHTML}
+                                ${abonosHTML}
                             </div>
                         `;
                     });
@@ -1616,6 +1652,7 @@
                 let totalGeneral = 0;
                 let totalPendiente = 0;
                 let cantidadFacturas = 0;
+                let tieneAbonos = false;
                 
                 for (const equipoNum of grupo.equipos) {
                     let equipoEncontrado = null;
@@ -1634,6 +1671,10 @@
                             const saldoPendiente = factura.saldoPendiente !== undefined ? factura.saldoPendiente : factura.total;
                             totalPendiente += saldoPendiente;
                             
+                            if (factura.abonos && factura.abonos.length > 0) {
+                                tieneAbonos = true;
+                            }
+                            
                             let productosHTML = '';
                             if (factura.products && factura.products.length > 0) {
                                 factura.products.forEach(producto => {
@@ -1651,7 +1692,7 @@
                                     <div><strong>Factura:</strong> ${factura.invoiceNumber}</div>
                                     <div><strong>Fecha:</strong> ${new Date(factura.timestamp.toDate ? factura.timestamp.toDate() : factura.timestamp).toLocaleDateString('es-ES')}</div>
                                     <div><strong>Total:</strong> $${factura.total.toFixed(2)}</div>
-                                    <div><strong>Saldo Pendiente:</strong> $${saldoPendiente.toFixed(2)}</div>
+                                    ${factura.abonos && factura.abonos.length > 0 ? `<div><strong>Saldo Pendiente:</strong> $${saldoPendiente.toFixed(2)}</div>` : ''}
                                     <div><strong>Productos:</strong></div>
                                     ${productosHTML}
                                 </div>
@@ -1682,7 +1723,7 @@
                     <h3 style="margin-bottom: 15px; text-align: center;">${grupo.nombre} - Detalles Completos</h3>
                     <div class="grupo-resumen">
                         <div><strong>Total del Grupo:</strong> $${totalGeneral.toFixed(2)}</div>
-                        <div><strong>Saldo Pendiente:</strong> $${totalPendiente.toFixed(2)}</div>
+                        ${tieneAbonos ? `<div><strong>Saldo Pendiente:</strong> $${totalPendiente.toFixed(2)}</div>` : ''}
                         <div><strong>Número de Equipos:</strong> ${grupo.equipos.length}</div>
                         <div><strong>Total de Facturas:</strong> ${cantidadFacturas}</div>
                     </div>
@@ -1700,12 +1741,6 @@
                 const grupo = this.currentGrupoDetalle;
                 if (!grupo) return;
                 
-                const printWindow = window.open('', '_blank');
-                
-                let contenidoHTML = '';
-                let totalGeneral = 0;
-                let totalPendiente = 0;
-                
                 for (const equipoNum of grupo.equipos) {
                     let equipoEncontrado = null;
                     this.equiposPendientes.forEach((equipo, key) => {
@@ -1715,89 +1750,116 @@
                     });
                     
                     if (equipoEncontrado) {
-                        totalGeneral += equipoEncontrado.total;
-                        
                         equipoEncontrado.facturas.forEach(factura => {
-                            const saldoPendiente = factura.saldoPendiente !== undefined ? factura.saldoPendiente : factura.total;
-                            totalPendiente += saldoPendiente;
-                            
-                            let productosHTML = '';
-                            if (factura.products && factura.products.length > 0) {
-                                factura.products.forEach(producto => {
-                                    productosHTML += `
-                                        <div style="display: flex; justify-content: space-between; font-size: 14px; margin: 1px 0;">
-                                            <div>${producto.descripcion} x${producto.cantidad}</div>
-                                            <div>$${(producto.precio * producto.cantidad).toFixed(2)}</div>
-                                        </div>
-                                    `;
-                                });
-                            }
-                            
-                            contenidoHTML += `
-                                <div style="margin: 8px 0; padding: 6px; border: 1px solid #000;">
-                                    <div style="font-weight: bold; font-size: 16px;">Factura: ${factura.invoiceNumber}</div>
-                                    <div style="font-size: 14px;">Equipo: ${equipoEncontrado.numero} | Cliente: ${equipoEncontrado.cliente}</div>
-                                    <div style="font-size: 14px;">Fecha: ${new Date(factura.timestamp.toDate ? factura.timestamp.toDate() : factura.timestamp).toLocaleDateString('es-ES')}</div>
-                                    <div style="font-size: 14px; margin: 4px 0;">
-                                        <strong>Total: $${factura.total.toFixed(2)}</strong> | 
-                                        <strong>Saldo: $${saldoPendiente.toFixed(2)}</strong>
-                                    </div>
-                                    ${productosHTML}
-                                </div>
-                            `;
+                            this.imprimirTicketFactura(factura, equipoEncontrado);
                         });
                     }
+                }
+            },
+
+            imprimirTicketFactura(factura, equipo) {
+                const printWindow = window.open('', '_blank');
+                const fecha = factura.timestamp ? new Date(factura.timestamp.toDate ? factura.timestamp.toDate() : factura.timestamp) : new Date();
+                const fechaFormateada = fecha.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' });
+                
+                const saldoPendiente = factura.saldoPendiente !== undefined ? factura.saldoPendiente : factura.total;
+                const tieneAbonos = factura.abonos && factura.abonos.length > 0;
+                const tipoPago = tieneAbonos && saldoPendiente > 0 ? 'PENDIENTE' : 'CONTADO';
+                
+                let abonosHTML = '';
+                if (tieneAbonos) {
+                    factura.abonos.forEach(abono => {
+                        const fechaAbono = abono.fecha ? new Date(abono.fecha.toDate ? abono.fecha.toDate() : abono.fecha).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' }) : 'N/A';
+                        abonosHTML += `
+                            <div style="display: flex; justify-content: space-between; font-size: 20px; margin: 2px 0;">
+                                <div>ABONO: $${abono.monto.toFixed(2)} (${fechaAbono})</div>
+                            </div>
+                        `;
+                    });
+                }
+                
+                let productosHTML = '';
+                if (factura.products && factura.products.length > 0) {
+                    factura.products.forEach(producto => {
+                        const descripcion = producto.descripcion.length > 25 ? producto.descripcion.substring(0, 25) + '...' : producto.descripcion;
+                        productosHTML += `
+                            <div style="margin: 4px 0;">
+                                <div style="font-size: 20px;">• ${descripcion}</div>
+                                <div style="display: flex; justify-content: space-between; font-size: 18px;">
+                                    <div>x${producto.cantidad}</div>
+                                    <div>$${(producto.precio * producto.cantidad).toFixed(2)}</div>
+                                </div>
+                            </div>
+                            <div style="border-bottom: 1px dotted #000; margin: 2px 0;"></div>
+                        `;
+                    });
                 }
                 
                 printWindow.document.write(`
                     <!DOCTYPE html>
                     <html>
                     <head>
-                        <title>${grupo.nombre}</title>
+                        <title>Ticket #${factura.invoiceNumber}</title>
                         <style>
                             body { 
                                 font-family: 'Courier New', monospace; 
-                                font-size: 16px; 
+                                font-size: 22px; 
                                 margin: 0; 
                                 padding: 6px;
                                 width: 58mm;
+                                font-weight: bold;
                             }
-                            .header { 
-                                text-align: center; 
-                                margin-bottom: 10px;
-                                border-bottom: 2px solid #000;
-                                padding-bottom: 8px;
-                            }
-                            .resumen {
+                            .header { text-align: center; margin-bottom: 12px; }
+                            .line { border-bottom: 2px dashed #000; margin: 4px 0; }
+                            .total { font-weight: bold; text-align: center; margin-top: 12px; font-size: 24px; }
+                            .footer { text-align: center; margin-top: 12px; font-size: 18px; font-weight: bold; }
+                            .small-text { font-size: 18px; }
+                            .medium-text { font-size: 20px; }
+                            .large-text { font-size: 26px; }
+                            .thank-you { text-align: center; margin-top: 15px; font-weight: bold; font-size: 20px; }
+                            .saldo-info {
                                 background: #f0f0f0;
                                 padding: 8px;
                                 margin: 8px 0;
                                 border-radius: 4px;
-                                text-align: center;
-                                font-weight: bold;
-                            }
-                            .thank-you {
-                                text-align: center;
-                                margin-top: 15px;
-                                font-weight: bold;
-                                font-size: 14px;
+                                font-size: 18px;
                             }
                         </style>
                     </head>
                     <body>
                         <div class="header">
-                            <h2 style="margin: 2px 0; font-size: 18px;">TALLER WILIAN</h2>
-                            <div style="font-size: 16px; font-weight: bold;">${grupo.nombre}</div>
-                            <div style="font-size: 14px;">${new Date().toLocaleDateString('es-ES')}</div>
+                            <h3 style="margin: 2px 0; font-size: 26px;">TALLER WILIAN</h3>
+                            <div class="small-text">Factura: ${factura.invoiceNumber}</div>
+                            <div class="small-text">${fechaFormateada}, ${tipoPago}</div>
                         </div>
                         
-                        <div class="resumen">
-                            <div>EQUIPOS: ${grupo.equipos.length}</div>
-                            <div>TOTAL: $${totalGeneral.toFixed(2)}</div>
-                            <div>PENDIENTE: $${totalPendiente.toFixed(2)}</div>
+                        <div class="line"></div>
+                        
+                        <div class="medium-text">
+                            <strong>Grupo:</strong> ${equipo.cliente}<br>
+                            <strong>Equipo:</strong> ${equipo.numero}
                         </div>
                         
-                        ${contenidoHTML}
+                        <div class="line"></div>
+                        
+                        <div style="margin: 8px 0;">
+                            ${productosHTML}
+                        </div>
+                        
+                        <div class="line"></div>
+                        
+                        <div class="total large-text">
+                            TOTAL: $${factura.total.toFixed(2)}
+                        </div>
+
+                        ${abonosHTML}
+
+                        ${tieneAbonos && saldoPendiente > 0 ? `
+                            <div class="saldo-info">
+                                <div>SALDO PENDIENTE:</div>
+                                <div class="large-text">$${saldoPendiente.toFixed(2)}</div>
+                            </div>
+                        ` : ''}
                         
                         <div class="thank-you">
                             GRACIAS POR PREFERIRNOS
@@ -1808,7 +1870,13 @@
                 
                 printWindow.document.close();
                 printWindow.focus();
-                printWindow.print();
+                
+                setTimeout(() => {
+                    printWindow.print();
+                    setTimeout(() => {
+                        printWindow.close();
+                    }, 500);
+                }, 500);
             },
             
             async actualizarDesdeVenta(ventaData) {
@@ -2169,7 +2237,7 @@
                 }
             },
 
-            async loadSales(limit = 250) {
+            async loadSales(limit = 100) {
                 if (AppState.firebaseInitialized) {
                     const snapshot = await AppState.db.collection("VENTAS")
                         .orderBy("timestamp", "desc")
@@ -2722,9 +2790,7 @@
                     
                     await DataService.saveSale(saleData);
                     
-                    if (paymentType === 'contado') {
-                        this.printTicket(saleData);
-                    }
+                    this.printTicket(saleData);
                     
                     UIService.showStatus(`Venta ${paymentType === 'contado' ? 'CONTADO' : 'PENDIENTE'} procesada - Factura #${saleData.invoiceNumber}`, "success");
                     
@@ -3491,8 +3557,41 @@
 
             printTicket(saleData) {
                 const printWindow = window.open('', '_blank');
+                const fecha = saleData.timestamp ? new Date(saleData.timestamp.toDate ? saleData.timestamp.toDate() : saleData.timestamp) : new Date();
+                const fechaFormateada = fecha.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' });
                 
                 const saldoPendiente = saleData.saldoPendiente !== undefined ? saleData.saldoPendiente : saleData.total;
+                const tieneAbonos = saleData.abonos && saleData.abonos.length > 0;
+                const tipoPago = saleData.paymentType === 'pendiente' ? 'PENDIENTE' : 'CONTADO';
+                
+                let abonosHTML = '';
+                if (tieneAbonos) {
+                    saleData.abonos.forEach(abono => {
+                        const fechaAbono = abono.fecha ? new Date(abono.fecha.toDate ? abono.fecha.toDate() : abono.fecha).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' }) : 'N/A';
+                        abonosHTML += `
+                            <div style="display: flex; justify-content: space-between; font-size: 20px; margin: 2px 0;">
+                                <div>ABONO: $${abono.monto.toFixed(2)} (${fechaAbono})</div>
+                            </div>
+                        `;
+                    });
+                }
+                
+                let productosHTML = '';
+                if (saleData.products && saleData.products.length > 0) {
+                    saleData.products.forEach(producto => {
+                        const descripcion = producto.descripcion.length > 25 ? producto.descripcion.substring(0, 25) + '...' : producto.descripcion;
+                        productosHTML += `
+                            <div style="margin: 4px 0;">
+                                <div style="font-size: 20px;">• ${descripcion}</div>
+                                <div style="display: flex; justify-content: space-between; font-size: 18px;">
+                                    <div>x${producto.cantidad}</div>
+                                    <div>$${(producto.precio * producto.cantidad).toFixed(2)}</div>
+                                </div>
+                            </div>
+                            <div style="border-bottom: 1px dotted #000; margin: 2px 0;"></div>
+                        `;
+                    });
+                }
                 
                 printWindow.document.write(`
                     <!DOCTYPE html>
@@ -3510,29 +3609,13 @@
                             }
                             .header { text-align: center; margin-bottom: 12px; }
                             .line { border-bottom: 2px dashed #000; margin: 4px 0; }
-                            .product-row { 
-                                margin: 4px 0;
-                                font-size: 20px;
-                            }
-                            .product-desc { 
-                                font-size: 18px;
-                                margin-bottom: 2px;
-                            }
-                            .product-info {
-                                display: flex;
-                                justify-content: space-between;
-                                font-size: 18px;
-                            }
                             .total { font-weight: bold; text-align: center; margin-top: 12px; font-size: 24px; }
                             .footer { text-align: center; margin-top: 12px; font-size: 18px; font-weight: bold; }
-                            .text-center { text-align: center; }
-                            .text-right { text-align: right; }
-                            .dotted-line { border-bottom: 2px dotted #000; margin: 2px 0; }
                             .small-text { font-size: 18px; }
                             .medium-text { font-size: 20px; }
                             .large-text { font-size: 26px; }
                             .thank-you { text-align: center; margin-top: 15px; font-weight: bold; font-size: 20px; }
-                            .abono-info {
+                            .saldo-info {
                                 background: #f0f0f0;
                                 padding: 8px;
                                 margin: 8px 0;
@@ -3545,30 +3628,20 @@
                         <div class="header">
                             <h3 style="margin: 2px 0; font-size: 26px;">TALLER WILIAN</h3>
                             <div class="small-text">Factura: ${saleData.invoiceNumber}</div>
-                            <div class="small-text">${new Date(saleData.timestamp.toDate ? saleData.timestamp.toDate() : saleData.timestamp).toLocaleString('es-ES')}</div>
+                            <div class="small-text">${fechaFormateada}, ${tipoPago}</div>
                         </div>
                         
                         <div class="line"></div>
                         
                         <div class="medium-text">
                             <strong>Grupo:</strong> ${saleData.clientName}<br>
-                            <strong>Equipo:</strong> ${saleData.equipoNumber}<br>
-                            <strong>Tipo:</strong> ${saleData.paymentType.toUpperCase()}
+                            <strong>Equipo:</strong> ${saleData.equipoNumber}
                         </div>
                         
                         <div class="line"></div>
                         
                         <div style="margin: 8px 0;">
-                            ${saleData.products.map(p => `
-                                <div class="product-row">
-                                    <div class="product-desc">${p.descripcion}</div>
-                                    <div class="product-info">
-                                        <div>x${p.cantidad}</div>
-                                        <div>$${(p.precio * p.cantidad).toFixed(2)}</div>
-                                    </div>
-                                </div>
-                                <div class="dotted-line"></div>
-                            `).join('')}
+                            ${productosHTML}
                         </div>
                         
                         <div class="line"></div>
@@ -3577,8 +3650,10 @@
                             TOTAL: $${saleData.total.toFixed(2)}
                         </div>
 
-                        ${saleData.paymentType === 'pendiente' ? `
-                            <div class="abono-info">
+                        ${abonosHTML}
+
+                        ${saleData.paymentType === 'pendiente' && saldoPendiente > 0 ? `
+                            <div class="saldo-info">
                                 <div>SALDO PENDIENTE:</div>
                                 <div class="large-text">$${saldoPendiente.toFixed(2)}</div>
                             </div>
@@ -3604,6 +3679,8 @@
 
             printAbonoTicket(venta, abonoData, nuevoSaldo) {
                 const printWindow = window.open('', '_blank');
+                const fechaAbono = abonoData.fecha ? new Date(abonoData.fecha.toDate ? abonoData.fecha.toDate() : abonoData.fecha) : new Date();
+                const fechaFormateada = fechaAbono.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' });
                 
                 printWindow.document.write(`
                     <!DOCTYPE html>
@@ -3627,8 +3704,6 @@
                             }
                             .total { font-weight: bold; text-align: center; margin-top: 12px; font-size: 24px; }
                             .footer { text-align: center; margin-top: 12px; font-size: 18px; font-weight: bold; }
-                            .text-center { text-align: center; }
-                            .text-right { text-align: right; }
                             .small-text { font-size: 18px; }
                             .medium-text { font-size: 20px; }
                             .large-text { font-size: 26px; }
@@ -3646,7 +3721,7 @@
                         <div class="header">
                             <h3 style="margin: 2px 0; font-size: 26px;">TALLER WILIAN</h3>
                             <div class="small-text">COMPROBANTE DE ABONO</div>
-                            <div class="small-text">${abonoData.fechaString}</div>
+                            <div class="small-text">${fechaFormateada}</div>
                         </div>
                         
                         <div class="line"></div>
@@ -3918,7 +3993,15 @@
                 });
 
                 document.getElementById('imprimir-detalle-modal').addEventListener('click', () => {
-                    GrupoManager.imprimirDetalle();
+                    const detalle = AppState.currentDetalle;
+                    if (detalle && detalle.tipo === 'equipo') {
+                        const equipo = GrupoManager.equiposPendientes.get(detalle.data);
+                        if (equipo) {
+                            equipo.facturas.forEach(factura => {
+                                GrupoManager.imprimirTicketFactura(factura, equipo);
+                            });
+                        }
+                    }
                 });
 
                 document.getElementById('close-grupo-detalle-modal').addEventListener('click', () => {
