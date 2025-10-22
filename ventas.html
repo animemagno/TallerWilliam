@@ -2626,13 +2626,35 @@
         };
 
         const SalesService = {
+            parseQuickInput(input) {
+                const regex = /^(\d+)\s+(.+?)\s+\$(\d+(?:\.\d{1,2})?)$/;
+                const match = input.match(regex);
+                
+                if (match) {
+                    const cantidad = parseInt(match[1]);
+                    const descripcion = match[2].trim();
+                    const subtotal = parseFloat(match[3]);
+                    const precioUnitario = subtotal / cantidad;
+                    
+                    return {
+                        cantidad: cantidad,
+                        descripcion: descripcion,
+                        precio: precioUnitario,
+                        subtotal: subtotal,
+                        isValid: true
+                    };
+                }
+                
+                return { isValid: false };
+            },
+
             addToCart(product) {
                 const cartItem = {
                     id: product.id,
                     codigo: product.codigo || 'MANUAL',
                     descripcion: product.descripcion || 'Sin descripción',
                     precio: product.precio || 0,
-                    cantidad: 1
+                    cantidad: product.cantidad || 1
                 };
                 
                 AppState.cart.push(cartItem);
@@ -2652,6 +2674,16 @@
                     descripcion: descripcion,
                     precio: 0,
                     cantidad: 1
+                });
+            },
+
+            addQuickProduct(parsedData) {
+                this.addToCart({
+                    id: 'quick-' + Date.now(),
+                    codigo: 'QUICK',
+                    descripcion: parsedData.descripcion,
+                    precio: parsedData.precio,
+                    cantidad: parsedData.cantidad
                 });
             },
 
@@ -3678,6 +3710,14 @@
                     
                     searchTimeout = setTimeout(async () => {
                         try {
+                            const parsed = SalesService.parseQuickInput(query);
+                            if (parsed.isValid) {
+                                SalesService.addQuickProduct(parsed);
+                                searchInput.value = '';
+                                UIService.showStatus(`Producto agregado: ${parsed.cantidad}x ${parsed.descripcion} - $${parsed.subtotal.toFixed(2)}`, "success");
+                                return;
+                            }
+                            
                             AppState.searchResults = await DataService.searchProducts(query);
                             UIService.showSearchResults(AppState.searchResults);
                         } catch (error) {
@@ -3690,10 +3730,17 @@
                     if (e.key === 'Enter') {
                         const query = searchInput.value.trim();
                         if (query) {
-                            SalesService.addManualProduct(query);
-                            searchInput.value = '';
+                            const parsed = SalesService.parseQuickInput(query);
+                            if (parsed.isValid) {
+                                SalesService.addQuickProduct(parsed);
+                                searchInput.value = '';
+                                UIService.showStatus(`Producto agregado: ${parsed.cantidad}x ${parsed.descripcion} - $${parsed.subtotal.toFixed(2)}`, "success");
+                            } else {
+                                SalesService.addManualProduct(query);
+                                searchInput.value = '';
+                            }
+                            document.getElementById('search-dropdown').style.display = 'none';
                         }
-                        document.getElementById('search-dropdown').style.display = 'none';
                     }
                 });
 
