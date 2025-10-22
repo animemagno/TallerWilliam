@@ -1081,7 +1081,7 @@
             </div>
 
             <div class="dashboard-section full-width">
-                <h2 class="section-title">HISTORIAL DE VENTAS (Últimas 100)</h2>
+                <h2 class="section-title">HISTORIAL DE VENTAS (Últimas 500)</h2>
                 
                 <div class="historial-actions">
                     <div class="filter-buttons">
@@ -2237,7 +2237,7 @@
                 }
             },
 
-            async loadSales(limit = 100) {
+            async loadSales(limit = 500) {
                 if (AppState.firebaseInitialized) {
                     const snapshot = await AppState.db.collection("VENTAS")
                         .orderBy("timestamp", "desc")
@@ -2250,7 +2250,7 @@
                 }
             },
 
-            async loadSalesByDate(date = new Date().toISOString().split('T')[0], limit = 200) {
+            async loadSalesByDate(date = new Date().toISOString().split('T')[0], limit = 500) {
                 if (AppState.firebaseInitialized) {
                     const snapshot = await AppState.db.collection("VENTAS")
                         .where("date", "==", date)
@@ -2866,7 +2866,7 @@
 
             async loadHistorial() {
                 try {
-                    const ventas = await DataService.loadSales(100);
+                    const ventas = await DataService.loadSales(500);
                     UIService.updateHistorial(ventas);
                 } catch (error) {
                     UIService.showStatus("Error al cargar historial: " + error.message, "error");
@@ -3133,149 +3133,38 @@
             printHistorialReport(ventas, titulo) {
                 const printWindow = window.open('', '_blank');
                 
+                let totalContado = 0;
+                let totalPendiente = 0;
+                let totalAbonos = 0;
+                let ventasContado = 0;
+                let ventasPendiente = 0;
+                let ventasConAbonos = 0;
+                
+                ventas.forEach(venta => {
+                    if (venta.paymentType === 'contado') {
+                        totalContado += venta.total || 0;
+                        ventasContado++;
+                    } else {
+                        totalPendiente += venta.total || 0;
+                        ventasPendiente++;
+                        
+                        if (venta.abonos && venta.abonos.length > 0) {
+                            ventasConAbonos++;
+                            venta.abonos.forEach(abono => {
+                                totalAbonos += abono.monto;
+                            });
+                        }
+                    }
+                });
+                
+                const fechaActual = new Date().toLocaleDateString('es-ES');
+                
                 let reportHTML = `
                     <!DOCTYPE html>
                     <html>
                     <head>
                         <title>${titulo}</title>
                         <style>
-                            @media print {
-                                body { 
-                                    font-family: 'Arial', sans-serif; 
-                                    font-size: 12px; 
-                                    margin: 0;
-                                    padding: 15px;
-                                    color: #000;
-                                }
-                                .header { 
-                                    text-align: center; 
-                                    margin-bottom: 20px;
-                                    border-bottom: 2px solid #333;
-                                    padding-bottom: 10px;
-                                }
-                                .header h1 {
-                                    font-size: 24px;
-                                    margin: 10px 0;
-                                    color: #2c3e50;
-                                }
-                                .header h2 {
-                                    font-size: 18px;
-                                    margin: 8px 0;
-                                    color: #34495e;
-                                }
-                                .header h3 {
-                                    font-size: 14px;
-                                    margin: 5px 0;
-                                    color: #7f8c8d;
-                                }
-                                .info-section {
-                                    display: grid;
-                                    grid-template-columns: 1fr 1fr;
-                                    gap: 15px;
-                                    margin-bottom: 20px;
-                                    padding: 15px;
-                                    background: #f8f9fa;
-                                    border-radius: 8px;
-                                    border: 1px solid #dee2e6;
-                                }
-                                .info-item {
-                                    margin-bottom: 8px;
-                                }
-                                .info-label {
-                                    font-weight: bold;
-                                    color: #2c3e50;
-                                }
-                                .table-container {
-                                    width: 100%;
-                                    margin-bottom: 20px;
-                                }
-                                .ventas-table {
-                                    width: 100%;
-                                    border-collapse: collapse;
-                                    margin: 15px 0;
-                                    font-size: 11px;
-                                }
-                                .ventas-table th {
-                                    background: #2c3e50;
-                                    color: white;
-                                    padding: 10px 8px;
-                                    text-align: left;
-                                    font-weight: bold;
-                                    border: 1px solid #34495e;
-                                }
-                                .ventas-table td {
-                                    padding: 8px;
-                                    border: 1px solid #ddd;
-                                    vertical-align: top;
-                                }
-                                .ventas-table tr:nth-child(even) {
-                                    background: #f8f9fa;
-                                }
-                                .ventas-table tr:hover {
-                                    background: #e9ecef;
-                                }
-                                .producto-item {
-                                    padding: 2px 0;
-                                    border-bottom: 1px dotted #eee;
-                                }
-                                .contado-badge {
-                                    background: #27ae60;
-                                    color: white;
-                                    padding: 3px 6px;
-                                    border-radius: 3px;
-                                    font-size: 9px;
-                                    font-weight: bold;
-                                }
-                                .pendiente-badge {
-                                    background: #f39c12;
-                                    color: white;
-                                    padding: 3px 6px;
-                                    border-radius: 3px;
-                                    font-size: 9px;
-                                    font-weight: bold;
-                                }
-                                .resumen-section {
-                                    margin-top: 25px;
-                                    padding: 15px;
-                                    background: #e8f4fd;
-                                    border-radius: 8px;
-                                    border: 1px solid #b8daff;
-                                }
-                                .resumen-grid {
-                                    display: grid;
-                                    grid-template-columns: 1fr 1fr;
-                                    gap: 15px;
-                                    margin-top: 10px;
-                                }
-                                .resumen-item {
-                                    text-align: center;
-                                    padding: 10px;
-                                    background: white;
-                                    border-radius: 6px;
-                                    border: 1px solid #dee2e6;
-                                }
-                                .resumen-valor {
-                                    font-size: 18px;
-                                    font-weight: bold;
-                                    color: #2c3e50;
-                                    margin-top: 5px;
-                                }
-                                .page-break {
-                                    page-break-before: always;
-                                }
-                                @page {
-                                    size: A4;
-                                    margin: 1.5cm;
-                                }
-                                .footer {
-                                    text-align: center;
-                                    margin-top: 20px;
-                                    padding-top: 10px;
-                                    border-top: 1px solid #ddd;
-                                    font-size: 10px;
-                                    color: #7f8c8d;
-                                }
-                            }
                             body { 
                                 font-family: 'Arial', sans-serif; 
                                 font-size: 12px; 
@@ -3304,23 +3193,6 @@
                                 margin: 5px 0;
                                 color: #7f8c8d;
                             }
-                            .info-section {
-                                display: grid;
-                                grid-template-columns: 1fr 1fr;
-                                gap: 15px;
-                                margin-bottom: 20px;
-                                padding: 15px;
-                                background: #f8f9fa;
-                                border-radius: 8px;
-                                border: 1px solid #dee2e6;
-                            }
-                            .info-item {
-                                margin-bottom: 8px;
-                            }
-                            .info-label {
-                                font-weight: bold;
-                                color: #2c3e50;
-                            }
                             .table-container {
                                 width: 100%;
                                 margin-bottom: 20px;
@@ -3347,12 +3219,9 @@
                             .ventas-table tr:nth-child(even) {
                                 background: #f8f9fa;
                             }
-                            .ventas-table tr:hover {
-                                background: #e9ecef;
-                            }
                             .producto-item {
                                 padding: 2px 0;
-                                border-bottom: 1px dotted #eee;
+                                font-size: 10px;
                             }
                             .contado-badge {
                                 background: #27ae60;
@@ -3379,7 +3248,7 @@
                             }
                             .resumen-grid {
                                 display: grid;
-                                grid-template-columns: 1fr 1fr;
+                                grid-template-columns: 1fr 1fr 1fr;
                                 gap: 15px;
                                 margin-top: 10px;
                             }
@@ -3396,6 +3265,13 @@
                                 color: #2c3e50;
                                 margin-top: 5px;
                             }
+                            .page-break {
+                                page-break-before: always;
+                            }
+                            @page {
+                                size: A4 landscape;
+                                margin: 1cm;
+                            }
                             .footer {
                                 text-align: center;
                                 margin-top: 20px;
@@ -3409,53 +3285,8 @@
                     <body>
                         <div class="header">
                             <h1>TALLER WILIAN</h1>
-                            <h2>${titulo}</h2>
-                            <h3>${new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</h3>
+                            <h2>HISTORIAL DE VENTAS ${fechaActual}</h2>
                         </div>
-                `;
-                
-                let totalContado = 0;
-                let totalPendiente = 0;
-                let totalGeneral = 0;
-                let ventasContado = 0;
-                let ventasPendiente = 0;
-                
-                ventas.forEach(venta => {
-                    if (venta.paymentType === 'contado') {
-                        totalContado += venta.total || 0;
-                        ventasContado++;
-                    } else {
-                        totalPendiente += venta.total || 0;
-                        ventasPendiente++;
-                    }
-                    totalGeneral += venta.total || 0;
-                });
-                
-                reportHTML += `
-                    <div class="info-section">
-                        <div>
-                            <div class="info-item">
-                                <span class="info-label">Total de Ventas:</span> ${ventas.length}
-                            </div>
-                            <div class="info-item">
-                                <span class="info-label">Ventas al Contado:</span> ${ventasContado}
-                            </div>
-                            <div class="info-item">
-                                <span class="info-label">Ventas Pendientes:</span> ${ventasPendiente}
-                            </div>
-                        </div>
-                        <div>
-                            <div class="info-item">
-                                <span class="info-label">Fecha de Emisión:</span> ${new Date().toLocaleString('es-ES')}
-                            </div>
-                            <div class="info-item">
-                                <span class="info-label">Filtro Aplicado:</span> ${AppState.currentFilter.toUpperCase()}
-                            </div>
-                            <div class="info-item">
-                                <span class="info-label">Usuario:</span> Sistema
-                            </div>
-                        </div>
-                    </div>
                 `;
                 
                 reportHTML += `
@@ -3463,61 +3294,96 @@
                         <table class="ventas-table">
                             <thead>
                                 <tr>
-                                    <th width="80">Factura</th>
-                                    <th width="60">Equipo</th>
-                                    <th width="150">Grupo</th>
-                                    <th width="80">Total</th>
-                                    <th width="80">Estado</th>
-                                    <th width="90">Fecha</th>
-                                    <th>Productos</th>
+                                    <th width="40%">Productos (completos)</th>
+                                    <th width="10%">Factura</th>
+                                    <th width="8%">Equipo</th>
+                                    <th width="10%">Total</th>
+                                    <th width="8%">Estado</th>
                                 </tr>
                             </thead>
                             <tbody>
                 `;
                 
                 ventas.forEach((venta, index) => {
-                    if (index > 0 && index % 15 === 0) {
-                        reportHTML += `</tbody></table></div><div class="page-break"></div><div class="table-container"><table class="ventas-table"><thead><tr><th width="80">Factura</th><th width="60">Equipo</th><th width="150">Grupo</th><th width="80">Total</th><th width="80">Estado</th><th width="90">Fecha</th><th>Productos</th></tr></thead><tbody>`;
+                    if (index > 0 && index % 20 === 0) {
+                        reportHTML += `</tbody></table></div><div class="page-break"></div><div class="table-container"><table class="ventas-table"><thead><tr><th width="40%">Productos (completos)</th><th width="10%">Factura</th><th width="8%">Equipo</th><th width="10%">Total</th><th width="8%">Estado</th></tr></thead><tbody>`;
                     }
                     
-                    const fecha = venta.timestamp ? new Date(venta.timestamp.toDate ? venta.timestamp.toDate() : venta.timestamp).toLocaleDateString('es-ES') : 'N/A';
                     const tipoBadge = venta.paymentType === 'contado' ? 'contado-badge' : 'pendiente-badge';
                     const tipoText = venta.paymentType === 'contado' ? 'CONTADO' : 'PENDIENTE';
                     
                     let productosHTML = '';
                     if (venta.products && venta.products.length > 0) {
-                        venta.products.forEach((producto, idx) => {
-                            if (idx < 3) {
-                                productosHTML += `
-                                    <div class="producto-item">
-                                        ${producto.descripcion} x${producto.cantidad} - $${(producto.precio * producto.cantidad).toFixed(2)}
-                                    </div>
-                                `;
-                            }
+                        venta.products.forEach(producto => {
+                            productosHTML += `
+                                <div class="producto-item">
+                                    • ${producto.descripcion} x${producto.cantidad} - $${(producto.precio * producto.cantidad).toFixed(2)}
+                                </div>
+                            `;
                         });
-                        if (venta.products.length > 3) {
-                            productosHTML += `<div class="producto-item">... y ${venta.products.length - 3} más</div>`;
-                        }
                     }
                     
                     reportHTML += `
                         <tr>
+                            <td>${productosHTML || 'Sin productos'}</td>
                             <td><strong>${venta.invoiceNumber || 'N/A'}</strong></td>
                             <td>${venta.equipoNumber || 'N/A'}</td>
-                            <td>${venta.clientName || 'Sin nombre'}</td>
                             <td>$${(venta.total || 0).toFixed(2)}</td>
                             <td><span class="${tipoBadge}">${tipoText}</span></td>
-                            <td>${fecha}</td>
-                            <td>${productosHTML || 'Sin productos'}</td>
                         </tr>
                     `;
                 });
                 
                 reportHTML += `</tbody></table></div>`;
                 
+                let abonosHTML = '';
+                const ventasConAbonosList = ventas.filter(venta => 
+                    venta.abonos && venta.abonos.length > 0
+                );
+                
+                if (ventasConAbonosList.length > 0) {
+                    abonosHTML += `
+                        <div class="page-break"></div>
+                        <div class="header">
+                            <h2>HISTORIAL DE ABONOS ${fechaActual}</h2>
+                        </div>
+                        <div class="table-container">
+                            <table class="ventas-table">
+                                <thead>
+                                    <tr>
+                                        <th width="15%">Fecha</th>
+                                        <th width="10%">Equipo</th>
+                                        <th width="15%">Total</th>
+                                        <th width="15%">Abono</th>
+                                        <th width="15%">Saldo</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                    `;
+                    
+                    ventasConAbonosList.forEach(venta => {
+                        const saldoPendiente = venta.saldoPendiente !== undefined ? venta.saldoPendiente : venta.total;
+                        const totalAbonado = venta.abonos.reduce((sum, abono) => sum + abono.monto, 0);
+                        
+                        abonosHTML += `
+                            <tr>
+                                <td>${new Date(venta.timestamp.toDate ? venta.timestamp.toDate() : venta.timestamp).toLocaleDateString('es-ES')}</td>
+                                <td>${venta.equipoNumber || 'N/A'}</td>
+                                <td>$${venta.total.toFixed(2)}</td>
+                                <td>$${totalAbonado.toFixed(2)}</td>
+                                <td>$${saldoPendiente.toFixed(2)}</td>
+                            </tr>
+                        `;
+                    });
+                    
+                    abonosHTML += `</tbody></table></div>`;
+                }
+                
+                reportHTML += abonosHTML;
+                
                 reportHTML += `
                     <div class="resumen-section">
-                        <h3 style="margin: 0 0 15px 0; text-align: center; color: #2c3e50;">RESUMEN FINANCIERO</h3>
+                        <h3 style="margin: 0 0 15px 0; text-align: center; color: #2c3e50;">RESUMEN</h3>
                         <div class="resumen-grid">
                             <div class="resumen-item">
                                 <div>VENTAS AL CONTADO</div>
@@ -3525,15 +3391,15 @@
                                 <div style="font-size: 10px; color: #666;">${ventasContado} ventas</div>
                             </div>
                             <div class="resumen-item">
+                                <div>ABONOS</div>
+                                <div class="resumen-valor">$${totalAbonos.toFixed(2)}</div>
+                                <div style="font-size: 10px; color: #666;">${ventasConAbonos} ventas</div>
+                            </div>
+                            <div class="resumen-item">
                                 <div>VENTAS PENDIENTES</div>
                                 <div class="resumen-valor">$${totalPendiente.toFixed(2)}</div>
                                 <div style="font-size: 10px; color: #666;">${ventasPendiente} ventas</div>
                             </div>
-                        </div>
-                        <div style="text-align: center; margin-top: 15px; padding: 12px; background: #2c3e50; color: white; border-radius: 6px;">
-                            <div style="font-size: 16px; font-weight: bold;">TOTAL GENERAL</div>
-                            <div style="font-size: 24px; font-weight: bold;">$${totalGeneral.toFixed(2)}</div>
-                            <div style="font-size: 12px; margin-top: 5px;">${ventas.length} ventas en total</div>
                         </div>
                     </div>
                     
@@ -3900,7 +3766,7 @@
                         return;
                     }
                     
-                    const filtered = AppState.filteredHistorial.filter(venta => {
+                    const filtered = AppState.historial.filter(venta => {
                         const equipo = venta.equipoNumber || '';
                         return equipo.includes(filter);
                     });
