@@ -1347,6 +1347,7 @@
                     .onSnapshot(async (snapshot) => {
                         console.log("🔄 Actualización en tiempo real detectada");
                         await this.loadEquiposPendientes();
+                        await this.actualizarTotalesGrupos(); // ACTUALIZAR TOTALES DE GRUPOS
                         this.updateUI();
                     }, (error) => {
                         console.error("Error en listener tiempo real:", error);
@@ -1363,8 +1364,60 @@
                         this.grupos.set(doc.id, { id: doc.id, ...doc.data() });
                     });
                     console.log(`✅ ${this.grupos.size} grupos cargados`);
+                    
+                    // Actualizar totales después de cargar grupos
+                    await this.actualizarTotalesGrupos();
+                    
                 } catch (error) {
                     console.error("Error cargando grupos:", error);
+                }
+            },
+            
+            async actualizarTotalesGrupos() {
+                try {
+                    console.log("🔄 Actualizando totales de grupos...");
+                    
+                    // Recorrer todos los grupos y recalcular sus totales
+                    for (const [grupoId, grupo] of this.grupos.entries()) {
+                        let nuevoTotal = 0;
+                        let equiposConFacturas = 0;
+                        
+                        // Calcular el total actualizado del grupo
+                        for (const equipoNum of grupo.equipos) {
+                            let equipoEncontrado = null;
+                            this.equiposPendientes.forEach((equipo, key) => {
+                                if (equipo.numero === equipoNum && equipo.total > 0) {
+                                    equipoEncontrado = equipo;
+                                }
+                            });
+                            
+                            if (equipoEncontrado) {
+                                nuevoTotal += equipoEncontrado.total;
+                                equiposConFacturas++;
+                            }
+                        }
+                        
+                        // Actualizar el total del grupo en memoria
+                        grupo.total = nuevoTotal;
+                        
+                        // Actualizar el total del grupo en Firestore solo si hay cambios
+                        if (AppState.firebaseInitialized && nuevoTotal !== grupo.total) {
+                            try {
+                                await AppState.db.collection("GRUPOS").doc(grupoId).update({
+                                    total: nuevoTotal,
+                                    fechaActualizacion: new Date()
+                                });
+                                console.log(`✅ Grupo ${grupo.nombre} actualizado: $${nuevoTotal.toFixed(2)}`);
+                            } catch (error) {
+                                console.error(`❌ Error actualizando grupo ${grupo.nombre}:`, error);
+                            }
+                        }
+                    }
+                    
+                    console.log("✅ Totales de grupos actualizados correctamente");
+                    
+                } catch (error) {
+                    console.error("❌ Error actualizando totales de grupos:", error);
                 }
             },
             
@@ -1416,6 +1469,9 @@
                     
                     console.log(`✅ ${this.equiposPendientes.size} equipos pendientes cargados`);
                     
+                    // Actualizar totales de grupos después de cargar equipos
+                    await this.actualizarTotalesGrupos();
+                    
                 } catch (error) {
                     console.error("Error cargando equipos pendientes:", error);
                 }
@@ -1440,22 +1496,23 @@
                         throw new Error("Los equipos seleccionados no tienen facturas pendientes");
                     }
                     
-                    const grupoData = {
-                        nombre: nombre,
-                        equipos: equiposConFacturas,
-                        total: 0,
-                        fechaCreacion: new Date(),
-                        activo: true
-                    };
-                    
                     // Calcular total real del grupo
+                    let totalGrupo = 0;
                     equiposConFacturas.forEach(equipoNum => {
                         this.equiposPendientes.forEach((equipo, key) => {
                             if (equipo.numero === equipoNum) {
-                                grupoData.total += equipo.total;
+                                totalGrupo += equipo.total;
                             }
                         });
                     });
+                    
+                    const grupoData = {
+                        nombre: nombre,
+                        equipos: equiposConFacturas,
+                        total: totalGrupo,
+                        fechaCreacion: new Date(),
+                        activo: true
+                    };
                     
                     const docRef = await AppState.db.collection("GRUPOS").add(grupoData);
                     grupoData.id = docRef.id;
@@ -1476,6 +1533,7 @@
                     }
                     
                     await this.loadEquiposPendientes();
+                    await this.actualizarTotalesGrupos();
                     this.updateUI();
                     
                     return docRef.id;
@@ -1500,21 +1558,22 @@
                         return tieneFacturas;
                     });
                     
-                    const grupoData = {
-                        nombre: nombre,
-                        equipos: equiposConFacturas,
-                        total: 0,
-                        fechaActualizacion: new Date()
-                    };
-                    
                     // Calcular total real del grupo
+                    let totalGrupo = 0;
                     equiposConFacturas.forEach(equipoNum => {
                         this.equiposPendientes.forEach((equipo, key) => {
                             if (equipo.numero === equipoNum) {
-                                grupoData.total += equipo.total;
+                                totalGrupo += equipo.total;
                             }
                         });
                     });
+                    
+                    const grupoData = {
+                        nombre: nombre,
+                        equipos: equiposConFacturas,
+                        total: totalGrupo,
+                        fechaActualizacion: new Date()
+                    };
                     
                     await AppState.db.collection("GRUPOS").doc(grupoId).update(grupoData);
                     
@@ -1557,6 +1616,7 @@
                     }
                     
                     await this.loadEquiposPendientes();
+                    await this.actualizarTotalesGrupos();
                     this.updateUI();
                     
                     return grupoId;
@@ -1591,6 +1651,7 @@
                     this.grupos.delete(grupoId);
                     
                     await this.loadEquiposPendientes();
+                    await this.actualizarTotalesGrupos();
                     this.updateUI();
                     
                 } catch (error) {
@@ -2024,6 +2085,7 @@
                     const equipo = ventaData.equipoNumber;
                     if (equipo) {
                         await this.loadEquiposPendientes();
+                        await this.actualizarTotalesGrupos(); // ACTUALIZAR TOTALES DE GRUPOS
                         this.updateUI();
                     }
                 }
