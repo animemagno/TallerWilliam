@@ -70,6 +70,7 @@
             padding: 20px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             border: 1px solid #e0e0e0;
+            height: fit-content;
         }
 
         .dashboard-section.full-width {
@@ -172,12 +173,23 @@
             color: white;
         }
 
+        /* CARRITO CON SCROLL */
         .cart-container {
             background: #f8f9fa;
             border-radius: 6px;
             padding: 15px;
             margin: 10px 0;
             border: 1px solid #e9ecef;
+            max-height: 400px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .cart-items-container {
+            flex: 1;
+            overflow-y: auto;
+            max-height: 300px;
+            margin-bottom: 10px;
         }
 
         .cart-header {
@@ -191,6 +203,9 @@
             font-weight: 600;
             font-size: 0.8rem;
             margin-bottom: 8px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
         }
 
         .cart-item {
@@ -260,11 +275,11 @@
             background: #ecf0f1;
             padding: 12px;
             border-radius: 4px;
-            margin-top: 10px;
             text-align: right;
             font-weight: bold;
             font-size: 1.1rem;
             border-top: 2px solid #3498db;
+            margin-top: auto;
         }
 
         .empty-cart {
@@ -659,6 +674,48 @@
             transform: scale(1.1);
         }
 
+        /* PESTAÑAS FACTURAS PENDIENTES */
+        .tabs-container {
+            margin-top: 10px;
+        }
+
+        .tabs-header {
+            display: flex;
+            border-bottom: 2px solid #3498db;
+            margin-bottom: 15px;
+        }
+
+        .tab-btn {
+            padding: 10px 20px;
+            background: #f8f9fa;
+            border: none;
+            border-bottom: 2px solid transparent;
+            cursor: pointer;
+            font-weight: 600;
+            color: #666;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .tab-btn.active {
+            background: white;
+            color: #3498db;
+            border-bottom: 2px solid #3498db;
+        }
+
+        .tab-btn:hover {
+            background: #e9ecef;
+            color: #2980b9;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
         .facturas-pendientes-container {
             margin-top: 15px;
         }
@@ -796,6 +853,59 @@
             background: #e8f4fd;
             border-radius: 4px;
             border-left: 3px solid #3498db;
+        }
+
+        /* SECCIÓN GRUPOS - GESTIÓN */
+        .grupos-management {
+            padding: 15px;
+        }
+
+        .grupos-actions {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .grupos-list {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 10px;
+            background: #f8f9fa;
+        }
+
+        .grupo-management-item {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .grupo-management-info {
+            flex: 1;
+        }
+
+        .grupo-management-name {
+            font-weight: bold;
+            font-size: 1rem;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .grupo-management-details {
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        .grupo-management-actions {
+            display: flex;
+            gap: 5px;
         }
 
         .modal-overlay {
@@ -1070,7 +1180,7 @@
                         <div>SUBTOTAL</div>
                         <div>ACCIÓN</div>
                     </div>
-                    <div id="cart-items">
+                    <div class="cart-items-container" id="cart-items">
                         <div class="empty-cart">
                             <i class="fas fa-shopping-cart" style="font-size: 2rem; margin-bottom: 10px; opacity: 0.5;"></i>
                             <div>No hay productos agregados</div>
@@ -1094,22 +1204,44 @@
             <div class="dashboard-section">
                 <h2 class="section-title">
                     Facturas Pendientes
-                    <button class="btn btn-primary btn-small" id="crear-grupo-btn">
-                        <i class="fas fa-plus"></i> Grupo
-                    </button>
                 </h2>
-                <div class="facturas-pendientes-container" id="facturas-pendientes-container">
-                    <div class="equipos-container">
-                        <div id="equipos-individuales" class="equipos-grid">
+                
+                <div class="tabs-container">
+                    <div class="tabs-header">
+                        <button class="tab-btn active" data-tab="facturas">FACTURAS PENDIENTES</button>
+                        <button class="tab-btn" data-tab="grupos">GRUPO</button>
+                    </div>
+                    
+                    <div class="tab-content active" id="tab-facturas">
+                        <div class="facturas-pendientes-container" id="facturas-pendientes-container">
+                            <div class="equipos-container">
+                                <div id="equipos-individuales" class="equipos-grid">
+                                </div>
+                                
+                                <div id="empty-equipos" class="empty-state" style="display: none;">
+                                    <i class="fas fa-cube"></i>
+                                    <div>No hay facturas pendientes</div>
+                                    <div style="font-size: 0.8rem; margin-top: 5px; color: #999;">Las ventas pendientes aparecerán aquí</div>
+                                </div>
+                            </div>
                         </div>
-                        
-                        <div id="grupos-container" class="grupos-container">
-                        </div>
-                        
-                        <div id="empty-equipos" class="empty-state" style="display: none;">
-                            <i class="fas fa-cube"></i>
-                            <div>No hay facturas pendientes</div>
-                            <div style="font-size: 0.8rem; margin-top: 5px; color: #999;">Las ventas pendientes aparecerán aquí</div>
+                    </div>
+                    
+                    <div class="tab-content" id="tab-grupos">
+                        <div class="grupos-management">
+                            <div class="grupos-actions">
+                                <button class="btn btn-success" id="crear-grupo-btn">
+                                    <i class="fas fa-plus"></i> CREAR GRUPO
+                                </button>
+                            </div>
+                            
+                            <div class="grupos-list" id="grupos-list">
+                                <div class="empty-state">
+                                    <i class="fas fa-users"></i>
+                                    <div>No hay grupos creados</div>
+                                    <div style="font-size: 0.8rem; margin-top: 5px; color: #999;">Crea tu primer grupo para organizar los equipos</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1682,7 +1814,7 @@
             
             updateUI() {
                 this.renderEquiposIndividuales();
-                this.renderGrupos();
+                this.renderGruposManagement();
             },
             
             renderEquiposIndividuales() {
@@ -1690,7 +1822,7 @@
                 const emptyState = document.getElementById('empty-equipos');
                 const equiposSinGrupo = this.getEquiposSinGrupo();
                 
-                if (equiposSinGrupo.size === 0 && this.grupos.size === 0) {
+                if (equiposSinGrupo.size === 0) {
                     emptyState.style.display = 'block';
                     container.innerHTML = '';
                     return;
@@ -1721,68 +1853,58 @@
                 container.innerHTML = html;
             },
             
-            renderGrupos() {
-                const container = document.getElementById('grupos-container');
+            renderGruposManagement() {
+                const container = document.getElementById('grupos-list');
                 
                 if (this.grupos.size === 0) {
-                    container.innerHTML = '';
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-users"></i>
+                            <div>No hay grupos creados</div>
+                            <div style="font-size: 0.8rem; margin-top: 5px; color: #999;">Crea tu primer grupo para organizar los equipos</div>
+                        </div>
+                    `;
                     return;
                 }
                 
                 const gruposOrdenados = Array.from(this.grupos.values())
-                    .filter(grupo => grupo.activo && grupo.total > 0)
+                    .filter(grupo => grupo.activo)
                     .sort((a, b) => a.nombre.localeCompare(b.nombre));
                 
                 let html = '';
                 gruposOrdenados.forEach(grupo => {
-                    const equiposOrdenados = grupo.equipos.sort((a, b) => parseInt(a) - parseInt(b));
-                    
-                    let equiposHTML = '';
-                    equiposOrdenados.forEach(equipoNum => {
-                        let equipoEncontrado = null;
+                    const cantidadEquipos = grupo.equipos.length;
+                    const equiposConFacturas = grupo.equipos.filter(equipoNum => {
+                        let tieneFacturas = false;
                         this.equiposPendientes.forEach((equipo, key) => {
                             if (equipo.numero === equipoNum && equipo.total > 0) {
-                                equipoEncontrado = equipo;
+                                tieneFacturas = true;
                             }
                         });
-                        
-                        if (equipoEncontrado) {
-                            const mostrarNombre = equipoEncontrado.cliente && !equipoEncontrado.cliente.startsWith('Equipo ');
-                            
-                            equiposHTML += `
-                                <div class="equipo-card" onclick="event.stopPropagation(); GrupoManager.mostrarDetalleEquipo('${equipoEncontrado.numero}-${equipoEncontrado.cliente}')">
-                                    <div class="equipo-number">${equipoEncontrado.numero}</div>
-                                    ${mostrarNombre ? `<div class="equipo-nombre">${equipoEncontrado.cliente}</div>` : ''}
-                                    <div class="equipo-total">$${equipoEncontrado.total.toFixed(2)}</div>
-                                </div>
-                            `;
-                        }
-                    });
+                        return tieneFacturas;
+                    }).length;
                     
-                    // Solo mostrar grupos que tienen equipos con facturas
-                    if (equiposHTML) {
-                        html += `
-                            <div class="grupo-card" onclick="GrupoManager.mostrarDetalleGrupoCompleto('${grupo.id}')">
-                                <div class="grupo-header">
-                                    <div class="grupo-name">${grupo.nombre}</div>
-                                    <div class="grupo-actions">
-                                        <button class="icon-btn btn-edit" onclick="event.stopPropagation(); GrupoManager.editarGrupo('${grupo.id}')" title="Editar grupo">
-                                            <i class="fas fa-edit"></i>
-                                        </button>
-                                        <button class="icon-btn btn-delete" onclick="event.stopPropagation(); GrupoManager.eliminarGrupo('${grupo.id}')" title="Eliminar grupo">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                                <div class="grupo-equipos">
-                                    ${equiposHTML}
-                                </div>
-                                <div class="grupo-total">
-                                    Total Grupo: $${grupo.total.toFixed(2)}
+                    html += `
+                        <div class="grupo-management-item">
+                            <div class="grupo-management-info">
+                                <div class="grupo-management-name">${grupo.nombre}</div>
+                                <div class="grupo-management-details">
+                                    Equipos: ${cantidadEquipos} | Con facturas: ${equiposConFacturas} | Total: $${grupo.total.toFixed(2)}
                                 </div>
                             </div>
-                        `;
-                    }
+                            <div class="grupo-management-actions">
+                                <button class="icon-btn btn-edit" onclick="GrupoManager.editarGrupo('${grupo.id}')" title="Editar grupo">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="icon-btn btn-delete" onclick="GrupoManager.eliminarGrupo('${grupo.id}')" title="Eliminar grupo">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                                <button class="icon-btn btn-view" onclick="GrupoManager.mostrarDetalleGrupoCompleto('${grupo.id}')" title="Ver detalles">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
                 });
                 
                 container.innerHTML = html;
@@ -2826,6 +2948,26 @@
                 document.getElementById('crear-grupo-modal').style.display = 'block';
                 document.getElementById('nombre-grupo').value = '';
                 document.getElementById('nombre-grupo').focus();
+            },
+
+            // Nueva función para manejar pestañas
+            setupTabs() {
+                const tabButtons = document.querySelectorAll('.tab-btn');
+                const tabContents = document.querySelectorAll('.tab-content');
+                
+                tabButtons.forEach(button => {
+                    button.addEventListener('click', () => {
+                        const tabId = button.getAttribute('data-tab');
+                        
+                        // Remover clase active de todos los botones y contenidos
+                        tabButtons.forEach(btn => btn.classList.remove('active'));
+                        tabContents.forEach(content => content.classList.remove('active'));
+                        
+                        // Agregar clase active al botón y contenido seleccionado
+                        button.classList.add('active');
+                        document.getElementById(`tab-${tabId}`).classList.add('active');
+                    });
+                });
             }
         };
 
@@ -3910,6 +4052,9 @@
                 const now = new Date();
                 document.getElementById('current-date').textContent = now.toLocaleDateString('es-ES');
                 SalesService.setTodayDate();
+                
+                // Configurar pestañas
+                UIService.setupTabs();
             },
 
             async loadInitialData() {
