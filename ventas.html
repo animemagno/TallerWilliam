@@ -47,16 +47,6 @@
             margin-bottom: 4px;
         }
 
-        .header-info {
-            font-size: 0.75rem;
-            opacity: 0.9;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 15px;
-            flex-wrap: wrap;
-        }
-
         .dashboard {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -173,7 +163,6 @@
             color: white;
         }
 
-        /* CARRITO CON SCROLL */
         .cart-container {
             background: #f8f9fa;
             border-radius: 6px;
@@ -572,20 +561,6 @@
             border-color: #2980b9;
         }
 
-        .cache-info {
-            background: #e8f4fd;
-            padding: 6px 10px;
-            border-radius: 4px;
-            font-size: 0.7rem;
-            text-align: center;
-            border-left: 3px solid #3498db;
-            color: #2c3e50;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
         .contado-badge {
             background: #27ae60;
             color: white;
@@ -658,23 +633,6 @@
             transform: scale(1.1);
         }
 
-        .refresh-cache-btn {
-            background: none;
-            border: none;
-            cursor: pointer;
-            padding: 4px;
-            border-radius: 3px;
-            transition: all 0.3s ease;
-            color: #2c3e50;
-        }
-
-        .refresh-cache-btn:hover {
-            background: #3498db;
-            color: white;
-            transform: scale(1.1);
-        }
-
-        /* PESTAÑAS FACTURAS PENDIENTES */
         .tabs-container {
             margin-top: 10px;
         }
@@ -793,35 +751,31 @@
         }
 
         .grupos-container {
-            display: flex;
-            flex-wrap: wrap;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
             gap: 15px;
             margin-top: 15px;
         }
 
         .grupo-card {
-            background: #f8f9fa;
-            border: 1px solid #e0e0e0;
+            background: white;
+            border: 2px solid #3498db;
             border-radius: 8px;
-            padding: 15px;
+            padding: 12px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            cursor: pointer;
             transition: all 0.3s ease;
-            max-width: 100%;
         }
 
         .grupo-card:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-            border-color: #3498db;
+            border-color: #2980b9;
         }
 
         .grupo-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-            padding-bottom: 8px;
+            text-align: center;
+            margin-bottom: 8px;
+            padding-bottom: 6px;
             border-bottom: 1px solid #ddd;
         }
 
@@ -831,17 +785,40 @@
             color: #2c3e50;
         }
 
-        .grupo-actions {
-            display: flex;
-            gap: 5px;
+        .grupo-equipos-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 6px;
+            margin-bottom: 8px;
         }
 
-        .grupo-equipos {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
-            margin-bottom: 10px;
-            justify-content: flex-start;
+        .grupo-equipo-item {
+            background: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            padding: 5px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.75rem;
+        }
+
+        .grupo-equipo-item:hover {
+            background: #e8f4fd;
+            border-color: #3498db;
+        }
+
+        .grupo-equipo-number {
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 2px;
+        }
+
+        .grupo-equipo-total {
+            font-size: 0.7rem;
+            font-weight: bold;
+            color: #27ae60;
         }
 
         .grupo-total {
@@ -849,13 +826,13 @@
             font-weight: bold;
             font-size: 0.9rem;
             color: #2c3e50;
-            padding: 8px;
+            padding: 6px;
             background: #e8f4fd;
             border-radius: 4px;
-            border-left: 3px solid #3498db;
+            border-top: 2px solid #3498db;
+            margin-top: 8px;
         }
 
-        /* SECCIÓN GRUPOS - GESTIÓN */
         .grupos-management {
             padding: 15px;
         }
@@ -1130,27 +1107,14 @@
     
     <div class="container">
         <header>
-            <h1>Taller William</h1>
-            <div class="header-info">
-                <span>Taller William<span id="current-date"></span></span>
-                <div class="cache-info" id="cache-info" style="display: none;">
-                    <span><i class="fas fa-database"></i> Cache activo: <span id="cache-count">0</span> productos</span>
-                    <button class="refresh-cache-btn" id="refresh-cache-btn" title="Actualizar cache">
-                        <i class="fas fa-sync-alt"></i>
-                    </button>
-                </div>
-            </div>
+            <h1>Sistema Avanzado de Ventas - OPTIMIZADO</h1>
         </header>
 
         <div class="dashboard">
             <div class="dashboard-section">
-                <h2 class="section-title">
-                    NUEVA VENTA
-                    <div class="fecha-control">
-                        <label for="fecha-venta">Fecha:</label>
-                        <input type="date" id="fecha-venta" class="fecha-input">
-                    </div>
-                </h2>
+                <h2 class="section-title">NUEVA VENTA</h2>
+                
+                <input type="date" id="fecha-venta" class="fecha-input" style="display: none;">
                 
                 <div class="venta-header">
                     <div class="form-group equipo-group">
@@ -1202,16 +1166,12 @@
             </div>
 
             <div class="dashboard-section">
-                <h2 class="section-title">
-                    Facturas Pendientes
-                </h2>
+                <div class="tabs-header">
+                    <button class="tab-btn active" data-tab="facturas">FACTURAS PENDIENTES</button>
+                    <button class="tab-btn" data-tab="grupos">GRUPO</button>
+                </div>
                 
                 <div class="tabs-container">
-                    <div class="tabs-header">
-                        <button class="tab-btn active" data-tab="facturas">FACTURAS PENDIENTES</button>
-                        <button class="tab-btn" data-tab="grupos">GRUPO</button>
-                    </div>
-                    
                     <div class="tab-content active" id="tab-facturas">
                         <div class="facturas-pendientes-container" id="facturas-pendientes-container">
                             <div class="equipos-container">
@@ -1228,19 +1188,11 @@
                     </div>
                     
                     <div class="tab-content" id="tab-grupos">
-                        <div class="grupos-management">
-                            <div class="grupos-actions">
-                                <button class="btn btn-success" id="crear-grupo-btn">
-                                    <i class="fas fa-plus"></i> CREAR GRUPO
-                                </button>
-                            </div>
-                            
-                            <div class="grupos-list" id="grupos-list">
-                                <div class="empty-state">
-                                    <i class="fas fa-users"></i>
-                                    <div>No hay grupos creados</div>
-                                    <div style="font-size: 0.8rem; margin-top: 5px; color: #999;">Crea tu primer grupo para organizar los equipos</div>
-                                </div>
+                        <div class="grupos-container" id="grupos-container">
+                            <div class="empty-state">
+                                <i class="fas fa-users"></i>
+                                <div>No hay grupos creados</div>
+                                <div style="font-size: 0.8rem; margin-top: 5px; color: #999;">Crea tu primer grupo para organizar los equipos</div>
                             </div>
                         </div>
                     </div>
@@ -1252,8 +1204,8 @@
                 
                 <div class="historial-actions">
                     <div class="filter-buttons">
-                        <button class="filter-btn active" data-filter="todo">TODO</button>
-                        <button class="filter-btn" data-filter="hoy">HOY</button>
+                        <button class="filter-btn" data-filter="todo">TODO</button>
+                        <button class="filter-btn active" data-filter="hoy">HOY</button>
                         <button class="filter-btn" data-filter="ventas">VENTAS</button>
                         <button class="filter-btn" data-filter="abonos">ABONOS</button>
                         <button class="filter-btn" data-filter="pendientes">PENDIENTES</button>
@@ -1287,7 +1239,6 @@
             </div>
         </div>
 
-        <!-- Modal para detalles de equipo -->
         <div class="modal-overlay" id="detalle-modal">
             <div class="modal-content">
                 <div id="detalle-modal-content"></div>
@@ -1296,7 +1247,6 @@
             </div>
         </div>
 
-        <!-- Modal para detalles de grupo -->
         <div class="modal-overlay" id="grupo-detalle-modal">
             <div class="modal-content">
                 <div id="grupo-detalle-modal-content"></div>
@@ -1305,7 +1255,6 @@
             </div>
         </div>
 
-        <!-- Modal para crear grupo -->
         <div class="modal-overlay" id="crear-grupo-modal">
             <div class="modal-content create-grupo-modal">
                 <h3 style="margin-bottom: 15px; text-align: center;">Crear Nuevo Grupo</h3>
@@ -1334,7 +1283,6 @@
             </div>
         </div>
 
-        <!-- Modal para editar grupo -->
         <div class="modal-overlay" id="editar-grupo-modal">
             <div class="modal-content edit-grupo-modal">
                 <h3 style="margin-bottom: 15px; text-align: center;">Editar Grupo</h3>
@@ -1363,7 +1311,6 @@
             </div>
         </div>
 
-        <!-- Modal para ver factura -->
         <div id="invoice-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000;">
             <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 8px; width: 90%; max-width: 600px; max-height: 80vh; overflow-y: auto;">
                 <div id="invoice-modal-content"></div>
@@ -1371,7 +1318,6 @@
             </div>
         </div>
 
-        <!-- Modal para abonos -->
         <div id="abono-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000;">
             <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 8px; width: 90%; max-width: 400px;">
                 <h3 style="margin-bottom: 15px; text-align: center;">Registrar Abono</h3>
@@ -1400,22 +1346,19 @@
             }
         };
 
-        // ========== CONEXIÓN Y MONITOREO ==========
         const ConnectionManager = {
             isOnline: true,
             
             initialize() {
                 this.checkConnection();
-                setInterval(() => this.checkConnection(), 30000); // Verificar cada 30 segundos
+                setInterval(() => this.checkConnection(), 30000);
                 
-                // Monitorear eventos de conexión del navegador
                 window.addEventListener('online', () => this.handleOnline());
                 window.addEventListener('offline', () => this.handleOffline());
             },
             
             async checkConnection() {
                 try {
-                    // Intentar una operación simple de Firestore
                     if (AppState.firebaseInitialized) {
                         await AppState.db.collection("VENTAS").limit(1).get();
                         this.handleOnline();
@@ -1477,9 +1420,8 @@
                     .where("paymentType", "==", "pendiente")
                     .where("status", "==", "pendiente")
                     .onSnapshot(async (snapshot) => {
-                        console.log("🔄 Actualización en tiempo real detectada");
                         await this.loadEquiposPendientes();
-                        await this.actualizarTotalesGrupos(); // ACTUALIZAR TOTALES DE GRUPOS
+                        await this.actualizarTotalesGrupos();
                         this.updateUI();
                     }, (error) => {
                         console.error("Error en listener tiempo real:", error);
@@ -1495,9 +1437,7 @@
                     snapshot.forEach(doc => {
                         this.grupos.set(doc.id, { id: doc.id, ...doc.data() });
                     });
-                    console.log(`✅ ${this.grupos.size} grupos cargados`);
                     
-                    // Actualizar totales después de cargar grupos
                     await this.actualizarTotalesGrupos();
                     
                 } catch (error) {
@@ -1507,14 +1447,9 @@
             
             async actualizarTotalesGrupos() {
                 try {
-                    console.log("🔄 Actualizando totales de grupos...");
-                    
-                    // Recorrer todos los grupos y recalcular sus totales
                     for (const [grupoId, grupo] of this.grupos.entries()) {
                         let nuevoTotal = 0;
-                        let equiposConFacturas = 0;
                         
-                        // Calcular el total actualizado del grupo
                         for (const equipoNum of grupo.equipos) {
                             let equipoEncontrado = null;
                             this.equiposPendientes.forEach((equipo, key) => {
@@ -1525,31 +1460,25 @@
                             
                             if (equipoEncontrado) {
                                 nuevoTotal += equipoEncontrado.total;
-                                equiposConFacturas++;
                             }
                         }
                         
-                        // Actualizar el total del grupo en memoria
                         grupo.total = nuevoTotal;
                         
-                        // Actualizar el total del grupo en Firestore solo si hay cambios
                         if (AppState.firebaseInitialized && nuevoTotal !== grupo.total) {
                             try {
                                 await AppState.db.collection("GRUPOS").doc(grupoId).update({
                                     total: nuevoTotal,
                                     fechaActualizacion: new Date()
                                 });
-                                console.log(`✅ Grupo ${grupo.nombre} actualizado: $${nuevoTotal.toFixed(2)}`);
                             } catch (error) {
-                                console.error(`❌ Error actualizando grupo ${grupo.nombre}:`, error);
+                                console.error(`Error actualizando grupo ${grupo.nombre}:`, error);
                             }
                         }
                     }
                     
-                    console.log("✅ Totales de grupos actualizados correctamente");
-                    
                 } catch (error) {
-                    console.error("❌ Error actualizando totales de grupos:", error);
+                    console.error("Error actualizando totales de grupos:", error);
                 }
             },
             
@@ -1569,14 +1498,12 @@
                         const equipo = venta.equipoNumber;
                         const cliente = venta.clientName || '';
                         
-                        // Calcular saldo pendiente considerando abonos
                         let saldoPendiente = venta.total || 0;
                         if (venta.abonos && venta.abonos.length > 0) {
                             const totalAbonado = venta.abonos.reduce((sum, abono) => sum + abono.monto, 0);
                             saldoPendiente = venta.total - totalAbonado;
                         }
                         
-                        // Solo incluir equipos con saldo pendiente mayor a 0
                         if (equipo && saldoPendiente > 0) {
                             const key = `${equipo}-${cliente}`;
                             
@@ -1599,9 +1526,6 @@
                         }
                     });
                     
-                    console.log(`✅ ${this.equiposPendientes.size} equipos pendientes cargados`);
-                    
-                    // Actualizar totales de grupos después de cargar equipos
                     await this.actualizarTotalesGrupos();
                     
                 } catch (error) {
@@ -1613,7 +1537,6 @@
                 try {
                     if (!AppState.firebaseInitialized) return;
                     
-                    // Filtrar equipos que realmente tienen facturas pendientes
                     const equiposConFacturas = equiposSeleccionados.filter(equipoNum => {
                         let tieneFacturas = false;
                         this.equiposPendientes.forEach((equipo, key) => {
@@ -1628,7 +1551,6 @@
                         throw new Error("Los equipos seleccionados no tienen facturas pendientes");
                     }
                     
-                    // Calcular total real del grupo
                     let totalGrupo = 0;
                     equiposConFacturas.forEach(equipoNum => {
                         this.equiposPendientes.forEach((equipo, key) => {
@@ -1650,7 +1572,6 @@
                     grupoData.id = docRef.id;
                     this.grupos.set(docRef.id, grupoData);
                     
-                    // Actualizar las facturas con la información del grupo
                     for (const equipoNum of equiposConFacturas) {
                         this.equiposPendientes.forEach(async (equipo, key) => {
                             if (equipo.numero === equipoNum) {
@@ -1679,7 +1600,6 @@
                 try {
                     if (!AppState.firebaseInitialized) return;
                     
-                    // Filtrar equipos que realmente tienen facturas pendientes
                     const equiposConFacturas = equiposSeleccionados.filter(equipoNum => {
                         let tieneFacturas = false;
                         this.equiposPendientes.forEach((equipo, key) => {
@@ -1690,7 +1610,6 @@
                         return tieneFacturas;
                     });
                     
-                    // Calcular total real del grupo
                     let totalGrupo = 0;
                     equiposConFacturas.forEach(equipoNum => {
                         this.equiposPendientes.forEach((equipo, key) => {
@@ -1714,7 +1633,6 @@
                         Object.assign(grupoExistente, grupoData);
                     }
                     
-                    // Actualizar las facturas con la nueva información del grupo
                     for (const equipoNum of equiposConFacturas) {
                         this.equiposPendientes.forEach(async (equipo, key) => {
                             if (equipo.numero === equipoNum) {
@@ -1728,7 +1646,6 @@
                         });
                     }
                     
-                    // Remover grupo de facturas que ya no están en el grupo
                     const grupoOriginal = this.grupos.get(grupoId);
                     if (grupoOriginal) {
                         for (const equipoNum of grupoOriginal.equipos) {
@@ -1764,7 +1681,6 @@
                     
                     const grupo = this.grupos.get(grupoId);
                     if (grupo) {
-                        // Remover información de grupo de todas las facturas
                         for (const equipoNum of grupo.equipos) {
                             this.equiposPendientes.forEach(async (equipo, key) => {
                                 if (equipo.numero === equipoNum) {
@@ -1814,7 +1730,7 @@
             
             updateUI() {
                 this.renderEquiposIndividuales();
-                this.renderGruposManagement();
+                this.renderGruposVisual();
             },
             
             renderEquiposIndividuales() {
@@ -1853,8 +1769,8 @@
                 container.innerHTML = html;
             },
             
-            renderGruposManagement() {
-                const container = document.getElementById('grupos-list');
+            renderGruposVisual() {
+                const container = document.getElementById('grupos-container');
                 
                 if (this.grupos.size === 0) {
                     container.innerHTML = `
@@ -1873,35 +1789,36 @@
                 
                 let html = '';
                 gruposOrdenados.forEach(grupo => {
-                    const cantidadEquipos = grupo.equipos.length;
-                    const equiposConFacturas = grupo.equipos.filter(equipoNum => {
-                        let tieneFacturas = false;
+                    let equiposHTML = '';
+                    
+                    grupo.equipos.forEach(equipoNum => {
+                        let equipoEncontrado = null;
                         this.equiposPendientes.forEach((equipo, key) => {
                             if (equipo.numero === equipoNum && equipo.total > 0) {
-                                tieneFacturas = true;
+                                equipoEncontrado = equipo;
                             }
                         });
-                        return tieneFacturas;
-                    }).length;
+                        
+                        if (equipoEncontrado) {
+                            equiposHTML += `
+                                <div class="grupo-equipo-item" onclick="GrupoManager.mostrarDetalleEquipo('${equipoEncontrado.numero}-${equipoEncontrado.cliente}')">
+                                    <div class="grupo-equipo-number">${equipoEncontrado.numero}</div>
+                                    <div class="grupo-equipo-total">$${equipoEncontrado.total.toFixed(2)}</div>
+                                </div>
+                            `;
+                        }
+                    });
                     
                     html += `
-                        <div class="grupo-management-item">
-                            <div class="grupo-management-info">
-                                <div class="grupo-management-name">${grupo.nombre}</div>
-                                <div class="grupo-management-details">
-                                    Equipos: ${cantidadEquipos} | Con facturas: ${equiposConFacturas} | Total: $${grupo.total.toFixed(2)}
-                                </div>
+                        <div class="grupo-card">
+                            <div class="grupo-header">
+                                <div class="grupo-name">${grupo.nombre}</div>
                             </div>
-                            <div class="grupo-management-actions">
-                                <button class="icon-btn btn-edit" onclick="GrupoManager.editarGrupo('${grupo.id}')" title="Editar grupo">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button class="icon-btn btn-delete" onclick="GrupoManager.eliminarGrupo('${grupo.id}')" title="Eliminar grupo">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                                <button class="icon-btn btn-view" onclick="GrupoManager.mostrarDetalleGrupoCompleto('${grupo.id}')" title="Ver detalles">
-                                    <i class="fas fa-eye"></i>
-                                </button>
+                            <div class="grupo-equipos-grid">
+                                ${equiposHTML}
+                            </div>
+                            <div class="grupo-total">
+                                Total: $${grupo.total.toFixed(2)}
                             </div>
                         </div>
                     `;
@@ -2207,7 +2124,7 @@
                     const equipo = ventaData.equipoNumber;
                     if (equipo) {
                         await this.loadEquiposPendientes();
-                        await this.actualizarTotalesGrupos(); // ACTUALIZAR TOTALES DE GRUPOS
+                        await this.actualizarTotalesGrupos();
                         this.updateUI();
                     }
                 }
@@ -2233,7 +2150,7 @@
                     
                     html += `
                         <div class="all-equipo-item ${estaSeleccionado ? 'selected' : ''} ${tieneFacturas ? 'has-facturas' : ''}" 
-                             onclick="GrupoManager.toggleEquipoGrid('${equipoNum}', '${modalType}')"
+                             onclick="toggleEquipoGrid('${equipoNum}', '${modalType}')"
                              style="${tieneFacturas ? 'border-color: #27ae60; background: #f0fff0;' : 'border-color: #ccc; background: #f5f5f5;'}">
                             ${equipoNum}
                             ${tieneFacturas ? '<br><small style="color: #27ae60;">$' + equipoEncontrado.total.toFixed(2) + '</small>' : '<br><small style="color: #999;">$0.00</small>'}
@@ -2242,37 +2159,6 @@
                 }
                 
                 grid.innerHTML = html;
-            },
-            
-            toggleEquipoGrid(equipoNum, modalType = 'crear') {
-                const selectedSet = modalType === 'crear' ? AppState.equiposSeleccionados : AppState.equiposEditSeleccionados;
-                
-                if (selectedSet.has(equipoNum)) {
-                    selectedSet.delete(equipoNum);
-                } else {
-                    if (selectedSet.size >= 130) {
-                        UIService.showStatus("Máximo 130 equipos permitidos", "error");
-                        return;
-                    }
-                    selectedSet.add(equipoNum);
-                }
-                
-                this.actualizarListaSeleccionados(modalType);
-                this.actualizarGridSeleccion(modalType);
-            },
-            
-            actualizarGridSeleccion(modalType = 'crear') {
-                const selector = modalType === 'crear' ? '.all-equipo-item' : '#editar-all-equipos-grid .all-equipo-item';
-                const selectedSet = modalType === 'crear' ? AppState.equiposSeleccionados : AppState.equiposEditSeleccionados;
-                
-                document.querySelectorAll(selector).forEach(item => {
-                    const equipoNum = item.textContent.split('\n')[0].trim();
-                    if (selectedSet.has(equipoNum)) {
-                        item.classList.add('selected');
-                    } else {
-                        item.classList.remove('selected');
-                    }
-                });
             },
             
             actualizarListaSeleccionados(modalType = 'crear') {
@@ -2368,7 +2254,6 @@
                 if (this.isExpired() || this.data.size === 0) {
                     await this.refresh();
                 }
-                this.updateUI();
             },
             
             async refresh() {
@@ -2381,11 +2266,9 @@
                         this.data.set(doc.id, { id: doc.id, ...doc.data() });
                     });
                     this.lastUpdate = Date.now();
-                    this.updateUI();
-                    console.log(`✅ Cache actualizado: ${this.data.size} productos`);
                     UIService.showStatus(`Cache actualizado: ${this.data.size} productos`, "success");
                 } catch (error) {
-                    console.error("❌ Error actualizando cache:", error);
+                    console.error("Error actualizando cache:", error);
                     UIService.showStatus("Error actualizando cache", "error");
                 }
             },
@@ -2416,18 +2299,6 @@
                     }
                 });
                 return found;
-            },
-            
-            updateUI() {
-                const cacheInfo = document.getElementById('cache-info');
-                const cacheCount = document.getElementById('cache-count');
-                
-                if (this.data.size > 0) {
-                    cacheInfo.style.display = 'flex';
-                    cacheCount.textContent = this.data.size;
-                } else {
-                    cacheInfo.style.display = 'none';
-                }
             }
         };
 
@@ -2440,7 +2311,7 @@
             currentEditingInvoice: null,
             historial: [],
             filteredHistorial: [],
-            currentFilter: 'todo',
+            currentFilter: 'hoy',
             currentAbonoInvoice: null,
             currentDetalle: null,
             equiposSeleccionados: new Set(),
@@ -2939,18 +2810,6 @@
                 });
             },
 
-            showCrearGrupoModal() {
-                AppState.equiposSeleccionados.clear();
-                
-                GrupoManager.generarGridEquipos();
-                GrupoManager.actualizarListaSeleccionados();
-                
-                document.getElementById('crear-grupo-modal').style.display = 'block';
-                document.getElementById('nombre-grupo').value = '';
-                document.getElementById('nombre-grupo').focus();
-            },
-
-            // Nueva función para manejar pestañas
             setupTabs() {
                 const tabButtons = document.querySelectorAll('.tab-btn');
                 const tabContents = document.querySelectorAll('.tab-content');
@@ -2959,11 +2818,9 @@
                     button.addEventListener('click', () => {
                         const tabId = button.getAttribute('data-tab');
                         
-                        // Remover clase active de todos los botones y contenidos
                         tabButtons.forEach(btn => btn.classList.remove('active'));
                         tabContents.forEach(content => content.classList.remove('active'));
                         
-                        // Agregar clase active al botón y contenido seleccionado
                         button.classList.add('active');
                         document.getElementById(`tab-${tabId}`).classList.add('active');
                     });
@@ -3054,22 +2911,18 @@
             },
 
             validateSaleData(equipo, cliente, fechaVenta) {
-                // Validar número de equipo (campo obligatorio)
                 if (!equipo.trim()) {
                     throw new Error("El número de equipo es obligatorio");
                 }
                 
-                // Validar que el equipo sea numérico
                 if (!/^\d+$/.test(equipo.trim())) {
                     throw new Error("El número de equipo debe contener solo números");
                 }
                 
-                // Validar fecha
                 if (!fechaVenta) {
                     throw new Error("Seleccione una fecha para la venta");
                 }
                 
-                // Validar que la fecha no sea futura
                 const fechaSeleccionada = new Date(fechaVenta);
                 const hoy = new Date();
                 hoy.setHours(0, 0, 0, 0);
@@ -3078,7 +2931,6 @@
                     throw new Error("No puede seleccionar una fecha futura");
                 }
                 
-                // Validar que no haya productos con precio cero
                 const productosConPrecioCero = AppState.cart.filter(item => item.precio === 0);
                 if (productosConPrecioCero.length > 0) {
                     throw new Error("Hay productos con precio $0.00. Modifique los precios antes de guardar.");
@@ -3098,13 +2950,11 @@
                 const fechaVenta = document.getElementById('fecha-venta').value;
                 
                 try {
-                    // Validar datos antes de procesar
                     this.validateSaleData(equipo, cliente, fechaVenta);
                     
                     const finalCliente = cliente || `Equipo ${equipo}`;
                     const finalEquipo = equipo || '0000';
                     
-                    // Pedir confirmación para ventas con total alto
                     const totalVenta = AppState.cart.reduce((sum, item) => sum + (item.precio * item.cantidad), 0);
                     if (totalVenta > 1000) {
                         const confirmacion = confirm(`¿Está seguro de guardar esta venta por $${totalVenta.toFixed(2)}?`);
@@ -3144,7 +2994,6 @@
                     
                     UIService.showStatus(`Venta ${paymentType === 'contado' ? 'CONTADO' : 'PENDIENTE'} procesada - Factura #${saleData.invoiceNumber}`, "success");
                     
-                    // Limpiar formulario
                     AppState.cart = [];
                     UIService.updateCartDisplay();
                     document.getElementById('equipo').value = '';
@@ -3173,7 +3022,6 @@
                         throw new Error("No se encontró la factura a actualizar");
                     }
 
-                    // Validar que no haya productos con precio cero
                     const productosConPrecioCero = AppState.cart.filter(item => item.precio === 0);
                     if (productosConPrecioCero.length > 0) {
                         throw new Error("Hay productos con precio $0.00. Modifique los precios antes de actualizar.");
@@ -3993,7 +3841,6 @@
                 const today = new Date().toISOString().split('T')[0];
                 document.getElementById('fecha-venta').value = today;
                 
-                // Verificar si la fecha es futura y mostrar advertencia
                 const fechaInput = document.getElementById('fecha-venta');
                 const fechaSeleccionada = new Date(fechaInput.value);
                 const hoy = new Date();
@@ -4029,7 +3876,6 @@
                     }
                     AppState.db = firebase.firestore();
                     
-                    // Configurar persistencia offline
                     await AppState.db.enablePersistence()
                         .catch((err) => {
                             if (err.code == 'failed-precondition') {
@@ -4040,36 +3886,26 @@
                         });
                     
                     AppState.firebaseInitialized = true;
-                    console.log("✅ Firebase inicializado correctamente");
                 } catch (error) {
-                    console.error("❌ Error inicializando Firebase:", error);
+                    console.error("Error inicializando Firebase:", error);
                     AppState.firebaseInitialized = false;
                     UIService.showStatus("Modo offline activado", "warning");
                 }
             },
 
             setupUI() {
-                const now = new Date();
-                document.getElementById('current-date').textContent = now.toLocaleDateString('es-ES');
                 SalesService.setTodayDate();
-                
-                // Configurar pestañas
                 UIService.setupTabs();
             },
 
             async loadInitialData() {
                 try {
                     await ProductCache.initialize();
-                    
                     AppState.saleCounter = await DataService.getSaleCounter();
-                    
                     await SalesService.loadHistorial();
-                    
                     await GrupoManager.initialize();
-                    
-                    console.log("✅ Datos iniciales cargados correctamente");
                 } catch (error) {
-                    console.error("❌ Error cargando datos iniciales:", error);
+                    console.error("Error cargando datos iniciales:", error);
                 }
             },
 
@@ -4120,7 +3956,6 @@
                     }
                 });
 
-                // Validar fecha en tiempo real
                 document.getElementById('fecha-venta').addEventListener('change', function() {
                     SalesService.setTodayDate();
                 });
@@ -4171,10 +4006,6 @@
                     SalesService.printCurrentHistorial();
                 });
 
-                document.getElementById('refresh-cache-btn').addEventListener('click', () => {
-                    ProductCache.refresh();
-                });
-
                 document.getElementById('close-invoice-modal').addEventListener('click', () => {
                     document.getElementById('invoice-modal').style.display = 'none';
                 });
@@ -4186,46 +4017,6 @@
                 document.getElementById('close-abono-modal').addEventListener('click', () => {
                     document.getElementById('abono-modal').style.display = 'none';
                     AppState.currentAbonoInvoice = null;
-                });
-
-                document.getElementById('crear-grupo-btn').addEventListener('click', () => {
-                    UIService.showCrearGrupoModal();
-                });
-
-                document.getElementById('guardar-grupo-btn').addEventListener('click', async () => {
-                    const nombre = document.getElementById('nombre-grupo').value.trim();
-                    if (!nombre) {
-                        UIService.showStatus("Ingrese un nombre para el grupo", "error");
-                        return;
-                    }
-
-                    if (AppState.equiposSeleccionados.size === 0) {
-                        UIService.showStatus("Seleccione al menos un equipo", "error");
-                        return;
-                    }
-
-                    try {
-                        const equiposArray = Array.from(AppState.equiposSeleccionados);
-                        await GrupoManager.crearGrupo(nombre, equiposArray);
-                        UIService.showStatus(`Grupo "${nombre}" creado correctamente`, "success");
-                        document.getElementById('crear-grupo-modal').style.display = 'none';
-                    } catch (error) {
-                        UIService.showStatus("Error al crear grupo: " + error.message, "error");
-                    }
-                });
-
-                document.getElementById('cancelar-grupo-btn').addEventListener('click', () => {
-                    document.getElementById('crear-grupo-modal').style.display = 'none';
-                });
-
-                document.getElementById('actualizar-grupo-btn').addEventListener('click', () => {
-                    GrupoManager.actualizarGrupoDesdeModal();
-                });
-
-                document.getElementById('cancelar-editar-grupo-btn').addEventListener('click', () => {
-                    document.getElementById('editar-grupo-modal').style.display = 'none';
-                    GrupoManager.currentEditingGroup = null;
-                    AppState.equiposEditSeleccionados.clear();
                 });
 
                 document.getElementById('close-detalle-modal').addEventListener('click', () => {
@@ -4255,8 +4046,7 @@
             }
         };
 
-        // Funciones globales para los event listeners
-        GrupoManager.toggleEquipoGrid = function(equipoNum, modalType = 'crear') {
+        function toggleEquipoGrid(equipoNum, modalType = 'crear') {
             const selectedSet = modalType === 'crear' ? AppState.equiposSeleccionados : AppState.equiposEditSeleccionados;
             
             if (selectedSet.has(equipoNum)) {
@@ -4269,23 +4059,32 @@
                 selectedSet.add(equipoNum);
             }
             
-            this.actualizarListaSeleccionados(modalType);
-            this.actualizarGridSeleccion(modalType);
-        };
+            GrupoManager.actualizarListaSeleccionados(modalType);
+            
+            const selector = modalType === 'crear' ? '.all-equipo-item' : '#editar-all-equipos-grid .all-equipo-item';
+            document.querySelectorAll(selector).forEach(item => {
+                const num = item.textContent.split('\n')[0].trim();
+                if (selectedSet.has(num)) {
+                    item.classList.add('selected');
+                } else {
+                    item.classList.remove('selected');
+                }
+            });
+        }
 
-        GrupoManager.eliminarGrupo = async function(grupoId) {
+        function eliminarGrupo(grupoId) {
             if (!confirm("¿Está seguro de eliminar este grupo? Los equipos volverán a estar disponibles individualmente.")) {
                 return;
             }
 
             try {
-                await this.eliminarGrupo(grupoId);
+                GrupoManager.eliminarGrupo(grupoId);
                 UIService.showStatus("Grupo eliminado correctamente", "success");
-                this.updateUI();
+                GrupoManager.updateUI();
             } catch (error) {
                 UIService.showStatus("Error al eliminar grupo: " + error.message, "error");
             }
-        };
+        }
 
         function closeInvoiceModal() {
             document.getElementById('invoice-modal').style.display = 'none';
