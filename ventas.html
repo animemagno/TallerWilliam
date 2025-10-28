@@ -764,6 +764,7 @@
             padding: 12px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             transition: all 0.3s ease;
+            position: relative;
         }
 
         .grupo-card:hover {
@@ -777,6 +778,7 @@
             margin-bottom: 8px;
             padding-bottom: 6px;
             border-bottom: 1px solid #ddd;
+            position: relative;
         }
 
         .grupo-name {
@@ -831,6 +833,68 @@
             border-radius: 4px;
             border-top: 2px solid #3498db;
             margin-top: 8px;
+        }
+
+        .grupo-actions {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            display: flex;
+            gap: 4px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .grupo-card:hover .grupo-actions {
+            opacity: 1;
+        }
+
+        .grupo-action-btn {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.7rem;
+        }
+
+        .grupo-action-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .btn-edit-grupo {
+            color: #27ae60;
+            border-color: #27ae60;
+        }
+
+        .btn-edit-grupo:hover {
+            background: #27ae60;
+            color: white;
+        }
+
+        .btn-delete-grupo {
+            color: #e74c3c;
+            border-color: #e74c3c;
+        }
+
+        .btn-delete-grupo:hover {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .btn-detalle-grupo {
+            color: #3498db;
+            border-color: #3498db;
+        }
+
+        .btn-detalle-grupo:hover {
+            background: #3498db;
+            color: white;
         }
 
         .grupos-management {
@@ -1188,6 +1252,11 @@
                     </div>
                     
                     <div class="tab-content" id="tab-grupos">
+                        <div class="grupos-actions">
+                            <button class="btn btn-success" id="crear-grupo-btn">
+                                <i class="fas fa-plus"></i> CREAR GRUPO
+                            </button>
+                        </div>
                         <div class="grupos-container" id="grupos-container">
                             <div class="empty-state">
                                 <i class="fas fa-users"></i>
@@ -1811,6 +1880,17 @@
                     
                     html += `
                         <div class="grupo-card">
+                            <div class="grupo-actions">
+                                <button class="grupo-action-btn btn-detalle-grupo" onclick="GrupoManager.mostrarDetalleGrupoCompleto('${grupo.id}')" title="Ver detalles">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="grupo-action-btn btn-edit-grupo" onclick="GrupoManager.editarGrupo('${grupo.id}')" title="Editar grupo">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="grupo-action-btn btn-delete-grupo" onclick="eliminarGrupo('${grupo.id}')" title="Eliminar grupo">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
                             <div class="grupo-header">
                                 <div class="grupo-name">${grupo.nombre}</div>
                             </div>
@@ -4042,6 +4122,52 @@
 
                 document.getElementById('imprimir-grupo-detalle-modal').addEventListener('click', () => {
                     GrupoManager.imprimirGrupoCompleto();
+                });
+
+                document.getElementById('crear-grupo-btn').addEventListener('click', () => {
+                    document.getElementById('crear-grupo-modal').style.display = 'block';
+                    AppState.equiposSeleccionados.clear();
+                    GrupoManager.generarGridEquipos('crear');
+                    GrupoManager.actualizarListaSeleccionados('crear');
+                    document.getElementById('nombre-grupo').value = '';
+                });
+
+                document.getElementById('guardar-grupo-btn').addEventListener('click', async () => {
+                    const nombre = document.getElementById('nombre-grupo').value.trim();
+                    if (!nombre) {
+                        UIService.showStatus("Ingrese un nombre para el grupo", "error");
+                        return;
+                    }
+
+                    if (AppState.equiposSeleccionados.size === 0) {
+                        UIService.showStatus("Seleccione al menos un equipo", "error");
+                        return;
+                    }
+
+                    try {
+                        const equiposArray = Array.from(AppState.equiposSeleccionados);
+                        await GrupoManager.crearGrupo(nombre, equiposArray);
+                        UIService.showStatus(`Grupo "${nombre}" creado correctamente`, "success");
+                        document.getElementById('crear-grupo-modal').style.display = 'none';
+                        AppState.equiposSeleccionados.clear();
+                    } catch (error) {
+                        UIService.showStatus("Error al crear grupo: " + error.message, "error");
+                    }
+                });
+
+                document.getElementById('cancelar-grupo-btn').addEventListener('click', () => {
+                    document.getElementById('crear-grupo-modal').style.display = 'none';
+                    AppState.equiposSeleccionados.clear();
+                });
+
+                document.getElementById('actualizar-grupo-btn').addEventListener('click', () => {
+                    GrupoManager.actualizarGrupoDesdeModal();
+                });
+
+                document.getElementById('cancelar-editar-grupo-btn').addEventListener('click', () => {
+                    document.getElementById('editar-grupo-modal').style.display = 'none';
+                    GrupoManager.currentEditingGroup = null;
+                    AppState.equiposEditSeleccionados.clear();
                 });
             }
         };
