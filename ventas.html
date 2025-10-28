@@ -60,11 +60,16 @@
             padding: 20px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             border: 1px solid #e0e0e0;
-            height: fit-content;
+            height: 520px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; /* Añadido para contener el contenido */
         }
 
         .dashboard-section.full-width {
             grid-column: 1 / -1;
+            height: auto;
+            min-height: 600px;
         }
 
         .section-title {
@@ -93,21 +98,26 @@
         }
 
         .venta-header {
-            display: flex;
+            display: grid;
+            grid-template-columns: 1fr auto;
             gap: 15px;
             margin-bottom: 5px;
         }
 
+        .venta-fields {
+            display: grid;
+            grid-template-columns: 80px 1fr;
+            gap: 10px;
+        }
+
+        .venta-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
         .form-group {
             margin-bottom: 5px;
-        }
-
-        .form-group.equipo-group {
-            flex: 0 0 100px;
-        }
-
-        .form-group.grupo-group {
-            flex: 1;
         }
 
         .form-group label {
@@ -169,16 +179,18 @@
             padding: 15px;
             margin: 10px 0;
             border: 1px solid #e9ecef;
-            max-height: 400px;
+            flex: 1;
             display: flex;
             flex-direction: column;
+            min-height: 0; /* Importante para flexbox con scroll */
         }
 
         .cart-items-container {
             flex: 1;
             overflow-y: auto;
-            max-height: 300px;
+            max-height: none; /* Eliminamos el límite fijo */
             margin-bottom: 10px;
+            min-height: 0; /* Importante para flexbox con scroll */
         }
 
         .cart-header {
@@ -269,6 +281,7 @@
             font-size: 1.1rem;
             border-top: 2px solid #3498db;
             margin-top: auto;
+            flex-shrink: 0; /* Evita que se encoja */
         }
 
         .empty-cart {
@@ -282,13 +295,14 @@
         }
 
         .btn {
-            padding: 12px 24px;
+            padding: 12px 16px;
             border: none;
             border-radius: 4px;
             cursor: pointer;
             font-weight: 600;
             transition: all 0.3s ease;
             font-size: 0.9rem;
+            text-align: center;
         }
 
         .btn-primary {
@@ -457,11 +471,26 @@
             background-color: #8e44ad;
         }
 
+        .history-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 400px;
+        }
+
+        .history-table-container {
+            flex: 1;
+            overflow: auto;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            margin-top: 10px;
+        }
+
         .history-table {
             width: 100%;
             border-collapse: collapse;
-            margin: 20px 0;
             font-size: 0.8rem;
+            min-width: 800px;
         }
 
         .history-table th,
@@ -469,60 +498,20 @@
             padding: 10px;
             text-align: left;
             border-bottom: 1px solid #ddd;
+            white-space: nowrap;
         }
 
         .history-table th {
             background-color: #2c3e50;
             color: white;
             font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
         }
 
         .history-table tbody tr:hover {
             background-color: #f8f9fa;
-        }
-
-        .payment-buttons {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-top: 20px;
-        }
-
-        .invoice-details {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 6px;
-            margin: 15px 0;
-            border-left: 4px solid #3498db;
-        }
-
-        .edit-mode {
-            background-color: #fff3cd;
-            border-left: 4px solid #ffc107;
-        }
-
-        .abono-section {
-            background: #e8f5e8;
-            padding: 15px;
-            border-radius: 6px;
-            margin: 15px 0;
-            border-left: 4px solid #27ae60;
-        }
-
-        .abono-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 5px 0;
-            border-bottom: 1px solid #ddd;
-        }
-
-        .saldo-info {
-            background: #fff3cd;
-            padding: 10px;
-            border-radius: 4px;
-            margin: 10px 0;
-            text-align: center;
-            font-weight: bold;
         }
 
         .historial-actions {
@@ -572,6 +561,24 @@
         
         .pendiente-badge {
             background: #f39c12;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+
+        .abono-badge {
+            background: #17a2b8;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+
+        .retiro-badge {
+            background: #e74c3c;
             color: white;
             padding: 4px 8px;
             border-radius: 3px;
@@ -634,13 +641,18 @@
         }
 
         .tabs-container {
-            margin-top: 10px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0; /* Importante para flexbox con scroll */
+            overflow: hidden; /* Contiene el contenido */
         }
 
         .tabs-header {
             display: flex;
             border-bottom: 2px solid #3498db;
             margin-bottom: 15px;
+            flex-shrink: 0; /* Evita que se encoja */
         }
 
         .tab-btn {
@@ -668,14 +680,22 @@
 
         .tab-content {
             display: none;
+            flex: 1;
+            min-height: 0; /* Importante para flexbox con scroll */
+            overflow: hidden; /* Contiene el contenido */
         }
 
         .tab-content.active {
-            display: block;
+            display: flex;
+            flex-direction: column;
         }
 
         .facturas-pendientes-container {
-            margin-top: 15px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0; /* Importante para flexbox con scroll */
+            overflow: hidden; /* Contiene el contenido */
         }
 
         .facturas-header {
@@ -698,6 +718,9 @@
             flex-wrap: wrap;
             gap: 10px;
             margin-bottom: 20px;
+            overflow-y: auto; /* Scroll cuando hay muchos equipos */
+            flex: 1;
+            min-height: 0; /* Importante para flexbox con scroll */
         }
 
         .equipo-card {
@@ -755,6 +778,10 @@
             grid-template-columns: 1fr 1fr;
             gap: 15px;
             margin-top: 15px;
+            overflow-y: auto; /* Scroll cuando hay muchos grupos */
+            flex: 1;
+            min-height: 0; /* Importante para flexbox con scroll */
+            padding-right: 5px; /* Espacio para el scroll */
         }
 
         .grupo-card {
@@ -1163,6 +1190,36 @@
             border: 2px solid #f39c12 !important;
             background-color: #fef9e7 !important;
         }
+
+        .duplicate-warning {
+            border: 2px solid #e74c3c !important;
+            background-color: #fdf2f2 !important;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { border-color: #e74c3c; }
+            50% { border-color: #ff9999; }
+            100% { border-color: #e74c3c; }
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn:disabled:hover {
+            transform: none;
+        }
+
+        .retiro-btn {
+            background-color: #9b59b6;
+            color: white;
+        }
+
+        .retiro-btn:hover {
+            background-color: #8e44ad;
+        }
     </style>
 </head>
 <body>
@@ -1181,14 +1238,25 @@
                 <input type="date" id="fecha-venta" class="fecha-input" style="display: none;">
                 
                 <div class="venta-header">
-                    <div class="form-group equipo-group">
-                        <label for="equipo">Equipo *</label>
-                        <input type="text" id="equipo" placeholder="Número" maxlength="4" required>
+                    <div class="venta-fields">
+                        <div class="form-group">
+                            <label for="equipo">Equipo *</label>
+                            <input type="text" id="equipo" placeholder="Número" maxlength="4" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="cliente">Grupo</label>
+                            <input type="text" id="cliente" placeholder="Nombre del grupo">
+                        </div>
                     </div>
 
-                    <div class="form-group grupo-group">
-                        <label for="cliente">Grupo</label>
-                        <input type="text" id="cliente" placeholder="Nombre del grupo">
+                    <div class="venta-buttons">
+                        <button class="btn btn-success" id="contado-btn">
+                            CONTADO
+                        </button>
+                        <button class="btn btn-warning" id="pendiente-btn">
+                            PENDIENTE
+                        </button>
                     </div>
                 </div>
 
@@ -1217,15 +1285,6 @@
                     <div class="cart-total" id="total-amount">
                         TOTAL: $0.00
                     </div>
-                </div>
-
-                <div class="payment-buttons">
-                    <button class="btn btn-success" id="contado-btn">
-                        GUARDAR CONTADO
-                    </button>
-                    <button class="btn btn-warning" id="pendiente-btn">
-                        GUARDAR PENDIENTE
-                    </button>
                 </div>
             </div>
 
@@ -1277,34 +1336,44 @@
                         <button class="filter-btn active" data-filter="hoy">HOY</button>
                         <button class="filter-btn" data-filter="ventas">VENTAS</button>
                         <button class="filter-btn" data-filter="abonos">ABONOS</button>
+                        <button class="filter-btn" data-filter="retiros">RETIROS</button>
                         <button class="filter-btn" data-filter="pendientes">PENDIENTES</button>
                     </div>
-                    <button class="btn btn-info" id="print-historial-btn">
-                        IMPRIMIR HISTORIAL
-                    </button>
+                    <div>
+                        <button class="btn retiro-btn" id="retirar-btn">
+                            RETIRAR
+                        </button>
+                        <button class="btn btn-info" id="print-historial-btn">
+                            IMPRIMIR HISTORIAL
+                        </button>
+                    </div>
                 </div>
                 
                 <div class="form-group">
                     <input type="text" id="filter-historial" placeholder="Filtrar por número de equipo...">
                 </div>
                 
-                <table class="history-table">
-                    <thead>
-                        <tr>
-                            <th>Factura</th>
-                            <th>Equipo</th>
-                            <th>Total</th>
-                            <th>Estado</th>
-                            <th>Fecha</th>
-                            <th width="250">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody id="historial-body">
-                        <tr>
-                            <td colspan="6" class="empty-cart">Cargando historial...</td>
-                        </tr>
-                    </tbody>
-                </table>
+                <div class="history-container">
+                    <div class="history-table-container">
+                        <table class="history-table">
+                            <thead>
+                                <tr>
+                                    <th>Factura</th>
+                                    <th>Equipo</th>
+                                    <th>Total</th>
+                                    <th>Estado</th>
+                                    <th>Fecha</th>
+                                    <th width="250">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="historial-body">
+                                <tr>
+                                    <td colspan="6" class="empty-cart">Cargando historial...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -1401,6 +1470,33 @@
                 </div>
             </div>
         </div>
+
+        <div id="retiro-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000;">
+            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 8px; width: 90%; max-width: 400px;">
+                <h3 style="margin-bottom: 15px; text-align: center;">Registrar Retiro</h3>
+                <div class="form-group">
+                    <label for="monto-retiro">Monto del Retiro:</label>
+                    <input type="number" id="monto-retiro" step="0.01" min="0.01" placeholder="0.00">
+                </div>
+                <div class="form-group">
+                    <label for="concepto-retiro">Concepto:</label>
+                    <input type="text" id="concepto-retiro" placeholder="Ej: Compra de materiales, Gastos operativos...">
+                </div>
+                <div class="form-group">
+                    <label for="categoria-retiro">Categoría:</label>
+                    <select id="categoria-retiro">
+                        <option value="compra">Compra de materiales</option>
+                        <option value="gastos">Gastos operativos</option>
+                        <option value="herramientas">Herramientas</option>
+                        <option value="otros">Otros</option>
+                    </select>
+                </div>
+                <div style="display: flex; gap: 10px; margin-top: 15px;">
+                    <button class="btn btn-success" id="process-retiro-btn" style="flex: 1;">PROCESAR RETIRO</button>
+                    <button class="btn btn-danger" id="close-retiro-modal" style="flex: 1;">CANCELAR</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -1412,6 +1508,62 @@
                 storageBucket: "tallerwilliam-732b3.firebasestorage.app",
                 messagingSenderId: "822262666247",
                 appId: "1:822262666247:web:6680487bbf1108006b86a2"
+            }
+        };
+
+        const DateUtils = {
+            getCurrentDateElSalvador() {
+                const now = new Date();
+                const offset = -6 * 60;
+                const localTime = now.getTime();
+                const localOffset = now.getTimezoneOffset() * 60000;
+                const utc = localTime + localOffset;
+                const elSalvadorTime = utc + (offset * 60000);
+                return new Date(elSalvadorTime);
+            },
+
+            getCurrentDateStringElSalvador() {
+                const date = this.getCurrentDateElSalvador();
+                return date.toISOString().split('T')[0];
+            },
+
+            formatDateToYYYYMMDD(date) {
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            },
+
+            createDateFromStringElSalvador(dateString) {
+                const [year, month, day] = dateString.split('-').map(Number);
+                const date = new Date(year, month - 1, day, 12, 0, 0);
+                return this.adjustToElSalvadorTime(date);
+            },
+
+            adjustToElSalvadorTime(date) {
+                const offset = -6 * 60;
+                const localTime = date.getTime();
+                const localOffset = date.getTimezoneOffset() * 60000;
+                const utc = localTime + localOffset;
+                const elSalvadorTime = utc + (offset * 60000);
+                return new Date(elSalvadorTime);
+            },
+
+            isTodayInElSalvador(dateString) {
+                const today = this.getCurrentDateStringElSalvador();
+                return dateString === today;
+            },
+
+            isFutureDateInElSalvador(dateString) {
+                const selectedDate = this.createDateFromStringElSalvador(dateString);
+                const today = this.getCurrentDateElSalvador();
+                const selectedDateOnly = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate());
+                const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+                return selectedDateOnly > todayOnly;
+            },
+
+            getCurrentTimestampElSalvador() {
+                return this.getCurrentDateElSalvador();
             }
         };
 
@@ -2346,10 +2498,8 @@
                         this.data.set(doc.id, { id: doc.id, ...doc.data() });
                     });
                     this.lastUpdate = Date.now();
-                    UIService.showStatus(`Cache actualizado: ${this.data.size} productos`, "success");
                 } catch (error) {
                     console.error("Error actualizando cache:", error);
-                    UIService.showStatus("Error actualizando cache", "error");
                 }
             },
             
@@ -2395,7 +2545,9 @@
             currentAbonoInvoice: null,
             currentDetalle: null,
             equiposSeleccionados: new Set(),
-            equiposEditSeleccionados: new Set()
+            equiposEditSeleccionados: new Set(),
+            processingSale: false,
+            currentInvoiceNumber: null
         };
 
         const DataService = {
@@ -2448,14 +2600,19 @@
             },
 
             async checkInvoiceExists(invoiceNumber) {
-                const snapshot = await AppState.db.collection("VENTAS")
-                    .where("invoiceNumber", "==", invoiceNumber)
-                    .limit(1)
-                    .get();
-                return !snapshot.empty;
+                try {
+                    const snapshot = await AppState.db.collection("VENTAS")
+                        .where("invoiceNumber", "==", invoiceNumber)
+                        .limit(1)
+                        .get();
+                    return !snapshot.empty;
+                } catch (error) {
+                    console.error("Error verificando factura duplicada:", error);
+                    return false;
+                }
             },
 
-            async updateSaleCounter(date = new Date().toISOString().split('T')[0]) {
+            async updateSaleCounter(date = DateUtils.getCurrentDateStringElSalvador()) {
                 try {
                     const counterRef = AppState.db.collection("COUNTERS").doc("sales");
                     const counterDoc = await counterRef.get();
@@ -2474,7 +2631,7 @@
                 }
             },
 
-            async getSaleCounter(date = new Date().toISOString().split('T')[0]) {
+            async getSaleCounter(date = DateUtils.getCurrentDateStringElSalvador()) {
                 try {
                     const counterRef = AppState.db.collection("COUNTERS").doc("sales");
                     const doc = await counterRef.get();
@@ -2525,7 +2682,7 @@
                 }
             },
 
-            async loadSalesByDate(date = new Date().toISOString().split('T')[0], limit = 500) {
+            async loadSalesByDate(date = DateUtils.getCurrentDateStringElSalvador(), limit = 500) {
                 if (AppState.firebaseInitialized) {
                     const snapshot = await AppState.db.collection("VENTAS")
                         .where("date", "==", date)
@@ -2605,6 +2762,78 @@
                 } else {
                     throw new Error("No hay conexión a la base de datos");
                 }
+            },
+
+            async saveRetiro(retiroData) {
+                if (AppState.firebaseInitialized) {
+                    const docRef = await AppState.db.collection("RETIROS").add(retiroData);
+                    return docRef.id;
+                } else {
+                    throw new Error("No hay conexión a la base de datos");
+                }
+            },
+
+            async loadRetiros(limit = 500) {
+                if (AppState.firebaseInitialized) {
+                    const snapshot = await AppState.db.collection("RETIROS")
+                        .orderBy("timestamp", "desc")
+                        .limit(limit)
+                        .get();
+                    
+                    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                } else {
+                    return [];
+                }
+            },
+
+            async loadRetirosByDate(date = DateUtils.getCurrentDateStringElSalvador(), limit = 500) {
+                if (AppState.firebaseInitialized) {
+                    const snapshot = await AppState.db.collection("RETIROS")
+                        .where("date", "==", date)
+                        .orderBy("timestamp", "desc")
+                        .limit(limit)
+                        .get();
+                    
+                    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                } else {
+                    return [];
+                }
+            },
+
+            async loadAllMovements(limit = 500) {
+                const [ventas, retiros] = await Promise.all([
+                    this.loadSales(limit),
+                    this.loadRetiros(limit)
+                ]);
+                
+                const allMovements = [
+                    ...ventas.map(v => ({ ...v, tipo: 'venta' })),
+                    ...retiros.map(r => ({ ...r, tipo: 'retiro' }))
+                ];
+                
+                return allMovements.sort((a, b) => {
+                    const dateA = a.timestamp?.toDate ? a.timestamp.toDate() : a.timestamp;
+                    const dateB = b.timestamp?.toDate ? b.timestamp.toDate() : b.timestamp;
+                    return dateB - dateA;
+                }).slice(0, limit);
+            },
+
+            async loadMovementsByDate(date = DateUtils.getCurrentDateStringElSalvador(), limit = 500) {
+                const [ventas, retiros] = await Promise.all([
+                    this.loadSalesByDate(date, limit),
+                    this.loadRetirosByDate(date, limit)
+                ]);
+                
+                const allMovements = [
+                    ...ventas.map(v => ({ ...v, tipo: 'venta' })),
+                    ...retiros.map(r => ({ ...r, tipo: 'retiro' }))
+                ];
+                
+                return allMovements.sort((a, b) => {
+                    const dateA = a.timestamp?.toDate ? a.timestamp.toDate() : a.timestamp;
+                    const dateB = b.timestamp?.toDate ? b.timestamp.toDate() : b.timestamp;
+                    return dateB - dateA;
+                }).slice(0, limit);
             }
         };
 
@@ -2707,10 +2936,10 @@
                 dropdown.style.display = 'block';
             },
 
-            updateHistorial(ventas) {
+            updateHistorial(movimientos) {
                 const historialBody = document.getElementById('historial-body');
-                AppState.historial = ventas;
-                AppState.filteredHistorial = ventas;
+                AppState.historial = movimientos;
+                AppState.filteredHistorial = movimientos;
                 
                 this.applyCurrentFilter();
             },
@@ -2720,27 +2949,33 @@
                 
                 switch (AppState.currentFilter) {
                     case 'hoy':
-                        const today = new Date().toISOString().split('T')[0];
-                        filtered = filtered.filter(venta => venta.date === today);
+                        const today = DateUtils.getCurrentDateStringElSalvador();
+                        filtered = filtered.filter(mov => mov.date === today);
                         break;
                     case 'ventas':
-                        filtered = filtered.filter(venta => 
-                            venta.paymentType === 'contado' || 
-                            (venta.paymentType === 'pendiente' && (venta.saldoPendiente || venta.total) <= 0)
+                        filtered = filtered.filter(mov => 
+                            mov.tipo === 'venta' && 
+                            (mov.paymentType === 'contado' || 
+                            (mov.paymentType === 'pendiente' && (mov.saldoPendiente || mov.total) <= 0))
                         );
                         break;
                     case 'abonos':
-                        filtered = filtered.filter(venta => 
-                            venta.paymentType === 'pendiente' && 
-                            venta.abonos && 
-                            venta.abonos.length > 0 && 
-                            (venta.saldoPendiente || venta.total) > 0
+                        filtered = filtered.filter(mov => 
+                            mov.tipo === 'venta' && 
+                            mov.paymentType === 'pendiente' && 
+                            mov.abonos && 
+                            mov.abonos.length > 0 && 
+                            (mov.saldoPendiente || mov.total) > 0
                         );
                         break;
+                    case 'retiros':
+                        filtered = filtered.filter(mov => mov.tipo === 'retiro');
+                        break;
                     case 'pendientes':
-                        filtered = filtered.filter(venta => 
-                            venta.paymentType === 'pendiente' && 
-                            (venta.saldoPendiente || venta.total) > 0
+                        filtered = filtered.filter(mov => 
+                            mov.tipo === 'venta' && 
+                            mov.paymentType === 'pendiente' && 
+                            (mov.saldoPendiente || mov.total) > 0
                         );
                         break;
                 }
@@ -2751,12 +2986,12 @@
 
             renderHistorial() {
                 const historialBody = document.getElementById('historial-body');
-                const ventas = AppState.filteredHistorial;
+                const movimientos = AppState.filteredHistorial;
                 
-                if (ventas.length === 0) {
+                if (movimientos.length === 0) {
                     historialBody.innerHTML = `
                         <tr>
-                            <td colspan="6" class="empty-cart">No hay ventas que coincidan con el filtro</td>
+                            <td colspan="6" class="empty-cart">No hay movimientos que coincidan con el filtro</td>
                         </tr>
                     `;
                     return;
@@ -2764,91 +2999,121 @@
                 
                 let historialHTML = '';
                 
-                ventas.forEach(venta => {
-                    const fecha = venta.timestamp ? new Date(venta.timestamp.toDate ? venta.timestamp.toDate() : venta.timestamp).toLocaleDateString('es-ES') : 'N/A';
-                    
-                    let estadoReal = venta.paymentType;
-                    let tipoClass = 'pendiente-badge';
-                    let tipoTexto = 'PENDIENTE';
-                    let saldoPendiente = venta.saldoPendiente !== undefined ? venta.saldoPendiente : venta.total;
-                    
-                    if (venta.paymentType === 'contado') {
-                        tipoClass = 'contado-badge';
-                        tipoTexto = 'CONTADO';
-                    } else if (venta.paymentType === 'pendiente') {
-                        if (saldoPendiente <= 0) {
-                            estadoReal = 'contado';
-                            tipoClass = 'contado-badge';
-                            tipoTexto = 'CONTADO';
-                        }
-                    }
-                    
-                    let montoMostrar = venta.total || 0;
-                    let claseMonto = 'saldo-pendiente-negro';
-                    
-                    if (estadoReal === 'pendiente') {
-                        montoMostrar = saldoPendiente;
-                        if (venta.saldoPendiente < venta.total) {
-                            claseMonto = 'saldo-pendiente-rojo';
-                        }
-                    }
-                    
-                    let botonesHTML = '';
-                    
-                    if (estadoReal === 'contado') {
-                        botonesHTML = `
-                            <button class="icon-btn btn-view" onclick="SalesService.viewInvoice('${venta.id}')" title="Ver factura">
-                                <i class="fas fa-eye"></i>
-                            </button>
-                            <button class="icon-btn btn-reprint" onclick="SalesService.reprintInvoice('${venta.id}')" title="Reimprimir">
-                                <i class="fas fa-print"></i>
-                            </button>
-                            <button class="icon-btn btn-delete" onclick="SalesService.deleteInvoice('${venta.id}')" title="Eliminar">
-                                <i class="fas fa-trash"></i>
-                            </button>
+                movimientos.forEach(movimiento => {
+                    if (movimiento.tipo === 'retiro') {
+                        const fecha = movimiento.timestamp ? new Date(movimiento.timestamp.toDate ? movimiento.timestamp.toDate() : movimiento.timestamp).toLocaleDateString('es-ES') : 'N/A';
+                        
+                        historialHTML += `
+                            <tr>
+                                <td><strong>RET-${movimiento.id.substring(0, 8)}</strong></td>
+                                <td>
+                                    <div class="cliente-equipo">-</div>
+                                    <div class="cliente-nombre">${movimiento.concepto || 'Sin concepto'}</div>
+                                </td>
+                                <td>
+                                    <div class="saldo-pendiente-rojo">-$${movimiento.monto.toFixed(2)}</div>
+                                </td>
+                                <td><span class="retiro-badge">RETIRO</span></td>
+                                <td>${fecha}</td>
+                                <td>
+                                    <div class="action-buttons historial-actions-container">
+                                        <button class="icon-btn btn-view" onclick="SalesService.viewRetiro('${movimiento.id}')" title="Ver retiro">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button class="icon-btn btn-delete" onclick="SalesService.deleteRetiro('${movimiento.id}')" title="Eliminar">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
                         `;
                     } else {
-                        botonesHTML = `
-                            <button class="icon-btn btn-view" onclick="SalesService.viewInvoice('${venta.id}')" title="Ver factura">
-                                <i class="fas fa-eye"></i>
-                            </button>
-                            <button class="icon-btn btn-reprint" onclick="SalesService.reprintInvoice('${venta.id}')" title="Reimprimir">
-                                <i class="fas fa-print"></i>
-                            </button>
-                            <button class="icon-btn btn-edit" onclick="SalesService.editInvoice('${venta.id}')" title="Editar">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="icon-btn btn-abono" onclick="SalesService.registrarAbono('${venta.id}')" title="Registrar abono">
-                                <i class="fas fa-money-bill-wave"></i>
-                            </button>
-                            <button class="icon-btn btn-delete" onclick="SalesService.deleteInvoice('${venta.id}')" title="Eliminar">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                            <button class="icon-btn btn-cancel" onclick="SalesService.cancelInvoice('${venta.id}')" title="Cancelar factura">
-                                <i class="fas fa-ban"></i>
-                            </button>
+                        const venta = movimiento;
+                        const fecha = venta.timestamp ? new Date(venta.timestamp.toDate ? venta.timestamp.toDate() : venta.timestamp).toLocaleDateString('es-ES') : 'N/A';
+                        
+                        let estadoReal = venta.paymentType;
+                        let tipoClass = 'pendiente-badge';
+                        let tipoTexto = 'PENDIENTE';
+                        let saldoPendiente = venta.saldoPendiente !== undefined ? venta.saldoPendiente : venta.total;
+                        
+                        if (venta.paymentType === 'contado') {
+                            tipoClass = 'contado-badge';
+                            tipoTexto = 'CONTADO';
+                        } else if (venta.paymentType === 'pendiente') {
+                            if (saldoPendiente <= 0) {
+                                estadoReal = 'contado';
+                                tipoClass = 'contado-badge';
+                                tipoTexto = 'CONTADO';
+                            }
+                        }
+                        
+                        let montoMostrar = venta.total || 0;
+                        let claseMonto = 'saldo-pendiente-negro';
+                        
+                        if (estadoReal === 'pendiente') {
+                            montoMostrar = saldoPendiente;
+                            if (venta.saldoPendiente < venta.total) {
+                                claseMonto = 'saldo-pendiente-rojo';
+                            }
+                        }
+                        
+                        let botonesHTML = '';
+                        
+                        if (estadoReal === 'contado') {
+                            botonesHTML = `
+                                <button class="icon-btn btn-view" onclick="SalesService.viewInvoice('${venta.id}')" title="Ver factura">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="icon-btn btn-reprint" onclick="SalesService.reprintInvoice('${venta.id}')" title="Reimprimir">
+                                    <i class="fas fa-print"></i>
+                                </button>
+                                <button class="icon-btn btn-delete" onclick="SalesService.deleteInvoice('${venta.id}')" title="Eliminar">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            `;
+                        } else {
+                            botonesHTML = `
+                                <button class="icon-btn btn-view" onclick="SalesService.viewInvoice('${venta.id}')" title="Ver factura">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="icon-btn btn-reprint" onclick="SalesService.reprintInvoice('${venta.id}')" title="Reimprimir">
+                                    <i class="fas fa-print"></i>
+                                </button>
+                                <button class="icon-btn btn-edit" onclick="SalesService.editInvoice('${venta.id}')" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="icon-btn btn-abono" onclick="SalesService.registrarAbono('${venta.id}')" title="Registrar abono">
+                                    <i class="fas fa-money-bill-wave"></i>
+                                </button>
+                                <button class="icon-btn btn-delete" onclick="SalesService.deleteInvoice('${venta.id}')" title="Eliminar">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                                <button class="icon-btn btn-cancel" onclick="SalesService.cancelInvoice('${venta.id}')" title="Cancelar factura">
+                                    <i class="fas fa-ban"></i>
+                                </button>
+                            `;
+                        }
+                        
+                        historialHTML += `
+                            <tr>
+                                <td><strong>${venta.invoiceNumber || 'N/A'}</strong></td>
+                                <td>
+                                    <div class="cliente-equipo">${venta.equipoNumber || 'N/A'}</div>
+                                    <div class="cliente-nombre">${venta.clientName || 'Sin nombre'}</div>
+                                </td>
+                                <td>
+                                    <div class="${claseMonto}">$${montoMostrar.toFixed(2)}</div>
+                                </td>
+                                <td><span class="${tipoClass}">${tipoTexto}</span></td>
+                                <td>${fecha}</td>
+                                <td>
+                                    <div class="action-buttons historial-actions-container">
+                                        ${botonesHTML}
+                                    </div>
+                                </td>
+                            </tr>
                         `;
                     }
-                    
-                    historialHTML += `
-                        <tr>
-                            <td><strong>${venta.invoiceNumber || 'N/A'}</strong></td>
-                            <td>
-                                <div class="cliente-equipo">${venta.equipoNumber || 'N/A'}</div>
-                                <div class="cliente-nombre">${venta.clientName || 'Sin nombre'}</div>
-                            </td>
-                            <td>
-                                <div class="${claseMonto}">$${montoMostrar.toFixed(2)}</div>
-                            </td>
-                            <td><span class="${tipoClass}">${tipoTexto}</span></td>
-                            <td>${fecha}</td>
-                            <td>
-                                <div class="action-buttons historial-actions-container">
-                                    ${botonesHTML}
-                                </div>
-                            </td>
-                        </tr>
-                    `;
                 });
                 
                 historialBody.innerHTML = historialHTML;
@@ -2866,14 +3131,22 @@
                 document.getElementById('monto-abono').focus();
             },
 
+            showRetiroModal() {
+                document.getElementById('retiro-modal').style.display = 'block';
+                document.getElementById('monto-retiro').value = '';
+                document.getElementById('concepto-retiro').value = '';
+                document.getElementById('categoria-retiro').value = 'compra';
+                document.getElementById('monto-retiro').focus();
+            },
+
             restorePaymentButtons() {
                 const paymentButtons = document.querySelector('.payment-buttons');
                 paymentButtons.innerHTML = `
                     <button class="btn btn-success" id="contado-btn">
-                        GUARDAR CONTADO
+                        CONTADO
                     </button>
                     <button class="btn btn-warning" id="pendiente-btn">
-                        GUARDAR PENDIENTE
+                        PENDIENTE
                     </button>
                 `;
                 
@@ -2905,6 +3178,40 @@
                         document.getElementById(`tab-${tabId}`).classList.add('active');
                     });
                 });
+            },
+
+            updatePaymentButtonsState(processing = false) {
+                const contadoBtn = document.getElementById('contado-btn');
+                const pendienteBtn = document.getElementById('pendiente-btn');
+                
+                if (processing) {
+                    contadoBtn.disabled = true;
+                    pendienteBtn.disabled = true;
+                    contadoBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> VERIFICANDO...';
+                    pendienteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> VERIFICANDO...';
+                } else {
+                    contadoBtn.disabled = false;
+                    pendienteBtn.disabled = false;
+                    contadoBtn.innerHTML = 'CONTADO';
+                    pendienteBtn.innerHTML = 'PENDIENTE';
+                }
+            },
+
+            showDuplicateWarning(invoiceNumber) {
+                const statusElement = document.getElementById('status-message');
+                statusElement.innerHTML = `
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                        <div>
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <strong>ADVERTENCIA:</strong> La factura ${invoiceNumber} ya existe
+                        </div>
+                        <button onclick="SalesService.regenerateInvoiceNumber()" class="btn btn-warning btn-small" style="margin-left: 10px;">
+                            <i class="fas fa-sync"></i> Generar Nueva
+                        </button>
+                    </div>
+                `;
+                statusElement.className = 'status error duplicate-warning';
+                statusElement.style.display = 'block';
             }
         };
 
@@ -2968,7 +3275,7 @@
 
             async generateInvoiceNumber() {
                 const fechaVenta = document.getElementById('fecha-venta').value;
-                const date = fechaVenta || new Date().toISOString().split('T')[0];
+                const date = fechaVenta || DateUtils.getCurrentDateStringElSalvador();
                 const datePart = date.replace(/-/g, '').substring(2);
                 
                 try {
@@ -2977,16 +3284,38 @@
                     
                     const invoiceNumber = datePart + counterPart;
                     
-                    const exists = await DataService.checkInvoiceExists(invoiceNumber);
-                    if (exists) {
-                        return await this.generateInvoiceNumber();
-                    }
-                    
+                    AppState.currentInvoiceNumber = invoiceNumber;
                     return invoiceNumber;
                 } catch (error) {
                     const fallback = datePart + Date.now().toString().substr(-4);
                     console.error("Error generando factura, usando fallback:", fallback);
+                    AppState.currentInvoiceNumber = fallback;
                     return fallback;
+                }
+            },
+
+            async regenerateInvoiceNumber() {
+                try {
+                    const newInvoiceNumber = await this.generateInvoiceNumber();
+                    UIService.showStatus(`Nueva factura generada: ${newInvoiceNumber}`, "success");
+                    return newInvoiceNumber;
+                } catch (error) {
+                    UIService.showStatus("Error generando nueva factura", "error");
+                    throw error;
+                }
+            },
+
+            async verifyInvoiceUnique(invoiceNumber) {
+                try {
+                    const exists = await DataService.checkInvoiceExists(invoiceNumber);
+                    if (exists) {
+                        UIService.showDuplicateWarning(invoiceNumber);
+                        return false;
+                    }
+                    return true;
+                } catch (error) {
+                    console.error("Error verificando factura única:", error);
+                    return true;
                 }
             },
 
@@ -3003,11 +3332,7 @@
                     throw new Error("Seleccione una fecha para la venta");
                 }
                 
-                const fechaSeleccionada = new Date(fechaVenta);
-                const hoy = new Date();
-                hoy.setHours(0, 0, 0, 0);
-                
-                if (fechaSeleccionada > hoy) {
+                if (DateUtils.isFutureDateInElSalvador(fechaVenta)) {
                     throw new Error("No puede seleccionar una fecha futura");
                 }
                 
@@ -3020,6 +3345,11 @@
             },
 
             async processSale(paymentType) {
+                if (AppState.processingSale) {
+                    UIService.showStatus("Ya hay una venta en proceso", "error");
+                    return;
+                }
+
                 if (AppState.cart.length === 0) {
                     UIService.showStatus("El carrito está vacío", "error");
                     return;
@@ -3043,7 +3373,17 @@
                         }
                     }
                     
+                    AppState.processingSale = true;
+                    UIService.updatePaymentButtonsState(true);
+                    
                     const invoiceNumber = await this.generateInvoiceNumber();
+                    
+                    const isUnique = await this.verifyInvoiceUnique(invoiceNumber);
+                    if (!isUnique) {
+                        AppState.processingSale = false;
+                        UIService.updatePaymentButtonsState(false);
+                        return;
+                    }
                     
                     const saleData = {
                         invoiceNumber: invoiceNumber,
@@ -3058,7 +3398,7 @@
                         })),
                         total: totalVenta,
                         paymentType: paymentType,
-                        timestamp: new Date(),
+                        timestamp: DateUtils.getCurrentTimestampElSalvador(),
                         date: fechaVenta,
                         status: paymentType === 'contado' ? 'pagado' : 'pendiente'
                     };
@@ -3087,6 +3427,9 @@
                 } catch (error) {
                     UIService.showStatus("Error al procesar la venta: " + error.message, "error");
                     console.error("Error en processSale:", error);
+                } finally {
+                    AppState.processingSale = false;
+                    UIService.updatePaymentButtonsState(false);
                 }
             },
 
@@ -3125,7 +3468,7 @@
                         })),
                         total: nuevoTotal,
                         saldoPendiente: nuevoSaldoPendiente,
-                        timestamp: new Date()
+                        timestamp: DateUtils.getCurrentTimestampElSalvador()
                     };
                     
                     if (nuevoSaldoPendiente <= 0) {
@@ -3151,8 +3494,8 @@
 
             async loadHistorial() {
                 try {
-                    const ventas = await DataService.loadSales(500);
-                    UIService.updateHistorial(ventas);
+                    const movimientos = await DataService.loadAllMovements(500);
+                    UIService.updateHistorial(movimientos);
                 } catch (error) {
                     UIService.showStatus("Error al cargar historial: " + error.message, "error");
                 }
@@ -3163,7 +3506,7 @@
                 try {
                     venta = await DataService.getSaleById(invoiceId);
                 } catch (error) {
-                    venta = AppState.historial.find(v => v.id === invoiceId);
+                    venta = AppState.historial.find(v => v.id === invoiceId && v.tipo === 'venta');
                 }
                 
                 if (!venta) return;
@@ -3175,7 +3518,7 @@
                             <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #eee;">
                                 <div>${product.descripcion} (x${product.cantidad})</div>
                                 <div>$${(product.precio * product.cantidad).toFixed(2)}</div>
-                            </div>
+                        </div>
                         `;
                     });
                 }
@@ -3228,8 +3571,46 @@
                 UIService.showInvoiceModal(modalContent);
             },
 
+            async viewRetiro(retiroId) {
+                let retiro;
+                try {
+                    if (AppState.firebaseInitialized) {
+                        const doc = await AppState.db.collection("RETIROS").doc(retiroId).get();
+                        if (doc.exists) {
+                            retiro = { id: doc.id, ...doc.data() };
+                        }
+                    } else {
+                        retiro = AppState.historial.find(r => r.id === retiroId && r.tipo === 'retiro');
+                    }
+                } catch (error) {
+                    retiro = AppState.historial.find(r => r.id === retiroId && r.tipo === 'retiro');
+                }
+                
+                if (!retiro) return;
+                
+                const fecha = retiro.timestamp ? new Date(retiro.timestamp.toDate ? retiro.timestamp.toDate() : retiro.timestamp).toLocaleString('es-ES') : 'N/A';
+                const categoriaText = {
+                    'compra': 'Compra de materiales',
+                    'gastos': 'Gastos operativos',
+                    'herramientas': 'Herramientas',
+                    'otros': 'Otros'
+                }[retiro.categoria] || retiro.categoria;
+                
+                const modalContent = `
+                    <h3 style="margin-bottom: 15px; text-align: center;">Retiro de Fondos</h3>
+                    <div class="invoice-details">
+                        <strong>Concepto:</strong> ${retiro.concepto || 'Sin concepto'}<br>
+                        <strong>Categoría:</strong> ${categoriaText}<br>
+                        <strong>Fecha:</strong> ${fecha}<br>
+                        <strong>Monto:</strong> $${(retiro.monto || 0).toFixed(2)}
+                    </div>
+                `;
+                
+                UIService.showInvoiceModal(modalContent);
+            },
+
             async editInvoice(invoiceId) {
-                let venta = AppState.historial.find(v => v.id === invoiceId);
+                let venta = AppState.historial.find(v => v.id === invoiceId && v.tipo === 'venta');
                 if (!venta) {
                     UIService.showStatus("No se encontró la factura para editar", "error");
                     return;
@@ -3245,7 +3626,7 @@
                 
                 document.getElementById('equipo').value = venta.equipoNumber || '';
                 document.getElementById('cliente').value = venta.clientName || '';
-                document.getElementById('fecha-venta').value = venta.date || new Date().toISOString().split('T')[0];
+                document.getElementById('fecha-venta').value = venta.date || DateUtils.getCurrentDateStringElSalvador();
                 
                 AppState.currentEditingInvoice = invoiceId;
                 
@@ -3300,6 +3681,22 @@
                 }
             },
 
+            async deleteRetiro(retiroId) {
+                if (!confirm("¿Está seguro de eliminar este retiro? Esta acción no se puede deshacer.")) return;
+                
+                try {
+                    if (AppState.firebaseInitialized) {
+                        await AppState.db.collection("RETIROS").doc(retiroId).delete();
+                        UIService.showStatus("Retiro eliminado correctamente", "success");
+                        await this.loadHistorial();
+                    } else {
+                        throw new Error("No hay conexión a la base de datos");
+                    }
+                } catch (error) {
+                    UIService.showStatus("Error al eliminar retiro: " + error.message, "error");
+                }
+            },
+
             async cancelInvoice(invoiceId) {
                 if (!confirm("¿Está seguro de cancelar esta factura? Se cambiará el estado a CONTADO.")) return;
                 
@@ -3317,7 +3714,7 @@
                 try {
                     venta = await DataService.getSaleById(invoiceId);
                 } catch (error) {
-                    venta = AppState.historial.find(v => v.id === invoiceId);
+                    venta = AppState.historial.find(v => v.id === invoiceId && v.tipo === 'venta');
                 }
                 
                 if (venta) {
@@ -3331,7 +3728,7 @@
                 try {
                     venta = await DataService.getSaleById(invoiceId);
                 } catch (error) {
-                    venta = AppState.historial.find(v => v.id === invoiceId);
+                    venta = AppState.historial.find(v => v.id === invoiceId && v.tipo === 'venta');
                 }
                 
                 if (!venta) return;
@@ -3377,8 +3774,8 @@
                 try {
                     const abonoData = {
                         monto: monto,
-                        fecha: new Date(),
-                        fechaString: new Date().toLocaleString('es-ES')
+                        fecha: DateUtils.getCurrentTimestampElSalvador(),
+                        fechaString: DateUtils.getCurrentTimestampElSalvador().toLocaleString('es-ES')
                     };
                     
                     await DataService.addAbono(venta.id, abonoData);
@@ -3393,7 +3790,7 @@
                     if (ventaActualizada) {
                         const indexHistorial = AppState.historial.findIndex(v => v.id === venta.id);
                         if (indexHistorial !== -1) {
-                            AppState.historial[indexHistorial] = ventaActualizada;
+                            AppState.historial[indexHistorial] = { ...ventaActualizada, tipo: 'venta' };
                         }
                         
                         UIService.updateHistorial(AppState.historial);
@@ -3404,45 +3801,95 @@
                 }
             },
 
-            async printCurrentHistorial() {
-                const ventas = AppState.filteredHistorial;
+            async processRetiro() {
+                const montoInput = document.getElementById('monto-retiro');
+                const conceptoInput = document.getElementById('concepto-retiro');
+                const categoriaInput = document.getElementById('categoria-retiro');
                 
-                if (ventas.length === 0) {
-                    UIService.showStatus("No hay ventas para imprimir", "warning");
+                const monto = parseFloat(montoInput.value);
+                const concepto = conceptoInput.value.trim();
+                const categoria = categoriaInput.value;
+                
+                if (!monto || monto <= 0) {
+                    UIService.showStatus("Ingrese un monto válido", "error");
                     return;
                 }
                 
-                this.printHistorialReport(ventas, 'HISTORIAL ACTUAL');
+                if (!concepto) {
+                    UIService.showStatus("Ingrese un concepto para el retiro", "error");
+                    return;
+                }
+                
+                try {
+                    const retiroData = {
+                        monto: monto,
+                        concepto: concepto,
+                        categoria: categoria,
+                        timestamp: DateUtils.getCurrentTimestampElSalvador(),
+                        date: DateUtils.getCurrentDateStringElSalvador()
+                    };
+                    
+                    await DataService.saveRetiro(retiroData);
+                    
+                    this.printRetiroTicket(retiroData);
+                    
+                    UIService.showStatus(`Retiro de $${monto.toFixed(2)} registrado correctamente`, "success");
+                    
+                    closeRetiroModal();
+                    
+                    await this.loadHistorial();
+                    
+                } catch (error) {
+                    UIService.showStatus("Error al procesar retiro: " + error.message, "error");
+                }
             },
 
-            printHistorialReport(ventas, titulo) {
+            async printCurrentHistorial() {
+                const movimientos = AppState.filteredHistorial;
+                
+                if (movimientos.length === 0) {
+                    UIService.showStatus("No hay movimientos para imprimir", "warning");
+                    return;
+                }
+                
+                this.printHistorialReport(movimientos, 'HISTORIAL ACTUAL');
+            },
+
+            printHistorialReport(movimientos, titulo) {
                 const printWindow = window.open('', '_blank');
                 
                 let totalContado = 0;
                 let totalPendiente = 0;
                 let totalAbonos = 0;
+                let totalRetiros = 0;
                 let ventasContado = 0;
                 let ventasPendiente = 0;
                 let ventasConAbonos = 0;
+                let cantidadRetiros = 0;
                 
-                ventas.forEach(venta => {
-                    if (venta.paymentType === 'contado') {
-                        totalContado += venta.total || 0;
-                        ventasContado++;
+                movimientos.forEach(movimiento => {
+                    if (movimiento.tipo === 'retiro') {
+                        totalRetiros += movimiento.monto || 0;
+                        cantidadRetiros++;
                     } else {
-                        totalPendiente += venta.total || 0;
-                        ventasPendiente++;
-                        
-                        if (venta.abonos && venta.abonos.length > 0) {
-                            ventasConAbonos++;
-                            venta.abonos.forEach(abono => {
-                                totalAbonos += abono.monto;
-                            });
+                        if (movimiento.paymentType === 'contado') {
+                            totalContado += movimiento.total || 0;
+                            ventasContado++;
+                        } else {
+                            totalPendiente += movimiento.total || 0;
+                            ventasPendiente++;
+                            
+                            if (movimiento.abonos && movimiento.abonos.length > 0) {
+                                ventasConAbonos++;
+                                movimiento.abonos.forEach(abono => {
+                                    totalAbonos += abono.monto;
+                                });
+                            }
                         }
                     }
                 });
                 
-                const fechaActual = new Date().toLocaleDateString('es-ES');
+                const fechaActual = DateUtils.getCurrentTimestampElSalvador().toLocaleDateString('es-ES');
                 
                 let reportHTML = `
                     <!DOCTYPE html>
@@ -3524,6 +3971,14 @@
                                 font-size: 9px;
                                 font-weight: bold;
                             }
+                            .retiro-badge {
+                                background: #e74c3c;
+                                color: white;
+                                padding: 3px 6px;
+                                border-radius: 3px;
+                                font-size: 9px;
+                                font-weight: bold;
+                            }
                             .resumen-section {
                                 margin-top: 25px;
                                 padding: 15px;
@@ -3533,7 +3988,7 @@
                             }
                             .resumen-grid {
                                 display: grid;
-                                grid-template-columns: 1fr 1fr 1fr;
+                                grid-template-columns: 1fr 1fr 1fr 1fr;
                                 gap: 15px;
                                 margin-top: 10px;
                             }
@@ -3570,7 +4025,7 @@
                     <body>
                         <div class="header">
                             <h1>TALLER WILIAN</h1>
-                            <h2>HISTORIAL DE VENTAS ${fechaActual}</h2>
+                            <h2>HISTORIAL DE MOVIMIENTOS ${fechaActual}</h2>
                         </div>
                 `;
                 
@@ -3579,51 +4034,67 @@
                         <table class="ventas-table">
                             <thead>
                                 <tr>
-                                    <th width="40%">Productos (completos)</th>
-                                    <th width="10%">Factura</th>
+                                    <th width="40%">Descripción</th>
+                                    <th width="10%">Factura/Retiro</th>
                                     <th width="8%">Equipo</th>
-                                    <th width="10%">Total</th>
+                                    <th width="10%">Monto</th>
                                     <th width="8%">Estado</th>
                                 </tr>
                             </thead>
                             <tbody>
                 `;
                 
-                ventas.forEach((venta, index) => {
+                movimientos.forEach((movimiento, index) => {
                     if (index > 0 && index % 20 === 0) {
-                        reportHTML += `</tbody></table></div><div class="page-break"></div><div class="table-container"><table class="ventas-table"><thead><tr><th width="40%">Productos (completos)</th><th width="10%">Factura</th><th width="8%">Equipo</th><th width="10%">Total</th><th width="8%">Estado</th></tr></thead><tbody>`;
+                        reportHTML += `</tbody></table></div><div class="page-break"></div><div class="table-container"><table class="ventas-table"><thead><tr><th width="40%">Descripción</th><th width="10%">Factura/Retiro</th><th width="8%">Equipo</th><th width="10%">Monto</th><th width="8%">Estado</th></tr></thead><tbody>`;
                     }
                     
-                    const tipoBadge = venta.paymentType === 'contado' ? 'contado-badge' : 'pendiente-badge';
-                    const tipoText = venta.paymentType === 'contado' ? 'CONTADO' : 'PENDIENTE';
-                    
-                    let productosHTML = '';
-                    if (venta.products && venta.products.length > 0) {
-                        venta.products.forEach(producto => {
-                            productosHTML += `
-                                <div class="producto-item">
-                                    • ${producto.descripcion} x${producto.cantidad} - $${(producto.precio * producto.cantidad).toFixed(2)}
-                                </div>
-                            `;
-                        });
+                    if (movimiento.tipo === 'retiro') {
+                        const tipoBadge = 'retiro-badge';
+                        const tipoText = 'RETIRO';
+                        
+                        reportHTML += `
+                            <tr>
+                                <td>${movimiento.concepto || 'Sin concepto'}</td>
+                                <td><strong>RET-${movimiento.id.substring(0, 8)}</strong></td>
+                                <td>-</td>
+                                <td style="color: #e74c3c;">-$${movimiento.monto.toFixed(2)}</td>
+                                <td><span class="${tipoBadge}">${tipoText}</span></td>
+                            </tr>
+                        `;
+                    } else {
+                        const venta = movimiento;
+                        const tipoBadge = venta.paymentType === 'contado' ? 'contado-badge' : 'pendiente-badge';
+                        const tipoText = venta.paymentType === 'contado' ? 'CONTADO' : 'PENDIENTE';
+                        
+                        let productosHTML = '';
+                        if (venta.products && venta.products.length > 0) {
+                            venta.products.forEach(producto => {
+                                productosHTML += `
+                                    <div class="producto-item">
+                                        • ${producto.descripcion} x${producto.cantidad} - $${(producto.precio * producto.cantidad).toFixed(2)}
+                                    </div>
+                                `;
+                            });
+                        }
+                        
+                        reportHTML += `
+                            <tr>
+                                <td>${productosHTML || 'Sin productos'}</td>
+                                <td><strong>${venta.invoiceNumber || 'N/A'}</strong></td>
+                                <td>${venta.equipoNumber || 'N/A'}</td>
+                                <td>$${(venta.total || 0).toFixed(2)}</td>
+                                <td><span class="${tipoBadge}">${tipoText}</span></td>
+                            </tr>
+                        `;
                     }
-                    
-                    reportHTML += `
-                        <tr>
-                            <td>${productosHTML || 'Sin productos'}</td>
-                            <td><strong>${venta.invoiceNumber || 'N/A'}</strong></td>
-                            <td>${venta.equipoNumber || 'N/A'}</td>
-                            <td>$${(venta.total || 0).toFixed(2)}</td>
-                            <td><span class="${tipoBadge}">${tipoText}</span></td>
-                        </tr>
-                    `;
                 });
                 
                 reportHTML += `</tbody></table></div>`;
                 
                 let abonosHTML = '';
-                const ventasConAbonosList = ventas.filter(venta => 
-                    venta.abonos && venta.abonos.length > 0
+                const ventasConAbonosList = movimientos.filter(mov => 
+                    mov.tipo === 'venta' && mov.abonos && mov.abonos.length > 0
                 );
                 
                 if (ventasConAbonosList.length > 0) {
@@ -3685,12 +4156,17 @@
                                 <div class="resumen-valor">$${totalPendiente.toFixed(2)}</div>
                                 <div style="font-size: 10px; color: #666;">${ventasPendiente} ventas</div>
                             </div>
+                            <div class="resumen-item">
+                                <div>RETIROS</div>
+                                <div class="resumen-valor" style="color: #e74c3c;">-$${totalRetiros.toFixed(2)}</div>
+                                <div style="font-size: 10px; color: #666;">${cantidadRetiros} retiros</div>
+                            </div>
                         </div>
                     </div>
                     
                     <div class="footer">
                         <div>Documento generado automáticamente por el Sistema de Ventas Taller Wilian</div>
-                        <div>Fecha de impresión: ${new Date().toLocaleString('es-ES')}</div>
+                        <div>Fecha de impresión: ${DateUtils.getCurrentTimestampElSalvador().toLocaleString('es-ES')}</div>
                     </div>
                 `;
                 
@@ -3708,7 +4184,7 @@
 
             printTicket(saleData) {
                 const printWindow = window.open('', '_blank');
-                const fecha = saleData.timestamp ? new Date(saleData.timestamp.toDate ? saleData.timestamp.toDate() : saleData.timestamp) : new Date();
+                const fecha = saleData.timestamp ? new Date(saleData.timestamp.toDate ? saleData.timestamp.toDate() : saleData.timestamp) : DateUtils.getCurrentTimestampElSalvador();
                 const fechaFormateada = fecha.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' });
                 
                 const saldoPendiente = saleData.saldoPendiente !== undefined ? saleData.saldoPendiente : saleData.total;
@@ -3830,7 +4306,7 @@
 
             printAbonoTicket(venta, abonoData, nuevoSaldo) {
                 const printWindow = window.open('', '_blank');
-                const fechaAbono = abonoData.fecha ? new Date(abonoData.fecha.toDate ? abonoData.fecha.toDate() : abonoData.fecha) : new Date();
+                const fechaAbono = abonoData.fecha ? new Date(abonoData.fecha.toDate ? abonoData.fecha.toDate() : abonoData.fecha) : DateUtils.getCurrentTimestampElSalvador();
                 const fechaFormateada = fechaAbono.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' });
                 
                 printWindow.document.write(`
@@ -3917,16 +4393,100 @@
                 }, 500);
             },
 
+            printRetiroTicket(retiroData) {
+                const printWindow = window.open('', '_blank');
+                const fecha = retiroData.timestamp ? new Date(retiroData.timestamp.toDate ? retiroData.timestamp.toDate() : retiroData.timestamp) : DateUtils.getCurrentTimestampElSalvador();
+                const fechaFormateada = fecha.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' });
+                
+                const categoriaText = {
+                    'compra': 'Compra de materiales',
+                    'gastos': 'Gastos operativos',
+                    'herramientas': 'Herramientas',
+                    'otros': 'Otros'
+                }[retiroData.categoria] || retiroData.categoria;
+                
+                printWindow.document.write(`
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <title>Retiro de Fondos</title>
+                        <style>
+                            body { 
+                                font-family: 'Courier New', monospace; 
+                                font-size: 22px; 
+                                margin: 0; 
+                                padding: 6px;
+                                width: 58mm;
+                                font-weight: bold;
+                            }
+                            .header { text-align: center; margin-bottom: 12px; }
+                            .line { border-bottom: 2px dashed #000; margin: 4px 0; }
+                            .retiro-detail { 
+                                margin: 8px 0;
+                                font-size: 20px;
+                            }
+                            .total { font-weight: bold; text-align: center; margin-top: 12px; font-size: 24px; }
+                            .footer { text-align: center; margin-top: 12px; font-size: 18px; font-weight: bold; }
+                            .small-text { font-size: 18px; }
+                            .medium-text { font-size: 20px; }
+                            .large-text { font-size: 26px; }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="header">
+                            <h3 style="margin: 2px 0; font-size: 26px;">TALLER WILIAN</h3>
+                            <div class="small-text">COMPROBANTE DE RETIRO</div>
+                            <div class="small-text">${fechaFormateada}</div>
+                        </div>
+                        
+                        <div class="line"></div>
+                        
+                        <div class="medium-text">
+                            <strong>Concepto:</strong> ${retiroData.concepto}<br>
+                            <strong>Categoría:</strong> ${categoriaText}
+                        </div>
+                        
+                        <div class="line"></div>
+                        
+                        <div class="retiro-detail">
+                            <div style="text-align: center; font-size: 24px; margin: 10px 0;">
+                                MONTO DEL RETIRO
+                            </div>
+                            <div style="text-align: center; font-size: 28px; font-weight: bold; color: #e74c3c;">
+                                -$${retiroData.monto.toFixed(2)}
+                            </div>
+                        </div>
+                        
+                        <div class="footer">
+                            CONTROL DE FONDOS
+                        </div>
+                    </body>
+                    </html>
+                `);
+                
+                printWindow.document.close();
+                printWindow.focus();
+                
+                setTimeout(() => {
+                    printWindow.print();
+                    setTimeout(() => {
+                        printWindow.close();
+                    }, 500);
+                }, 500);
+            },
+
             setTodayDate() {
-                const today = new Date().toISOString().split('T')[0];
+                const today = DateUtils.getCurrentDateStringElSalvador();
                 document.getElementById('fecha-venta').value = today;
                 
                 const fechaInput = document.getElementById('fecha-venta');
-                const fechaSeleccionada = new Date(fechaInput.value);
-                const hoy = new Date();
-                hoy.setHours(0, 0, 0, 0);
+                const fechaSeleccionada = DateUtils.createDateFromStringElSalvador(fechaInput.value);
+                const hoy = DateUtils.getCurrentDateElSalvador();
                 
-                if (fechaSeleccionada > hoy) {
+                const selectedDateOnly = new Date(fechaSeleccionada.getFullYear(), fechaSeleccionada.getMonth(), fechaSeleccionada.getDate());
+                const hoyOnly = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
+                
+                if (selectedDateOnly > hoyOnly) {
                     fechaInput.classList.add('date-warning');
                 } else {
                     fechaInput.classList.remove('date-warning');
@@ -4048,6 +4608,10 @@
                     SalesService.processSale('pendiente');
                 });
 
+                document.getElementById('retirar-btn').addEventListener('click', () => {
+                    UIService.showRetiroModal();
+                });
+
                 document.getElementById('filter-historial').addEventListener('input', (e) => {
                     const filter = e.target.value;
                     if (filter === '') {
@@ -4055,9 +4619,12 @@
                         return;
                     }
                     
-                    const filtered = AppState.historial.filter(venta => {
-                        const equipo = venta.equipoNumber || '';
-                        return equipo.includes(filter);
+                    const filtered = AppState.historial.filter(movimiento => {
+                        if (movimiento.tipo === 'venta') {
+                            const equipo = movimiento.equipoNumber || '';
+                            return equipo.includes(filter);
+                        }
+                        return false;
                     });
                     
                     const historialBody = document.getElementById('historial-body');
@@ -4065,7 +4632,7 @@
                     if (filtered.length === 0) {
                         historialBody.innerHTML = `
                             <tr>
-                                <td colspan="6" class="empty-cart">No hay ventas para el equipo ${filter}</td>
+                                <td colspan="6" class="empty-cart">No hay movimientos para el equipo ${filter}</td>
                             </tr>
                         `;
                     } else {
@@ -4097,6 +4664,14 @@
                 document.getElementById('close-abono-modal').addEventListener('click', () => {
                     document.getElementById('abono-modal').style.display = 'none';
                     AppState.currentAbonoInvoice = null;
+                });
+
+                document.getElementById('process-retiro-btn').addEventListener('click', () => {
+                    SalesService.processRetiro();
+                });
+
+                document.getElementById('close-retiro-modal').addEventListener('click', () => {
+                    document.getElementById('retiro-modal').style.display = 'none';
                 });
 
                 document.getElementById('close-detalle-modal').addEventListener('click', () => {
@@ -4219,6 +4794,10 @@
         function closeAbonoModal() {
             document.getElementById('abono-modal').style.display = 'none';
             AppState.currentAbonoInvoice = null;
+        }
+
+        function closeRetiroModal() {
+            document.getElementById('retiro-modal').style.display = 'none';
         }
 
         document.addEventListener('DOMContentLoaded', function() {
