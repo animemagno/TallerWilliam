@@ -63,7 +63,7 @@
             height: 520px;
             display: flex;
             flex-direction: column;
-            overflow: hidden; /* Añadido para contener el contenido */
+            overflow: hidden;
         }
 
         .dashboard-section.full-width {
@@ -182,15 +182,15 @@
             flex: 1;
             display: flex;
             flex-direction: column;
-            min-height: 0; /* Importante para flexbox con scroll */
+            min-height: 0;
         }
 
         .cart-items-container {
             flex: 1;
             overflow-y: auto;
-            max-height: none; /* Eliminamos el límite fijo */
+            max-height: none;
             margin-bottom: 10px;
-            min-height: 0; /* Importante para flexbox con scroll */
+            min-height: 0;
         }
 
         .cart-header {
@@ -281,7 +281,7 @@
             font-size: 1.1rem;
             border-top: 2px solid #3498db;
             margin-top: auto;
-            flex-shrink: 0; /* Evita que se encoja */
+            flex-shrink: 0;
         }
 
         .empty-cart {
@@ -644,15 +644,15 @@
             flex: 1;
             display: flex;
             flex-direction: column;
-            min-height: 0; /* Importante para flexbox con scroll */
-            overflow: hidden; /* Contiene el contenido */
+            min-height: 0;
+            overflow: hidden;
         }
 
         .tabs-header {
             display: flex;
             border-bottom: 2px solid #3498db;
             margin-bottom: 15px;
-            flex-shrink: 0; /* Evita que se encoja */
+            flex-shrink: 0;
         }
 
         .tab-btn {
@@ -681,8 +681,8 @@
         .tab-content {
             display: none;
             flex: 1;
-            min-height: 0; /* Importante para flexbox con scroll */
-            overflow: hidden; /* Contiene el contenido */
+            min-height: 0;
+            overflow: hidden;
         }
 
         .tab-content.active {
@@ -694,8 +694,8 @@
             flex: 1;
             display: flex;
             flex-direction: column;
-            min-height: 0; /* Importante para flexbox con scroll */
-            overflow: hidden; /* Contiene el contenido */
+            min-height: 0;
+            overflow: hidden;
         }
 
         .facturas-header {
@@ -718,9 +718,9 @@
             flex-wrap: wrap;
             gap: 10px;
             margin-bottom: 20px;
-            overflow-y: auto; /* Scroll cuando hay muchos equipos */
+            overflow-y: auto;
             flex: 1;
-            min-height: 0; /* Importante para flexbox con scroll */
+            min-height: 0;
         }
 
         .equipo-card {
@@ -778,10 +778,10 @@
             grid-template-columns: 1fr 1fr;
             gap: 15px;
             margin-top: 15px;
-            overflow-y: auto; /* Scroll cuando hay muchos grupos */
+            overflow-y: auto;
             flex: 1;
-            min-height: 0; /* Importante para flexbox con scroll */
-            padding-right: 5px; /* Espacio para el scroll */
+            min-height: 0;
+            padding-right: 5px;
         }
 
         .grupo-card {
@@ -1220,6 +1220,18 @@
         .retiro-btn:hover {
             background-color: #8e44ad;
         }
+
+        .equipo-en-grupo {
+            background: #f8d7da !important;
+            border-color: #e74c3c !important;
+            color: #721c24 !important;
+            cursor: not-allowed !important;
+        }
+
+        .equipo-en-grupo:hover {
+            transform: none !important;
+            box-shadow: none !important;
+        }
     </style>
 </head>
 <body>
@@ -1240,7 +1252,7 @@
                 <div class="venta-header">
                     <div class="venta-fields">
                         <div class="form-group">
-                            <label for="equipo">Equipo</label>
+                            <label for="equipo">Equipo *</label>
                             <input type="text" id="equipo" placeholder="Número" maxlength="4" required>
                         </div>
 
@@ -1684,16 +1696,18 @@
                             }
                         }
                         
-                        grupo.total = nuevoTotal;
-                        
-                        if (AppState.firebaseInitialized && nuevoTotal !== grupo.total) {
-                            try {
-                                await AppState.db.collection("GRUPOS").doc(grupoId).update({
-                                    total: nuevoTotal,
-                                    fechaActualizacion: new Date()
-                                });
-                            } catch (error) {
-                                console.error(`Error actualizando grupo ${grupo.nombre}:`, error);
+                        if (grupo.total !== nuevoTotal) {
+                            grupo.total = nuevoTotal;
+                            
+                            if (AppState.firebaseInitialized) {
+                                try {
+                                    await AppState.db.collection("GRUPOS").doc(grupoId).update({
+                                        total: nuevoTotal,
+                                        fechaActualizacion: new Date()
+                                    });
+                                } catch (error) {
+                                    console.error(`Error actualizando grupo ${grupo.nombre}:`, error);
+                                }
                             }
                         }
                     }
@@ -1947,6 +1961,18 @@
                 });
                 
                 return equiposSinGrupo;
+            },
+
+            getEquiposEnGrupos() {
+                const equiposEnGrupos = new Set();
+                
+                this.grupos.forEach(grupo => {
+                    grupo.equipos.forEach(equipoNum => {
+                        equiposEnGrupos.add(equipoNum);
+                    });
+                });
+                
+                return equiposEnGrupos;
             },
             
             updateUI() {
@@ -2364,6 +2390,9 @@
             
             generarGridEquipos(modalType = 'crear') {
                 const grid = document.getElementById(modalType === 'crear' ? 'all-equipos-grid' : 'editar-all-equipos-grid');
+                const equiposEnGrupos = this.getEquiposEnGrupos();
+                const selectedSet = modalType === 'crear' ? AppState.equiposSeleccionados : AppState.equiposEditSeleccionados;
+                
                 let html = '';
                 
                 for (let i = 1; i <= 130; i++) {
@@ -2376,16 +2405,26 @@
                     });
                     
                     const tieneFacturas = equipoEncontrado && equipoEncontrado.facturas.length > 0;
-                    const estaSeleccionado = modalType === 'crear' 
-                        ? AppState.equiposSeleccionados.has(equipoNum)
-                        : AppState.equiposEditSeleccionados.has(equipoNum);
+                    const estaSeleccionado = selectedSet.has(equipoNum);
+                    const estaEnOtroGrupo = equiposEnGrupos.has(equipoNum) && 
+                        (modalType === 'crear' || 
+                         (modalType === 'editar' && this.currentEditingGroup && 
+                          !this.currentEditingGroup.equipos.includes(equipoNum)));
+                    
+                    let estilo = '';
+                    if (estaEnOtroGrupo) {
+                        estilo = 'equipo-en-grupo';
+                    } else if (tieneFacturas) {
+                        estilo = 'has-facturas';
+                    }
                     
                     html += `
-                        <div class="all-equipo-item ${estaSeleccionado ? 'selected' : ''} ${tieneFacturas ? 'has-facturas' : ''}" 
-                             onclick="toggleEquipoGrid('${equipoNum}', '${modalType}')"
-                             style="${tieneFacturas ? 'border-color: #27ae60; background: #f0fff0;' : 'border-color: #ccc; background: #f5f5f5;'}">
+                        <div class="all-equipo-item ${estilo} ${estaSeleccionado ? 'selected' : ''}" 
+                             onclick="${estaEnOtroGrupo ? '' : `toggleEquipoGrid('${equipoNum}', '${modalType}')`}"
+                             style="${tieneFacturas && !estaEnOtroGrupo ? 'border-color: #27ae60; background: #f0fff0;' : ''}${estaEnOtroGrupo ? 'border-color: #e74c3c; background: #f8d7da; color: #721c24; cursor: not-allowed;' : 'border-color: #ccc; background: #f5f5f5;'}">
                             ${equipoNum}
                             ${tieneFacturas ? '<br><small style="color: #27ae60;">$' + equipoEncontrado.total.toFixed(2) + '</small>' : '<br><small style="color: #999;">$0.00</small>'}
+                            ${estaEnOtroGrupo ? '<br><small style="color: #e74c3c; font-size: 0.6rem;">EN GRUPO</small>' : ''}
                         </div>
                     `;
                 }
@@ -3140,7 +3179,7 @@
             },
 
             restorePaymentButtons() {
-                const paymentButtons = document.querySelector('.payment-buttons');
+                const paymentButtons = document.querySelector('.venta-buttons');
                 paymentButtons.innerHTML = `
                     <button class="btn btn-success" id="contado-btn">
                         CONTADO
@@ -3647,7 +3686,7 @@
                 cancelBtn.textContent = 'CANCELAR EDICIÓN';
                 cancelBtn.onclick = () => this.cancelEdit();
                 
-                const paymentButtons = document.querySelector('.payment-buttons');
+                const paymentButtons = document.querySelector('.venta-buttons');
                 paymentButtons.innerHTML = '';
                 paymentButtons.appendChild(updateBtn);
                 paymentButtons.appendChild(cancelBtn);
@@ -4774,7 +4813,7 @@
         }
 
         function eliminarGrupo(grupoId) {
-            if (!confirm("¿Está seguro de eliminar este grupo? Los equipos volverán a estar disponibles individualmente.")) {
+            if (!confirm("¿Está seguro de eliminar este grupo? Los equipos volverán a estar disponibles individualmente y se eliminarán las asociaciones de grupo.")) {
                 return;
             }
 
