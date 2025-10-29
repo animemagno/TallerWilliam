@@ -312,6 +312,7 @@ const UIService = {
             </button>
         `;
         
+        // Re-asignar event listeners después de restaurar
         document.getElementById('contado-btn').addEventListener('click', () => SalesService.processSale('contado'));
         document.getElementById('pendiente-btn').addEventListener('click', () => SalesService.processSale('pendiente'));
     },
@@ -374,6 +375,23 @@ const UIService = {
         `;
         statusElement.className = 'status error duplicate-warning';
         statusElement.style.display = 'block';
+    },
+
+    // NUEVA FUNCIÓN: Crear botones de edición
+    createEditButtons(invoiceId) {
+        const updateBtn = document.createElement('button');
+        updateBtn.className = 'btn btn-success btn-full';
+        updateBtn.id = 'update-btn';
+        updateBtn.textContent = 'ACTUALIZAR FACTURA';
+        updateBtn.onclick = () => SalesService.updateInvoice(invoiceId);
+        
+        const cancelBtn = document.createElement('button');
+        cancelBtn.className = 'btn btn-danger';
+        cancelBtn.style.marginTop = '10px';
+        cancelBtn.textContent = 'CANCELAR EDICIÓN';
+        cancelBtn.onclick = () => SalesService.cancelEdit();
+        
+        return { updateBtn, cancelBtn };
     }
 };
 
@@ -772,13 +790,19 @@ const SalesService = {
         UIService.showInvoiceModal(modalContent);
     },
 
+    // FUNCIÓN CORREGIDA: Editar factura
     async editInvoice(invoiceId) {
+        console.log("Iniciando edición de factura:", invoiceId);
+        
         let venta = AppState.historial.find(v => v.id === invoiceId && v.tipo === 'venta');
         if (!venta) {
             UIService.showStatus("No se encontró la factura para editar", "error");
             return;
         }
         
+        console.log("Factura encontrada:", venta);
+        
+        // Cargar productos en el carrito
         AppState.cart = venta.products.map(p => ({
             id: p.id,
             codigo: p.codigo,
@@ -787,38 +811,38 @@ const SalesService = {
             cantidad: p.cantidad
         }));
         
+        // Llenar campos del formulario
         document.getElementById('equipo').value = venta.equipoNumber || '';
         document.getElementById('cliente').value = venta.clientName || '';
         document.getElementById('fecha-venta').value = venta.date || DateUtils.getCurrentDateStringElSalvador();
         
         AppState.currentEditingInvoice = invoiceId;
         
+        // Actualizar interfaz
         UIService.updateCartDisplay();
         
-        document.getElementById('contado-btn').style.display = 'none';
-        document.getElementById('pendiente-btn').style.display = 'none';
-        
-        const updateBtn = document.createElement('button');
-        updateBtn.className = 'btn btn-success btn-full';
-        updateBtn.id = 'update-btn';
-        updateBtn.textContent = 'ACTUALIZAR FACTURA';
-        updateBtn.onclick = () => this.updateInvoice(invoiceId);
-        
-        const cancelBtn = document.createElement('button');
-        cancelBtn.className = 'btn btn-danger';
-        cancelBtn.style.marginTop = '10px';
-        cancelBtn.textContent = 'CANCELAR EDICIÓN';
-        cancelBtn.onclick = () => this.cancelEdit();
-        
+        // Obtener contenedor de botones
         const paymentButtons = document.querySelector('.venta-buttons');
+        console.log("Contenedor de botones encontrado:", paymentButtons);
+        
+        // Limpiar botones existentes
         paymentButtons.innerHTML = '';
+        
+        // Crear nuevos botones de edición
+        const { updateBtn, cancelBtn } = UIService.createEditButtons(invoiceId);
+        
+        // Agregar botones al contenedor
         paymentButtons.appendChild(updateBtn);
         paymentButtons.appendChild(cancelBtn);
+        
+        console.log("Botones de edición agregados correctamente");
         
         UIService.showStatus("Modo edición activado - Editando factura pendiente", "success");
     },
 
     cancelEdit() {
+        console.log("Cancelando edición");
+        
         AppState.cart = [];
         AppState.currentEditingInvoice = null;
         this.setTodayDate();
