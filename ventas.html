@@ -1461,15 +1461,15 @@
             </div>
         </div>
 
-        <div id="invoice-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000;">
-            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 8px; width: 90%; max-width: 600px; max-height: 80vh; overflow-y: auto;">
+        <div id="invoice-modal" class="modal-overlay">
+            <div class="modal-content">
                 <div id="invoice-modal-content"></div>
                 <button class="btn btn-primary" id="close-invoice-modal" style="margin-top: 15px; width: 100%;">CERRAR</button>
             </div>
         </div>
 
-        <div id="abono-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000;">
-            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 8px; width: 90%; max-width: 400px;">
+        <div id="abono-modal" class="modal-overlay">
+            <div class="modal-content">
                 <h3 style="margin-bottom: 15px; text-align: center;">Registrar Abono</h3>
                 <div id="abono-modal-content"></div>
                 <div class="form-group">
@@ -1483,8 +1483,8 @@
             </div>
         </div>
 
-        <div id="retiro-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000;">
-            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 8px; width: 90%; max-width: 400px;">
+        <div id="retiro-modal" class="modal-overlay">
+            <div class="modal-content">
                 <h3 style="margin-bottom: 15px; text-align: center;">Registrar Retiro</h3>
                 <div class="form-group">
                     <label for="monto-retiro">Monto del Retiro:</label>
@@ -1512,6 +1512,9 @@
     </div>
 
     <script>
+        // Definir firebase globalmente
+        const firebase = window.firebase;
+
         const CONFIG = {
             firebase: {
                 apiKey: "AIzaSyDh074AarXaYCc-Htw-lsCeIc_95QQNSnY",
@@ -1570,8 +1573,8 @@
                 const selectedDate = this.createDateFromStringElSalvador(dateString);
                 const today = this.getCurrentDateElSalvador();
                 const selectedDateOnly = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate());
-                const hoyOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-                return selectedDateOnly > hoyOnly;
+                const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+                return selectedDateOnly > todayOnly;
             },
 
             getCurrentTimestampElSalvador() {
@@ -1770,7 +1773,9 @@
             
             async crearGrupo(nombre, equiposSeleccionados) {
                 try {
-                    if (!AppState.firebaseInitialized) return;
+                    if (!AppState.firebaseInitialized) {
+                        throw new Error("No hay conexión a la base de datos");
+                    }
                     
                     const equiposConFacturas = equiposSeleccionados.filter(equipoNum => {
                         let tieneFacturas = false;
@@ -1807,14 +1812,19 @@
                     grupoData.id = docRef.id;
                     this.grupos.set(docRef.id, grupoData);
                     
+                    // Actualizar las facturas con la información del grupo
                     for (const equipoNum of equiposConFacturas) {
                         this.equiposPendientes.forEach(async (equipo, key) => {
                             if (equipo.numero === equipoNum) {
                                 for (const factura of equipo.facturas) {
-                                    await AppState.db.collection("VENTAS").doc(factura.id).update({
-                                        grupo: docRef.id,
-                                        grupoNombre: nombre
-                                    });
+                                    try {
+                                        await AppState.db.collection("VENTAS").doc(factura.id).update({
+                                            grupo: docRef.id,
+                                            grupoNombre: nombre
+                                        });
+                                    } catch (error) {
+                                        console.error(`Error actualizando factura ${factura.id}:`, error);
+                                    }
                                 }
                             }
                         });
@@ -1833,7 +1843,9 @@
 
             async actualizarGrupo(grupoId, nombre, equiposSeleccionados) {
                 try {
-                    if (!AppState.firebaseInitialized) return;
+                    if (!AppState.firebaseInitialized) {
+                        throw new Error("No hay conexión a la base de datos");
+                    }
                     
                     const equiposConFacturas = equiposSeleccionados.filter(equipoNum => {
                         let tieneFacturas = false;
@@ -1868,19 +1880,25 @@
                         Object.assign(grupoExistente, grupoData);
                     }
                     
+                    // Actualizar facturas con el nuevo grupo
                     for (const equipoNum of equiposConFacturas) {
                         this.equiposPendientes.forEach(async (equipo, key) => {
                             if (equipo.numero === equipoNum) {
                                 for (const factura of equipo.facturas) {
-                                    await AppState.db.collection("VENTAS").doc(factura.id).update({
-                                        grupo: grupoId,
-                                        grupoNombre: nombre
-                                    });
+                                    try {
+                                        await AppState.db.collection("VENTAS").doc(factura.id).update({
+                                            grupo: grupoId,
+                                            grupoNombre: nombre
+                                        });
+                                    } catch (error) {
+                                        console.error(`Error actualizando factura ${factura.id}:`, error);
+                                    }
                                 }
                             }
                         });
                     }
                     
+                    // Remover grupo de facturas que ya no están en el grupo
                     const grupoOriginal = this.grupos.get(grupoId);
                     if (grupoOriginal) {
                         for (const equipoNum of grupoOriginal.equipos) {
@@ -1888,10 +1906,16 @@
                                 this.equiposPendientes.forEach(async (equipo, key) => {
                                     if (equipo.numero === equipoNum) {
                                         for (const factura of equipo.facturas) {
-                                            await AppState.db.collection("VENTAS").doc(factura.id).update({
-                                                grupo: firebase.firestore.FieldValue.delete(),
-                                                grupoNombre: firebase.firestore.FieldValue.delete()
-                                            });
+                                            try {
+                                                if (AppState.firebaseInitialized && AppState.db.FieldValue) {
+                                                    await AppState.db.collection("VENTAS").doc(factura.id).update({
+                                                        grupo: AppState.db.FieldValue.delete(),
+                                                        grupoNombre: AppState.db.FieldValue.delete()
+                                                    });
+                                                }
+                                            } catch (error) {
+                                                console.error(`Error removiendo grupo de factura ${factura.id}:`, error);
+                                            }
                                         }
                                     }
                                 });
@@ -1912,7 +1936,9 @@
             
             async eliminarGrupo(grupoId) {
                 try {
-                    if (!AppState.firebaseInitialized) return;
+                    if (!AppState.firebaseInitialized) {
+                        throw new Error("No hay conexión a la base de datos");
+                    }
                     
                     const grupo = this.grupos.get(grupoId);
                     if (grupo) {
@@ -1920,10 +1946,16 @@
                             this.equiposPendientes.forEach(async (equipo, key) => {
                                 if (equipo.numero === equipoNum) {
                                     for (const factura of equipo.facturas) {
-                                        await AppState.db.collection("VENTAS").doc(factura.id).update({
-                                            grupo: firebase.firestore.FieldValue.delete(),
-                                            grupoNombre: firebase.firestore.FieldValue.delete()
-                                        });
+                                        try {
+                                            if (AppState.firebaseInitialized && AppState.db.FieldValue) {
+                                                await AppState.db.collection("VENTAS").doc(factura.id).update({
+                                                    grupo: AppState.db.FieldValue.delete(),
+                                                    grupoNombre: AppState.db.FieldValue.delete()
+                                                });
+                                            }
+                                        } catch (error) {
+                                            console.error(`Error removiendo grupo de factura ${factura.id}:`, error);
+                                        }
                                     }
                                 }
                             });
@@ -2753,7 +2785,7 @@
                     }
                     
                     await ventaRef.update({
-                        abonos: firebase.firestore.FieldValue.arrayUnion(abonoData),
+                        abonos: AppState.db.FieldValue.arrayUnion(abonoData),
                         saldoPendiente: nuevoSaldo
                     });
                     
@@ -2873,6 +2905,42 @@
                     const dateB = b.timestamp?.toDate ? b.timestamp.toDate() : b.timestamp;
                     return dateB - dateA;
                 }).slice(0, limit);
+            }
+        };
+
+        const ModalService = {
+            closeAbonoModal() {
+                document.getElementById('abono-modal').style.display = 'none';
+                AppState.currentAbonoInvoice = null;
+            },
+            
+            closeRetiroModal() {
+                document.getElementById('retiro-modal').style.display = 'none';
+            },
+            
+            closeInvoiceModal() {
+                document.getElementById('invoice-modal').style.display = 'none';
+            },
+            
+            closeDetalleModal() {
+                document.getElementById('detalle-modal').style.display = 'none';
+                AppState.currentDetalle = null;
+            },
+            
+            closeGrupoDetalleModal() {
+                document.getElementById('grupo-detalle-modal').style.display = 'none';
+                GrupoManager.currentGrupoDetalle = null;
+            },
+            
+            closeCrearGrupoModal() {
+                document.getElementById('crear-grupo-modal').style.display = 'none';
+                AppState.equiposSeleccionados.clear();
+            },
+            
+            closeEditarGrupoModal() {
+                document.getElementById('editar-grupo-modal').style.display = 'none';
+                GrupoManager.currentEditingGroup = null;
+                AppState.equiposEditSeleccionados.clear();
             }
         };
 
@@ -3312,22 +3380,6 @@
                 UIService.updateCartDisplay();
             },
 
-            createEditButtons(invoiceId) {
-                const updateBtn = document.createElement('button');
-                updateBtn.className = 'btn btn-success btn-full';
-                updateBtn.id = 'update-btn';
-                updateBtn.textContent = 'ACTUALIZAR FACTURA';
-                updateBtn.onclick = () => SalesService.updateInvoice(invoiceId);
-                
-                const cancelBtn = document.createElement('button');
-                cancelBtn.className = 'btn btn-danger';
-                cancelBtn.style.marginTop = '10px';
-                cancelBtn.textContent = 'CANCELAR EDICIÓN';
-                cancelBtn.onclick = () => SalesService.cancelEdit();
-                
-                return { updateBtn, cancelBtn };
-            },
-
             async generateInvoiceNumber() {
                 const fechaVenta = document.getElementById('fecha-venta').value;
                 const date = fechaVenta || DateUtils.getCurrentDateStringElSalvador();
@@ -3690,7 +3742,17 @@
                 document.getElementById('contado-btn').style.display = 'none';
                 document.getElementById('pendiente-btn').style.display = 'none';
                 
-                const { updateBtn, cancelBtn } = this.createEditButtons(invoiceId);
+                const updateBtn = document.createElement('button');
+                updateBtn.className = 'btn btn-success btn-full';
+                updateBtn.id = 'update-btn';
+                updateBtn.textContent = 'ACTUALIZAR FACTURA';
+                updateBtn.onclick = () => this.updateInvoice(invoiceId);
+                
+                const cancelBtn = document.createElement('button');
+                cancelBtn.className = 'btn btn-danger';
+                cancelBtn.style.marginTop = '10px';
+                cancelBtn.textContent = 'CANCELAR EDICIÓN';
+                cancelBtn.onclick = () => this.cancelEdit();
                 
                 const paymentButtons = document.querySelector('.venta-buttons');
                 paymentButtons.innerHTML = '';
@@ -3829,7 +3891,7 @@
                     
                     UIService.showStatus(`Abono de $${monto.toFixed(2)} registrado correctamente`, "success");
                     
-                    closeAbonoModal();
+                    ModalService.closeAbonoModal();
                     
                     const ventaActualizada = await DataService.getSaleById(venta.id);
                     if (ventaActualizada) {
@@ -3880,7 +3942,7 @@
                     
                     UIService.showStatus(`Retiro de $${monto.toFixed(2)} registrado correctamente`, "success");
                     
-                    closeRetiroModal();
+                    ModalService.closeRetiroModal();
                     
                     await this.loadHistorial();
                     
@@ -4699,7 +4761,7 @@
                 });
 
                 document.getElementById('close-invoice-modal').addEventListener('click', () => {
-                    document.getElementById('invoice-modal').style.display = 'none';
+                    ModalService.closeInvoiceModal();
                 });
 
                 document.getElementById('process-abono-btn').addEventListener('click', () => {
@@ -4707,8 +4769,7 @@
                 });
 
                 document.getElementById('close-abono-modal').addEventListener('click', () => {
-                    document.getElementById('abono-modal').style.display = 'none';
-                    AppState.currentAbonoInvoice = null;
+                    ModalService.closeAbonoModal();
                 });
 
                 document.getElementById('process-retiro-btn').addEventListener('click', () => {
@@ -4716,11 +4777,11 @@
                 });
 
                 document.getElementById('close-retiro-modal').addEventListener('click', () => {
-                    document.getElementById('retiro-modal').style.display = 'none';
+                    ModalService.closeRetiroModal();
                 });
 
                 document.getElementById('close-detalle-modal').addEventListener('click', () => {
-                    document.getElementById('detalle-modal').style.display = 'none';
+                    ModalService.closeDetalleModal();
                 });
 
                 document.getElementById('imprimir-detalle-modal').addEventListener('click', () => {
@@ -4736,8 +4797,7 @@
                 });
 
                 document.getElementById('close-grupo-detalle-modal').addEventListener('click', () => {
-                    document.getElementById('grupo-detalle-modal').style.display = 'none';
-                    GrupoManager.currentGrupoDetalle = null;
+                    ModalService.closeGrupoDetalleModal();
                 });
 
                 document.getElementById('imprimir-grupo-detalle-modal').addEventListener('click', () => {
@@ -4768,16 +4828,14 @@
                         const equiposArray = Array.from(AppState.equiposSeleccionados);
                         await GrupoManager.crearGrupo(nombre, equiposArray);
                         UIService.showStatus(`Grupo "${nombre}" creado correctamente`, "success");
-                        document.getElementById('crear-grupo-modal').style.display = 'none';
-                        AppState.equiposSeleccionados.clear();
+                        ModalService.closeCrearGrupoModal();
                     } catch (error) {
                         UIService.showStatus("Error al crear grupo: " + error.message, "error");
                     }
                 });
 
                 document.getElementById('cancelar-grupo-btn').addEventListener('click', () => {
-                    document.getElementById('crear-grupo-modal').style.display = 'none';
-                    AppState.equiposSeleccionados.clear();
+                    ModalService.closeCrearGrupoModal();
                 });
 
                 document.getElementById('actualizar-grupo-btn').addEventListener('click', () => {
@@ -4785,9 +4843,7 @@
                 });
 
                 document.getElementById('cancelar-editar-grupo-btn').addEventListener('click', () => {
-                    document.getElementById('editar-grupo-modal').style.display = 'none';
-                    GrupoManager.currentEditingGroup = null;
-                    AppState.equiposEditSeleccionados.clear();
+                    ModalService.closeEditarGrupoModal();
                 });
             }
         };
@@ -4830,19 +4886,6 @@
             } catch (error) {
                 UIService.showStatus("Error al eliminar grupo: " + error.message, "error");
             }
-        }
-
-        function closeInvoiceModal() {
-            document.getElementById('invoice-modal').style.display = 'none';
-        }
-
-        function closeAbonoModal() {
-            document.getElementById('abono-modal').style.display = 'none';
-            AppState.currentAbonoInvoice = null;
-        }
-
-        function closeRetiroModal() {
-            document.getElementById('retiro-modal').style.display = 'none';
         }
 
         document.addEventListener('DOMContentLoaded', function() {
