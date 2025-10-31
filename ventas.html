@@ -78,7 +78,7 @@
             align-items: center;
             font-size: 1.2rem;
             color: #2c3e50;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
             padding-bottom: 8px;
             border-bottom: 2px solid #3498db;
         }
@@ -97,27 +97,30 @@
             font-size: 0.85rem;
         }
 
+        /* NUEVA DISTRIBUCIÓN - VENTA HEADER */
         .venta-header {
             display: grid;
-            grid-template-columns: 1fr auto;
-            gap: 15px;
-            margin-bottom: 5px;
-        }
-
-        .venta-fields {
-            display: grid;
-            grid-template-columns: 80px 1fr;
+            grid-template-columns: 1fr;
             gap: 10px;
+            margin-bottom: 10px;
         }
 
-        .venta-buttons {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
+        .venta-line-1 {
+            display: grid;
+            grid-template-columns: 80px 1fr 100px;
+            gap: 10px;
+            align-items: end;
+        }
+
+        .venta-line-2 {
+            display: grid;
+            grid-template-columns: 1fr 100px;
+            gap: 10px;
+            align-items: end;
         }
 
         .form-group {
-            margin-bottom: 5px;
+            margin-bottom: 0;
         }
 
         .form-group label {
@@ -173,6 +176,7 @@
             color: white;
         }
 
+        /* CARRITO EXPANDIDO */
         .cart-container {
             background: #f8f9fa;
             border-radius: 6px;
@@ -294,15 +298,17 @@
             border: 2px dashed #ddd;
         }
 
+        /* BOTONES COMPACTOS */
         .btn {
-            padding: 12px 16px;
+            padding: 8px 12px;
             border: none;
             border-radius: 4px;
             cursor: pointer;
             font-weight: 600;
             transition: all 0.3s ease;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             text-align: center;
+            height: 38px;
         }
 
         .btn-primary {
@@ -1250,9 +1256,9 @@
                 <input type="date" id="fecha-venta" class="fecha-input" style="display: none;">
                 
                 <div class="venta-header">
-                    <div class="venta-fields">
+                    <div class="venta-line-1">
                         <div class="form-group">
-                            <label for="equipo">Equipo</label>
+                            <label for="equipo">Equipo *</label>
                             <input type="text" id="equipo" placeholder="Número" maxlength="4" required>
                         </div>
 
@@ -1260,23 +1266,24 @@
                             <label for="cliente">Grupo</label>
                             <input type="text" id="cliente" placeholder="Nombre del grupo">
                         </div>
-                    </div>
 
-                    <div class="venta-buttons">
                         <button class="btn btn-success" id="contado-btn">
                             CONTADO
                         </button>
+                    </div>
+
+                    <div class="venta-line-2">
+                        <div class="form-group">
+                            <label for="buscar-producto">Buscar Producto</label>
+                            <div class="search-container">
+                                <input type="text" id="buscar-producto" placeholder="Código, descripción o formato: 3 pernos de culata $3">
+                                <div id="search-dropdown" class="search-dropdown"></div>
+                            </div>
+                        </div>
+
                         <button class="btn btn-warning" id="pendiente-btn">
                             PENDIENTE
                         </button>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label for="buscar-producto">Buscar Producto</label>
-                    <div class="search-container">
-                        <input type="text" id="buscar-producto" placeholder="Código, descripción o formato: 3 pernos de culata $3">
-                        <div id="search-dropdown" class="search-dropdown"></div>
                     </div>
                 </div>
 
@@ -3003,6 +3010,10 @@
                 
                 cartItems.innerHTML = itemsHTML;
                 totalAmount.textContent = `TOTAL: $${total.toFixed(2)}`;
+                
+                // SCROLL AUTOMÁTICO AL FINAL
+                const cartContainer = document.getElementById('cart-items');
+                cartContainer.scrollTop = cartContainer.scrollHeight;
             },
 
             showSearchResults(results) {
