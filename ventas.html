@@ -1267,9 +1267,11 @@
                             <input type="text" id="cliente" placeholder="Nombre del grupo">
                         </div>
 
-                        <button class="btn btn-success" id="contado-btn">
-                            CONTADO
-                        </button>
+                        <div>
+                            <button class="btn btn-success" id="contado-btn">
+                                CONTADO
+                            </button>
+                        </div>
                     </div>
 
                     <div class="venta-line-2">
@@ -1281,9 +1283,11 @@
                             </div>
                         </div>
 
-                        <button class="btn btn-warning" id="pendiente-btn">
-                            PENDIENTE
-                        </button>
+                        <div>
+                            <button class="btn btn-warning" id="pendiente-btn">
+                                PENDIENTE
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -3258,16 +3262,14 @@
             },
 
             restorePaymentButtons() {
-                const paymentButtons = document.querySelector('.venta-buttons');
-                paymentButtons.innerHTML = `
-                    <button class="btn btn-success" id="contado-btn">
-                        CONTADO
-                    </button>
-                    <button class="btn btn-warning" id="pendiente-btn">
-                        PENDIENTE
-                    </button>
-                `;
-                
+                // Restaurar los botones originales en sus contenedores
+                const contadoContainer = document.querySelector('.venta-line-1').lastElementChild;
+                const pendienteContainer = document.querySelector('.venta-line-2').lastElementChild;
+
+                contadoContainer.innerHTML = '<button class="btn btn-success" id="contado-btn">CONTADO</button>';
+                pendienteContainer.innerHTML = '<button class="btn btn-warning" id="pendiente-btn">PENDIENTE</button>';
+
+                // Restaurar event listeners
                 document.getElementById('contado-btn').addEventListener('click', () => SalesService.processSale('contado'));
                 document.getElementById('pendiente-btn').addEventListener('click', () => SalesService.processSale('pendiente'));
             },
@@ -3750,25 +3752,32 @@
                 
                 UIService.updateCartDisplay();
                 
+                // Ocultar botones originales
                 document.getElementById('contado-btn').style.display = 'none';
                 document.getElementById('pendiente-btn').style.display = 'none';
                 
+                // Crear botones de edición en las mismas posiciones
                 const updateBtn = document.createElement('button');
-                updateBtn.className = 'btn btn-success btn-full';
+                updateBtn.className = 'btn btn-success';
                 updateBtn.id = 'update-btn';
                 updateBtn.textContent = 'ACTUALIZAR FACTURA';
                 updateBtn.onclick = () => this.updateInvoice(invoiceId);
-                
+
                 const cancelBtn = document.createElement('button');
                 cancelBtn.className = 'btn btn-danger';
-                cancelBtn.style.marginTop = '10px';
+                cancelBtn.id = 'cancel-btn';
                 cancelBtn.textContent = 'CANCELAR EDICIÓN';
                 cancelBtn.onclick = () => this.cancelEdit();
-                
-                const paymentButtons = document.querySelector('.venta-buttons');
-                paymentButtons.innerHTML = '';
-                paymentButtons.appendChild(updateBtn);
-                paymentButtons.appendChild(cancelBtn);
+
+                // Insertar en las mismas posiciones de los botones originales
+                const contadoContainer = document.querySelector('.venta-line-1').lastElementChild;
+                const pendienteContainer = document.querySelector('.venta-line-2').lastElementChild;
+
+                contadoContainer.innerHTML = '';
+                pendienteContainer.innerHTML = '';
+
+                contadoContainer.appendChild(updateBtn);
+                pendienteContainer.appendChild(cancelBtn);
                 
                 UIService.showStatus("Modo edición activado - Editando factura pendiente", "success");
             },
