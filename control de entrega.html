@@ -439,17 +439,148 @@
             body * {
                 visibility: hidden;
             }
-            .depositos-print, .depositos-print * {
+            .calendario-print, .calendario-print * {
                 visibility: visible;
             }
-            .depositos-print {
+            .calendario-print {
                 position: absolute;
                 left: 0;
                 top: 0;
                 width: 100%;
+                height: 100%;
+                font-size: 12px;
             }
             .no-print {
                 display: none !important;
+            }
+            
+            /* Estilos para el calendario en tamaño carta */
+            .calendario-mensual {
+                width: 8.5in;
+                height: 11in;
+                padding: 0.5in;
+                margin: 0 auto;
+                page-break-after: always;
+                font-family: Arial, sans-serif;
+            }
+            
+            .encabezado-recibo {
+                text-align: center;
+                margin-bottom: 10px;
+                border-bottom: 2px solid #000;
+                padding-bottom: 10px;
+            }
+            
+            .encabezado-recibo h1 {
+                font-size: 18px;
+                margin-bottom: 5px;
+            }
+            
+            .encabezado-recibo .info-mes {
+                font-size: 14px;
+                margin-bottom: 5px;
+            }
+            
+            .info-equipo {
+                text-align: center;
+                margin-bottom: 15px;
+                font-size: 13px;
+            }
+            
+            .info-equipo .numero-equipo {
+                font-weight: bold;
+                font-size: 16px;
+                margin-bottom: 5px;
+            }
+            
+            .tabla-calendario {
+                width: 100%;
+                border-collapse: collapse;
+                margin-bottom: 20px;
+            }
+            
+            .tabla-calendario th {
+                background-color: #f0f0f0;
+                border: 1px solid #000;
+                padding: 5px;
+                text-align: center;
+                font-size: 12px;
+            }
+            
+            .tabla-calendario td {
+                border: 1px solid #000;
+                padding: 5px;
+                vertical-align: top;
+                height: 90px;
+                width: 14.28%;
+            }
+            
+            .cuadro-dia {
+                height: 100%;
+                display: flex;
+                flex-direction: column;
+                text-align: center;
+                padding: 3px;
+                position: relative;
+            }
+            
+            .dia-numero {
+                font-weight: bold;
+                font-size: 16px;
+                text-align: left;
+                position: absolute;
+                top: 3px;
+                left: 5px;
+            }
+            
+            .dia-monto {
+                font-size: 14px;
+                font-weight: bold;
+                margin-top: 20px;
+            }
+            
+            .dia-comentario {
+                font-size: 10px;
+                color: #666;
+                margin-top: auto;
+                padding-bottom: 5px;
+            }
+            
+            .dia-descanso {
+                background-color: #f0f0f0;
+            }
+            
+            .texto-descanso {
+                font-size: 14px;
+                font-weight: bold;
+                color: #666;
+                height: 100%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin-top: 20px;
+            }
+            
+            .pie-pagina {
+                margin-top: 30px;
+                padding-top: 10px;
+                display: flex;
+                flex-direction: column;
+                align-items: flex-end;
+            }
+            
+            .total-general-print {
+                font-weight: bold;
+                font-size: 16px;
+                margin-bottom: 40px;
+            }
+            
+            .firma {
+                font-size: 14px;
+                border-top: 1px solid #000;
+                padding-top: 3px;
+                width: 200px;
+                text-align: center;
             }
         }
         
@@ -552,6 +683,138 @@
             color: #3498db;
             font-weight: bold;
         }
+        
+        /* Estilos para el botón de imprimir calendario */
+        .btn-imprimir-calendario {
+            margin-top: 10px;
+            background-color: #9b59b6;
+            color: white;
+        }
+        
+        .btn-imprimir-calendario:hover {
+            background-color: #8e44ad;
+        }
+        
+        /* Estilos para selección de días de descanso */
+        .dias-descanso {
+            margin-top: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+        }
+        
+        .dias-descanso h3 {
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        
+        .lista-dias-descanso {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .dia-descanso-check {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .dia-descanso-check label {
+            margin-bottom: 0;
+            font-weight: normal;
+        }
+        
+        /* Estilos para vista previa del calendario */
+        .vista-previa-calendario {
+            margin-top: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            background-color: white;
+        }
+        
+        .vista-previa-calendario h3 {
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .tabla-calendario-preview {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .tabla-calendario-preview th {
+            background-color: #f0f0f0;
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+            font-size: 12px;
+        }
+        
+        .tabla-calendario-preview td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            vertical-align: top;
+            height: 90px;
+            width: 14.28%;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .tabla-calendario-preview td:hover {
+            background-color: #f9f9f9;
+        }
+        
+        .dia-descanso-preview {
+            background-color: #f0f0f0;
+        }
+        
+        .cuadro-dia-preview {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            text-align: center;
+            padding: 3px;
+            position: relative;
+        }
+        
+        .dia-numero-preview {
+            font-weight: bold;
+            font-size: 16px;
+            text-align: left;
+            position: absolute;
+            top: 3px;
+            left: 5px;
+        }
+        
+        .dia-monto-preview {
+            font-size: 14px;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+        
+        .dia-comentario-preview {
+            font-size: 10px;
+            color: #666;
+            margin-top: auto;
+            padding-bottom: 5px;
+        }
+        
+        .texto-descanso-preview {
+            font-size: 14px;
+            font-weight: bold;
+            color: #666;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        .dia-seleccionado {
+            background-color: #e3f2fd;
+        }
     </style>
 </head>
 <body>
@@ -565,6 +828,7 @@
             <div class="tab" data-tab="equipos">Gestionar Equipos</div>
             <div class="tab" data-tab="historial">Historial de Ingresos</div>
             <div class="tab" data-tab="depositos-equipos">Depósitos por Equipo</div>
+            <div class="tab" data-tab="calendario">Calendario Mensual</div>
         </div>
         
         <!-- Pestaña de Ingresos -->
@@ -690,6 +954,43 @@
                 </div>
             </div>
         </div>
+        
+        <!-- Pestaña de Calendario Mensual -->
+        <div class="tab-content" id="calendario">
+            <h2>Calendario Mensual para Imprimir</h2>
+            
+            <div class="filtros">
+                <div class="filtro-group">
+                    <label for="filtro-mes-calendario">Seleccionar Mes:</label>
+                    <input type="month" id="filtro-mes-calendario">
+                </div>
+                
+                <div class="filtro-group">
+                    <label for="filtro-equipo-calendario">Filtrar por Equipo:</label>
+                    <select id="filtro-equipo-calendario">
+                        <option value="">Todos los equipos</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="dias-descanso">
+                <h3>Haz clic en los días del calendario para marcarlos como DESCANSO</h3>
+                <p>Los días marcados se mostrarán en gris con el texto "DESCANSO"</p>
+            </div>
+            
+            <div class="vista-previa-calendario">
+                <h3>Vista Previa del Calendario</h3>
+                <div id="calendario-preview">
+                    <!-- Aquí se generará la vista previa del calendario -->
+                </div>
+            </div>
+            
+            <button class="btn btn-imprimir-calendario" id="imprimir-calendario">Imprimir Calendario</button>
+            
+            <div class="calendario-print" id="calendario-print">
+                <!-- Aquí se generará el calendario para imprimir -->
+            </div>
+        </div>
     </div>
 
     <script>
@@ -706,6 +1007,9 @@
         // Inicializar Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
+
+        // Variable global para almacenar los días de descanso seleccionados
+        let diasDescansoSeleccionados = [];
 
         document.addEventListener('DOMContentLoaded', function() {
             // Configurar pestañas
@@ -733,6 +1037,12 @@
                     } else if (tabId === 'historial') {
                         actualizarFiltroEquipos('filtro-equipo');
                         cargarHistorialIngresos();
+                    } else if (tabId === 'calendario') {
+                        actualizarFiltroEquipos('filtro-equipo-calendario');
+                        const hoy = new Date();
+                        const mesActual = hoy.getFullYear() + '-' + String(hoy.getMonth() + 1).padStart(2, '0');
+                        document.getElementById('filtro-mes-calendario').value = mesActual;
+                        generarCalendario();
                     }
                 });
             });
@@ -765,6 +1075,7 @@
             const guardarRapidoBtn = document.getElementById('guardar-rapido');
             const guardarEquipoBtn = document.getElementById('guardar-equipo');
             const imprimirTodosEquiposBtn = document.getElementById('imprimir-todos-equipos');
+            const imprimirCalendarioBtn = document.getElementById('imprimir-calendario');
             
             // Elementos del formulario rápido
             const equipoRapidoInput = document.getElementById('equipo-rapido');
@@ -779,11 +1090,14 @@
             guardarRapidoBtn.addEventListener('click', guardarIngresoRapido);
             guardarEquipoBtn.addEventListener('click', guardarEquipo);
             imprimirTodosEquiposBtn.addEventListener('click', () => window.print());
+            imprimirCalendarioBtn.addEventListener('click', () => window.print());
             
             // Filtros
             document.getElementById('filtro-equipo').addEventListener('change', cargarHistorialIngresos);
             document.getElementById('filtro-fecha').addEventListener('change', cargarHistorialIngresos);
             document.getElementById('filtro-equipo-depositos').addEventListener('change', cargarDepositosPorEquipo);
+            document.getElementById('filtro-mes-calendario').addEventListener('change', generarCalendario);
+            document.getElementById('filtro-equipo-calendario').addEventListener('change', generarCalendario);
             
             // Event listeners para navegación con ENTER
             equipoRapidoInput.addEventListener('keypress', function(e) {
@@ -951,94 +1265,12 @@
                     
                     // Actualizar interfaces
                     cargarListaEquipos();
-                }
-            }
-            
-            // Función para guardar un ingreso rápido
-            async function guardarIngresoRapido() {
-                const fecha = document.getElementById('fecha').value;
-                const equipo = parseInt(equipoRapidoInput.value) || 0;
-                const monto = parseFloat(montoRapidoInput.value) || 0;
-                const observacion = observacionRapidaInput.value.trim();
-                
-                // Validaciones
-                if (!fecha) {
-                    alert('Por favor, seleccione una fecha.');
-                    return;
-                }
-                
-                if (equipo <= 0) {
-                    alert('Por favor, ingrese un número de equipo válido.');
-                    equipoRapidoInput.focus();
-                    return;
-                }
-                
-                // MODIFICACIÓN: Permitir monto 0
-                if (monto < 0) {
-                    alert('Por favor, ingrese un monto válido (no puede ser negativo).');
-                    montoRapidoInput.focus();
-                    return;
-                }
-                
-                // Obtener nombre del equipo
-                const equipos = JSON.parse(localStorage.getItem('equiposMototaxis')) || [];
-                const equipoEncontrado = equipos.find(e => e.numero === equipo);
-                const nombreEquipo = equipoEncontrado ? equipoEncontrado.nombre : 'No registrado';
-                
-                // Crear nuevo ingreso
-                const nuevoIngreso = {
-                    fecha: fecha,
-                    equipo: equipo,
-                    nombreEquipo: nombreEquipo,
-                    monto: monto,
-                    observacion: observacion,
-                    tipo: 'cuota'
-                };
-                
-                // Guardar ingreso en Firebase
-                const id = Date.now().toString();
-                const exito = await guardarEnFirebase('ingresos', nuevoIngreso, id);
-                
-                if (exito) {
-                    // Guardar ingreso localmente
-                    nuevoIngreso.id = id;
-                    const ingresos = JSON.parse(localStorage.getItem('ingresosMototaxis')) || [];
-                    ingresos.push(nuevoIngreso);
-                    localStorage.setItem('ingresosMototaxis', JSON.stringify(ingresos));
                     
                     // Limpiar formulario
-                    equipoRapidoInput.value = '';
-                    nombreRapidoInput.value = '';
-                    montoRapidoInput.value = '';
-                    observacionRapidaInput.value = '';
-                    
-                    // Enfocar en el campo de equipo
-                    equipoRapidoInput.focus();
-                    
-                    // Actualizar resumen
-                    actualizarResumenEquiposSaldos();
-                    
-                    alert('Ingreso registrado correctamente.');
-                } else {
-                    alert('Error al guardar el ingreso. Los datos se guardarán localmente.');
-                    
-                    // Guardar solo localmente si falla Firebase
-                    nuevoIngreso.id = id;
-                    const ingresos = JSON.parse(localStorage.getItem('ingresosMototaxis')) || [];
-                    ingresos.push(nuevoIngreso);
-                    localStorage.setItem('ingresosMototaxis', JSON.stringify(ingresos));
-                    
-                    // Limpiar formulario
-                    equipoRapidoInput.value = '';
-                    nombreRapidoInput.value = '';
-                    montoRapidoInput.value = '';
-                    observacionRapidaInput.value = '';
-                    
-                    // Enfocar en el campo de equipo
-                    equipoRapidoInput.focus();
-                    
-                    // Actualizar resumen
-                    actualizarResumenEquiposSaldos();
+                    document.getElementById('numero-equipo').value = '';
+                    document.getElementById('placa').value = '';
+                    document.getElementById('nombre').value = '';
+                    document.getElementById('dui').value = '';
                 }
             }
             
@@ -1048,46 +1280,36 @@
                 const equipos = JSON.parse(localStorage.getItem('equiposMototaxis')) || [];
                 
                 if (equipos.length === 0) {
-                    listaEquipos.innerHTML = '<div class="empty-message">No hay equipos registrados</div>';
+                    listaEquipos.innerHTML = '<div class="empty-message">No hay equipos registrados.</div>';
                     return;
                 }
                 
-                listaEquipos.innerHTML = '';
-                
+                let html = '';
                 equipos.forEach(equipo => {
-                    const equipoItem = document.createElement('div');
-                    equipoItem.className = 'ingreso-item';
-                    equipoItem.innerHTML = `
-                        <div class="ingreso-fecha">#${equipo.numero}</div>
-                        <div class="ingreso-equipo">${equipo.placa}</div>
-                        <div class="ingreso-cliente">${equipo.nombre}</div>
-                        <div class="ingreso-info">${equipo.dui}</div>
-                        <button class="edit-btn" data-id="${equipo.id}">Editar</button>
-                        <button class="delete-btn" data-id="${equipo.id}">Eliminar</button>
+                    html += `
+                        <div class="ingreso-item">
+                            <div class="ingreso-equipo">Equipo ${equipo.numero}</div>
+                            <div class="ingreso-cliente">${equipo.nombre}</div>
+                            <div class="ingreso-info">Placa: ${equipo.placa} | DUI: ${equipo.dui}</div>
+                            <button class="delete-btn" data-id="${equipo.id}">Eliminar</button>
+                        </div>
                     `;
-                    listaEquipos.appendChild(equipoItem);
                 });
                 
-                // Agregar event listeners para los botones de eliminar
-                document.querySelectorAll('.delete-btn').forEach(btn => {
+                listaEquipos.innerHTML = html;
+                
+                // Agregar event listeners a los botones de eliminar
+                document.querySelectorAll('#lista-equipos .delete-btn').forEach(btn => {
                     btn.addEventListener('click', function() {
                         const id = this.getAttribute('data-id');
                         eliminarEquipo(id);
-                    });
-                });
-                
-                // Agregar event listeners para los botones de editar
-                document.querySelectorAll('.edit-btn').forEach(btn => {
-                    btn.addEventListener('click', function() {
-                        const id = this.getAttribute('data-id');
-                        editarEquipo(id);
                     });
                 });
             }
             
             // Función para eliminar un equipo
             async function eliminarEquipo(id) {
-                if (!confirm('¿Está seguro de que desea eliminar este equipo?')) {
+                if (!confirm('¿Está seguro de eliminar este equipo?')) {
                     return;
                 }
                 
@@ -1096,108 +1318,139 @@
                 
                 if (exito) {
                     // Eliminar localmente
-                    const equipos = JSON.parse(localStorage.getItem('equiposMototaxis')) || [];
-                    const equiposActualizados = equipos.filter(equipo => equipo.id !== id);
-                    localStorage.setItem('equiposMototaxis', JSON.stringify(equiposActualizados));
+                    let equipos = JSON.parse(localStorage.getItem('equiposMototaxis')) || [];
+                    equipos = equipos.filter(equipo => equipo.id !== id);
+                    localStorage.setItem('equiposMototaxis', JSON.stringify(equipos));
                     
-                    // Actualizar lista
+                    // Actualizar interfaz
                     cargarListaEquipos();
                     
                     alert('Equipo eliminado correctamente.');
                 } else {
-                    alert('Error al eliminar el equipo de Firebase. Se eliminará solo localmente.');
+                    alert('Error al eliminar el equipo. Se eliminará solo localmente.');
                     
-                    // Eliminar solo localmente
-                    const equipos = JSON.parse(localStorage.getItem('equiposMototaxis')) || [];
-                    const equiposActualizados = equipos.filter(equipo => equipo.id !== id);
-                    localStorage.setItem('equiposMototaxis', JSON.stringify(equiposActualizados));
+                    // Eliminar solo localmente si falla Firebase
+                    let equipos = JSON.parse(localStorage.getItem('equiposMototaxis')) || [];
+                    equipos = equipos.filter(equipo => equipo.id !== id);
+                    localStorage.setItem('equiposMototaxis', JSON.stringify(equipos));
                     
-                    // Actualizar lista
+                    // Actualizar interfaz
                     cargarListaEquipos();
                 }
             }
             
-            // Función para editar un equipo
-            function editarEquipo(id) {
+            // Función para guardar un ingreso rápido
+            async function guardarIngresoRapido() {
+                const fecha = document.getElementById('fecha').value;
+                const numeroEquipo = parseInt(equipoRapidoInput.value) || 0;
+                const nombre = nombreRapidoInput.value.trim();
+                const monto = parseFloat(montoRapidoInput.value) || 0;
+                const observacion = observacionRapidaInput.value.trim();
+                
+                // Validaciones
+                if (numeroEquipo <= 0) {
+                    alert('Por favor, ingrese un número de equipo válido.');
+                    equipoRapidoInput.focus();
+                    return;
+                }
+                
+                if (nombre === '') {
+                    alert('Por favor, ingrese el nombre del conductor.');
+                    nombreRapidoInput.focus();
+                    return;
+                }
+                
+                if (monto <= 0) {
+                    alert('Por favor, ingrese un monto válido.');
+                    montoRapidoInput.focus();
+                    return;
+                }
+                
+                // Verificar si el equipo existe
                 const equipos = JSON.parse(localStorage.getItem('equiposMototaxis')) || [];
-                const equipo = equipos.find(e => e.id === id);
+                let equipo = equipos.find(e => e.numero === numeroEquipo);
                 
-                if (!equipo) return;
-                
-                document.getElementById('numero-equipo').value = equipo.numero;
-                document.getElementById('placa').value = equipo.placa;
-                document.getElementById('nombre').value = equipo.nombre;
-                document.getElementById('dui').value = equipo.dui;
-                
-                // Cambiar el texto del botón
-                guardarEquipoBtn.textContent = 'Actualizar Equipo';
-                
-                // Cambiar el evento del botón
-                guardarEquipoBtn.onclick = async function() {
-                    const numero = parseInt(document.getElementById('numero-equipo').value) || 0;
-                    const placa = document.getElementById('placa').value.trim();
-                    const nombre = document.getElementById('nombre').value.trim();
-                    const dui = document.getElementById('dui').value.trim();
+                // Si no existe, crear uno nuevo
+                if (!equipo) {
+                    const nuevoEquipo = {
+                        numero: numeroEquipo,
+                        placa: 'No registrada',
+                        nombre: nombre,
+                        dui: 'No registrado'
+                    };
                     
-                    // Validaciones
-                    if (numero <= 0) {
-                        alert('Por favor, ingrese un número de equipo válido.');
-                        return;
-                    }
-                    
-                    // Verificar si ya existe el número de equipo (excluyendo el actual)
-                    if (equipos.some(e => e.numero === numero && e.id !== id)) {
-                        alert('Ya existe un equipo con ese número.');
-                        return;
-                    }
-                    
-                    // Actualizar equipo
-                    equipo.numero = numero;
-                    equipo.placa = placa || 'No registrada';
-                    equipo.nombre = nombre || 'No registrado';
-                    equipo.dui = dui || 'No registrado';
-                    
-                    // Guardar en Firebase
-                    const exito = await guardarEnFirebase('equipos', equipo, id);
+                    // Guardar equipo en Firebase
+                    const id = Date.now().toString();
+                    const exito = await guardarEnFirebase('equipos', nuevoEquipo, id);
                     
                     if (exito) {
-                        // Actualizar localmente
+                        nuevoEquipo.id = id;
+                        equipos.push(nuevoEquipo);
                         localStorage.setItem('equiposMototaxis', JSON.stringify(equipos));
-                        
-                        // Actualizar lista
-                        cargarListaEquipos();
-                        
-                        // Limpiar formulario
-                        document.getElementById('numero-equipo').value = '';
-                        document.getElementById('placa').value = '';
-                        document.getElementById('nombre').value = '';
-                        document.getElementById('dui').value = '';
-                        
-                        // Restaurar botón
-                        guardarEquipoBtn.textContent = 'Guardar Equipo';
-                        guardarEquipoBtn.onclick = guardarEquipo;
-                        
-                        alert('Equipo actualizado correctamente.');
+                        equipo = nuevoEquipo;
                     } else {
-                        alert('Error al actualizar el equipo en Firebase. Se actualizará solo localmente.');
-                        
-                        // Actualizar solo localmente
+                        alert('Error al guardar el equipo. Los datos se guardarán localmente.');
+                        nuevoEquipo.id = id;
+                        equipos.push(nuevoEquipo);
                         localStorage.setItem('equiposMototaxis', JSON.stringify(equipos));
-                        
-                        // Actualizar lista
-                        cargarListaEquipos();
-                        
-                        // Limpiar formulario
-                        document.getElementById('numero-equipo').value = '';
-                        document.getElementById('placa').value = '';
-                        document.getElementById('nombre').value = '';
-                        document.getElementById('dui').value = '';
-                        
-                        // Restaurar botón
-                        guardarEquipoBtn.textContent = 'Guardar Equipo';
-                        guardarEquipoBtn.onclick = guardarEquipo;
+                        equipo = nuevoEquipo;
                     }
+                }
+                
+                // Crear nuevo ingreso
+                const nuevoIngreso = {
+                    fecha: fecha,
+                    equipo: numeroEquipo,
+                    nombre: equipo.nombre,
+                    monto: monto,
+                    observacion: observacion || 'Sin observación'
                 };
+                
+                // Guardar ingreso en Firebase
+                const idIngreso = Date.now().toString();
+                const exitoIngreso = await guardarEnFirebase('ingresos', nuevoIngreso, idIngreso);
+                
+                if (exitoIngreso) {
+                    // Guardar ingreso localmente
+                    nuevoIngreso.id = idIngreso;
+                    const ingresos = JSON.parse(localStorage.getItem('ingresosMototaxis')) || [];
+                    ingresos.push(nuevoIngreso);
+                    localStorage.setItem('ingresosMototaxis', JSON.stringify(ingresos));
+                    
+                    // Limpiar formulario
+                    equipoRapidoInput.value = '';
+                    nombreRapidoInput.value = '';
+                    montoRapidoInput.value = '';
+                    observacionRapidaInput.value = '';
+                    
+                    // Actualizar resumen
+                    actualizarResumenEquiposSaldos();
+                    
+                    // Enfocar en el campo de equipo
+                    equipoRapidoInput.focus();
+                    
+                    alert('Ingreso registrado correctamente.');
+                } else {
+                    alert('Error al guardar el ingreso. Los datos se guardarán localmente.');
+                    
+                    // Guardar solo localmente si falla Firebase
+                    nuevoIngreso.id = idIngreso;
+                    const ingresos = JSON.parse(localStorage.getItem('ingresosMototaxis')) || [];
+                    ingresos.push(nuevoIngreso);
+                    localStorage.setItem('ingresosMototaxis', JSON.stringify(ingresos));
+                    
+                    // Limpiar formulario
+                    equipoRapidoInput.value = '';
+                    nombreRapidoInput.value = '';
+                    montoRapidoInput.value = '';
+                    observacionRapidaInput.value = '';
+                    
+                    // Actualizar resumen
+                    actualizarResumenEquiposSaldos();
+                    
+                    // Enfocar en el campo de equipo
+                    equipoRapidoInput.focus();
+                }
             }
             
             // Función para actualizar el resumen de equipos con saldo
@@ -1207,59 +1460,64 @@
                 const ingresos = JSON.parse(localStorage.getItem('ingresosMototaxis')) || [];
                 
                 if (equipos.length === 0) {
-                    resumenEquiposSaldos.innerHTML = '<div class="empty-message">No hay equipos registrados</div>';
+                    resumenEquiposSaldos.innerHTML = '<div class="empty-message">No hay equipos registrados.</div>';
                     return;
                 }
                 
-                // Calcular totales por equipo
+                // Calcular total por equipo
                 const totalesPorEquipo = {};
                 const ultimaFechaPorEquipo = {};
                 
                 ingresos.forEach(ingreso => {
-                    if (!totalesPorEquipo[ingreso.equipo]) {
-                        totalesPorEquipo[ingreso.equipo] = 0;
+                    const equipo = ingreso.equipo;
+                    if (!totalesPorEquipo[equipo]) {
+                        totalesPorEquipo[equipo] = 0;
                     }
-                    totalesPorEquipo[ingreso.equipo] += ingreso.monto;
+                    totalesPorEquipo[equipo] += ingreso.monto;
                     
-                    // Guardar la última fecha de pago
-                    if (!ultimaFechaPorEquipo[ingreso.equipo] || ingreso.fecha > ultimaFechaPorEquipo[ingreso.equipo]) {
-                        ultimaFechaPorEquipo[ingreso.equipo] = ingreso.fecha;
+                    // Guardar la última fecha de ingreso
+                    if (!ultimaFechaPorEquipo[equipo] || ingreso.fecha > ultimaFechaPorEquipo[equipo]) {
+                        ultimaFechaPorEquipo[equipo] = ingreso.fecha;
                     }
                 });
                 
                 // Ordenar equipos por número
                 equipos.sort((a, b) => a.numero - b.numero);
                 
-                resumenEquiposSaldos.innerHTML = '';
-                
+                let html = '';
                 equipos.forEach(equipo => {
                     const total = totalesPorEquipo[equipo.numero] || 0;
-                    const ultimaFecha = ultimaFechaPorEquipo[equipo.numero] || 'Nunca';
+                    const ultimaFecha = ultimaFechaPorEquipo[equipo.numero] || 'Sin registros';
                     
-                    const equipoCard = document.createElement('div');
-                    equipoCard.className = 'equipo-saldo-card';
-                    equipoCard.innerHTML = `
-                        <div class="equipo-saldo-header">
-                            <div class="equipo-saldo-numero">Equipo #${equipo.numero}</div>
-                            <div class="equipo-saldo-total">$${total.toFixed(2)}</div>
+                    html += `
+                        <div class="equipo-saldo-card">
+                            <div class="equipo-saldo-header">
+                                <div class="equipo-saldo-numero">Equipo ${equipo.numero}</div>
+                                <div class="equipo-saldo-total">$${total.toFixed(2)}</div>
+                            </div>
+                            <div class="equipo-saldo-info">${equipo.nombre}</div>
+                            <div class="equipo-saldo-fecha">Último: ${formatearFecha(ultimaFecha)}</div>
                         </div>
-                        <div class="equipo-saldo-info">${equipo.nombre}</div>
-                        <div class="equipo-saldo-info">${equipo.placa}</div>
-                        <div class="equipo-saldo-fecha">Último pago: ${ultimaFecha !== 'Nunca' ? formatearFecha(ultimaFecha) : 'Nunca'}</div>
                     `;
-                    resumenEquiposSaldos.appendChild(equipoCard);
                 });
+                
+                resumenEquiposSaldos.innerHTML = html;
             }
             
             // Función para cargar el historial de ingresos
             function cargarHistorialIngresos() {
                 const historialIngresos = document.getElementById('historial-ingresos');
                 const ingresos = JSON.parse(localStorage.getItem('ingresosMototaxis')) || [];
+                
+                if (ingresos.length === 0) {
+                    historialIngresos.innerHTML = '<div class="empty-message">No hay ingresos registrados.</div>';
+                    return;
+                }
+                
+                // Aplicar filtros
+                let ingresosFiltrados = [...ingresos];
                 const filtroEquipo = document.getElementById('filtro-equipo').value;
                 const filtroFecha = document.getElementById('filtro-fecha').value;
-                
-                // Filtrar ingresos
-                let ingresosFiltrados = [...ingresos];
                 
                 if (filtroEquipo) {
                     ingresosFiltrados = ingresosFiltrados.filter(ingreso => ingreso.equipo == filtroEquipo);
@@ -1273,47 +1531,47 @@
                 ingresosFiltrados.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
                 
                 if (ingresosFiltrados.length === 0) {
-                    historialIngresos.innerHTML = '<div class="empty-message">No hay ingresos registrados</div>';
+                    historialIngresos.innerHTML = '<div class="empty-message">No hay ingresos que coincidan con los filtros.</div>';
                     return;
                 }
                 
-                historialIngresos.innerHTML = '';
-                
+                let html = '';
                 let totalGeneral = 0;
                 
                 ingresosFiltrados.forEach(ingreso => {
                     totalGeneral += ingreso.monto;
                     
-                    const ingresoItem = document.createElement('div');
-                    ingresoItem.className = 'ingreso-item';
-                    ingresoItem.innerHTML = `
-                        <div class="ingreso-fecha">${formatearFecha(ingreso.fecha)}</div>
-                        <div class="ingreso-equipo">#${ingreso.equipo}</div>
-                        <div class="ingreso-cliente">${ingreso.nombreEquipo}</div>
-                        <div class="ingreso-monto">$${ingreso.monto.toFixed(2)}</div>
-                        <div class="ingreso-info">${ingreso.observacion || ''}</div>
-                        <button class="edit-btn" data-id="${ingreso.id}">Editar</button>
-                        <button class="delete-btn" data-id="${ingreso.id}">Eliminar</button>
+                    html += `
+                        <div class="ingreso-item">
+                            <div class="ingreso-fecha">${formatearFecha(ingreso.fecha)}</div>
+                            <div class="ingreso-equipo">Equipo ${ingreso.equipo}</div>
+                            <div class="ingreso-cliente">${ingreso.nombre}</div>
+                            <div class="ingreso-monto">$${ingreso.monto.toFixed(2)}</div>
+                            <div class="ingreso-info">${ingreso.observacion}</div>
+                            <button class="edit-btn" data-id="${ingreso.id}">Editar</button>
+                            <button class="delete-btn" data-id="${ingreso.id}">Eliminar</button>
+                        </div>
                     `;
-                    historialIngresos.appendChild(ingresoItem);
                 });
                 
                 // Agregar total general
-                const totalDiv = document.createElement('div');
-                totalDiv.className = 'total-general';
-                totalDiv.textContent = `Total General: $${totalGeneral.toFixed(2)}`;
-                historialIngresos.appendChild(totalDiv);
+                html += `
+                    <div class="total-general">
+                        Total General: $${totalGeneral.toFixed(2)}
+                    </div>
+                `;
                 
-                // Agregar event listeners para los botones de eliminar
-                document.querySelectorAll('.delete-btn').forEach(btn => {
+                historialIngresos.innerHTML = html;
+                
+                // Agregar event listeners a los botones de eliminar y editar
+                document.querySelectorAll('#historial-ingresos .delete-btn').forEach(btn => {
                     btn.addEventListener('click', function() {
                         const id = this.getAttribute('data-id');
                         eliminarIngreso(id);
                     });
                 });
                 
-                // Agregar event listeners para los botones de editar
-                document.querySelectorAll('.edit-btn').forEach(btn => {
+                document.querySelectorAll('#historial-ingresos .edit-btn').forEach(btn => {
                     btn.addEventListener('click', function() {
                         const id = this.getAttribute('data-id');
                         editarIngreso(id);
@@ -1323,7 +1581,7 @@
             
             // Función para eliminar un ingreso
             async function eliminarIngreso(id) {
-                if (!confirm('¿Está seguro de que desea eliminar este ingreso?')) {
+                if (!confirm('¿Está seguro de eliminar este ingreso?')) {
                     return;
                 }
                 
@@ -1332,126 +1590,33 @@
                 
                 if (exito) {
                     // Eliminar localmente
-                    const ingresos = JSON.parse(localStorage.getItem('ingresosMototaxis')) || [];
-                    const ingresosActualizados = ingresos.filter(ingreso => ingreso.id !== id);
-                    localStorage.setItem('ingresosMototaxis', JSON.stringify(ingresosActualizados));
+                    let ingresos = JSON.parse(localStorage.getItem('ingresosMototaxis')) || [];
+                    ingresos = ingresos.filter(ingreso => ingreso.id !== id);
+                    localStorage.setItem('ingresosMototaxis', JSON.stringify(ingresos));
                     
-                    // Actualizar historial y resumen
+                    // Actualizar interfaces
                     cargarHistorialIngresos();
                     actualizarResumenEquiposSaldos();
                     
                     alert('Ingreso eliminado correctamente.');
                 } else {
-                    alert('Error al eliminar el ingreso de Firebase. Se eliminará solo localmente.');
+                    alert('Error al eliminar el ingreso. Se eliminará solo localmente.');
                     
-                    // Eliminar solo localmente
-                    const ingresos = JSON.parse(localStorage.getItem('ingresosMototaxis')) || [];
-                    const ingresosActualizados = ingresos.filter(ingreso => ingreso.id !== id);
-                    localStorage.setItem('ingresosMototaxis', JSON.stringify(ingresosActualizados));
+                    // Eliminar solo localmente si falla Firebase
+                    let ingresos = JSON.parse(localStorage.getItem('ingresosMototaxis')) || [];
+                    ingresos = ingresos.filter(ingreso => ingreso.id !== id);
+                    localStorage.setItem('ingresosMototaxis', JSON.stringify(ingresos));
                     
-                    // Actualizar historial y resumen
+                    // Actualizar interfaces
                     cargarHistorialIngresos();
                     actualizarResumenEquiposSaldos();
                 }
             }
             
-            // Función para editar un ingreso
+            // Función para editar un ingreso (placeholder)
             function editarIngreso(id) {
-                const ingresos = JSON.parse(localStorage.getItem('ingresosMototaxis')) || [];
-                const ingreso = ingresos.find(i => i.id === id);
-                
-                if (!ingreso) return;
-                
-                // Cambiar a la pestaña de ingresos
-                document.querySelector('[data-tab="ingresos"]').click();
-                
-                // Llenar el formulario con los datos del ingreso
-                document.getElementById('fecha').value = ingreso.fecha;
-                equipoRapidoInput.value = ingreso.equipo;
-                nombreRapidoInput.value = ingreso.nombreEquipo;
-                montoRapidoInput.value = ingreso.monto;
-                observacionRapidaInput.value = ingreso.observacion || '';
-                
-                // Cambiar el texto del botón
-                guardarRapidoBtn.textContent = 'Actualizar Ingreso';
-                
-                // Cambiar el evento del botón
-                guardarRapidoBtn.onclick = async function() {
-                    const fecha = document.getElementById('fecha').value;
-                    const equipo = parseInt(equipoRapidoInput.value) || 0;
-                    const monto = parseFloat(montoRapidoInput.value) || 0;
-                    const observacion = observacionRapidaInput.value.trim();
-                    
-                    // Validaciones
-                    if (!fecha) {
-                        alert('Por favor, seleccione una fecha.');
-                        return;
-                    }
-                    
-                    if (equipo <= 0) {
-                        alert('Por favor, ingrese un número de equipo válido.');
-                        return;
-                    }
-                    
-                    // MODIFICACIÓN: Permitir monto 0
-                    if (monto < 0) {
-                        alert('Por favor, ingrese un monto válido (no puede ser negativo).');
-                        return;
-                    }
-                    
-                    // Obtener nombre del equipo
-                    const equipos = JSON.parse(localStorage.getItem('equiposMototaxis')) || [];
-                    const equipoEncontrado = equipos.find(e => e.numero === equipo);
-                    const nombreEquipo = equipoEncontrado ? equipoEncontrado.nombre : 'No registrado';
-                    
-                    // Actualizar ingreso
-                    ingreso.fecha = fecha;
-                    ingreso.equipo = equipo;
-                    ingreso.nombreEquipo = nombreEquipo;
-                    ingreso.monto = monto;
-                    ingreso.observacion = observacion;
-                    
-                    // Guardar en Firebase
-                    const exito = await guardarEnFirebase('ingresos', ingreso, id);
-                    
-                    if (exito) {
-                        // Actualizar localmente
-                        localStorage.setItem('ingresosMototaxis', JSON.stringify(ingresos));
-                        
-                        // Limpiar formulario
-                        equipoRapidoInput.value = '';
-                        nombreRapidoInput.value = '';
-                        montoRapidoInput.value = '';
-                        observacionRapidaInput.value = '';
-                        
-                        // Restaurar botón
-                        guardarRapidoBtn.textContent = 'Registrar';
-                        guardarRapidoBtn.onclick = guardarIngresoRapido;
-                        
-                        // Actualizar resumen
-                        actualizarResumenEquiposSaldos();
-                        
-                        alert('Ingreso actualizado correctamente.');
-                    } else {
-                        alert('Error al actualizar el ingreso en Firebase. Se actualizará solo localmente.');
-                        
-                        // Actualizar solo localmente
-                        localStorage.setItem('ingresosMototaxis', JSON.stringify(ingresos));
-                        
-                        // Limpiar formulario
-                        equipoRapidoInput.value = '';
-                        nombreRapidoInput.value = '';
-                        montoRapidoInput.value = '';
-                        observacionRapidaInput.value = '';
-                        
-                        // Restaurar botón
-                        guardarRapidoBtn.textContent = 'Registrar';
-                        guardarRapidoBtn.onclick = guardarIngresoRapido;
-                        
-                        // Actualizar resumen
-                        actualizarResumenEquiposSaldos();
-                    }
-                };
+                alert('Funcionalidad de edición en desarrollo.');
+                // Aquí se implementaría la lógica para editar un ingreso
             }
             
             // Función para cargar depósitos por equipo
@@ -1459,55 +1624,67 @@
                 const depositosListaEquipos = document.getElementById('depositos-lista-equipos');
                 const equipos = JSON.parse(localStorage.getItem('equiposMototaxis')) || [];
                 const ingresos = JSON.parse(localStorage.getItem('ingresosMototaxis')) || [];
-                const filtroEquipo = document.getElementById('filtro-equipo-depositos').value;
                 
-                // Filtrar equipos si hay un filtro
+                if (equipos.length === 0) {
+                    depositosListaEquipos.innerHTML = '<div class="empty-message">No hay equipos registrados.</div>';
+                    return;
+                }
+                
+                // Aplicar filtro de equipo
+                const filtroEquipo = document.getElementById('filtro-equipo-depositos').value;
                 let equiposFiltrados = [...equipos];
+                
                 if (filtroEquipo) {
                     equiposFiltrados = equiposFiltrados.filter(equipo => equipo.numero == filtroEquipo);
                 }
                 
-                if (equiposFiltrados.length === 0) {
-                    depositosListaEquipos.innerHTML = '<div class="empty-message">No hay equipos registrados</div>';
-                    return;
-                }
-                
-                depositosListaEquipos.innerHTML = '';
-                
                 // Ordenar equipos por número
                 equiposFiltrados.sort((a, b) => a.numero - b.numero);
                 
+                let html = '';
+                
                 equiposFiltrados.forEach(equipo => {
-                    // Filtrar ingresos del equipo
+                    // Filtrar ingresos por equipo
                     const ingresosEquipo = ingresos.filter(ingreso => ingreso.equipo === equipo.numero);
                     
-                    // Ordenar ingresos por fecha
-                    ingresosEquipo.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+                    if (ingresosEquipo.length === 0) {
+                        return; // No mostrar equipos sin ingresos
+                    }
                     
-                    // Calcular total
+                    // Calcular total del equipo
                     const totalEquipo = ingresosEquipo.reduce((sum, ingreso) => sum + ingreso.monto, 0);
                     
-                    const depositoCard = document.createElement('div');
-                    depositoCard.className = 'deposito-equipo-card depositos-print';
-                    depositoCard.innerHTML = `
-                        <div class="deposito-equipo-header">
-                            <div class="deposito-equipo-numero">Equipo #${equipo.numero}</div>
-                            <div class="deposito-equipo-total">$${totalEquipo.toFixed(2)}</div>
+                    // Ordenar ingresos por fecha (más reciente primero)
+                    ingresosEquipo.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+                    
+                    let ingresosHtml = '';
+                    ingresosEquipo.forEach(ingreso => {
+                        ingresosHtml += `
+                            <div class="deposito-item">
+                                <div class="deposito-fecha">${formatearFecha(ingreso.fecha)}</div>
+                                <div class="deposito-monto">$${ingreso.monto.toFixed(2)}</div>
+                            </div>
+                        `;
+                    });
+                    
+                    html += `
+                        <div class="deposito-equipo-card">
+                            <div class="deposito-equipo-header">
+                                <div class="deposito-equipo-numero">Equipo ${equipo.numero}</div>
+                                <div class="deposito-equipo-total">$${totalEquipo.toFixed(2)}</div>
+                            </div>
+                            <div class="deposito-equipo-info">${equipo.nombre} - ${equipo.placa}</div>
+                            ${ingresosHtml}
+                            <div class="deposito-total">Total: $${totalEquipo.toFixed(2)}</div>
                         </div>
-                        <div>${equipo.nombre}</div>
-                        <div>${equipo.placa} - ${equipo.dui}</div>
-                        <div class="deposito-total-detalle">
-                            ${ingresosEquipo.map(ingreso => `
-                                <div class="deposito-item">
-                                    <div class="deposito-fecha">${formatearFecha(ingreso.fecha)}</div>
-                                    <div class="deposito-monto">$${ingreso.monto.toFixed(2)}</div>
-                                </div>
-                            `).join('')}
-                        </div>
-                        <div class="deposito-total">Total: $${totalEquipo.toFixed(2)}</div>
                     `;
-                    depositosListaEquipos.appendChild(depositoCard);
                 });
+                
+                if (html === '') {
+                    html = '<div class="empty-message">No hay ingresos registrados para los equipos seleccionados.</div>';
+                }
+                
+                depositosListaEquipos.innerHTML = html;
             }
             
             // Función para actualizar los filtros de equipos
@@ -1520,13 +1697,245 @@
                     filtro.remove(1);
                 }
                 
-                // Agregar equipos al filtro
+                // Ordenar equipos por número
+                equipos.sort((a, b) => a.numero - b.numero);
+                
+                // Agregar opciones de equipos
                 equipos.forEach(equipo => {
                     const option = document.createElement('option');
                     option.value = equipo.numero;
                     option.textContent = `Equipo ${equipo.numero} - ${equipo.nombre}`;
                     filtro.appendChild(option);
                 });
+            }
+            
+            // Función para generar el calendario mensual
+            function generarCalendario() {
+                const calendarioPreview = document.getElementById('calendario-preview');
+                const calendarioPrint = document.getElementById('calendario-print');
+                const filtroMes = document.getElementById('filtro-mes-calendario').value;
+                const filtroEquipo = document.getElementById('filtro-equipo-calendario').value;
+                
+                if (!filtroMes) {
+                    calendarioPreview.innerHTML = '<div class="empty-message">Seleccione un mes para generar el calendario.</div>';
+                    calendarioPrint.innerHTML = '';
+                    return;
+                }
+                
+                const [año, mes] = filtroMes.split('-').map(Number);
+                const ingresos = JSON.parse(localStorage.getItem('ingresosMototaxis')) || [];
+                const equipos = JSON.parse(localStorage.getItem('equiposMototaxis')) || [];
+                
+                // Obtener información del equipo seleccionado
+                let equipoSeleccionado = null;
+                if (filtroEquipo) {
+                    equipoSeleccionado = equipos.find(e => e.numero == filtroEquipo);
+                }
+                
+                // Filtrar ingresos por mes y equipo si es necesario
+                let ingresosFiltrados = ingresos.filter(ingreso => {
+                    const [ingresoAño, ingresoMes] = ingreso.fecha.split('-').map(Number);
+                    return ingresoAño === año && ingresoMes === mes;
+                });
+                
+                if (filtroEquipo) {
+                    ingresosFiltrados = ingresosFiltrados.filter(ingreso => ingreso.equipo == filtroEquipo);
+                }
+                
+                // Crear objeto para agrupar ingresos por día
+                const ingresosPorDia = {};
+                ingresosFiltrados.forEach(ingreso => {
+                    const dia = parseInt(ingreso.fecha.split('-')[2]);
+                    if (!ingresosPorDia[dia]) {
+                        ingresosPorDia[dia] = [];
+                    }
+                    ingresosPorDia[dia].push(ingreso);
+                });
+                
+                // Obtener el primer día del mes y el número de días
+                const primerDia = new Date(año, mes - 1, 1);
+                const ultimoDia = new Date(año, mes, 0);
+                const diasEnMes = ultimoDia.getDate();
+                const diaInicio = primerDia.getDay(); // 0 = Domingo, 1 = Lunes, ..., 6 = Sábado
+                
+                // Nombres de los meses
+                const nombresMeses = [
+                    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+                    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+                ];
+                
+                // Calcular total general (solo de días que no son descanso)
+                let totalGeneral = 0;
+                for (let dia = 1; dia <= diasEnMes; dia++) {
+                    if (!diasDescansoSeleccionados.includes(dia)) {
+                        const ingresosDia = ingresosPorDia[dia] || [];
+                        const totalDia = ingresosDia.reduce((sum, ingreso) => sum + ingreso.monto, 0);
+                        totalGeneral += totalDia;
+                    }
+                }
+                
+                // Generar HTML del calendario para vista previa
+                let htmlPreview = `
+                    <table class="tabla-calendario-preview">
+                        <thead>
+                            <tr>
+                                <th>Domingo</th>
+                                <th>Lunes</th>
+                                <th>Martes</th>
+                                <th>Miércoles</th>
+                                <th>Jueves</th>
+                                <th>Viernes</th>
+                                <th>Sábado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+                
+                // Generar celdas del calendario para vista previa
+                let diaActual = 1;
+                for (let i = 0; i < 6; i++) { // Máximo 6 filas
+                    htmlPreview += '<tr>';
+                    
+                    for (let j = 0; j < 7; j++) { // 7 días por semana
+                        if ((i === 0 && j < diaInicio) || diaActual > diasEnMes) {
+                            // Celda vacía
+                            htmlPreview += '<td></td>';
+                        } else {
+                            const ingresosDia = ingresosPorDia[diaActual] || [];
+                            const totalDia = ingresosDia.reduce((sum, ingreso) => sum + ingreso.monto, 0);
+                            const comentarios = ingresosDia.map(ingreso => 
+                                ingreso.observacion && ingreso.observacion !== 'Sin observación' ? ingreso.observacion : ''
+                            ).filter(c => c !== '').join(', ');
+                            
+                            const esDescanso = diasDescansoSeleccionados.includes(diaActual);
+                            
+                            htmlPreview += `
+                                <td class="${esDescanso ? 'dia-descanso-preview' : ''}" data-dia="${diaActual}">
+                                    <div class="cuadro-dia-preview">
+                                        <div class="dia-numero-preview">${diaActual}</div>
+                                        ${!esDescanso && totalDia > 0 ? `<div class="dia-monto-preview">$${totalDia.toFixed(2)}</div>` : ''}
+                                        ${!esDescanso && comentarios ? `<div class="dia-comentario-preview">${comentarios}</div>` : ''}
+                                        ${esDescanso ? `<div class="texto-descanso-preview">DESCANSO</div>` : ''}
+                                    </div>
+                                </td>
+                            `;
+                            diaActual++;
+                        }
+                    }
+                    
+                    htmlPreview += '</tr>';
+                    
+                    // Si ya hemos completado todos los días, salir del bucle
+                    if (diaActual > diasEnMes) break;
+                }
+                
+                htmlPreview += `
+                        </tbody>
+                    </table>
+                `;
+                
+                calendarioPreview.innerHTML = htmlPreview;
+                
+                // Agregar event listeners a las celdas del calendario
+                document.querySelectorAll('.tabla-calendario-preview td[data-dia]').forEach(celda => {
+                    celda.addEventListener('click', function() {
+                        const dia = parseInt(this.getAttribute('data-dia'));
+                        if (diasDescansoSeleccionados.includes(dia)) {
+                            diasDescansoSeleccionados = diasDescansoSeleccionados.filter(d => d !== dia);
+                        } else {
+                            diasDescansoSeleccionados.push(dia);
+                        }
+                        generarCalendario();
+                    });
+                });
+                
+                // Generar HTML del calendario para impresión
+                let htmlPrint = `
+                    <div class="calendario-mensual">
+                        <div class="encabezado-recibo">
+                            <h1>RECIBO DE INGRESO EN CONCEPTO DE TRANSPORTE PÚBLICO ALTERNATIVO LOCAL</h1>
+                            <div class="info-mes">MES: ${nombresMeses[mes-1]} AÑO: ${año}</div>
+                        </div>
+                `;
+                
+                // Agregar información del equipo si está seleccionado
+                if (equipoSeleccionado) {
+                    htmlPrint += `
+                        <div class="info-equipo">
+                            <div class="numero-equipo">EQUIPO: ${equipoSeleccionado.numero}</div>
+                            <div>Nombre: ${equipoSeleccionado.nombre}</div>
+                            <div>DUI: ${equipoSeleccionado.dui}</div>
+                            <div>Placas: ${equipoSeleccionado.placa}</div>
+                        </div>
+                    `;
+                }
+                
+                htmlPrint += `
+                        <table class="tabla-calendario">
+                            <thead>
+                                <tr>
+                                    <th>Domingo</th>
+                                    <th>Lunes</th>
+                                    <th>Martes</th>
+                                    <th>Miércoles</th>
+                                    <th>Jueves</th>
+                                    <th>Viernes</th>
+                                    <th>Sábado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+                
+                // Generar celdas del calendario para impresión
+                diaActual = 1;
+                for (let i = 0; i < 6; i++) { // Máximo 6 filas
+                    htmlPrint += '<tr>';
+                    
+                    for (let j = 0; j < 7; j++) { // 7 días por semana
+                        if ((i === 0 && j < diaInicio) || diaActual > diasEnMes) {
+                            // Celda vacía
+                            htmlPrint += '<td></td>';
+                        } else {
+                            const ingresosDia = ingresosPorDia[diaActual] || [];
+                            const totalDia = ingresosDia.reduce((sum, ingreso) => sum + ingreso.monto, 0);
+                            const comentarios = ingresosDia.map(ingreso => 
+                                ingreso.observacion && ingreso.observacion !== 'Sin observación' ? ingreso.observacion : ''
+                            ).filter(c => c !== '').join(', ');
+                            
+                            const esDescanso = diasDescansoSeleccionados.includes(diaActual);
+                            
+                            htmlPrint += `
+                                <td class="${esDescanso ? 'dia-descanso' : ''}">
+                                    <div class="cuadro-dia">
+                                        <div class="dia-numero">${diaActual}</div>
+                                        ${!esDescanso && totalDia > 0 ? `<div class="dia-monto">$${totalDia.toFixed(2)}</div>` : ''}
+                                        ${!esDescanso && comentarios ? `<div class="dia-comentario">${comentarios}</div>` : ''}
+                                        ${esDescanso ? `<div class="texto-descanso">DESCANSO</div>` : ''}
+                                    </div>
+                                </td>
+                            `;
+                            diaActual++;
+                        }
+                    }
+                    
+                    htmlPrint += '</tr>';
+                    
+                    // Si ya hemos completado todos los días, salir del bucle
+                    if (diaActual > diasEnMes) break;
+                }
+                
+                htmlPrint += `
+                            </tbody>
+                        </table>
+                        
+                        <div class="pie-pagina">
+                            <div class="total-general-print">TOTAL: $${totalGeneral.toFixed(2)}</div>
+                            <div class="firma">FIRMA:______________</div>
+                        </div>
+                    </div>
+                `;
+                
+                calendarioPrint.innerHTML = htmlPrint;
             }
         });
     </script>
