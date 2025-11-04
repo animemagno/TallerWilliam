@@ -10,28 +10,19 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body class="theme-light">
-    <div class="status" id="status-message"></div>
-    <div class="connection-status" id="connection-status"></div>
-    
     <div class="container">
         <header>
             <h1>Taller Wilian - Sistema de Ventas</h1>
-            <div class="header-controls">
-                <button class="home-btn" id="home-btn" title="Ir al Inicio">
-                    <i class="fas fa-home"></i>
-                </button>
-                <button class="theme-toggle" id="theme-toggle">
-                    <i class="fas fa-moon"></i>
-                </button>
-            </div>
+            <button class="theme-toggle" id="theme-toggle">
+                <i class="fas fa-moon"></i>
+            </button>
         </header>
 
         <div class="dashboard">
-            <!-- SECCIÓN NUEVA VENTA -->
             <div class="dashboard-section">
                 <h2 class="section-title">NUEVA VENTA</h2>
                 
-                <!-- Acceso rápido -->
+                <!-- Botones de acceso rápido -->
                 <div class="quick-access">
                     <button class="btn btn-info quick-access-btn" id="historial-btn">
                         <i class="fas fa-history"></i> HISTORIAL DE VENTA
@@ -41,13 +32,11 @@
                     </button>
                 </div>
                 
-                <input type="date" id="fecha-venta" class="fecha-input" style="display: none;">
-                
                 <div class="venta-header">
                     <div class="venta-line-1">
                         <div class="form-group">
                             <label for="equipo">Equipo</label>
-                            <input type="text" id="equipo" placeholder="Número (opcional)" maxlength="4">
+                            <input type="text" id="equipo" placeholder="Número" maxlength="4" required>
                         </div>
 
                         <div class="form-group">
@@ -73,7 +62,7 @@
 
                         <div class="form-group">
                             <label for="cliente">Grupo</label>
-                            <input type="text" id="cliente" placeholder="Nombre del grupo (opcional)">
+                            <input type="text" id="cliente" placeholder="Nombre del grupo">
                         </div>
 
                         <div>
@@ -88,7 +77,6 @@
                             <label for="buscar-producto">Buscar Producto</label>
                             <div class="search-container">
                                 <input type="text" id="buscar-producto" placeholder="Código, descripción o formato: 3 pernos de culata $3">
-                                <div id="search-dropdown" class="search-dropdown"></div>
                             </div>
                         </div>
 
@@ -110,8 +98,9 @@
                     </div>
                     <div class="cart-items-container" id="cart-items">
                         <div class="empty-cart">
-                            <i class="fas fa-shopping-cart" style="font-size: 2rem; margin-bottom: 10px; opacity: 0.5;"></i>
-                            <div>No hay productos agregados</div>
+                            <i class="fas fa-shopping-basket" style="font-size: 2rem; margin-bottom: 10px; opacity: 0.5;"></i>
+                            <div>Carrito vacío</div>
+                            <div style="font-size: 0.8rem; margin-top: 5px; color: var(--text-muted);">Los productos agregados aparecerán aquí</div>
                         </div>
                     </div>
                     <div class="cart-total" id="total-amount">
@@ -120,146 +109,28 @@
                 </div>
             </div>
 
-            <!-- SECCIÓN HISTORIAL/PENDIENTES -->
             <div class="dashboard-section">
-                <div class="tabs-header">
-                    <button class="tab-btn active" data-tab="historial">HISTORIAL DE VENTAS</button>
-                    <button class="tab-btn" data-tab="pendientes">FACTURAS PENDIENTES</button>
-                    <button class="tab-btn" data-tab="grupos">GRUPOS</button>
-                </div>
+                <h2 class="section-title">CARRITO</h2>
                 
-                <div class="tabs-container">
-                    <!-- TAB HISTORIAL -->
-                    <div class="tab-content active" id="tab-historial">
-                        <div class="historial-actions">
-                            <div class="filter-buttons">
-                                <button class="filter-btn active" data-filter="todo">TODO</button>
-                                <button class="filter-btn" data-filter="hoy">HOY</button>
-                                <button class="filter-btn" data-filter="ventas">VENTAS</button>
-                                <button class="filter-btn" data-filter="abonos">ABONOS</button>
-                                <button class="filter-btn" data-filter="retiros">RETIROS</button>
-                                <button class="filter-btn" data-filter="pendientes">PENDIENTES</button>
-                            </div>
-                            <div>
-                                <button class="btn btn-danger" id="retirar-btn">
-                                    RETIRAR
-                                </button>
-                                <button class="btn btn-info" id="print-historial-btn">
-                                    IMPRIMIR HISTORIAL
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <div class="form-group">
-                            <input type="text" id="filter-historial" placeholder="Filtrar por número de equipo...">
-                        </div>
-                        
-                        <div class="history-container">
-                            <div class="history-table-container">
-                                <table class="history-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Factura</th>
-                                            <th>Equipo/Ciudad</th>
-                                            <th>Total</th>
-                                            <th>Estado</th>
-                                            <th>Fecha</th>
-                                            <th width="250">Acciones</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="historial-body">
-                                        <tr>
-                                            <td colspan="6" class="empty-cart">Cargando historial...</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
+                <div class="cart-container" id="carrito-container">
+                    <div class="cart-header">
+                        <div>CANT</div>
+                        <div>DESCRIPCIÓN</div>
+                        <div>PRECIO UNIT.</div>
+                        <div>SUBTOTAL</div>
+                        <div>ACCIÓN</div>
+                    </div>
+                    <div class="cart-items-container" id="carrito-items">
+                        <div class="empty-cart">
+                            <i class="fas fa-shopping-basket" style="font-size: 2rem; margin-bottom: 10px; opacity: 0.5;"></i>
+                            <div>Carrito vacío</div>
+                            <div style="font-size: 0.8rem; margin-top: 5px; color: var(--text-muted);">Los productos agregados aparecerán aquí</div>
                         </div>
                     </div>
-                    
-                    <!-- TAB FACTURAS PENDIENTES -->
-                    <div class="tab-content" id="tab-pendientes">
-                        <div class="facturas-pendientes-container" id="facturas-pendientes-container">
-                            <div class="equipos-container">
-                                <div id="equipos-individuales" class="equipos-grid">
-                                </div>
-                                
-                                <div id="empty-equipos" class="empty-state" style="display: none;">
-                                    <i class="fas fa-cube"></i>
-                                    <div>No hay facturas pendientes</div>
-                                    <div style="font-size: 0.8rem; margin-top: 5px; color: var(--text-muted);">Las ventas pendientes aparecerán aquí</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- TAB GRUPOS -->
-                    <div class="tab-content" id="tab-grupos">
-                        <div class="grupos-actions">
-                            <button class="btn btn-success" id="crear-grupo-btn">
-                                <i class="fas fa-plus"></i> CREAR GRUPO
-                            </button>
-                        </div>
-                        <div class="grupos-container" id="grupos-container">
-                            <div class="empty-state">
-                                <i class="fas fa-users"></i>
-                                <div>No hay grupos creados</div>
-                                <div style="font-size: 0.8rem; margin-top: 5px; color: var(--text-muted);">Crea tu primer grupo para organizar los equipos</div>
-                            </div>
-                        </div>
+                    <div class="cart-total" id="carrito-total">
+                        TOTAL: $0.00
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODALES -->
-    <div class="modal-overlay" id="detalle-modal">
-        <div class="modal-content">
-            <div id="detalle-modal-content"></div>
-            <button class="btn btn-primary" id="close-detalle-modal" style="margin-top: 15px; width: 100%;">CERRAR</button>
-            <button class="btn btn-success" id="imprimir-detalle-modal" style="margin-top: 10px; width: 100%;">IMPRIMIR</button>
-        </div>
-    </div>
-
-    <div class="modal-overlay" id="abono-modal">
-        <div class="modal-content">
-            <h3 style="margin-bottom: 15px; text-align: center;">Registrar Abono</h3>
-            <div id="abono-modal-content"></div>
-            <div class="form-group">
-                <label for="monto-abono">Monto del Abono:</label>
-                <input type="number" id="monto-abono" step="0.01" min="0.01" placeholder="0.00">
-            </div>
-            <div style="display: flex; gap: 10px; margin-top: 15px;">
-                <button class="btn btn-success" id="process-abono-btn" style="flex: 1;">PROCESAR ABONO</button>
-                <button class="btn btn-danger" id="close-abono-modal" style="flex: 1;">CANCELAR</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="retiro-modal" class="modal-overlay">
-        <div class="modal-content">
-            <h3 style="margin-bottom: 15px; text-align: center;">Registrar Retiro</h3>
-            <div class="form-group">
-                <label for="monto-retiro">Monto del Retiro:</label>
-                <input type="number" id="monto-retiro" step="0.01" min="0.01" placeholder="0.00">
-            </div>
-            <div class="form-group">
-                <label for="concepto-retiro">Concepto:</label>
-                <input type="text" id="concepto-retiro" placeholder="Ej: Compra de materiales, Gastos operativos...">
-            </div>
-            <div class="form-group">
-                <label for="categoria-retiro">Categoría:</label>
-                <select id="categoria-retiro">
-                    <option value="compra">Compra de materiales</option>
-                    <option value="gastos">Gastos operativos</option>
-                    <option value="herramientas">Herramientas</option>
-                    <option value="otros">Otros</option>
-                </select>
-            </div>
-            <div style="display: flex; gap: 10px; margin-top: 15px;">
-                <button class="btn btn-success" id="process-retiro-btn" style="flex: 1;">PROCESAR RETIRO</button>
-                <button class="btn btn-danger" id="close-retiro-modal" style="flex: 1;">CANCELAR</button>
             </div>
         </div>
     </div>
