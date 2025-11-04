@@ -1918,10 +1918,10 @@
                                     if (equipo.numero === equipoNum) {
                                         for (const factura of equipo.facturas) {
                                             try {
-                                                if (AppState.firebaseInitialized && AppState.db.FieldValue) {
+                                                if (AppState.firebaseInitialized) {
                                                     await AppState.db.collection("VENTAS").doc(factura.id).update({
-                                                        grupo: AppState.db.FieldValue.delete(),
-                                                        grupoNombre: AppState.db.FieldValue.delete()
+                                                        grupo: firebase.firestore.FieldValue.delete(),
+                                                        grupoNombre: firebase.firestore.FieldValue.delete()
                                                     });
                                                 }
                                             } catch (error) {
@@ -1958,10 +1958,10 @@
                                 if (equipo.numero === equipoNum) {
                                     for (const factura of equipo.facturas) {
                                         try {
-                                            if (AppState.firebaseInitialized && AppState.db.FieldValue) {
+                                            if (AppState.firebaseInitialized) {
                                                 await AppState.db.collection("VENTAS").doc(factura.id).update({
-                                                    grupo: AppState.db.FieldValue.delete(),
-                                                    grupoNombre: AppState.db.FieldValue.delete()
+                                                    grupo: firebase.firestore.FieldValue.delete(),
+                                                    grupoNombre: firebase.firestore.FieldValue.delete()
                                                 });
                                             }
                                         } catch (error) {
@@ -2795,10 +2795,11 @@
                         throw new Error("El monto del abono no puede ser mayor al saldo pendiente");
                     }
                     
+                    // CORRECCIÓN: Usar firebase.firestore.FieldValue en lugar de AppState.db.FieldValue
                     await ventaRef.update({
-                        abonos: AppState.db.FieldValue.arrayUnion(abonoData),
+                        abonos: firebase.firestore.FieldValue.arrayUnion(abonoData),
                         saldoPendiente: nuevoSaldo,
-                        fechaActualizacion: DateUtils.getCurrentTimestampElSalvador() // ✅ Agregar fecha de actualización
+                        fechaActualizacion: DateUtils.getCurrentTimestampElSalvador()
                     });
                     
                     if (nuevoSaldo <= 0) {
@@ -2836,7 +2837,7 @@
                         saldoPendiente: 0,
                         cancelada: true,
                         fechaCancelacion: new Date(),
-                        fechaActualizacion: DateUtils.getCurrentTimestampElSalvador() // ✅ Agregar fecha de actualización
+                        fechaActualizacion: DateUtils.getCurrentTimestampElSalvador()
                     });
                     
                     const venta = await this.getSaleById(invoiceId);
@@ -3539,7 +3540,7 @@
                         timestamp: DateUtils.getCurrentTimestampElSalvador(),
                         date: fechaVenta,
                         status: paymentType === 'contado' ? 'pagado' : 'pendiente',
-                        fechaCreacion: DateUtils.getCurrentTimestampElSalvador() // ✅ Guardar fecha de creación
+                        fechaCreacion: DateUtils.getCurrentTimestampElSalvador()
                     };
 
                     if (paymentType === 'pendiente') {
@@ -3607,8 +3608,7 @@
                         })),
                         total: nuevoTotal,
                         saldoPendiente: nuevoSaldoPendiente,
-                        fechaActualizacion: DateUtils.getCurrentTimestampElSalvador(), // ✅ Agregar fecha de actualización
-                        // NO actualizamos el timestamp original para mantener la fecha de creación
+                        fechaActualizacion: DateUtils.getCurrentTimestampElSalvador()
                     };
                     
                     if (nuevoSaldoPendiente <= 0) {
