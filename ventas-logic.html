@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema Taller Wilian</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .main-menu {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .menu-card {
+            background: var(--bg-secondary);
+            border: 2px solid var(--accent-color);
+            border-radius: 12px;
+            padding: 30px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow);
+            color: var(--text-primary);
+            text-decoration: none;
+            display: block;
+        }
+
+        .menu-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            border-color: var(--accent-color);
+        }
+
+        .menu-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            color: var(--accent-color);
+        }
+
+        .menu-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .menu-description {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
+        @media (max-width: 768px) {
+            .main-menu {
+                grid-template-columns: 1fr;
+                gap: 15px;
+                padding: 15px;
+            }
+            
+            .menu-card {
+                padding: 20px 15px;
+            }
+            
+            .menu-icon {
+                font-size: 2.5rem;
+            }
+        }
+    </style>
+</head>
+<body class="theme-light">
+    <div class="container">
+        <header>
+            <h1>Sistema de Gestión - Taller Wilian</h1>
+            <div class="header-controls">
+                <button class="theme-toggle" id="theme-toggle">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+        </header>
+
+        <div class="main-menu">
+            <a href="ventas.html" class="menu-card">
+                <div class="menu-icon">
+                    <i class="fas fa-cash-register"></i>
+                </div>
+                <div class="menu-title">VENTAS</div>
+                <div class="menu-description">
+                    Registrar nuevas ventas, gestionar facturas pendientes y procesar abonos
+                </div>
+            </a>
+
+            <a href="#" class="menu-card" onclick="alert('Módulo en desarrollo')">
+                <div class="menu-icon">
+                    <i class="fas fa-boxes"></i>
+                </div>
+                <div class="menu-title">INVENTARIO</div>
+                <div class="menu-description">
+                    Gestionar productos, control de stock y actualización de precios
+                </div>
+            </a>
+
+            <a href="#" class="menu-card" onclick="alert('Módulo en desarrollo')">
+                <div class="menu-icon">
+                    <i class="fas fa-chart-bar"></i>
+                </div>
+                <div class="menu-title">REPORTES</div>
+                <div class="menu-description">
+                    Reportes detallados, estadísticas de ventas y análisis financieros
+                </div>
+            </a>
+
+            <a href="#" class="menu-card" onclick="alert('Módulo en desarrollo')">
+                <div class="menu-icon">
+                    <i class="fas fa-cogs"></i>
+                </div>
+                <div class="menu-title">CONFIGURACIÓN</div>
+                <div class="menu-description">
+                    Configuración del sistema, usuarios y preferencias de la aplicación
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // Configuración básica del tema para el index
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.body;
+            const icon = themeToggle.querySelector('i');
+            
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme) {
+                body.className = savedTheme;
+                updateIcon(savedTheme);
+            }
+            
+            themeToggle.addEventListener('click', function() {
+                if (body.classList.contains('theme-light')) {
+                    body.classList.remove('theme-light');
+                    body.classList.add('theme-dark');
+                    localStorage.setItem('theme', 'theme-dark');
+                } else {
+                    body.classList.remove('theme-dark');
+                    body.classList.add('theme-light');
+                    localStorage.setItem('theme', 'theme-light');
+                }
+                updateIcon(body.className);
+            });
+            
+            function updateIcon(theme) {
+                if (theme === 'theme-dark') {
+                    icon.className = 'fas fa-sun';
+                } else {
+                    icon.className = 'fas fa-moon';
+                }
+            }
+        });
+    </script>
+</body>
+</html>
