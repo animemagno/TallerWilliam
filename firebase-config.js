@@ -111,9 +111,6 @@ const ConnectionManager = {
         if (!this.isOnline) {
             this.isOnline = true;
             this.updateUI();
-            if (typeof UIService !== 'undefined') {
-                UIService.showStatus("Conexión restaurada", "success");
-            }
         }
     },
     
@@ -121,9 +118,6 @@ const ConnectionManager = {
         if (this.isOnline) {
             this.isOnline = false;
             this.updateUI();
-            if (typeof UIService !== 'undefined') {
-                UIService.showStatus("Sin conexión - Modo offline", "error");
-            }
         }
     },
     
@@ -146,7 +140,7 @@ const ConnectionManager = {
 const ProductCache = {
     data: new Map(),
     lastUpdate: null,
-    ttl: 10 * 60 * 1000, // 10 minutos
+    ttl: 10 * 60 * 1000,
     
     isExpired() {
         return !this.lastUpdate || (Date.now() - this.lastUpdate) > this.ttl;
@@ -248,23 +242,6 @@ const DataService = {
         }
     },
 
-    async saveDirectSale(saleData) {
-        if (db) {
-            const existingInvoice = await this.checkInvoiceExists(saleData.invoiceNumber);
-            if (existingInvoice) {
-                throw new Error(`La factura ${saleData.invoiceNumber} ya existe`);
-            }
-            
-            const docRef = await db.collection("VENTAS_DIRECTAS").add(saleData);
-            
-            await this.updateSaleCounter(saleData.date);
-            
-            return docRef.id;
-        } else {
-            throw new Error("No hay conexión a la base de datos");
-        }
-    },
-
     async checkInvoiceExists(invoiceNumber) {
         try {
             if (!db) return false;
@@ -273,16 +250,7 @@ const DataService = {
                 .where("invoiceNumber", "==", invoiceNumber)
                 .limit(1)
                 .get();
-                
-            if (!snapshot.empty) return true;
-            
-            // Verificar también en ventas directas
-            const directSnapshot = await db.collection("VENTAS_DIRECTAS")
-                .where("invoiceNumber", "==", invoiceNumber)
-                .limit(1)
-                .get();
-                
-            return !directSnapshot.empty;
+            return !snapshot.empty;
         } catch (error) {
             console.error("Error verificando factura duplicada:", error);
             return false;
@@ -331,194 +299,5 @@ const DataService = {
             }
             return 0;
         }
-    },
-
-    async updateSale(saleId, saleData) {
-        if (db) {
-            await db.collection("VENTAS").doc(saleId).update(saleData);
-        } else {
-            throw new Error("No hay conexión a la base de datos");
-        }
-    },
-
-    async updateDirectSale(saleId, saleData) {
-        if (db) {
-            await db.collection("VENTAS_DIRECTAS").doc(saleId).update(saleData);
-        } else {
-            throw new Error("No hay conexión a la base de datos");
-        }
-    },
-
-    async deleteSale(saleId) {
-        if (db) {
-            await db.collection("VENTAS").doc(saleId).delete();
-        } else {
-            throw new Error("No hay conexión a la base de datos");
-        }
-    },
-
-    async deleteDirectSale(saleId) {
-        if (db) {
-            await db.collection("VENTAS_DIRECTAS").doc(saleId).delete();
-        } else {
-            throw new Error("No hay conexión a la base de datos");
-        }
-    },
-
-    async loadSales(limit = 500) {
-        if (db) {
-            const snapshot = await db.collection("VENTAS")
-                .orderBy("timestamp", "desc")
-                .limit(limit)
-                .get();
-            
-            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        } else {
-            return [];
-        }
-    },
-
-    async loadDirectSales(limit = 500) {
-        if (db) {
-            const snapshot = await db.collection("VENTAS_DIRECTAS")
-                .orderBy("timestamp", "desc")
-                .limit(limit)
-                .get();
-            
-            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        } else {
-            return [];
-        }
-    },
-
-    async loadSalesByDate(date = DateUtils.getCurrentDateStringElSalvador(), limit = 500) {
-        if (db) {
-            const snapshot = await db.collection("VENTAS")
-                .where("date", "==", date)
-                .orderBy("timestamp", "desc")
-                .limit(limit)
-                .get();
-            
-            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        } else {
-            return [];
-        }
-    },
-
-    async addAbono(invoiceId, abonoData) {
-        if (db) {
-            const ventaRef = db.collection("VENTAS").doc(invoiceId);
-            
-            const ventaDoc = await ventaRef.get();
-            if (!ventaDoc.exists) {
-                throw new Error("No se encontró la venta");
-            }
-            
-            const venta = ventaDoc.data();
-            
-            const nuevoSaldo = (venta.saldoPendiente || venta.total) - abonoData.monto;
-            
-            if (nuevoSaldo < 0) {
-                throw new Error("El monto del abono no puede ser mayor al saldo pendiente");
-            }
-            
-            await ventaRef.update({
-                abonos: db.FieldValue.arrayUnion(abonoData),
-                saldoPendiente: nuevoSaldo
-            });
-            
-            if (nuevoSaldo <= 0) {
-                await ventaRef.update({
-                    paymentType: 'contado',
-                    status: 'pagado'
-                });
-            }
-            
-            return true;
-        } else {
-            throw new Error("No hay conexión a la base de datos");
-        }
-    },
-
-    async getSaleById(invoiceId) {
-        if (db) {
-            const doc = await db.collection("VENTAS").doc(invoiceId).get();
-            if (doc.exists) {
-                return { id: doc.id, ...doc.data() };
-            }
-            return null;
-        } else {
-            throw new Error("No hay conexión a la base de datos");
-        }
-    },
-
-    async getDirectSaleById(invoiceId) {
-        if (db) {
-            const doc = await db.collection("VENTAS_DIRECTAS").doc(invoiceId).get();
-            if (doc.exists) {
-                return { id: doc.id, ...doc.data() };
-            }
-            return null;
-        } else {
-            throw new Error("No hay conexión a la base de datos");
-        }
-    },
-
-    async cancelInvoice(invoiceId) {
-        if (db) {
-            const ventaRef = db.collection("VENTAS").doc(invoiceId);
-            
-            await ventaRef.update({
-                paymentType: 'contado',
-                status: 'pagado',
-                saldoPendiente: 0,
-                cancelada: true,
-                fechaCancelacion: new Date()
-            });
-        } else {
-            throw new Error("No hay conexión a la base de datos");
-        }
-    },
-
-    async saveRetiro(retiroData) {
-        if (db) {
-            const docRef = await db.collection("RETIROS").add(retiroData);
-            return docRef.id;
-        } else {
-            throw new Error("No hay conexión a la base de datos");
-        }
-    },
-
-    async loadRetiros(limit = 500) {
-        if (db) {
-            const snapshot = await db.collection("RETIROS")
-                .orderBy("timestamp", "desc")
-                .limit(limit)
-                .get();
-            
-            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        } else {
-            return [];
-        }
-    },
-
-    async loadAllMovements(limit = 500) {
-        const [ventas, ventasDirectas, retiros] = await Promise.all([
-            this.loadSales(limit),
-            this.loadDirectSales(limit),
-            this.loadRetiros(limit)
-        ]);
-        
-        const allMovements = [
-            ...ventas.map(v => ({ ...v, tipo: 'venta', subtipo: 'equipo' })),
-            ...ventasDirectas.map(v => ({ ...v, tipo: 'venta', subtipo: 'directa' })),
-            ...retiros.map(r => ({ ...r, tipo: 'retiro' }))
-        ];
-        
-        return allMovements.sort((a, b) => {
-            const dateA = a.timestamp?.toDate ? a.timestamp.toDate() : a.timestamp;
-            const dateB = b.timestamp?.toDate ? b.timestamp.toDate() : b.timestamp;
-            return dateB - dateA;
-        }).slice(0, limit);
     }
 };
