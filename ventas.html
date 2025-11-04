@@ -2797,7 +2797,8 @@
                     
                     await ventaRef.update({
                         abonos: AppState.db.FieldValue.arrayUnion(abonoData),
-                        saldoPendiente: nuevoSaldo
+                        saldoPendiente: nuevoSaldo,
+                        fechaActualizacion: DateUtils.getCurrentTimestampElSalvador() // ✅ Agregar fecha de actualización
                     });
                     
                     if (nuevoSaldo <= 0) {
@@ -2834,7 +2835,8 @@
                         status: 'pagado',
                         saldoPendiente: 0,
                         cancelada: true,
-                        fechaCancelacion: new Date()
+                        fechaCancelacion: new Date(),
+                        fechaActualizacion: DateUtils.getCurrentTimestampElSalvador() // ✅ Agregar fecha de actualización
                     });
                     
                     const venta = await this.getSaleById(invoiceId);
@@ -3072,7 +3074,23 @@
                 switch (AppState.currentFilter) {
                     case 'hoy':
                         const today = DateUtils.getCurrentDateStringElSalvador();
-                        filtered = filtered.filter(mov => mov.date === today);
+                        filtered = filtered.filter(mov => {
+                            if (mov.tipo === 'venta') {
+                                // Para ventas, verificar si la fecha de creación o alguna fecha de abono es hoy
+                                const fechaCreacion = mov.date;
+                                const tieneAbonosHoy = mov.abonos && mov.abonos.some(abono => {
+                                    const fechaAbono = abono.fecha ? 
+                                        (abono.fecha.toDate ? abono.fecha.toDate() : abono.fecha) : 
+                                        null;
+                                    return fechaAbono && DateUtils.isTodayInElSalvador(DateUtils.formatDateToYYYYMMDD(fechaAbono));
+                                });
+                                return fechaCreacion === today || tieneAbonosHoy;
+                            } else if (mov.tipo === 'retiro') {
+                                // Para retiros, verificar la fecha del retiro
+                                return mov.date === today;
+                            }
+                            return false;
+                        });
                         break;
                     case 'ventas':
                         filtered = filtered.filter(mov => 
@@ -3520,7 +3538,8 @@
                         paymentType: paymentType,
                         timestamp: DateUtils.getCurrentTimestampElSalvador(),
                         date: fechaVenta,
-                        status: paymentType === 'contado' ? 'pagado' : 'pendiente'
+                        status: paymentType === 'contado' ? 'pagado' : 'pendiente',
+                        fechaCreacion: DateUtils.getCurrentTimestampElSalvador() // ✅ Guardar fecha de creación
                     };
 
                     if (paymentType === 'pendiente') {
@@ -3588,7 +3607,8 @@
                         })),
                         total: nuevoTotal,
                         saldoPendiente: nuevoSaldoPendiente,
-                        timestamp: DateUtils.getCurrentTimestampElSalvador()
+                        fechaActualizacion: DateUtils.getCurrentTimestampElSalvador(), // ✅ Agregar fecha de actualización
+                        // NO actualizamos el timestamp original para mantener la fecha de creación
                     };
                     
                     if (nuevoSaldoPendiente <= 0) {
@@ -3666,6 +3686,9 @@
                     </div>` : '';
                 
                 const fecha = venta.timestamp ? new Date(venta.timestamp.toDate ? venta.timestamp.toDate() : venta.timestamp).toLocaleString('es-ES') : 'N/A';
+                const fechaActualizacion = venta.fechaActualizacion ? 
+                    new Date(venta.fechaActualizacion.toDate ? venta.fechaActualizacion.toDate() : venta.fechaActualizacion).toLocaleString('es-ES') : 
+                    'No actualizada';
                 
                 let estadoMostrar = venta.paymentType;
                 if (venta.paymentType === 'pendiente' && saldoPendiente <= 0) {
@@ -3673,13 +3696,17 @@
                 }
                 const tipo = estadoMostrar === 'contado' ? 'CONTADO' : 'PENDIENTE';
                 
+                const infoActualizacion = venta.fechaActualizacion ? 
+                    `<div><strong>Última Actualización:</strong> ${fechaActualizacion}</div>` : '';
+                
                 const modalContent = `
                     <h3 style="margin-bottom: 15px; text-align: center;">Factura #${venta.invoiceNumber}</h3>
                     <div class="invoice-details">
                         <strong>Grupo:</strong> ${venta.clientName || 'N/A'}<br>
                         <strong>Equipo:</strong> ${venta.equipoNumber || 'N/A'}<br>
                         <strong>Tipo:</strong> ${tipo}<br>
-                        <strong>Fecha:</strong> ${fecha}<br>
+                        <strong>Fecha de Creación:</strong> ${fecha}<br>
+                        ${infoActualizacion}
                         <strong>Total:</strong> $${(venta.total || 0).toFixed(2)}
                     </div>
                     ${saldoInfo}
