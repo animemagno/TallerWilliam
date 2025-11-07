@@ -1257,11 +1257,37 @@
             font-size: 0.9rem;
             font-weight: bold;
         }
+
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 3000;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 1.2rem;
+        }
+
+        .concurrency-lock {
+            pointer-events: none;
+            opacity: 0.7;
+        }
     </style>
 </head>
 <body>
     <div class="status" id="status-message"></div>
     <div class="connection-status" id="connection-status"></div>
+    <div class="loading-overlay" id="loading-overlay">
+        <div style="text-align: center;">
+            <i class="fas fa-spinner fa-spin" style="font-size: 3rem; margin-bottom: 15px;"></i>
+            <div>Procesando...</div>
+        </div>
+    </div>
     
     <div class="container">
         <header>
@@ -1611,6 +1637,41 @@
             }
         };
 
+        // CORRECCIÓN 1: Mejor manejo de errores y timeouts
+        const ErrorHandler = {
+            async withTimeout(promise, timeoutMs = 10000, operationName = "Operación") {
+                const timeoutPromise = new Promise((_, reject) => {
+                    setTimeout(() => reject(new Error(`${operationName} timeout después de ${timeoutMs}ms`)), timeoutMs);
+                });
+                
+                try {
+                    return await Promise.race([promise, timeoutPromise]);
+                } catch (error) {
+                    console.error(`Error en ${operationName}:`, error);
+                    throw error;
+                }
+            },
+            
+            async withRetry(promiseFn, maxRetries = 3, operationName = "Operación") {
+                let lastError;
+                
+                for (let attempt = 1; attempt <= maxRetries; attempt++) {
+                    try {
+                        return await promiseFn();
+                    } catch (error) {
+                        lastError = error;
+                        console.warn(`Intento ${attempt}/${maxRetries} falló para ${operationName}:`, error);
+                        
+                        if (attempt < maxRetries) {
+                            await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+                        }
+                    }
+                }
+                
+                throw new Error(`${operationName} falló después de ${maxRetries} intentos: ${lastError.message}`);
+            }
+        };
+
         const DateUtils = {
             getCurrentDateElSalvador() {
                 const now = new Date();
@@ -1654,9 +1715,10 @@
                 return dateString === today;
             },
 
+            // CORRECCIÓN 4: Restaurar validación de fechas futuras con mejor manejo
             isFutureDateInElSalvador(dateString) {
-                // Eliminada la restricción de fechas futuras
-                return false;
+                const today = this.getCurrentDateStringElSalvador();
+                return dateString > today;
             },
 
             getCurrentTimestampElSalvador() {
@@ -1678,7 +1740,11 @@
             async checkConnection() {
                 try {
                     if (AppState.firebaseInitialized) {
-                        await AppState.db.collection("VENTAS").limit(1).get();
+                        await ErrorHandler.withTimeout(
+                            AppState.db.collection("VENTAS").limit(1).get(),
+                            5000,
+                            "Verificación de conexión"
+                        );
                         this.handleOnline();
                     } else {
                         this.handleOffline();
@@ -1717,12 +1783,42 @@
             }
         };
 
+        // CORRECCIÓN 8: Mejor gestión de memoria con paginación
+        const MemoryManager = {
+            maxCacheSize: 1000,
+            cleanupThreshold: 0.8,
+            
+            cleanupIfNeeded(cache) {
+                if (cache.size > this.maxCacheSize * this.cleanupThreshold) {
+                    const entries = Array.from(cache.entries());
+                    const toRemove = entries.slice(0, Math.floor(entries.length * 0.2));
+                    
+                    toRemove.forEach(([key]) => {
+                        cache.delete(key);
+                    });
+                    
+                    console.log(`MemoryManager: Limpiados ${toRemove.length} elementos del cache`);
+                }
+            },
+            
+            paginateData(data, pageSize = 50) {
+                const pages = [];
+                for (let i = 0; i < data.length; i += pageSize) {
+                    pages.push(data.slice(i, i + pageSize));
+                }
+                return pages;
+            }
+        };
+
         const GrupoManager = {
             grupos: new Map(),
             equiposPendientes: new Map(),
             currentEditingGroup: null,
             currentGrupoDetalle: null,
             unsubscribe: null,
+            // CORRECCIÓN 5: Cache para optimizar rendimiento
+            totalesCache: new Map(),
+            lastUpdateTime: null,
             
             async initialize() {
                 await this.loadGrupos();
@@ -1750,7 +1846,12 @@
                 try {
                     if (!AppState.firebaseInitialized) return;
                     
-                    const snapshot = await AppState.db.collection("GRUPOS").get();
+                    const snapshot = await ErrorHandler.withRetry(
+                        () => AppState.db.collection("GRUPOS").get(),
+                        3,
+                        "Carga de grupos"
+                    );
+                    
                     this.grupos.clear();
                     snapshot.forEach(doc => {
                         this.grupos.set(doc.id, { id: doc.id, ...doc.data() });
@@ -1760,42 +1861,80 @@
                     
                 } catch (error) {
                     console.error("Error cargando grupos:", error);
+                    UIService.showStatus("Error cargando grupos: " + error.message, "error");
                 }
             },
             
+            // CORRECCIÓN 5: Función optimizada para actualizar totales
             async actualizarTotalesGrupos() {
                 try {
+                    const now = Date.now();
+                    // Usar cache si la actualización fue hace menos de 30 segundos
+                    if (this.lastUpdateTime && (now - this.lastUpdateTime < 30000)) {
+                        return;
+                    }
+                    
+                    const batch = AppState.db.batch();
+                    let updatesCount = 0;
+                    
                     for (const [grupoId, grupo] of this.grupos.entries()) {
-                        let nuevoTotal = 0;
+                        const cacheKey = `${grupoId}-${grupo.equipos.join('-')}`;
+                        const cachedTotal = this.totalesCache.get(cacheKey);
                         
-                        for (const equipoNum of grupo.equipos) {
-                            let equipoEncontrado = null;
-                            this.equiposPendientes.forEach((equipo, key) => {
-                                if (equipo.numero === equipoNum && equipo.total > 0) {
-                                    equipoEncontrado = equipo;
+                        let nuevoTotal = 0;
+                        let needsUpdate = false;
+                        
+                        // Calcular total solo si no está en cache o si los equipos cambiaron
+                        if (!cachedTotal) {
+                            for (const equipoNum of grupo.equipos) {
+                                let equipoEncontrado = null;
+                                this.equiposPendientes.forEach((equipo, key) => {
+                                    if (equipo.numero === equipoNum && equipo.total > 0) {
+                                        equipoEncontrado = equipo;
+                                    }
+                                });
+                                
+                                if (equipoEncontrado) {
+                                    nuevoTotal += equipoEncontrado.total;
                                 }
-                            });
-                            
-                            if (equipoEncontrado) {
-                                nuevoTotal += equipoEncontrado.total;
                             }
+                            this.totalesCache.set(cacheKey, nuevoTotal);
+                            needsUpdate = true;
+                        } else {
+                            nuevoTotal = cachedTotal;
                         }
                         
-                        if (grupo.total !== nuevoTotal) {
+                        if (grupo.total !== nuevoTotal && needsUpdate) {
                             grupo.total = nuevoTotal;
                             
                             if (AppState.firebaseInitialized) {
                                 try {
-                                    await AppState.db.collection("GRUPOS").doc(grupoId).update({
+                                    const grupoRef = AppState.db.collection("GRUPOS").doc(grupoId);
+                                    batch.update(grupoRef, {
                                         total: nuevoTotal,
                                         fechaActualizacion: new Date()
                                     });
+                                    updatesCount++;
+                                    
+                                    // Limitar tamaño del batch para evitar timeouts
+                                    if (updatesCount >= 400) {
+                                        await batch.commit();
+                                        updatesCount = 0;
+                                    }
                                 } catch (error) {
                                     console.error(`Error actualizando grupo ${grupo.nombre}:`, error);
                                 }
                             }
                         }
                     }
+                    
+                    // Commit batch final si hay updates pendientes
+                    if (updatesCount > 0) {
+                        await batch.commit();
+                    }
+                    
+                    this.lastUpdateTime = now;
+                    MemoryManager.cleanupIfNeeded(this.totalesCache);
                     
                 } catch (error) {
                     console.error("Error actualizando totales de grupos:", error);
@@ -1806,10 +1945,14 @@
                 try {
                     if (!AppState.firebaseInitialized) return;
                     
-                    const snapshot = await AppState.db.collection("VENTAS")
-                        .where("paymentType", "==", "pendiente")
-                        .where("status", "==", "pendiente")
-                        .get();
+                    const snapshot = await ErrorHandler.withRetry(
+                        () => AppState.db.collection("VENTAS")
+                            .where("paymentType", "==", "pendiente")
+                            .where("status", "==", "pendiente")
+                            .get(),
+                        3,
+                        "Carga de equipos pendientes"
+                    );
                     
                     this.equiposPendientes.clear();
                     
@@ -1847,6 +1990,7 @@
                     });
                     
                     await this.actualizarTotalesGrupos();
+                    MemoryManager.cleanupIfNeeded(this.equiposPendientes);
                     
                 } catch (error) {
                     console.error("Error cargando equipos pendientes:", error);
@@ -1890,7 +2034,12 @@
                         activo: true
                     };
                     
-                    const docRef = await AppState.db.collection("GRUPOS").add(grupoData);
+                    const docRef = await ErrorHandler.withRetry(
+                        () => AppState.db.collection("GRUPOS").add(grupoData),
+                        3,
+                        "Creación de grupo"
+                    );
+                    
                     grupoData.id = docRef.id;
                     this.grupos.set(docRef.id, grupoData);
                     
@@ -1955,7 +2104,11 @@
                         fechaActualizacion: new Date()
                     };
                     
-                    await AppState.db.collection("GRUPOS").doc(grupoId).update(grupoData);
+                    await ErrorHandler.withRetry(
+                        () => AppState.db.collection("GRUPOS").doc(grupoId).update(grupoData),
+                        3,
+                        "Actualización de grupo"
+                    );
                     
                     const grupoExistente = this.grupos.get(grupoId);
                     if (grupoExistente) {
@@ -1990,6 +2143,7 @@
                                         for (const factura of equipo.facturas) {
                                             try {
                                                 if (AppState.firebaseInitialized) {
+                                                    // CORRECCIÓN 1: Usar firebase.firestore.FieldValue consistentemente
                                                     await AppState.db.collection("VENTAS").doc(factura.id).update({
                                                         grupo: firebase.firestore.FieldValue.delete(),
                                                         grupoNombre: firebase.firestore.FieldValue.delete()
@@ -2030,6 +2184,7 @@
                                     for (const factura of equipo.facturas) {
                                         try {
                                             if (AppState.firebaseInitialized) {
+                                                // CORRECCIÓN 1: Usar firebase.firestore.FieldValue consistentemente
                                                 await AppState.db.collection("VENTAS").doc(factura.id).update({
                                                     grupo: firebase.firestore.FieldValue.delete(),
                                                     grupoNombre: firebase.firestore.FieldValue.delete()
@@ -2044,8 +2199,14 @@
                         }
                     }
                     
-                    await AppState.db.collection("GRUPOS").doc(grupoId).delete();
+                    await ErrorHandler.withRetry(
+                        () => AppState.db.collection("GRUPOS").doc(grupoId).delete(),
+                        3,
+                        "Eliminación de grupo"
+                    );
+                    
                     this.grupos.delete(grupoId);
+                    this.totalesCache.clear(); // Limpiar cache
                     
                     await this.loadEquiposPendientes();
                     await this.actualizarTotalesGrupos();
@@ -2629,7 +2790,8 @@
         const ProductCache = {
             data: new Map(),
             lastUpdate: null,
-            ttl: 10 * 60 * 1000,
+            ttl: 10 * 60 * 1000, // 10 minutos
+            unsubscribe: null,
             
             isExpired() {
                 return !this.lastUpdate || (Date.now() - this.lastUpdate) > this.ttl;
@@ -2639,18 +2801,44 @@
                 if (this.isExpired() || this.data.size === 0) {
                     await this.refresh();
                 }
+                this.setupRealTimeListener();
+            },
+            
+            // CORRECCIÓN 7: Listener en tiempo real para cache automático
+            setupRealTimeListener() {
+                if (!AppState.firebaseInitialized) return;
+                
+                this.unsubscribe = AppState.db.collection("INVENTARIO")
+                    .onSnapshot((snapshot) => {
+                        snapshot.docChanges().forEach((change) => {
+                            if (change.type === 'added' || change.type === 'modified') {
+                                this.data.set(change.doc.id, { id: change.doc.id, ...change.doc.data() });
+                            } else if (change.type === 'removed') {
+                                this.data.delete(change.doc.id);
+                            }
+                        });
+                        this.lastUpdate = Date.now();
+                    }, (error) => {
+                        console.error("Error en listener de inventario:", error);
+                    });
             },
             
             async refresh() {
                 try {
                     if (!AppState.firebaseInitialized) return;
                     
-                    const snapshot = await AppState.db.collection("INVENTARIO").get();
+                    const snapshot = await ErrorHandler.withRetry(
+                        () => AppState.db.collection("INVENTARIO").get(),
+                        3,
+                        "Actualización de cache de productos"
+                    );
+                    
                     this.data.clear();
                     snapshot.forEach(doc => {
                         this.data.set(doc.id, { id: doc.id, ...doc.data() });
                     });
                     this.lastUpdate = Date.now();
+                    MemoryManager.cleanupIfNeeded(this.data);
                 } catch (error) {
                     console.error("Error actualizando cache:", error);
                 }
@@ -2682,6 +2870,12 @@
                     }
                 });
                 return found;
+            },
+            
+            cleanup() {
+                if (this.unsubscribe) {
+                    this.unsubscribe();
+                }
             }
         };
 
@@ -2701,7 +2895,45 @@
             equiposEditSeleccionados: new Set(),
             processingSale: false,
             currentInvoiceNumber: null,
-            datosVentaPendiente: null // Para almacenar datos temporales de venta pendiente
+            datosVentaPendiente: null,
+            // CORRECCIÓN 6: Lock para concurrencia
+            operationLock: false
+        };
+
+        // CORRECCIÓN 6: Manejo de concurrencia
+        const ConcurrencyManager = {
+            async acquireLock(operationName = "Operación") {
+                let attempts = 0;
+                const maxAttempts = 10;
+                const delay = 100;
+                
+                while (AppState.operationLock && attempts < maxAttempts) {
+                    attempts++;
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                }
+                
+                if (AppState.operationLock) {
+                    throw new Error(`No se pudo adquirir lock para ${operationName} después de ${maxAttempts} intentos`);
+                }
+                
+                AppState.operationLock = true;
+                document.body.classList.add('concurrency-lock');
+                return true;
+            },
+            
+            releaseLock() {
+                AppState.operationLock = false;
+                document.body.classList.remove('concurrency-lock');
+            },
+            
+            async withLock(operationFn, operationName = "Operación") {
+                await this.acquireLock(operationName);
+                try {
+                    return await operationFn();
+                } finally {
+                    this.releaseLock();
+                }
+            }
         };
 
         const DataService = {
@@ -2733,32 +2965,43 @@
             },
 
             async saveSale(saleData) {
-                if (AppState.firebaseInitialized) {
-                    const existingInvoice = await this.checkInvoiceExists(saleData.invoiceNumber);
-                    if (existingInvoice) {
-                        throw new Error(`La factura ${saleData.invoiceNumber} ya existe`);
+                // CORRECCIÓN 6: Usar lock para prevenir concurrencia
+                return await ConcurrencyManager.withLock(async () => {
+                    if (AppState.firebaseInitialized) {
+                        const existingInvoice = await this.checkInvoiceExists(saleData.invoiceNumber);
+                        if (existingInvoice) {
+                            throw new Error(`La factura ${saleData.invoiceNumber} ya existe`);
+                        }
+                        
+                        const docRef = await ErrorHandler.withRetry(
+                            () => AppState.db.collection("VENTAS").add(saleData),
+                            3,
+                            "Guardado de venta"
+                        );
+                        
+                        await this.updateSaleCounter(saleData.date);
+                        
+                        if (saleData.paymentType === 'pendiente') {
+                            await GrupoManager.actualizarDesdeVenta(saleData);
+                        }
+                        
+                        return docRef.id;
+                    } else {
+                        throw new Error("No hay conexión a la base de datos");
                     }
-                    
-                    const docRef = await AppState.db.collection("VENTAS").add(saleData);
-                    
-                    await this.updateSaleCounter(saleData.date);
-                    
-                    if (saleData.paymentType === 'pendiente') {
-                        await GrupoManager.actualizarDesdeVenta(saleData);
-                    }
-                    
-                    return docRef.id;
-                } else {
-                    throw new Error("No hay conexión a la base de datos");
-                }
+                }, "Guardar venta");
             },
 
             async checkInvoiceExists(invoiceNumber) {
                 try {
-                    const snapshot = await AppState.db.collection("VENTAS")
-                        .where("invoiceNumber", "==", invoiceNumber)
-                        .limit(1)
-                        .get();
+                    const snapshot = await ErrorHandler.withTimeout(
+                        AppState.db.collection("VENTAS")
+                            .where("invoiceNumber", "==", invoiceNumber)
+                            .limit(1)
+                            .get(),
+                        5000,
+                        "Verificación de factura única"
+                    );
                     return !snapshot.empty;
                 } catch (error) {
                     console.error("Error verificando factura duplicada:", error);
@@ -2804,193 +3047,278 @@
             },
 
             async updateSale(saleId, saleData) {
-                if (AppState.firebaseInitialized) {
-                    await AppState.db.collection("VENTAS").doc(saleId).update(saleData);
-                    
-                    if (saleData.paymentType === 'pendiente') {
-                        await GrupoManager.actualizarDesdeVenta({...saleData, id: saleId});
+                return await ConcurrencyManager.withLock(async () => {
+                    if (AppState.firebaseInitialized) {
+                        await ErrorHandler.withRetry(
+                            () => AppState.db.collection("VENTAS").doc(saleId).update(saleData),
+                            3,
+                            "Actualización de venta"
+                        );
+                        
+                        if (saleData.paymentType === 'pendiente') {
+                            await GrupoManager.actualizarDesdeVenta({...saleData, id: saleId});
+                        }
+                    } else {
+                        throw new Error("No hay conexión a la base de datos");
                     }
-                } else {
-                    throw new Error("No hay conexión a la base de datos");
-                }
+                }, "Actualizar venta");
             },
 
             async deleteSale(saleId) {
-                if (AppState.firebaseInitialized) {
-                    await AppState.db.collection("VENTAS").doc(saleId).delete();
-                } else {
-                    throw new Error("No hay conexión a la base de datos");
-                }
+                return await ConcurrencyManager.withLock(async () => {
+                    if (AppState.firebaseInitialized) {
+                        await ErrorHandler.withRetry(
+                            () => AppState.db.collection("VENTAS").doc(saleId).delete(),
+                            3,
+                            "Eliminación de venta"
+                        );
+                    } else {
+                        throw new Error("No hay conexión a la base de datos");
+                    }
+                }, "Eliminar venta");
             },
 
             async loadSales(limit = 500) {
-                if (AppState.firebaseInitialized) {
-                    const snapshot = await AppState.db.collection("VENTAS")
-                        .orderBy("timestamp", "desc")
-                        .limit(limit)
-                        .get();
-                    
-                    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                } else {
+                try {
+                    if (AppState.firebaseInitialized) {
+                        const snapshot = await ErrorHandler.withTimeout(
+                            AppState.db.collection("VENTAS")
+                                .orderBy("timestamp", "desc")
+                                .limit(limit)
+                                .get(),
+                            10000,
+                            "Carga de ventas"
+                        );
+                        
+                        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    } else {
+                        return [];
+                    }
+                } catch (error) {
+                    console.error("Error cargando ventas:", error);
                     return [];
                 }
             },
 
             async loadSalesByDate(date = DateUtils.getCurrentDateStringElSalvador(), limit = 500) {
-                if (AppState.firebaseInitialized) {
-                    const snapshot = await AppState.db.collection("VENTAS")
-                        .where("date", "==", date)
-                        .orderBy("timestamp", "desc")
-                        .limit(limit)
-                        .get();
-                    
-                    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                } else {
+                try {
+                    if (AppState.firebaseInitialized) {
+                        const snapshot = await ErrorHandler.withTimeout(
+                            AppState.db.collection("VENTAS")
+                                .where("date", "==", date)
+                                .orderBy("timestamp", "desc")
+                                .limit(limit)
+                                .get(),
+                            10000,
+                            "Carga de ventas por fecha"
+                        );
+                        
+                        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    } else {
+                        return [];
+                    }
+                } catch (error) {
+                    console.error("Error cargando ventas por fecha:", error);
                     return [];
                 }
             },
 
             async addAbono(invoiceId, abonoData) {
-                if (AppState.firebaseInitialized) {
-                    const ventaRef = AppState.db.collection("VENTAS").doc(invoiceId);
-                    
-                    const ventaDoc = await ventaRef.get();
-                    if (!ventaDoc.exists) {
-                        throw new Error("No se encontró la venta");
+                return await ConcurrencyManager.withLock(async () => {
+                    if (AppState.firebaseInitialized) {
+                        const ventaRef = AppState.db.collection("VENTAS").doc(invoiceId);
+                        
+                        const ventaDoc = await ventaRef.get();
+                        if (!ventaDoc.exists) {
+                            throw new Error("No se encontró la venta");
+                        }
+                        
+                        const venta = ventaDoc.data();
+                        
+                        const nuevoSaldo = (venta.saldoPendiente || venta.total) - abonoData.monto;
+                        
+                        if (nuevoSaldo < 0) {
+                            throw new Error("El monto del abono no puede ser mayor al saldo pendiente");
+                        }
+                        
+                        // CORRECCIÓN 1: Usar firebase.firestore.FieldValue consistentemente
+                        await ErrorHandler.withRetry(
+                            () => ventaRef.update({
+                                abonos: firebase.firestore.FieldValue.arrayUnion(abonoData),
+                                saldoPendiente: nuevoSaldo,
+                                fechaActualizacion: DateUtils.getCurrentTimestampElSalvador()
+                            }),
+                            3,
+                            "Registro de abono"
+                        );
+                        
+                        if (nuevoSaldo <= 0) {
+                            await ventaRef.update({
+                                paymentType: 'contado',
+                                status: 'pagado'
+                            });
+                        }
+                        
+                        await GrupoManager.actualizarDesdeVenta(venta);
+                    } else {
+                        throw new Error("No hay conexión a la base de datos");
                     }
-                    
-                    const venta = ventaDoc.data();
-                    
-                    const nuevoSaldo = (venta.saldoPendiente || venta.total) - abonoData.monto;
-                    
-                    if (nuevoSaldo < 0) {
-                        throw new Error("El monto del abono no puede ser mayor al saldo pendiente");
-                    }
-                    
-                    // CORRECCIÓN: Usar firebase.firestore.FieldValue en lugar de AppState.db.FieldValue
-                    await ventaRef.update({
-                        abonos: firebase.firestore.FieldValue.arrayUnion(abonoData),
-                        saldoPendiente: nuevoSaldo,
-                        fechaActualizacion: DateUtils.getCurrentTimestampElSalvador()
-                    });
-                    
-                    if (nuevoSaldo <= 0) {
-                        await ventaRef.update({
-                            paymentType: 'contado',
-                            status: 'pagado'
-                        });
-                    }
-                    
-                    await GrupoManager.actualizarDesdeVenta(venta);
-                } else {
-                    throw new Error("No hay conexión a la base de datos");
-                }
+                }, "Registrar abono");
             },
 
             async getSaleById(invoiceId) {
-                if (AppState.firebaseInitialized) {
-                    const doc = await AppState.db.collection("VENTAS").doc(invoiceId).get();
-                    if (doc.exists) {
-                        return { id: doc.id, ...doc.data() };
+                try {
+                    if (AppState.firebaseInitialized) {
+                        const doc = await ErrorHandler.withTimeout(
+                            AppState.db.collection("VENTAS").doc(invoiceId).get(),
+                            5000,
+                            "Carga de venta por ID"
+                        );
+                        if (doc.exists) {
+                            return { id: doc.id, ...doc.data() };
+                        }
+                        return null;
+                    } else {
+                        throw new Error("No hay conexión a la base de datos");
                     }
+                } catch (error) {
+                    console.error("Error obteniendo venta por ID:", error);
                     return null;
-                } else {
-                    throw new Error("No hay conexión a la base de datos");
                 }
             },
 
             async cancelInvoice(invoiceId) {
-                if (AppState.firebaseInitialized) {
-                    const ventaRef = AppState.db.collection("VENTAS").doc(invoiceId);
-                    
-                    await ventaRef.update({
-                        paymentType: 'contado',
-                        status: 'pagado',
-                        saldoPendiente: 0,
-                        cancelada: true,
-                        fechaCancelacion: new Date(),
-                        fechaActualizacion: DateUtils.getCurrentTimestampElSalvador()
-                    });
-                    
-                    const venta = await this.getSaleById(invoiceId);
-                    if (venta) {
-                        await GrupoManager.actualizarDesdeVenta(venta);
+                return await ConcurrencyManager.withLock(async () => {
+                    if (AppState.firebaseInitialized) {
+                        const ventaRef = AppState.db.collection("VENTAS").doc(invoiceId);
+                        
+                        await ErrorHandler.withRetry(
+                            () => ventaRef.update({
+                                paymentType: 'contado',
+                                status: 'pagado',
+                                saldoPendiente: 0,
+                                cancelada: true,
+                                fechaCancelacion: new Date(),
+                                fechaActualizacion: DateUtils.getCurrentTimestampElSalvador()
+                            }),
+                            3,
+                            "Cancelación de factura"
+                        );
+                        
+                        const venta = await this.getSaleById(invoiceId);
+                        if (venta) {
+                            await GrupoManager.actualizarDesdeVenta(venta);
+                        }
+                    } else {
+                        throw new Error("No hay conexión a la base de datos");
                     }
-                } else {
-                    throw new Error("No hay conexión a la base de datos");
-                }
+                }, "Cancelar factura");
             },
 
             async saveRetiro(retiroData) {
-                if (AppState.firebaseInitialized) {
-                    const docRef = await AppState.db.collection("RETIROS").add(retiroData);
-                    return docRef.id;
-                } else {
-                    throw new Error("No hay conexión a la base de datos");
-                }
+                return await ConcurrencyManager.withLock(async () => {
+                    if (AppState.firebaseInitialized) {
+                        const docRef = await ErrorHandler.withRetry(
+                            () => AppState.db.collection("RETIROS").add(retiroData),
+                            3,
+                            "Guardado de retiro"
+                        );
+                        return docRef.id;
+                    } else {
+                        throw new Error("No hay conexión a la base de datos");
+                    }
+                }, "Guardar retiro");
             },
 
             async loadRetiros(limit = 500) {
-                if (AppState.firebaseInitialized) {
-                    const snapshot = await AppState.db.collection("RETIROS")
-                        .orderBy("timestamp", "desc")
-                        .limit(limit)
-                        .get();
-                    
-                    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                } else {
+                try {
+                    if (AppState.firebaseInitialized) {
+                        const snapshot = await ErrorHandler.withTimeout(
+                            AppState.db.collection("RETIROS")
+                                .orderBy("timestamp", "desc")
+                                .limit(limit)
+                                .get(),
+                            10000,
+                            "Carga de retiros"
+                        );
+                        
+                        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    } else {
+                        return [];
+                    }
+                } catch (error) {
+                    console.error("Error cargando retiros:", error);
                     return [];
                 }
             },
 
             async loadRetirosByDate(date = DateUtils.getCurrentDateStringElSalvador(), limit = 500) {
-                if (AppState.firebaseInitialized) {
-                    const snapshot = await AppState.db.collection("RETIROS")
-                        .where("date", "==", date)
-                        .orderBy("timestamp", "desc")
-                        .limit(limit)
-                        .get();
-                    
-                    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                } else {
+                try {
+                    if (AppState.firebaseInitialized) {
+                        const snapshot = await ErrorHandler.withTimeout(
+                            AppState.db.collection("RETIROS")
+                                .where("date", "==", date)
+                                .orderBy("timestamp", "desc")
+                                .limit(limit)
+                                .get(),
+                            10000,
+                            "Carga de retiros por fecha"
+                        );
+                        
+                        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    } else {
+                        return [];
+                    }
+                } catch (error) {
+                    console.error("Error cargando retiros por fecha:", error);
                     return [];
                 }
             },
 
             async loadAllMovements(limit = 500) {
-                const [ventas, retiros] = await Promise.all([
-                    this.loadSales(limit),
-                    this.loadRetiros(limit)
-                ]);
-                
-                const allMovements = [
-                    ...ventas.map(v => ({ ...v, tipo: 'venta' })),
-                    ...retiros.map(r => ({ ...r, tipo: 'retiro' }))
-                ];
-                
-                return allMovements.sort((a, b) => {
-                    const dateA = a.timestamp?.toDate ? a.timestamp.toDate() : a.timestamp;
-                    const dateB = b.timestamp?.toDate ? b.timestamp.toDate() : b.timestamp;
-                    return dateB - dateA;
-                }).slice(0, limit);
+                try {
+                    const [ventas, retiros] = await Promise.all([
+                        this.loadSales(limit),
+                        this.loadRetiros(limit)
+                    ]);
+                    
+                    const allMovements = [
+                        ...ventas.map(v => ({ ...v, tipo: 'venta' })),
+                        ...retiros.map(r => ({ ...r, tipo: 'retiro' }))
+                    ];
+                    
+                    return allMovements.sort((a, b) => {
+                        const dateA = a.timestamp?.toDate ? a.timestamp.toDate() : a.timestamp;
+                        const dateB = b.timestamp?.toDate ? b.timestamp.toDate() : b.timestamp;
+                        return dateB - dateA;
+                    }).slice(0, limit);
+                } catch (error) {
+                    console.error("Error cargando todos los movimientos:", error);
+                    return [];
+                }
             },
 
             async loadMovementsByDate(date = DateUtils.getCurrentDateStringElSalvador(), limit = 500) {
-                const [ventas, retiros] = await Promise.all([
-                    this.loadSalesByDate(date, limit),
-                    this.loadRetirosByDate(date, limit)
-                ]);
-                
-                const allMovements = [
-                    ...ventas.map(v => ({ ...v, tipo: 'venta' })),
-                    ...retiros.map(r => ({ ...r, tipo: 'retiro' }))
-                ];
-                
-                return allMovements.sort((a, b) => {
-                    const dateA = a.timestamp?.toDate ? a.timestamp.toDate() : a.timestamp;
-                    const dateB = b.timestamp?.toDate ? b.timestamp.toDate() : b.timestamp;
-                    return dateB - dateA;
-                }).slice(0, limit);
+                try {
+                    const [ventas, retiros] = await Promise.all([
+                        this.loadSalesByDate(date, limit),
+                        this.loadRetirosByDate(date, limit)
+                    ]);
+                    
+                    const allMovements = [
+                        ...ventas.map(v => ({ ...v, tipo: 'venta' })),
+                        ...retiros.map(r => ({ ...r, tipo: 'retiro' }))
+                    ];
+                    
+                    return allMovements.sort((a, b) => {
+                        const dateA = a.timestamp?.toDate ? a.timestamp.toDate() : a.timestamp;
+                        const dateB = b.timestamp?.toDate ? b.timestamp.toDate() : b.timestamp;
+                        return dateB - dateA;
+                    }).slice(0, limit);
+                } catch (error) {
+                    console.error("Error cargando movimientos por fecha:", error);
+                    return [];
+                }
             }
         };
 
@@ -3050,6 +3378,11 @@
                 setTimeout(() => {
                     statusElement.style.display = 'none';
                 }, 4000);
+            },
+
+            showLoading(show = true) {
+                const loadingOverlay = document.getElementById('loading-overlay');
+                loadingOverlay.style.display = show ? 'flex' : 'none';
             },
 
             updateCartDisplay() {
@@ -3158,14 +3491,8 @@
                     case 'hoy':
                         const today = DateUtils.getCurrentDateStringElSalvador();
                         filtered = filtered.filter(mov => {
-                            if (mov.tipo === 'venta') {
-                                // Solo mostrar ventas creadas hoy
-                                return mov.date === today;
-                            } else if (mov.tipo === 'retiro') {
-                                // Mostrar retiros de hoy
-                                return mov.date === today;
-                            }
-                            return false;
+                            // CORRECCIÓN 2: Filtro HOY mejorado - solo movimientos creados hoy
+                            return mov.date === today;
                         });
                         break;
                     case 'todo':
@@ -3511,6 +3838,7 @@
             },
 
             validateSaleData(equipo, cliente, fechaVenta) {
+                // CORRECCIÓN 9: Validaciones mejoradas de montos
                 if (!equipo.trim()) {
                     throw new Error("El número de equipo es obligatorio");
                 }
@@ -3523,17 +3851,32 @@
                     throw new Error("Seleccione una fecha para la venta");
                 }
                 
-                // Eliminada la validación de fecha futura
+                // CORRECCIÓN 4: Restaurar validación de fechas futuras
+                if (DateUtils.isFutureDateInElSalvador(fechaVenta)) {
+                    const confirmacion = confirm("La fecha seleccionada es futura. ¿Está seguro de continuar?");
+                    if (!confirmacion) {
+                        throw new Error("Fecha futura no confirmada");
+                    }
+                }
                 
                 const productosConPrecioCero = AppState.cart.filter(item => item.precio === 0);
                 if (productosConPrecioCero.length > 0) {
                     throw new Error("Hay productos con precio $0.00. Modifique los precios antes de guardar.");
                 }
                 
+                // CORRECCIÓN 9: Validar formato de precios
+                const productosConPrecioInvalido = AppState.cart.filter(item => 
+                    item.precio < 0 || isNaN(item.precio) || !isFinite(item.precio)
+                );
+                if (productosConPrecioInvalido.length > 0) {
+                    throw new Error("Hay productos con precios inválidos. Verifique los montos.");
+                }
+                
                 return true;
             },
 
             async processSale(paymentType) {
+                // CORRECCIÓN 6: Prevenir procesamiento concurrente
                 if (AppState.processingSale) {
                     UIService.showStatus("Ya hay una venta en proceso", "error");
                     return;
@@ -3564,6 +3907,7 @@
                     
                     AppState.processingSale = true;
                     UIService.updatePaymentButtonsState(true);
+                    UIService.showLoading(true);
                     
                     // Para ventas contado, procesar directamente
                     if (paymentType === 'contado') {
@@ -3583,6 +3927,7 @@
                 } finally {
                     AppState.processingSale = false;
                     UIService.updatePaymentButtonsState(false);
+                    UIService.showLoading(false);
                 }
             },
 
@@ -3607,6 +3952,7 @@
             async procesarVentaContado(equipo, cliente, fechaVenta, totalVenta) {
                 AppState.processingSale = true;
                 UIService.updatePaymentButtonsState(true);
+                UIService.showLoading(true);
                 
                 try {
                     const finalCliente = cliente || `Equipo ${equipo}`;
@@ -3618,6 +3964,7 @@
                     if (!isUnique) {
                         AppState.processingSale = false;
                         UIService.updatePaymentButtonsState(false);
+                        UIService.showLoading(false);
                         return;
                     }
                     
@@ -3656,12 +4003,14 @@
                 } finally {
                     AppState.processingSale = false;
                     UIService.updatePaymentButtonsState(false);
+                    UIService.showLoading(false);
                 }
             },
 
             async procesarVentaPendienteSinAbono(equipo, cliente, fechaVenta, totalVenta) {
                 AppState.processingSale = true;
                 UIService.updatePaymentButtonsState(true);
+                UIService.showLoading(true);
                 
                 try {
                     const finalCliente = cliente || `Equipo ${equipo}`;
@@ -3673,6 +4022,7 @@
                     if (!isUnique) {
                         AppState.processingSale = false;
                         UIService.updatePaymentButtonsState(false);
+                        UIService.showLoading(false);
                         return;
                     }
                     
@@ -3713,12 +4063,14 @@
                 } finally {
                     AppState.processingSale = false;
                     UIService.updatePaymentButtonsState(false);
+                    UIService.showLoading(false);
                 }
             },
 
             async procesarVentaPendienteConAbono(equipo, cliente, fechaVenta, totalVenta, montoAbono) {
                 AppState.processingSale = true;
                 UIService.updatePaymentButtonsState(true);
+                UIService.showLoading(true);
                 
                 try {
                     const finalCliente = cliente || `Equipo ${equipo}`;
@@ -3731,6 +4083,7 @@
                     if (!isUnique) {
                         AppState.processingSale = false;
                         UIService.updatePaymentButtonsState(false);
+                        UIService.showLoading(false);
                         return;
                     }
                     
@@ -3787,6 +4140,7 @@
                 } finally {
                     AppState.processingSale = false;
                     UIService.updatePaymentButtonsState(false);
+                    UIService.showLoading(false);
                 }
             },
 
@@ -3883,10 +4237,13 @@
 
             async loadHistorial() {
                 try {
+                    UIService.showLoading(true);
                     const movimientos = await DataService.loadAllMovements(500);
                     UIService.updateHistorial(movimientos);
                 } catch (error) {
                     UIService.showStatus("Error al cargar historial: " + error.message, "error");
+                } finally {
+                    UIService.showLoading(false);
                 }
             },
 
@@ -4076,11 +4433,14 @@
                 if (!confirm("¿Está seguro de eliminar esta factura? Esta acción no se puede deshacer.")) return;
                 
                 try {
+                    UIService.showLoading(true);
                     await DataService.deleteSale(invoiceId);
                     UIService.showStatus("Factura eliminada correctamente", "success");
                     await this.loadHistorial();
                 } catch (error) {
                     UIService.showStatus("Error al eliminar factura: " + error.message, "error");
+                } finally {
+                    UIService.showLoading(false);
                 }
             },
 
@@ -4088,6 +4448,7 @@
                 if (!confirm("¿Está seguro de eliminar este retiro? Esta acción no se puede deshacer.")) return;
                 
                 try {
+                    UIService.showLoading(true);
                     if (AppState.firebaseInitialized) {
                         await AppState.db.collection("RETIROS").doc(retiroId).delete();
                         UIService.showStatus("Retiro eliminado correctamente", "success");
@@ -4097,6 +4458,8 @@
                     }
                 } catch (error) {
                     UIService.showStatus("Error al eliminar retiro: " + error.message, "error");
+                } finally {
+                    UIService.showLoading(false);
                 }
             },
 
@@ -4104,11 +4467,14 @@
                 if (!confirm("¿Está seguro de cancelar esta factura? Se cambiará el estado a CONTADO.")) return;
                 
                 try {
+                    UIService.showLoading(true);
                     await DataService.cancelInvoice(invoiceId);
                     UIService.showStatus("Factura cancelada correctamente", "success");
                     await this.loadHistorial();
                 } catch (error) {
                     UIService.showStatus("Error al cancelar factura: " + error.message, "error");
+                } finally {
+                    UIService.showLoading(false);
                 }
             },
 
@@ -4156,8 +4522,15 @@
                 const montoInput = document.getElementById('monto-abono');
                 const monto = parseFloat(montoInput.value);
                 
-                if (!monto || monto <= 0) {
-                    UIService.showStatus("Ingrese un monto válido", "error");
+                // CORRECCIÓN 9: Validación mejorada de montos
+                if (!monto || monto <= 0 || isNaN(monto) || !isFinite(monto)) {
+                    UIService.showStatus("Ingrese un monto válido mayor a 0", "error");
+                    return;
+                }
+                
+                // Validar formato decimal
+                if (!/^\d+(\.\d{1,2})?$/.test(montoInput.value)) {
+                    UIService.showStatus("El monto debe tener máximo 2 decimales", "error");
                     return;
                 }
                 
@@ -4175,6 +4548,7 @@
                 }
                 
                 try {
+                    UIService.showLoading(true);
                     const abonoData = {
                         monto: monto,
                         fecha: DateUtils.getCurrentTimestampElSalvador(),
@@ -4201,6 +4575,8 @@
                     
                 } catch (error) {
                     UIService.showStatus("Error al procesar abono: " + error.message, "error");
+                } finally {
+                    UIService.showLoading(false);
                 }
             },
 
@@ -4213,8 +4589,15 @@
                 const concepto = conceptoInput.value.trim();
                 const categoria = categoriaInput.value;
                 
-                if (!monto || monto <= 0) {
-                    UIService.showStatus("Ingrese un monto válido", "error");
+                // CORRECCIÓN 9: Validación mejorada de montos
+                if (!monto || monto <= 0 || isNaN(monto) || !isFinite(monto)) {
+                    UIService.showStatus("Ingrese un monto válido mayor a 0", "error");
+                    return;
+                }
+                
+                // Validar formato decimal
+                if (!/^\d+(\.\d{1,2})?$/.test(montoInput.value)) {
+                    UIService.showStatus("El monto debe tener máximo 2 decimales", "error");
                     return;
                 }
                 
@@ -4224,6 +4607,7 @@
                 }
                 
                 try {
+                    UIService.showLoading(true);
                     const retiroData = {
                         monto: monto,
                         concepto: concepto,
@@ -4244,6 +4628,8 @@
                     
                 } catch (error) {
                     UIService.showStatus("Error al procesar retiro: " + error.message, "error");
+                } finally {
+                    UIService.showLoading(false);
                 }
             },
 
@@ -4882,9 +5268,13 @@
                 const today = DateUtils.getCurrentDateStringElSalvador();
                 document.getElementById('fecha-venta').value = today;
                 
-                // Eliminada la validación de fecha futura
+                // CORRECCIÓN 4: Mostrar advertencia para fechas futuras
                 const fechaInput = document.getElementById('fecha-venta');
-                fechaInput.classList.remove('date-warning');
+                if (DateUtils.isFutureDateInElSalvador(today)) {
+                    fechaInput.classList.add('date-warning');
+                } else {
+                    fechaInput.classList.remove('date-warning');
+                }
             }
         };
 
@@ -4910,14 +5300,21 @@
                     }
                     AppState.db = firebase.firestore();
                     
-                    await AppState.db.enablePersistence()
-                        .catch((err) => {
-                            if (err.code == 'failed-precondition') {
-                                console.log("Persistencia offline no disponible - Múltiples pestañas abiertas");
-                            } else if (err.code == 'unimplemented') {
-                                console.log("Persistencia offline no disponible - Navegador no compatible");
-                            }
-                        });
+                    // CORRECCIÓN 3: Mejor manejo de persistencia offline
+                    await ErrorHandler.withTimeout(
+                        AppState.db.enablePersistence()
+                            .catch((err) => {
+                                if (err.code == 'failed-precondition') {
+                                    console.log("Persistencia offline no disponible - Múltiples pestañas abiertas");
+                                } else if (err.code == 'unimplemented') {
+                                    console.log("Persistencia offline no disponible - Navegador no compatible");
+                                } else {
+                                    console.log("Persistencia offline configurada");
+                                }
+                            }),
+                        5000,
+                        "Inicialización de Firebase"
+                    );
                     
                     AppState.firebaseInitialized = true;
                 } catch (error) {
@@ -4934,12 +5331,15 @@
 
             async loadInitialData() {
                 try {
+                    UIService.showLoading(true);
                     await ProductCache.initialize();
                     AppState.saleCounter = await DataService.getSaleCounter();
                     await SalesService.loadHistorial();
                     await GrupoManager.initialize();
                 } catch (error) {
                     console.error("Error cargando datos iniciales:", error);
+                } finally {
+                    UIService.showLoading(false);
                 }
             },
 
@@ -5104,12 +5504,15 @@
                     }
 
                     try {
+                        UIService.showLoading(true);
                         const equiposArray = Array.from(AppState.equiposSeleccionados);
                         await GrupoManager.crearGrupo(nombre, equiposArray);
                         UIService.showStatus(`Grupo "${nombre}" creado correctamente`, "success");
                         ModalService.closeCrearGrupoModal();
                     } catch (error) {
                         UIService.showStatus("Error al crear grupo: " + error.message, "error");
+                    } finally {
+                        UIService.showLoading(false);
                     }
                 });
 
@@ -5188,6 +5591,14 @@
                 document.getElementById('cancelar-abono-inicial-btn').addEventListener('click', () => {
                     ModalService.closeAbonoInicialModal();
                 });
+
+                // CORRECCIÓN 8: Cleanup al cerrar la página
+                window.addEventListener('beforeunload', () => {
+                    ProductCache.cleanup();
+                    if (GrupoManager.unsubscribe) {
+                        GrupoManager.unsubscribe();
+                    }
+                });
             }
         };
 
@@ -5223,11 +5634,14 @@
             }
 
             try {
+                UIService.showLoading(true);
                 GrupoManager.eliminarGrupo(grupoId);
                 UIService.showStatus("Grupo eliminado correctamente", "success");
                 GrupoManager.updateUI();
             } catch (error) {
                 UIService.showStatus("Error al eliminar grupo: " + error.message, "error");
+            } finally {
+                UIService.showLoading(false);
             }
         }
 
