@@ -1238,6 +1238,25 @@
             transform: none !important;
             box-shadow: none !important;
         }
+
+        /* Modal de confirmación de abono inicial */
+        .confirmacion-abono-modal {
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .confirmacion-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .confirmacion-buttons button {
+            flex: 1;
+            padding: 12px;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -1357,15 +1376,8 @@
                     <div class="filter-buttons">
                         <button class="filter-btn" data-filter="todo">TODO</button>
                         <button class="filter-btn active" data-filter="hoy">HOY</button>
-                        <button class="filter-btn" data-filter="ventas">VENTAS</button>
-                        <button class="filter-btn" data-filter="abonos">ABONOS</button>
-                        <button class="filter-btn" data-filter="retiros">RETIROS</button>
-                        <button class="filter-btn" data-filter="pendientes">PENDIENTES</button>
                     </div>
                     <div>
-                        <button class="btn retiro-btn" id="retirar-btn">
-                            RETIRAR
-                        </button>
                         <button class="btn btn-info" id="print-historial-btn">
                             IMPRIMIR HISTORIAL
                         </button>
@@ -1400,6 +1412,68 @@
             </div>
         </div>
 
+        <!-- Modal de confirmación de abono inicial -->
+        <div id="confirmacion-abono-modal" class="modal-overlay">
+            <div class="modal-content confirmacion-abono-modal">
+                <h3 style="margin-bottom: 15px; text-align: center;">Factura Pendiente con Abono Inicial</h3>
+                <div style="margin-bottom: 20px;">
+                    <p>¿Desea registrar un abono inicial para esta factura pendiente?</p>
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 6px; margin: 15px 0;">
+                        <div><strong>Total de la venta:</strong> $<span id="confirmacion-total">0.00</span></div>
+                        <div><strong>Equipo:</strong> <span id="confirmacion-equipo"></span></div>
+                        <div><strong>Grupo:</strong> <span id="confirmacion-cliente"></span></div>
+                    </div>
+                </div>
+                
+                <div class="confirmacion-buttons">
+                    <button class="btn btn-success" id="confirmar-con-abono-btn">
+                        <i class="fas fa-money-bill-wave"></i> REGISTRAR ABONO
+                    </button>
+                    <button class="btn btn-warning" id="continuar-sin-abono-btn">
+                        <i class="fas fa-forward"></i> CONTINUAR SIN ABONO
+                    </button>
+                </div>
+                
+                <button class="btn btn-danger" id="cancelar-confirmacion-btn" style="margin-top: 10px; width: 100%;">
+                    <i class="fas fa-times"></i> CANCELAR
+                </button>
+            </div>
+        </div>
+
+        <!-- Modal de abono inicial -->
+        <div id="abono-inicial-modal" class="modal-overlay">
+            <div class="modal-content">
+                <h3 style="margin-bottom: 15px; text-align: center;">Registrar Abono Inicial</h3>
+                <div style="margin-bottom: 20px;">
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 6px;">
+                        <div><strong>Total de la venta:</strong> $<span id="abono-modal-total">0.00</span></div>
+                        <div><strong>Equipo:</strong> <span id="abono-modal-equipo"></span></div>
+                        <div><strong>Grupo:</strong> <span id="abono-modal-cliente"></span></div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="monto-abono-inicial">Monto del Abono Inicial:</label>
+                    <input type="number" id="monto-abono-inicial" step="0.01" min="0.01" placeholder="0.00" style="font-size: 1.2rem; text-align: center; font-weight: bold;">
+                </div>
+                
+                <div style="background: #e8f4fd; padding: 12px; border-radius: 6px; margin: 15px 0; text-align: center;">
+                    <div><strong>Saldo Pendiente después del abono:</strong></div>
+                    <div style="font-size: 1.4rem; font-weight: bold; color: #2c3e50;" id="saldo-despues-abono">$0.00</div>
+                </div>
+                
+                <div style="display: flex; gap: 10px; margin-top: 15px;">
+                    <button class="btn btn-success" id="procesar-venta-con-abono-btn" style="flex: 1;">
+                        <i class="fas fa-check"></i> PROCESAR VENTA CON ABONO
+                    </button>
+                    <button class="btn btn-danger" id="cancelar-abono-inicial-btn" style="flex: 1;">
+                        <i class="fas fa-times"></i> CANCELAR
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modales existentes -->
         <div class="modal-overlay" id="detalle-modal">
             <div class="modal-content">
                 <div id="detalle-modal-content"></div>
@@ -1581,11 +1655,8 @@
             },
 
             isFutureDateInElSalvador(dateString) {
-                const selectedDate = this.createDateFromStringElSalvador(dateString);
-                const today = this.getCurrentDateElSalvador();
-                const selectedDateOnly = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate());
-                const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-                return selectedDateOnly > todayOnly;
+                // Eliminada la restricción de fechas futuras
+                return false;
             },
 
             getCurrentTimestampElSalvador() {
@@ -2629,7 +2700,8 @@
             equiposSeleccionados: new Set(),
             equiposEditSeleccionados: new Set(),
             processingSale: false,
-            currentInvoiceNumber: null
+            currentInvoiceNumber: null,
+            datosVentaPendiente: null // Para almacenar datos temporales de venta pendiente
         };
 
         const DataService = {
@@ -2955,6 +3027,16 @@
                 document.getElementById('editar-grupo-modal').style.display = 'none';
                 GrupoManager.currentEditingGroup = null;
                 AppState.equiposEditSeleccionados.clear();
+            },
+
+            closeConfirmacionAbonoModal() {
+                document.getElementById('confirmacion-abono-modal').style.display = 'none';
+                delete AppState.datosVentaPendiente;
+            },
+
+            closeAbonoInicialModal() {
+                document.getElementById('abono-inicial-modal').style.display = 'none';
+                delete AppState.datosVentaPendiente;
             }
         };
 
@@ -3077,47 +3159,17 @@
                         const today = DateUtils.getCurrentDateStringElSalvador();
                         filtered = filtered.filter(mov => {
                             if (mov.tipo === 'venta') {
-                                // Para ventas, verificar si la fecha de creación o alguna fecha de abono es hoy
-                                const fechaCreacion = mov.date;
-                                const tieneAbonosHoy = mov.abonos && mov.abonos.some(abono => {
-                                    const fechaAbono = abono.fecha ? 
-                                        (abono.fecha.toDate ? abono.fecha.toDate() : abono.fecha) : 
-                                        null;
-                                    return fechaAbono && DateUtils.isTodayInElSalvador(DateUtils.formatDateToYYYYMMDD(fechaAbono));
-                                });
-                                return fechaCreacion === today || tieneAbonosHoy;
+                                // Solo mostrar ventas creadas hoy
+                                return mov.date === today;
                             } else if (mov.tipo === 'retiro') {
-                                // Para retiros, verificar la fecha del retiro
+                                // Mostrar retiros de hoy
                                 return mov.date === today;
                             }
                             return false;
                         });
                         break;
-                    case 'ventas':
-                        filtered = filtered.filter(mov => 
-                            mov.tipo === 'venta' && 
-                            (mov.paymentType === 'contado' || 
-                            (mov.paymentType === 'pendiente' && (mov.saldoPendiente || mov.total) <= 0))
-                        );
-                        break;
-                    case 'abonos':
-                        filtered = filtered.filter(mov => 
-                            mov.tipo === 'venta' && 
-                            mov.paymentType === 'pendiente' && 
-                            mov.abonos && 
-                            mov.abonos.length > 0 && 
-                            (mov.saldoPendiente || mov.total) > 0
-                        );
-                        break;
-                    case 'retiros':
-                        filtered = filtered.filter(mov => mov.tipo === 'retiro');
-                        break;
-                    case 'pendientes':
-                        filtered = filtered.filter(mov => 
-                            mov.tipo === 'venta' && 
-                            mov.paymentType === 'pendiente' && 
-                            (mov.saldoPendiente || mov.total) > 0
-                        );
+                    case 'todo':
+                        // Mostrar todo sin filtrar
                         break;
                 }
                 
@@ -3471,9 +3523,7 @@
                     throw new Error("Seleccione una fecha para la venta");
                 }
                 
-                if (DateUtils.isFutureDateInElSalvador(fechaVenta)) {
-                    throw new Error("No puede seleccionar una fecha futura");
-                }
+                // Eliminada la validación de fecha futura
                 
                 const productosConPrecioCero = AppState.cart.filter(item => item.precio === 0);
                 if (productosConPrecioCero.length > 0) {
@@ -3515,6 +3565,53 @@
                     AppState.processingSale = true;
                     UIService.updatePaymentButtonsState(true);
                     
+                    // Para ventas contado, procesar directamente
+                    if (paymentType === 'contado') {
+                        await this.procesarVentaContado(equipo, cliente, fechaVenta, totalVenta);
+                        return;
+                    }
+                    
+                    // Para ventas pendiente, mostrar modal de confirmación de abono
+                    if (paymentType === 'pendiente') {
+                        this.mostrarConfirmacionAbono(equipo, cliente, totalVenta, fechaVenta);
+                        return;
+                    }
+                    
+                } catch (error) {
+                    UIService.showStatus("Error al procesar la venta: " + error.message, "error");
+                    console.error("Error en processSale:", error);
+                } finally {
+                    AppState.processingSale = false;
+                    UIService.updatePaymentButtonsState(false);
+                }
+            },
+
+            mostrarConfirmacionAbono(equipo, cliente, totalVenta, fechaVenta) {
+                // Guardar datos temporalmente para usar después
+                AppState.datosVentaPendiente = {
+                    equipo: equipo,
+                    cliente: cliente,
+                    totalVenta: totalVenta,
+                    fechaVenta: fechaVenta
+                };
+                
+                // Actualizar información en el modal
+                document.getElementById('confirmacion-total').textContent = totalVenta.toFixed(2);
+                document.getElementById('confirmacion-equipo').textContent = equipo;
+                document.getElementById('confirmacion-cliente').textContent = cliente || `Equipo ${equipo}`;
+                
+                // Mostrar modal
+                document.getElementById('confirmacion-abono-modal').style.display = 'block';
+            },
+
+            async procesarVentaContado(equipo, cliente, fechaVenta, totalVenta) {
+                AppState.processingSale = true;
+                UIService.updatePaymentButtonsState(true);
+                
+                try {
+                    const finalCliente = cliente || `Equipo ${equipo}`;
+                    const finalEquipo = equipo || '0000';
+                    
                     const invoiceNumber = await this.generateInvoiceNumber();
                     
                     const isUnique = await this.verifyInvoiceUnique(invoiceNumber);
@@ -3536,41 +3633,193 @@
                             cantidad: item.cantidad
                         })),
                         total: totalVenta,
-                        paymentType: paymentType,
+                        paymentType: 'contado',
                         timestamp: DateUtils.getCurrentTimestampElSalvador(),
                         date: fechaVenta,
-                        status: paymentType === 'contado' ? 'pagado' : 'pendiente',
+                        status: 'pagado',
                         fechaCreacion: DateUtils.getCurrentTimestampElSalvador()
                     };
-
-                    if (paymentType === 'pendiente') {
-                        saleData.saldoPendiente = saleData.total;
-                        saleData.abonos = [];
-                    }
                     
                     await DataService.saveSale(saleData);
                     
                     this.printTicket(saleData);
                     
-                    UIService.showStatus(`Venta ${paymentType === 'contado' ? 'CONTADO' : 'PENDIENTE'} procesada - Factura #${saleData.invoiceNumber}`, "success");
+                    UIService.showStatus(`Venta CONTADO procesada - Factura #${saleData.invoiceNumber}`, "success");
                     
-                    AppState.cart = [];
-                    UIService.updateCartDisplay();
-                    document.getElementById('equipo').value = '';
-                    document.getElementById('cliente').value = '';
-                    document.getElementById('buscar-producto').value = '';
-                    
+                    this.limpiarFormularioVenta();
                     await ProductCache.refresh();
-                    
                     await this.loadHistorial();
                     
                 } catch (error) {
-                    UIService.showStatus("Error al procesar la venta: " + error.message, "error");
-                    console.error("Error en processSale:", error);
+                    UIService.showStatus("Error al procesar venta contado: " + error.message, "error");
+                    console.error("Error en procesarVentaContado:", error);
                 } finally {
                     AppState.processingSale = false;
                     UIService.updatePaymentButtonsState(false);
                 }
+            },
+
+            async procesarVentaPendienteSinAbono(equipo, cliente, fechaVenta, totalVenta) {
+                AppState.processingSale = true;
+                UIService.updatePaymentButtonsState(true);
+                
+                try {
+                    const finalCliente = cliente || `Equipo ${equipo}`;
+                    const finalEquipo = equipo || '0000';
+                    
+                    const invoiceNumber = await this.generateInvoiceNumber();
+                    
+                    const isUnique = await this.verifyInvoiceUnique(invoiceNumber);
+                    if (!isUnique) {
+                        AppState.processingSale = false;
+                        UIService.updatePaymentButtonsState(false);
+                        return;
+                    }
+                    
+                    const saleData = {
+                        invoiceNumber: invoiceNumber,
+                        equipoNumber: finalEquipo,
+                        clientName: finalCliente,
+                        products: AppState.cart.map(item => ({
+                            id: item.id,
+                            codigo: item.codigo,
+                            descripcion: item.descripcion,
+                            precio: item.precio,
+                            cantidad: item.cantidad
+                        })),
+                        total: totalVenta,
+                        paymentType: 'pendiente',
+                        timestamp: DateUtils.getCurrentTimestampElSalvador(),
+                        date: fechaVenta,
+                        status: 'pendiente',
+                        saldoPendiente: totalVenta,
+                        abonos: [],
+                        fechaCreacion: DateUtils.getCurrentTimestampElSalvador()
+                    };
+                    
+                    await DataService.saveSale(saleData);
+                    
+                    this.printTicket(saleData);
+                    
+                    UIService.showStatus(`Venta PENDIENTE procesada - Factura #${saleData.invoiceNumber}`, "success");
+                    
+                    this.limpiarFormularioVenta();
+                    await ProductCache.refresh();
+                    await this.loadHistorial();
+                    
+                } catch (error) {
+                    UIService.showStatus("Error al procesar venta pendiente: " + error.message, "error");
+                    console.error("Error en procesarVentaPendienteSinAbono:", error);
+                } finally {
+                    AppState.processingSale = false;
+                    UIService.updatePaymentButtonsState(false);
+                }
+            },
+
+            async procesarVentaPendienteConAbono(equipo, cliente, fechaVenta, totalVenta, montoAbono) {
+                AppState.processingSale = true;
+                UIService.updatePaymentButtonsState(true);
+                
+                try {
+                    const finalCliente = cliente || `Equipo ${equipo}`;
+                    const finalEquipo = equipo || '0000';
+                    const saldoPendiente = totalVenta - montoAbono;
+                    
+                    const invoiceNumber = await this.generateInvoiceNumber();
+                    
+                    const isUnique = await this.verifyInvoiceUnique(invoiceNumber);
+                    if (!isUnique) {
+                        AppState.processingSale = false;
+                        UIService.updatePaymentButtonsState(false);
+                        return;
+                    }
+                    
+                    const abonoData = {
+                        monto: montoAbono,
+                        fecha: DateUtils.getCurrentTimestampElSalvador(),
+                        fechaString: DateUtils.getCurrentTimestampElSalvador().toLocaleString('es-ES')
+                    };
+                    
+                    const saleData = {
+                        invoiceNumber: invoiceNumber,
+                        equipoNumber: finalEquipo,
+                        clientName: finalCliente,
+                        products: AppState.cart.map(item => ({
+                            id: item.id,
+                            codigo: item.codigo,
+                            descripcion: item.descripcion,
+                            precio: item.precio,
+                            cantidad: item.cantidad
+                        })),
+                        total: totalVenta,
+                        paymentType: saldoPendiente <= 0 ? 'contado' : 'pendiente',
+                        timestamp: DateUtils.getCurrentTimestampElSalvador(),
+                        date: fechaVenta,
+                        status: saldoPendiente <= 0 ? 'pagado' : 'pendiente',
+                        saldoPendiente: saldoPendiente,
+                        abonos: [abonoData],
+                        fechaCreacion: DateUtils.getCurrentTimestampElSalvador()
+                    };
+                    
+                    await DataService.saveSale(saleData);
+                    
+                    // Imprimir ticket de la venta
+                    this.printTicket(saleData);
+                    
+                    // Imprimir ticket del abono si es necesario
+                    if (montoAbono > 0) {
+                        this.printAbonoTicket(saleData, abonoData, saldoPendiente);
+                    }
+                    
+                    if (saldoPendiente <= 0) {
+                        UIService.showStatus(`Venta con abono completo procesada - Factura #${saleData.invoiceNumber}`, "success");
+                    } else {
+                        UIService.showStatus(`Venta PENDIENTE con abono inicial procesada - Factura #${saleData.invoiceNumber}`, "success");
+                    }
+                    
+                    this.limpiarFormularioVenta();
+                    await ProductCache.refresh();
+                    await this.loadHistorial();
+                    
+                } catch (error) {
+                    UIService.showStatus("Error al procesar venta con abono: " + error.message, "error");
+                    console.error("Error en procesarVentaPendienteConAbono:", error);
+                } finally {
+                    AppState.processingSale = false;
+                    UIService.updatePaymentButtonsState(false);
+                }
+            },
+
+            mostrarModalAbonoInicial(equipo, cliente, totalVenta, fechaVenta) {
+                // Guardar datos temporalmente
+                AppState.datosVentaPendiente = {
+                    equipo: equipo,
+                    cliente: cliente,
+                    totalVenta: totalVenta,
+                    fechaVenta: fechaVenta
+                };
+                
+                // Actualizar información en el modal de abono
+                document.getElementById('abono-modal-total').textContent = totalVenta.toFixed(2);
+                document.getElementById('abono-modal-equipo').textContent = equipo;
+                document.getElementById('abono-modal-cliente').textContent = cliente || `Equipo ${equipo}`;
+                
+                // Resetear campo de abono
+                document.getElementById('monto-abono-inicial').value = '';
+                document.getElementById('saldo-despues-abono').textContent = '$' + totalVenta.toFixed(2);
+                
+                // Mostrar modal
+                document.getElementById('abono-inicial-modal').style.display = 'block';
+                document.getElementById('monto-abono-inicial').focus();
+            },
+
+            limpiarFormularioVenta() {
+                AppState.cart = [];
+                UIService.updateCartDisplay();
+                document.getElementById('equipo').value = '';
+                document.getElementById('cliente').value = '';
+                document.getElementById('buscar-producto').value = '';
+                delete AppState.datosVentaPendiente;
             },
 
             async updateInvoice(invoiceId) {
@@ -4633,18 +4882,9 @@
                 const today = DateUtils.getCurrentDateStringElSalvador();
                 document.getElementById('fecha-venta').value = today;
                 
+                // Eliminada la validación de fecha futura
                 const fechaInput = document.getElementById('fecha-venta');
-                const fechaSeleccionada = DateUtils.createDateFromStringElSalvador(fechaInput.value);
-                const hoy = DateUtils.getCurrentDateElSalvador();
-                
-                const selectedDateOnly = new Date(fechaSeleccionada.getFullYear(), fechaSeleccionada.getMonth(), fechaSeleccionada.getDate());
-                const hoyOnly = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
-                
-                if (selectedDateOnly > hoyOnly) {
-                    fechaInput.classList.add('date-warning');
-                } else {
-                    fechaInput.classList.remove('date-warning');
-                }
+                fechaInput.classList.remove('date-warning');
             }
         };
 
@@ -4762,8 +5002,8 @@
                     SalesService.processSale('pendiente');
                 });
 
-                document.getElementById('retirar-btn').addEventListener('click', () => {
-                    UIService.showRetiroModal();
+                document.getElementById('print-historial-btn').addEventListener('click', () => {
+                    SalesService.printCurrentHistorial();
                 });
 
                 document.getElementById('filter-historial').addEventListener('input', (e) => {
@@ -4803,10 +5043,6 @@
                     });
                 });
 
-                document.getElementById('print-historial-btn').addEventListener('click', () => {
-                    SalesService.printCurrentHistorial();
-                });
-
                 document.getElementById('close-invoice-modal').addEventListener('click', () => {
                     ModalService.closeInvoiceModal();
                 });
@@ -4817,10 +5053,6 @@
 
                 document.getElementById('close-abono-modal').addEventListener('click', () => {
                     ModalService.closeAbonoModal();
-                });
-
-                document.getElementById('process-retiro-btn').addEventListener('click', () => {
-                    SalesService.processRetiro();
                 });
 
                 document.getElementById('close-retiro-modal').addEventListener('click', () => {
@@ -4891,6 +5123,70 @@
 
                 document.getElementById('cancelar-editar-grupo-btn').addEventListener('click', () => {
                     ModalService.closeEditarGrupoModal();
+                });
+
+                // Event listeners para los nuevos modales de abono inicial
+                document.getElementById('confirmar-con-abono-btn').addEventListener('click', () => {
+                    const datos = AppState.datosVentaPendiente;
+                    if (datos) {
+                        document.getElementById('confirmacion-abono-modal').style.display = 'none';
+                        SalesService.mostrarModalAbonoInicial(datos.equipo, datos.cliente, datos.totalVenta, datos.fechaVenta);
+                    }
+                });
+
+                document.getElementById('continuar-sin-abono-btn').addEventListener('click', () => {
+                    const datos = AppState.datosVentaPendiente;
+                    if (datos) {
+                        document.getElementById('confirmacion-abono-modal').style.display = 'none';
+                        SalesService.procesarVentaPendienteSinAbono(datos.equipo, datos.cliente, datos.fechaVenta, datos.totalVenta);
+                    }
+                });
+
+                document.getElementById('cancelar-confirmacion-btn').addEventListener('click', () => {
+                    ModalService.closeConfirmacionAbonoModal();
+                });
+
+                // Event listener para el campo de monto de abono inicial
+                document.getElementById('monto-abono-inicial').addEventListener('input', (e) => {
+                    const montoAbono = parseFloat(e.target.value) || 0;
+                    const totalVenta = AppState.datosVentaPendiente?.totalVenta || 0;
+                    const saldoDespues = totalVenta - montoAbono;
+                    
+                    document.getElementById('saldo-despues-abono').textContent = '$' + Math.max(0, saldoDespues).toFixed(2);
+                    
+                    // Validar que el abono no sea mayor al total
+                    if (montoAbono > totalVenta) {
+                        e.target.classList.add('price-warning');
+                    } else {
+                        e.target.classList.remove('price-warning');
+                    }
+                });
+
+                document.getElementById('procesar-venta-con-abono-btn').addEventListener('click', () => {
+                    const montoAbono = parseFloat(document.getElementById('monto-abono-inicial').value) || 0;
+                    const datos = AppState.datosVentaPendiente;
+                    
+                    if (!datos) {
+                        UIService.showStatus("Error: No hay datos de venta disponibles", "error");
+                        return;
+                    }
+                    
+                    if (montoAbono <= 0) {
+                        UIService.showStatus("Ingrese un monto de abono válido", "error");
+                        return;
+                    }
+                    
+                    if (montoAbono > datos.totalVenta) {
+                        UIService.showStatus("El monto del abono no puede ser mayor al total de la venta", "error");
+                        return;
+                    }
+                    
+                    document.getElementById('abono-inicial-modal').style.display = 'none';
+                    SalesService.procesarVentaPendienteConAbono(datos.equipo, datos.cliente, datos.fechaVenta, datos.totalVenta, montoAbono);
+                });
+
+                document.getElementById('cancelar-abono-inicial-btn').addEventListener('click', () => {
+                    ModalService.closeAbonoInicialModal();
                 });
             }
         };
