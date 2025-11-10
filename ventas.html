@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Taller Wilian</title>
+    <title>Taller Willian</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -2808,7 +2808,8 @@
             setupRealTimeListener() {
                 if (!AppState.firebaseInitialized) return;
                 
-                this.unsubscribe = AppState.db.collection("INVENTARIO")
+                // Escuchar ambas colecciones
+                const inventarioUnsubscribe = AppState.db.collection("INVENTARIO")
                     .onSnapshot((snapshot) => {
                         snapshot.docChanges().forEach((change) => {
                             if (change.type === 'added' || change.type === 'modified') {
@@ -2821,22 +2822,47 @@
                     }, (error) => {
                         console.error("Error en listener de inventario:", error);
                     });
+
+                const provisionalUnsubscribe = AppState.db.collection("INVENTARIO_PROVICIONAL")
+                    .onSnapshot((snapshot) => {
+                        snapshot.docChanges().forEach((change) => {
+                            if (change.type === 'added' || change.type === 'modified') {
+                                this.data.set(change.doc.id, { id: change.doc.id, ...change.doc.data() });
+                            } else if (change.type === 'removed') {
+                                this.data.delete(change.doc.id);
+                            }
+                        });
+                        this.lastUpdate = Date.now();
+                    }, (error) => {
+                        console.error("Error en listener de inventario provisional:", error);
+                    });
+
+                this.unsubscribe = () => {
+                    inventarioUnsubscribe();
+                    provisionalUnsubscribe();
+                };
             },
             
             async refresh() {
                 try {
                     if (!AppState.firebaseInitialized) return;
                     
-                    const snapshot = await ErrorHandler.withRetry(
-                        () => AppState.db.collection("INVENTARIO").get(),
-                        3,
-                        "Actualización de cache de productos"
-                    );
+                    // Cargar ambas colecciones
+                    const [inventarioSnap, provisionalSnap] = await Promise.all([
+                        ErrorHandler.withRetry(() => AppState.db.collection("INVENTARIO").get(), 3, "Carga de inventario"),
+                        ErrorHandler.withRetry(() => AppState.db.collection("INVENTARIO_PROVICIONAL").get(), 3, "Carga de inventario provisional")
+                    ]);
                     
                     this.data.clear();
-                    snapshot.forEach(doc => {
+                    
+                    inventarioSnap.forEach(doc => {
                         this.data.set(doc.id, { id: doc.id, ...doc.data() });
                     });
+                    
+                    provisionalSnap.forEach(doc => {
+                        this.data.set(doc.id, { id: doc.id, ...doc.data() });
+                    });
+                    
                     this.lastUpdate = Date.now();
                     MemoryManager.cleanupIfNeeded(this.data);
                 } catch (error) {
@@ -2994,7 +3020,7 @@
 
             async checkInvoiceExists(invoiceNumber) {
                 try {
-                    const snapshot = await ErrorHandler.withTimeout(
+                    const exists = await ErrorHandler.withTimeout(
                         AppState.db.collection("VENTAS")
                             .where("invoiceNumber", "==", invoiceNumber)
                             .limit(1)
@@ -3002,7 +3028,7 @@
                         5000,
                         "Verificación de factura única"
                     );
-                    return !snapshot.empty;
+                    return !exists.empty;
                 } catch (error) {
                     console.error("Error verificando factura duplicada:", error);
                     return false;
@@ -5123,14 +5149,6 @@
                             .small-text { font-size: 18px; }
                             .medium-text { font-size: 20px; }
                             .large-text { font-size: 26px; }
-                            .thank-you { text-align: center; margin-top: 15px; font-weight: bold; font-size: 20px; }
-                            .saldo-info {
-                                background: #f0f0f0;
-                                padding: 8px;
-                                margin: 8px 0;
-                                border-radius: 4px;
-                                font-size: 18px;
-                            }
                         </style>
                     </head>
                     <body>
