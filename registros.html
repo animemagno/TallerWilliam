@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Equipos - Sistema de Gestión</title>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+    
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f0f2f5;
+            color: #333;
+            line-height: 1.4;
+            padding: 0;
+        }
+        
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            background-color: white;
+            min-height: 100vh;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            font-size: 20px;
+            margin-bottom: 5px;
+        }
+        
+        .subtitle {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .main-content {
+            padding: 15px;
+        }
+        
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-size: 16px;
+            width: 100%;
+            margin-bottom: 15px;
+        }
+        
+        .btn-primary {
+            background-color: #2a5298;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #1e3c72;
+        }
+        
+        .btn-success {
+            background-color: #27ae60;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background-color: #219653;
+        }
+        
+        .btn-warning {
+            background-color: #f39c12;
+            color: white;
+        }
+        
+        .btn-warning:hover {
+            background-color: #e67e22;
+        }
+        
+        .btn-danger {
+            background-color: #e74c3c;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background-color: #c0392b;
+        }
+        
+        .registros-list {
+            margin-top: 20px;
+        }
+        
+        .registro-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+            background-color: white;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .registro-info {
+            flex: 1;
+        }
+        
+        .registro-mecanico {
+            font-weight: bold;
+            color: #2a5298;
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+        
+        .registro-equipo {
+            color: #27ae60;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        
+        .registro-fecha {
+            color: #666;
+            font-size: 12px;
+        }
+        
+        .delete-btn {
+            background: none;
+            border: none;
+            color: #e74c3c;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 5px;
+        }
+        
+        .empty-message {
+            text-align: center;
+            color: #6c757d;
+            font-style: italic;
+            padding: 30px;
+            font-size: 16px;
+        }
+        
+        /* Modal para agregar registro */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background-color: white;
+            width: 90%;
+            max-width: 500px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .modal-header {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            padding: 15px;
+            text-align: center;
+        }
+        
+        .modal-body {
+            padding: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #2d3748;
+            font-size: 14px;
+        }
+        
+        input, select {
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            width: 100%;
+        }
+        
+        .modal-footer {
+            padding: 15px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            border-top: 1px solid #eee;
+        }
+        
+        .modal-footer .btn {
+            width: auto;
+            margin-bottom: 0;
+            padding: 10px 20px;
+        }
+        
+        /* Modal para agregar mecánico */
+        .mecanicos-list {
+            margin-top: 20px;
+        }
+        
+        .mecanico-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+            background-color: white;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .mecanico-nombre {
+            font-weight: bold;
+            color: #2a5298;
+            font-size: 16px;
+        }
+        
+        .filtros {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .filtro-group {
+            flex: 1;
+            min-width: 150px;
+        }
+        
+        .imprimir-btn {
+            background-color: #9b59b6;
+            color: white;
+        }
+        
+        .imprimir-btn:hover {
+            background-color: #8e44ad;
+        }
+        
+        /* Estilos para impresión */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            .print-section, .print-section * {
+                visibility: visible;
+            }
+            .print-section {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                font-size: 14px;
+            }
+            .no-print {
+                display: none !important;
+            }
+            
+            .encabezado-recibo {
+                text-align: center;
+                margin-bottom: 20px;
+                border-bottom: 2px solid #000;
+                padding-bottom: 10px;
+            }
+            
+            .encabezado-recibo h1 {
+                font-size: 20px;
+                margin-bottom: 5px;
+            }
+            
+            .encabezado-recibo .fecha {
+                font-size: 16px;
+                margin-bottom: 5px;
+            }
+            
+            .tabla-registros {
+                width: 100%;
+                border-collapse: collapse;
+                margin-bottom: 20px;
+            }
+            
+            .tabla-registros th {
+                background-color: #f0f0f0;
+                border: 1px solid #000;
+                padding: 8px;
+                text-align: left;
+                font-size: 14px;
+            }
+            
+            .tabla-registros td {
+                border: 1px solid #000;
+                padding: 8px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Registro de Equipos</h1>
+            <p class="subtitle">Control de equipos en revisión por mecánicos</p>
+        </header>
+        
+        <div class="main-content">
+            <div class="filtros">
+                <div class="filtro-group">
+                    <label for="filtro-fecha">Filtrar por fecha:</label>
+                    <input type="date" id="filtro-fecha">
+                </div>
+                
+                <div class="filtro-group">
+                    <label for="filtro-mecanico">Filtrar por mecánico:</label>
+                    <select id="filtro-mecanico">
+                        <option value="">Todos los mecánicos</option>
+                    </select>
+                </div>
+            </div>
+            
+            <button class="btn btn-primary no-print" id="agregar-registro">Agregar Nuevo Registro</button>
+            <button class="btn btn-warning no-print" id="gestionar-mecanicos">Gestionar Mecánicos</button>
+            <button class="btn imprimir-btn no-print" id="imprimir-registros">Imprimir Registros del Día</button>
+            
+            <div class="registros-list" id="lista-registros">
+                <!-- Aquí se mostrarán los registros -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal para agregar registro -->
+    <div class="modal" id="modal-registro">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Nuevo Registro de Equipo</h2>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="mecanico">Mecánico:</label>
+                    <select id="mecanico">
+                        <option value="">Seleccione un mecánico</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="equipo">Número de Equipo:</label>
+                    <input type="number" id="equipo" placeholder="Ej: 1, 2, 3..." min="1">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-danger" id="cancelar-registro">Cancelar</button>
+                <button class="btn btn-success" id="guardar-registro">Guardar</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal para gestionar mecánicos -->
+    <div class="modal" id="modal-mecanicos">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Gestionar Mecánicos</h2>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="nuevo-mecanico">Nombre del Mecánico:</label>
+                    <input type="text" id="nuevo-mecanico" placeholder="Nombre completo">
+                </div>
+                
+                <button class="btn btn-primary" id="agregar-mecanico">Agregar Mecánico</button>
+                
+                <div class="mecanicos-list" id="lista-mecanicos">
+                    <!-- Aquí se mostrarán los mecánicos -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-danger" id="cerrar-mecanicos">Cerrar</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Sección para impresión -->
+    <div class="print-section" id="print-section">
+        <!-- Aquí se generará el contenido para imprimir -->
+    </div>
+
+    <script>
+        // Configuración de Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyDh074AarXaYCc-Htw-lsCeIc_95QQNSnY",
+            authDomain: "tallerwilliam-732b3.firebaseapp.com",
+            projectId: "tallerwilliam-732b3",
+            storageBucket: "tallerwilliam-732b3.firebasestorage.app",
+            messagingSenderId: "822262666247",
+            appId: "1:822262666247:web:6680487bbf1108006b86a2"
+        };
+
+        // Inicializar Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Elementos del DOM
+            const agregarRegistroBtn = document.getElementById('agregar-registro');
+            const gestionarMecanicosBtn = document.getElementById('gestionar-mecanicos');
+            const imprimirRegistrosBtn = document.getElementById('imprimir-registros');
+            const modalRegistro = document.getElementById('modal-registro');
+            const modalMecanicos = document.getElementById('modal-mecanicos');
+            const cancelarRegistroBtn = document.getElementById('cancelar-registro');
+            const guardarRegistroBtn = document.getElementById('guardar-registro');
+            const cerrarMecanicosBtn = document.getElementById('cerrar-mecanicos');
+            const agregarMecanicoBtn = document.getElementById('agregar-mecanico');
+            const filtroFecha = document.getElementById('filtro-fecha');
+            const filtroMecanico = document.getElementById('filtro-mecanico');
+            
+            // Establecer fecha actual en el filtro
+            const fechaActual = new Date();
+            const año = fechaActual.getFullYear();
+            const mes = String(fechaActual.getMonth() + 1).padStart(2, '0');
+            const dia = String(fechaActual.getDate()).padStart(2, '0');
+            filtroFecha.value = `${año}-${mes}-${dia}`;
+            
+            // Inicializar la aplicación
+            inicializarApp();
+            
+            // Event listeners
+            agregarRegistroBtn.addEventListener('click', mostrarModalRegistro);
+            gestionarMecanicosBtn.addEventListener('click', mostrarModalMecanicos);
+            imprimirRegistrosBtn.addEventListener('click', imprimirRegistros);
+            cancelarRegistroBtn.addEventListener('click', cerrarModalRegistro);
+            guardarRegistroBtn.addEventListener('click', guardarRegistro);
+            cerrarMecanicosBtn.addEventListener('click', cerrarModalMecanicos);
+            agregarMecanicoBtn.addEventListener('click', agregarMecanico);
+            filtroFecha.addEventListener('change', cargarRegistros);
+            filtroMecanico.addEventListener('change', cargarRegistros);
+            
+            // Función para inicializar la aplicación
+            async function inicializarApp() {
+                // Cargar datos desde Firebase
+                await cargarDatosFirebase();
+                
+                // Cargar datos iniciales
+                cargarRegistros();
+                actualizarSelectMecanicos();
+            }
+            
+            // Función para cargar datos desde Firebase
+            async function cargarDatosFirebase() {
+                try {
+                    // Cargar mecánicos
+                    const mecanicosSnapshot = await db.collection('mecanicos').get();
+                    const mecanicos = [];
+                    mecanicosSnapshot.forEach(doc => {
+                        mecanicos.push({ id: doc.id, ...doc.data() });
+                    });
+                    localStorage.setItem('mecanicosRegistro', JSON.stringify(mecanicos));
+                    
+                    // Cargar registros
+                    const registrosSnapshot = await db.collection('registrosEquipos').get();
+                    const registros = [];
+                    registrosSnapshot.forEach(doc => {
+                        registros.push({ id: doc.id, ...doc.data() });
+                    });
+                    localStorage.setItem('registrosEquipos', JSON.stringify(registros));
+                } catch (error) {
+                    console.error("Error cargando datos desde Firebase:", error);
+                    // Si no hay datos en Firebase, usar datos locales
+                    if (!localStorage.getItem('mecanicosRegistro')) {
+                        localStorage.setItem('mecanicosRegistro', JSON.stringify([]));
+                    }
+                    if (!localStorage.getItem('registrosEquipos')) {
+                        localStorage.setItem('registrosEquipos', JSON.stringify([]));
+                    }
+                }
+            }
+            
+            // Función para guardar datos en Firebase
+            async function guardarEnFirebase(coleccion, datos, id = null) {
+                try {
+                    if (id) {
+                        await db.collection(coleccion).doc(id.toString()).set(datos);
+                    } else {
+                        await db.collection(coleccion).add(datos);
+                    }
+                    return true;
+                } catch (error) {
+                    console.error("Error guardando en Firebase:", error);
+                    return false;
+                }
+            }
+            
+            // Función para eliminar datos de Firebase
+            async function eliminarDeFirebase(coleccion, id) {
+                try {
+                    await db.collection(coleccion).doc(id.toString()).delete();
+                    return true;
+                } catch (error) {
+                    console.error("Error eliminando de Firebase:", error);
+                    return false;
+                }
+            }
+            
+            // Función para mostrar el modal de registro
+            function mostrarModalRegistro() {
+                const selectMecanico = document.getElementById('mecanico');
+                selectMecanico.innerHTML = '<option value="">Seleccione un mecánico</option>';
+                
+                const mecanicos = JSON.parse(localStorage.getItem('mecanicosRegistro')) || [];
+                mecanicos.forEach(mecanico => {
+                    const option = document.createElement('option');
+                    option.value = mecanico.id;
+                    option.textContent = mecanico.nombre;
+                    selectMecanico.appendChild(option);
+                });
+                
+                modalRegistro.style.display = 'flex';
+                document.getElementById('equipo').focus();
+            }
+            
+            // Función para cerrar el modal de registro
+            function cerrarModalRegistro() {
+                modalRegistro.style.display = 'none';
+                document.getElementById('equipo').value = '';
+                document.getElementById('mecanico').value = '';
+            }
+            
+            // Función para guardar un nuevo registro
+            async function guardarRegistro() {
+                const mecanicoId = document.getElementById('mecanico').value;
+                const equipo = parseInt(document.getElementById('equipo').value) || 0;
+                
+                // Validaciones
+                if (!mecanicoId) {
+                    alert('Por favor, seleccione un mecánico.');
+                    return;
+                }
+                
+                if (equipo <= 0) {
+                    alert('Por favor, ingrese un número de equipo válido.');
+                    return;
+                }
+                
+                // Obtener información del mecánico
+                const mecanicos = JSON.parse(localStorage.getItem('mecanicosRegistro')) || [];
+                const mecanico = mecanicos.find(m => m.id === mecanicoId);
+                
+                if (!mecanico) {
+                    alert('Error: Mecánico no encontrado.');
+                    return;
+                }
+                
+                // Crear fecha y hora actual
+                const ahora = new Date();
+                const fecha = ahora.toISOString().split('T')[0];
+                const hora = ahora.toTimeString().split(' ')[0].substring(0, 5);
+                
+                // Crear nuevo registro
+                const nuevoRegistro = {
+                    mecanicoId: mecanicoId,
+                    mecanicoNombre: mecanico.nombre,
+                    equipo: equipo,
+                    fecha: fecha,
+                    hora: hora,
+                    timestamp: ahora.getTime()
+                };
+                
+                // Guardar registro en Firebase
+                const id = Date.now().toString();
+                const exito = await guardarEnFirebase('registrosEquipos', nuevoRegistro, id);
+                
+                if (exito) {
+                    // Guardar registro localmente
+                    nuevoRegistro.id = id;
+                    const registros = JSON.parse(localStorage.getItem('registrosEquipos')) || [];
+                    registros.push(nuevoRegistro);
+                    localStorage.setItem('registrosEquipos', JSON.stringify(registros));
+                    
+                    // Cerrar modal y actualizar lista
+                    cerrarModalRegistro();
+                    cargarRegistros();
+                    
+                    alert('Registro guardado correctamente.');
+                } else {
+                    alert('Error al guardar el registro. Los datos se guardarán localmente.');
+                    
+                    // Guardar solo localmente si falla Firebase
+                    nuevoRegistro.id = id;
+                    const registros = JSON.parse(localStorage.getItem('registrosEquipos')) || [];
+                    registros.push(nuevoRegistro);
+                    localStorage.setItem('registrosEquipos', JSON.stringify(registros));
+                    
+                    // Cerrar modal y actualizar lista
+                    cerrarModalRegistro();
+                    cargarRegistros();
+                }
+            }
+            
+            // Función para cargar los registros
+            function cargarRegistros() {
+                const listaRegistros = document.getElementById('lista-registros');
+                const registros = JSON.parse(localStorage.getItem('registrosEquipos')) || [];
+                
+                // Aplicar filtros
+                let registrosFiltrados = [...registros];
+                const filtroFechaValor = filtroFecha.value;
+                const filtroMecanicoValor = filtroMecanico.value;
+                
+                if (filtroFechaValor) {
+                    registrosFiltrados = registrosFiltrados.filter(registro => registro.fecha === filtroFechaValor);
+                }
+                
+                if (filtroMecanicoValor) {
+                    registrosFiltrados = registrosFiltrados.filter(registro => registro.mecanicoId === filtroMecanicoValor);
+                }
+                
+                // Ordenar por timestamp (más reciente primero)
+                registrosFiltrados.sort((a, b) => b.timestamp - a.timestamp);
+                
+                if (registrosFiltrados.length === 0) {
+                    listaRegistros.innerHTML = '<div class="empty-message">No hay registros que coincidan con los filtros.</div>';
+                    return;
+                }
+                
+                let html = '';
+                registrosFiltrados.forEach(registro => {
+                    html += `
+                        <div class="registro-item">
+                            <div class="registro-info">
+                                <div class="registro-mecanico">${registro.mecanicoNombre}</div>
+                                <div class="registro-equipo">Equipo ${registro.equipo}</div>
+                                <div class="registro-fecha">${registro.fecha} - ${registro.hora}</div>
+                            </div>
+                            <button class="delete-btn" data-id="${registro.id}">🗑️</button>
+                        </div>
+                    `;
+                });
+                
+                listaRegistros.innerHTML = html;
+                
+                // Agregar event listeners a los botones de eliminar
+                document.querySelectorAll('#lista-registros .delete-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const id = this.getAttribute('data-id');
+                        eliminarRegistro(id);
+                    });
+                });
+            }
+            
+            // Función para eliminar un registro
+            async function eliminarRegistro(id) {
+                if (!confirm('¿Está seguro de eliminar este registro?')) {
+                    return;
+                }
+                
+                // Eliminar de Firebase
+                const exito = await eliminarDeFirebase('registrosEquipos', id);
+                
+                if (exito) {
+                    // Eliminar localmente
+                    let registros = JSON.parse(localStorage.getItem('registrosEquipos')) || [];
+                    registros = registros.filter(registro => registro.id !== id);
+                    localStorage.setItem('registrosEquipos', JSON.stringify(registros));
+                    
+                    // Actualizar interfaz
+                    cargarRegistros();
+                    
+                    alert('Registro eliminado correctamente.');
+                } else {
+                    alert('Error al eliminar el registro. Se eliminará solo localmente.');
+                    
+                    // Eliminar solo localmente si falla Firebase
+                    let registros = JSON.parse(localStorage.getItem('registrosEquipos')) || [];
+                    registros = registros.filter(registro => registro.id !== id);
+                    localStorage.setItem('registrosEquipos', JSON.stringify(registros));
+                    
+                    // Actualizar interfaz
+                    cargarRegistros();
+                }
+            }
+            
+            // Función para mostrar el modal de mecánicos
+            function mostrarModalMecanicos() {
+                cargarListaMecanicos();
+                modalMecanicos.style.display = 'flex';
+                document.getElementById('nuevo-mecanico').focus();
+            }
+            
+            // Función para cerrar el modal de mecánicos
+            function cerrarModalMecanicos() {
+                modalMecanicos.style.display = 'none';
+                document.getElementById('nuevo-mecanico').value = '';
+            }
+            
+            // Función para cargar la lista de mecánicos
+            function cargarListaMecanicos() {
+                const listaMecanicos = document.getElementById('lista-mecanicos');
+                const mecanicos = JSON.parse(localStorage.getItem('mecanicosRegistro')) || [];
+                
+                if (mecanicos.length === 0) {
+                    listaMecanicos.innerHTML = '<div class="empty-message">No hay mecánicos registrados.</div>';
+                    return;
+                }
+                
+                let html = '';
+                mecanicos.forEach(mecanico => {
+                    html += `
+                        <div class="mecanico-item">
+                            <div class="mecanico-nombre">${mecanico.nombre}</div>
+                            <button class="delete-btn" data-id="${mecanico.id}">🗑️</button>
+                        </div>
+                    `;
+                });
+                
+                listaMecanicos.innerHTML = html;
+                
+                // Agregar event listeners a los botones de eliminar
+                document.querySelectorAll('#lista-mecanicos .delete-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const id = this.getAttribute('data-id');
+                        eliminarMecanico(id);
+                    });
+                });
+            }
+            
+            // Función para agregar un nuevo mecánico
+            async function agregarMecanico() {
+                const nombre = document.getElementById('nuevo-mecanico').value.trim();
+                
+                if (!nombre) {
+                    alert('Por favor, ingrese el nombre del mecánico.');
+                    return;
+                }
+                
+                // Obtener mecánicos actuales
+                const mecanicos = JSON.parse(localStorage.getItem('mecanicosRegistro')) || [];
+                
+                // Verificar si ya existe el mecánico
+                if (mecanicos.some(mecanico => mecanico.nombre.toLowerCase() === nombre.toLowerCase())) {
+                    alert('Ya existe un mecánico con ese nombre.');
+                    return;
+                }
+                
+                // Crear nuevo mecánico
+                const nuevoMecanico = {
+                    nombre: nombre
+                };
+                
+                // Guardar mecánico en Firebase
+                const id = Date.now().toString();
+                const exito = await guardarEnFirebase('mecanicos', nuevoMecanico, id);
+                
+                if (exito) {
+                    // Guardar mecánico localmente
+                    nuevoMecanico.id = id;
+                    mecanicos.push(nuevoMecanico);
+                    localStorage.setItem('mecanicosRegistro', JSON.stringify(mecanicos));
+                    
+                    // Actualizar interfaces
+                    cargarListaMecanicos();
+                    actualizarSelectMecanicos();
+                    
+                    // Limpiar campo
+                    document.getElementById('nuevo-mecanico').value = '';
+                    
+                    alert('Mecánico registrado correctamente.');
+                } else {
+                    alert('Error al guardar el mecánico. Los datos se guardarán localmente.');
+                    
+                    // Guardar solo localmente si falla Firebase
+                    nuevoMecanico.id = id;
+                    mecanicos.push(nuevoMecanico);
+                    localStorage.setItem('mecanicosRegistro', JSON.stringify(mecanicos));
+                    
+                    // Actualizar interfaces
+                    cargarListaMecanicos();
+                    actualizarSelectMecanicos();
+                    
+                    // Limpiar campo
+                    document.getElementById('nuevo-mecanico').value = '';
+                }
+            }
+            
+            // Función para eliminar un mecánico
+            async function eliminarMecanico(id) {
+                if (!confirm('¿Está seguro de eliminar este mecánico?')) {
+                    return;
+                }
+                
+                // Verificar si hay registros asociados a este mecánico
+                const registros = JSON.parse(localStorage.getItem('registrosEquipos')) || [];
+                const registrosAsociados = registros.filter(registro => registro.mecanicoId === id);
+                
+                if (registrosAsociados.length > 0) {
+                    alert('No se puede eliminar este mecánico porque tiene registros asociados.');
+                    return;
+                }
+                
+                // Eliminar de Firebase
+                const exito = await eliminarDeFirebase('mecanicos', id);
+                
+                if (exito) {
+                    // Eliminar localmente
+                    let mecanicos = JSON.parse(localStorage.getItem('mecanicosRegistro')) || [];
+                    mecanicos = mecanicos.filter(mecanico => mecanico.id !== id);
+                    localStorage.setItem('mecanicosRegistro', JSON.stringify(mecanicos));
+                    
+                    // Actualizar interfaces
+                    cargarListaMecanicos();
+                    actualizarSelectMecanicos();
+                    
+                    alert('Mecánico eliminado correctamente.');
+                } else {
+                    alert('Error al eliminar el mecánico. Se eliminará solo localmente.');
+                    
+                    // Eliminar solo localmente si falla Firebase
+                    let mecanicos = JSON.parse(localStorage.getItem('mecanicosRegistro')) || [];
+                    mecanicos = mecanicos.filter(mecanico => mecanico.id !== id);
+                    localStorage.setItem('mecanicosRegistro', JSON.stringify(mecanicos));
+                    
+                    // Actualizar interfaces
+                    cargarListaMecanicos();
+                    actualizarSelectMecanicos();
+                }
+            }
+            
+            // Función para actualizar los selectores de mecánicos
+            function actualizarSelectMecanicos() {
+                const mecanicos = JSON.parse(localStorage.getItem('mecanicosRegistro')) || [];
+                
+                // Actualizar filtro de mecánicos
+                const filtroMecanicoSelect = document.getElementById('filtro-mecanico');
+                filtroMecanicoSelect.innerHTML = '<option value="">Todos los mecánicos</option>';
+                
+                mecanicos.forEach(mecanico => {
+                    const option = document.createElement('option');
+                    option.value = mecanico.id;
+                    option.textContent = mecanico.nombre;
+                    filtroMecanicoSelect.appendChild(option);
+                });
+            }
+            
+            // Función para imprimir los registros del día
+            function imprimirRegistros() {
+                const printSection = document.getElementById('print-section');
+                const registros = JSON.parse(localStorage.getItem('registrosEquipos')) || [];
+                const fechaFiltro = filtroFecha.value;
+                
+                // Filtrar registros por fecha
+                const registrosFiltrados = registros.filter(registro => registro.fecha === fechaFiltro);
+                
+                // Ordenar por hora
+                registrosFiltrados.sort((a, b) => a.hora.localeCompare(b.hora));
+                
+                // Formatear fecha para mostrar
+                const [año, mes, dia] = fechaFiltro.split('-');
+                const fechaFormateada = `${dia}/${mes}/${año}`;
+                
+                let html = `
+                    <div class="encabezado-recibo">
+                        <h1>REGISTRO DE EQUIPOS EN REVISIÓN</h1>
+                        <div class="fecha">Fecha: ${fechaFormateada}</div>
+                    </div>
+                `;
+                
+                if (registrosFiltrados.length === 0) {
+                    html += '<p>No hay registros para esta fecha.</p>';
+                } else {
+                    html += `
+                        <table class="tabla-registros">
+                            <thead>
+                                <tr>
+                                    <th>Hora</th>
+                                    <th>Mecánico</th>
+                                    <th>Equipo</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                    `;
+                    
+                    registrosFiltrados.forEach(registro => {
+                        html += `
+                            <tr>
+                                <td>${registro.hora}</td>
+                                <td>${registro.mecanicoNombre}</td>
+                                <td>${registro.equipo}</td>
+                            </tr>
+                        `;
+                    });
+                    
+                    html += `
+                            </tbody>
+                        </table>
+                        <p>Total de equipos: ${registrosFiltrados.length}</p>
+                    `;
+                }
+                
+                printSection.innerHTML = html;
+                
+                // Imprimir
+                window.print();
+            }
+        });
+    </script>
+</body>
+</html>
