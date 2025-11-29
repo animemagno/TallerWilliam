@@ -595,6 +595,15 @@
             font-weight: bold;
         }
 
+        .ingreso-badge {
+            background: #27ae60;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+
         .total-display {
             font-weight: bold;
         }
@@ -1238,6 +1247,15 @@
             background-color: #8e44ad;
         }
 
+        .ingreso-btn {
+            background-color: #27ae60;
+            color: white;
+        }
+
+        .ingreso-btn:hover {
+            background-color: #219a52;
+        }
+
         .equipo-en-grupo {
             background: #f8d7da !important;
             border-color: #e74c3c !important;
@@ -1305,13 +1323,19 @@
         <header>
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 0 15px;">
                 <h1>Taller Willian</h1>
-                <button class="btn btn-info btn-small" id="backup-btn" title="Descargar copia de seguridad">
-                    <i class="fas fa-download"></i> RESPALDO
-                </button>
-                <button class="btn btn-small retiro-btn" onclick="UIService.showRetiroModal()"
-                    title="Registrar retiro de caja" style="margin-left: 10px;">
-                    <i class="fas fa-hand-holding-usd"></i> RETIRO
-                </button>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn btn-success btn-small ingreso-btn" onclick="UIService.showIngresoModal()"
+                        title="Registrar ingreso de caja">
+                        <i class="fas fa-plus-circle"></i> INGRESO
+                    </button>
+                    <button class="btn btn-info btn-small" id="backup-btn" title="Descargar copia de seguridad">
+                        <i class="fas fa-download"></i> RESPALDO
+                    </button>
+                    <button class="btn btn-small retiro-btn" onclick="UIService.showRetiroModal()"
+                        title="Registrar retiro de caja">
+                        <i class="fas fa-hand-holding-usd"></i> RETIRO
+                    </button>
+                </div>
             </div>
         </header>
 
@@ -1438,79 +1462,8 @@
                     </div>
                 </div>
 
-                <!-- History Section with Sidebar Layout -->
-                <div style="display: grid; grid-template-columns: 320px 1fr; gap: 15px;">
-                    <!-- Left Sidebar: Search Tools -->
-                    <div style="display: flex; flex-direction: column; gap: 15px;">
-                        <!-- Product Search -->
-                        <div
-                            style="background: #e8f4fd; padding: 15px; border-radius: 6px; border-left: 4px solid #3498db;">
-                            <h4
-                                style="margin-top: 0; margin-bottom: 10px; color: #2c3e50; border-bottom: 1px solid #bdc3c7; padding-bottom: 5px; font-size: 0.95rem;">
-                                <i class="fas fa-search"></i> Buscar Producto
-                            </h4>
-                            <div class="form-group" style="margin-bottom: 8px;">
-                                <label for="product-search-input"
-                                    style="font-weight: bold; font-size: 0.85rem;">Producto:</label>
-                                <input type="text" id="product-search-input" placeholder="Ej: Carburador..."
-                                    style="padding: 6px; border: 1px solid #ddd; border-radius: 4px; width: 100%; font-size: 0.9rem;">
-                            </div>
-                            <div class="form-group" style="margin-bottom: 8px;">
-                                <label for="product-search-start-date"
-                                    style="font-weight: bold; font-size: 0.85rem;">Desde:</label>
-                                <input type="date" id="product-search-start-date"
-                                    style="padding: 6px; border: 1px solid #ddd; border-radius: 4px; width: 100%; font-size: 0.9rem;">
-                            </div>
-                            <div class="form-group" style="margin-bottom: 8px;">
-                                <label for="product-search-end-date"
-                                    style="font-weight: bold; font-size: 0.85rem;">Hasta:</label>
-                                <input type="date" id="product-search-end-date"
-                                    style="padding: 6px; border: 1px solid #ddd; border-radius: 4px; width: 100%; font-size: 0.9rem;">
-                            </div>
-                            <button class="btn btn-info" onclick="UIService.searchProductInHistory()"
-                                style="width: 100%; margin-bottom: 8px; padding: 8px; font-size: 0.9rem;">
-                                <i class="fas fa-search"></i> BUSCAR
-                            </button>
-                            <div style="display: flex; flex-direction: column; gap: 4px;">
-                                <button class="btn btn-secondary" onclick="UIService.setProductSearchMonth('current')"
-                                    style="font-size: 0.8rem; padding: 5px; width: 100%;">
-                                    <i class="fas fa-calendar"></i> Este Mes
-                                </button>
-                                <button class="btn btn-secondary" onclick="UIService.setProductSearchMonth('last')"
-                                    style="font-size: 0.8rem; padding: 5px; width: 100%;">
-                                    <i class="fas fa-calendar-minus"></i> Mes Pasado
-                                </button>
-                                <button class="btn btn-secondary" onclick="UIService.clearProductSearch()"
-                                    style="font-size: 0.8rem; padding: 5px; width: 100%;">
-                                    <i class="fas fa-times"></i> Limpiar
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Daily Summary Filter -->
-                        <div
-                            style="background: #fff3cd; padding: 15px; border-radius: 6px; border-left: 4px solid #ffc107;">
-                            <h4
-                                style="margin-top: 0; margin-bottom: 10px; color: #2c3e50; border-bottom: 1px solid #e8d5a0; padding-bottom: 5px; font-size: 0.95rem;">
-                                <i class="fas fa-calendar-day"></i> Resumen Diario
-                            </h4>
-                            <div class="form-group" style="margin-bottom: 8px;">
-                                <label for="history-date-filter"
-                                    style="font-weight: bold; font-size: 0.85rem;">Fecha:</label>
-                                <input type="date" id="history-date-filter"
-                                    style="padding: 6px; border: 1px solid #ddd; border-radius: 4px; width: 100%; font-size: 0.9rem;">
-                            </div>
-                            <button class="btn btn-primary" onclick="UIService.filterHistoryByDate()"
-                                style="width: 100%; margin-bottom: 5px; padding: 8px; font-size: 0.9rem;">
-                                <i class="fas fa-filter"></i> Ver Día
-                            </button>
-                            <button class="btn btn-secondary" onclick="SalesService.loadHistorial()"
-                                style="width: 100%; padding: 8px; font-size: 0.9rem;">
-                                <i class="fas fa-list"></i> Ver Todos
-                            </button>
-                        </div>
-                    </div>
-
+                <!-- History Section - Full Width -->
+                <div>
                     <!-- Right Main Content: History Table -->
                     <div>
                         <!-- Daily Summary (shown when filtering by date) -->
@@ -1562,6 +1515,109 @@
                                     </tbody>
                                 </table>
                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal de ingreso -->
+                <div id="ingreso-modal" class="modal-overlay">
+                    <div class="modal-content">
+                        <h3 style="margin-bottom: 15px; text-align: center; color: #27ae60;">Registrar Ingreso de Caja
+                        </h3>
+
+                        <div class="form-group">
+                            <label for="concepto-ingreso">Razón / Concepto:</label>
+                            <input type="text" id="concepto-ingreso" placeholder="Ej: Abono recibido, venta contado..."
+                                class="form-control">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="monto-ingreso">Monto:</label>
+                            <input type="number" id="monto-ingreso" step="0.01" min="0.01" placeholder="0.00"
+                                style="font-size: 1.2rem; text-align: center; font-weight: bold; color: #27ae60;">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="categoria-ingreso">Categoría:</label>
+                            <select id="categoria-ingreso" class="form-control">
+                                <option value="venta">Venta</option>
+                                <option value="abono">Abono</option>
+                                <option value="otro">Otro</option>
+                            </select>
+                        </div>
+
+                        <div style="display: flex; gap: 10px; margin-top: 20px;">
+                            <button class="btn btn-success" id="process-ingreso-btn" style="flex: 1;">
+                                <i class="fas fa-save"></i> REGISTRAR INGRESO
+                            </button>
+                            <button class="btn btn-danger" id="close-ingreso-modal" style="flex: 1;">CANCELAR</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal Editar Ingreso -->
+                <div id="editar-ingreso-modal" class="modal-overlay">
+                    <div class="modal-content">
+                        <h3 style="margin-bottom: 15px; text-align: center; color: #27ae60;">Editar Ingreso de Caja</h3>
+
+                        <div class="form-group">
+                            <label for="editar-concepto-ingreso">Concepto:</label>
+                            <input type="text" id="editar-concepto-ingreso" class="form-control">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="editar-monto-ingreso">Monto:</label>
+                            <input type="number" id="editar-monto-ingreso" step="0.01" min="0.01" class="form-control">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="editar-categoria-ingreso">Categoría:</label>
+                            <select id="editar-categoria-ingreso" class="form-control">
+                                <option value="venta">Venta</option>
+                                <option value="abono">Abono</option>
+                                <option value="otro">Otro</option>
+                            </select>
+                        </div>
+
+                        <div style="display: flex; gap: 10px; margin-top: 20px;">
+                            <button class="btn btn-success" id="guardar-ingreso-btn" style="flex: 1;">GUARDAR
+                                CAMBIOS</button>
+                            <button class="btn btn-danger" id="cancelar-editar-ingreso-btn"
+                                style="flex: 1;">CANCELAR</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal Editar Retiro -->
+                <div id="editar-retiro-modal" class="modal-overlay">
+                    <div class="modal-content">
+                        <h3 style="margin-bottom: 15px; text-align: center; color: #9b59b6;">Editar Retiro de Caja</h3>
+
+                        <div class="form-group">
+                            <label for="editar-concepto-retiro">Concepto:</label>
+                            <input type="text" id="editar-concepto-retiro" class="form-control">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="editar-monto-retiro">Monto:</label>
+                            <input type="number" id="editar-monto-retiro" step="0.01" min="0.01" class="form-control">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="editar-categoria-retiro">Categoría:</label>
+                            <select id="editar-categoria-retiro" class="form-control">
+                                <option value="compra">Compra de materiales</option>
+                                <option value="gastos">Gastos operativos</option>
+                                <option value="herramientas">Herramientas</option>
+                                <option value="otros">Otros</option>
+                            </select>
+                        </div>
+
+                        <div style="display: flex; gap: 10px; margin-top: 20px;">
+                            <button class="btn btn-success" id="guardar-retiro-btn" style="flex: 1;">GUARDAR
+                                CAMBIOS</button>
+                            <button class="btn btn-danger" id="cancelar-editar-retiro-btn"
+                                style="flex: 1;">CANCELAR</button>
                         </div>
                     </div>
                 </div>
@@ -1629,6 +1685,67 @@
                             <button class="btn btn-danger" id="cancelar-abono-inicial-btn" style="flex: 1;">
                                 <i class="fas fa-times"></i> CANCELAR
                             </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal Editar Ingreso -->
+                <div id="editar-ingreso-modal" class="modal-overlay">
+                    <div class="modal-content">
+                        <h3>Editar Ingreso</h3>
+                        <input type="hidden" id="edit-ingreso-id">
+                        <div class="form-group">
+                            <label for="edit-concepto-ingreso">Concepto:</label>
+                            <input type="text" id="edit-concepto-ingreso" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-monto-ingreso">Monto:</label>
+                            <input type="number" id="edit-monto-ingreso" step="0.01" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-categoria-ingreso">Categoría:</label>
+                            <select id="edit-categoria-ingreso" class="form-control">
+                                <option value="venta">Venta</option>
+                                <option value="abono">Abono</option>
+                                <option value="otro">Otro</option>
+                            </select>
+                        </div>
+                        <div style="display: flex; gap: 10px; margin-top: 15px;">
+                            <button class="btn btn-success" onclick="SalesService.processEditarIngreso()"
+                                style="flex: 1;">GUARDAR</button>
+                            <button class="btn btn-danger" onclick="ModalService.closeEditarIngresoModal()"
+                                style="flex: 1;">CANCELAR</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal Editar Retiro -->
+                <div id="editar-retiro-modal" class="modal-overlay">
+                    <div class="modal-content">
+                        <h3>Editar Retiro</h3>
+                        <input type="hidden" id="edit-retiro-id">
+                        <div class="form-group">
+                            <label for="edit-concepto-retiro">Concepto:</label>
+                            <input type="text" id="edit-concepto-retiro" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-monto-retiro">Monto:</label>
+                            <input type="number" id="edit-monto-retiro" step="0.01" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-categoria-retiro">Categoría:</label>
+                            <select id="edit-categoria-retiro" class="form-control">
+                                <option value="compra">Compra de materiales</option>
+                                <option value="gastos">Gastos operativos</option>
+                                <option value="herramientas">Herramientas</option>
+                                <option value="otros">Otros</option>
+                            </select>
+                        </div>
+                        <div style="display: flex; gap: 10px; margin-top: 15px;">
+                            <button class="btn btn-success" onclick="SalesService.processEditarRetiro()"
+                                style="flex: 1;">GUARDAR</button>
+                            <button class="btn btn-danger" onclick="ModalService.closeEditarRetiroModal()"
+                                style="flex: 1;">CANCELAR</button>
                         </div>
                     </div>
                 </div>
@@ -3735,16 +3852,78 @@
                         }
                     },
 
+                    async saveIngreso(ingresoData) {
+                        return await ConcurrencyManager.withLock(async () => {
+                            if (AppState.firebaseInitialized) {
+                                const docRef = await ErrorHandler.withRetry(
+                                    () => AppState.db.collection("INGRESOS").add(ingresoData),
+                                    3,
+                                    "Guardado de ingreso"
+                                );
+                                return docRef.id;
+                            } else {
+                                throw new Error("No hay conexión a la base de datos");
+                            }
+                        }, "Guardar ingreso");
+                    },
+
+                    async loadIngresos(limit = 500) {
+                        try {
+                            if (AppState.firebaseInitialized) {
+                                const snapshot = await ErrorHandler.withTimeout(
+                                    AppState.db.collection("INGRESOS")
+                                        .orderBy("timestamp", "desc")
+                                        .limit(limit)
+                                        .get(),
+                                    10000,
+                                    "Carga de ingresos"
+                                );
+
+                                return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                            } else {
+                                return [];
+                            }
+                        } catch (error) {
+                            console.error("Error cargando ingresos:", error);
+                            return [];
+                        }
+                    },
+
+                    async loadIngresosByDate(date = DateUtils.getCurrentDateStringElSalvador(), limit = 500) {
+                        try {
+                            if (AppState.firebaseInitialized) {
+                                const snapshot = await ErrorHandler.withTimeout(
+                                    AppState.db.collection("INGRESOS")
+                                        .where("date", "==", date)
+                                        .orderBy("timestamp", "desc")
+                                        .limit(limit)
+                                        .get(),
+                                    10000,
+                                    "Carga de ingresos por fecha"
+                                );
+
+                                return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                            } else {
+                                return [];
+                            }
+                        } catch (error) {
+                            console.error("Error cargando ingresos por fecha:", error);
+                            return [];
+                        }
+                    },
+
                     async loadAllMovements(limit = 500) {
                         try {
-                            const [ventas, retiros] = await Promise.all([
+                            const [ventas, retiros, ingresos] = await Promise.all([
                                 this.loadSales(limit),
-                                this.loadRetiros(limit)
+                                this.loadRetiros(limit),
+                                this.loadIngresos(limit)
                             ]);
 
                             const allMovements = [
                                 ...ventas.map(v => ({ ...v, tipo: 'venta' })),
-                                ...retiros.map(r => ({ ...r, tipo: 'retiro' }))
+                                ...retiros.map(r => ({ ...r, tipo: 'retiro' })),
+                                ...ingresos.map(i => ({ ...i, tipo: 'ingreso' }))
                             ];
 
                             return allMovements.sort((a, b) => {
@@ -3760,8 +3939,11 @@
 
                     async getDailyCashFlow(dateString) {
                         try {
-                            // 1. Cargar Retiros del día
-                            const retiros = await this.loadRetirosByDate(dateString);
+                            // 1. Cargar Retiros e Ingresos del día
+                            const [retiros, ingresos] = await Promise.all([
+                                this.loadRetirosByDate(dateString),
+                                this.loadIngresosByDate(dateString)
+                            ]);
 
                             // 2. Cargar Ventas recientes (para buscar abonos y ventas del día)
                             // Cargamos suficientes para encontrar abonos recientes en facturas viejas
@@ -3825,7 +4007,15 @@
                                 });
                             });
 
-                            // 5. Ordenar por hora
+                            // 5. Agregar Ingresos
+                            ingresos.forEach(ingreso => {
+                                movimientos.push({
+                                    ...ingreso,
+                                    tipo: 'ingreso'
+                                });
+                            });
+
+                            // 6. Ordenar por hora
                             return movimientos.sort((a, b) => {
                                 const dateA = a.timestamp?.toDate ? a.timestamp.toDate() : new Date(a.timestamp);
                                 const dateB = b.timestamp?.toDate ? b.timestamp.toDate() : new Date(b.timestamp);
@@ -3894,14 +4084,16 @@
 
                     async loadMovementsByDate(date = DateUtils.getCurrentDateStringElSalvador(), limit = 500) {
                         try {
-                            const [ventas, retiros] = await Promise.all([
+                            const [ventas, retiros, ingresos] = await Promise.all([
                                 this.loadSalesByDate(date, limit),
-                                this.loadRetirosByDate(date, limit)
+                                this.loadRetirosByDate(date, limit),
+                                this.loadIngresosByDate(date, limit)
                             ]);
 
                             const allMovements = [
                                 ...ventas.map(v => ({ ...v, tipo: 'venta' })),
-                                ...retiros.map(r => ({ ...r, tipo: 'retiro' }))
+                                ...retiros.map(r => ({ ...r, tipo: 'retiro' })),
+                                ...ingresos.map(i => ({ ...i, tipo: 'ingreso' }))
                             ];
 
                             return allMovements.sort((a, b) => {
@@ -4123,6 +4315,18 @@
                         document.getElementById('retiro-modal').style.display = 'none';
                     },
 
+                    closeIngresoModal() {
+                        document.getElementById('ingreso-modal').style.display = 'none';
+                    },
+
+                    closeEditarRetiroModal() {
+                        document.getElementById('editar-retiro-modal').style.display = 'none';
+                    },
+
+                    closeEditarIngresoModal() {
+                        document.getElementById('editar-ingreso-modal').style.display = 'none';
+                    },
+
                     closeInvoiceModal() {
                         document.getElementById('invoice-modal').style.display = 'none';
                     },
@@ -4182,6 +4386,34 @@
                         document.getElementById('monto-retiro').value = '';
                         document.getElementById('categoria-retiro').value = 'compra';
                         document.getElementById('concepto-retiro').focus();
+                    },
+
+                    showIngresoModal() {
+                        document.getElementById('ingreso-modal').style.display = 'flex';
+                        document.getElementById('concepto-ingreso').value = '';
+                        document.getElementById('monto-ingreso').value = '';
+                        document.getElementById('categoria-ingreso').value = 'venta';
+                        document.getElementById('concepto-ingreso').focus();
+                    },
+
+                    closeIngresoModal() {
+                        document.getElementById('ingreso-modal').style.display = 'none';
+                    },
+
+                    showEditarRetiroModal(retiro) {
+                        document.getElementById('edit-retiro-id').value = retiro.id;
+                        document.getElementById('edit-concepto-retiro').value = retiro.concepto;
+                        document.getElementById('edit-monto-retiro').value = retiro.monto;
+                        document.getElementById('edit-categoria-retiro').value = retiro.categoria;
+                        document.getElementById('editar-retiro-modal').style.display = 'flex';
+                    },
+
+                    showEditarIngresoModal(ingreso) {
+                        document.getElementById('edit-ingreso-id').value = ingreso.id;
+                        document.getElementById('edit-concepto-ingreso').value = ingreso.concepto;
+                        document.getElementById('edit-monto-ingreso').value = ingreso.monto;
+                        document.getElementById('edit-categoria-ingreso').value = ingreso.categoria;
+                        document.getElementById('editar-ingreso-modal').style.display = 'flex';
                     },
 
                     updateCartDisplay() {
@@ -4341,6 +4573,7 @@
                         let totalVentas = 0;
                         let totalAbonos = 0;
                         let totalRetiros = 0;
+                        let totalIngresos = 0;
 
                         movimientos.forEach(mov => {
                             if (mov.tipo === 'venta') {
@@ -4363,6 +4596,8 @@
                                 totalAbonos += mov.monto;
                             } else if (mov.tipo === 'retiro') {
                                 totalRetiros += Math.abs(mov.monto);
+                            } else if (mov.tipo === 'ingreso') {
+                                totalIngresos += mov.monto;
                             }
                         });
 
@@ -4437,10 +4672,11 @@
                         }
 
                         // Renderizar resumen de caja
-                        const saldoFinal = totalVentas + totalAbonos - totalRetiros;
+                        const saldoFinal = totalVentas + totalAbonos + totalIngresos - totalRetiros;
                         cashSummary.innerHTML = `
                     <div style="color: #27ae60;">Ventas Contado: $${totalVentas.toFixed(2)}</div>
                     <div style="color: #2980b9;">Abonos Recibidos: $${totalAbonos.toFixed(2)}</div>
+                    <div style="color: #16a085;">Ingresos: +$${totalIngresos.toFixed(2)}</div>
                     <div style="color: #c0392b;">Retiros: -$${totalRetiros.toFixed(2)}</div>
                     <div style="color: #2c3e50; border-left: 2px solid #bdc3c7; padding-left: 15px;">Flujo Neto: $${saldoFinal.toFixed(2)}</div>
                 `;
@@ -4481,6 +4717,40 @@
                                     <div class="action-buttons historial-actions-container">
                                         <button class="icon-btn btn-view" onclick="SalesService.viewRetiro('${movimiento.id}')" title="Ver retiro">
                                             <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button class="icon-btn btn-edit" onclick="SalesService.editRetiro('${movimiento.id}')" title="Editar retiro">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="icon-btn btn-delete" onclick="SalesService.deleteRetiro('${movimiento.id}')" title="Eliminar retiro">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                            } else if (movimiento.tipo === 'ingreso') {
+                                historialHTML += `
+                            <tr style="background-color: #f0fff4;">
+                                <td><strong>ING-${movimiento.id.substring(0, 6)}</strong></td>
+                                <td>
+                                    <div class="cliente-equipo">-</div>
+                                    <div class="cliente-nombre">${movimiento.concepto || 'Sin concepto'}</div>
+                                </td>
+                                <td>
+                                    <div class="saldo-pendiente-negro" style="color: #27ae60;">+$${Math.abs(movimiento.monto).toFixed(2)}</div>
+                                </td>
+                                <td><span class="ingreso-badge">INGRESO</span></td>
+                                <td>${fecha}</td>
+                                <td>
+                                    <div class="action-buttons historial-actions-container">
+                                        <button class="icon-btn btn-view" onclick="SalesService.viewIngreso('${movimiento.id}')" title="Ver ingreso">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button class="icon-btn btn-edit" onclick="SalesService.editIngreso('${movimiento.id}')" title="Editar ingreso">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="icon-btn btn-delete" onclick="SalesService.deleteIngreso('${movimiento.id}')" title="Eliminar ingreso">
+                                            <i class="fas fa-trash"></i>
                                         </button>
                                     </div>
                                 </td>
@@ -5594,6 +5864,156 @@
                         }
                     },
 
+                    async viewRetiro(retiroId) {
+                        const retiro = AppState.historial.find(r => r.id === retiroId && r.tipo === 'retiro');
+                        if (!retiro) {
+                            UIService.showStatus("No se encontró el retiro", "error");
+                            return;
+                        }
+
+                        const categoriaText = {
+                            'compra': 'Compra de materiales',
+                            'gastos': 'Gastos operativos',
+                            'herramientas': 'Herramientas',
+                            'otros': 'Otros'
+                        }[retiro.categoria] || retiro.categoria;
+
+                        const fecha = retiro.timestamp ? new Date(retiro.timestamp.toDate ? retiro.timestamp.toDate() : retiro.timestamp).toLocaleString('es-ES') : 'N/A';
+
+                        alert(`RETIRO DE CAJA\n\nConcepto: ${retiro.concepto}\nCategoría: ${categoriaText}\nMonto: $${retiro.monto.toFixed(2)}\nFecha: ${fecha}`);
+                    },
+
+                    async viewIngreso(ingresoId) {
+                        const ingreso = AppState.historial.find(i => i.id === ingresoId && i.tipo === 'ingreso');
+                        if (!ingreso) {
+                            UIService.showStatus("No se encontró el ingreso", "error");
+                            return;
+                        }
+
+                        const categoriaText = {
+                            'venta': 'Venta',
+                            'abono': 'Abono',
+                            'otro': 'Otro'
+                        }[ingreso.categoria] || ingreso.categoria;
+
+                        const fecha = ingreso.timestamp ? new Date(ingreso.timestamp.toDate ? ingreso.timestamp.toDate() : ingreso.timestamp).toLocaleString('es-ES') : 'N/A';
+
+                        alert(`INGRESO DE CAJA\n\nConcepto: ${ingreso.concepto}\nCategoría: ${categoriaText}\nMonto: $${ingreso.monto.toFixed(2)}\nFecha: ${fecha}`);
+                    },
+
+                    async deleteIngreso(ingresoId) {
+                        if (!confirm("¿Está seguro de eliminar este ingreso? Esta acción no se puede deshacer.")) return;
+
+                        try {
+                            UIService.showLoading(true);
+                            if (AppState.firebaseInitialized) {
+                                await AppState.db.collection("INGRESOS").doc(ingresoId).delete();
+                                UIService.showStatus("Ingreso eliminado correctamente", "success");
+                                await this.loadHistorial();
+                            } else {
+                                throw new Error("No hay conexión a la base de datos");
+                            }
+                        } catch (error) {
+                            UIService.showStatus("Error al eliminar ingreso: " + error.message, "error");
+                        } finally {
+                            UIService.showLoading(false);
+                        }
+                    },
+
+                    async editRetiro(retiroId) {
+                        const retiro = AppState.historial.find(r => r.id === retiroId && r.tipo === 'retiro');
+                        if (!retiro) {
+                            UIService.showStatus("No se encontró el retiro", "error");
+                            return;
+                        }
+                        UIService.showEditarRetiroModal(retiro);
+                    },
+
+                    async editIngreso(ingresoId) {
+                        const ingreso = AppState.historial.find(i => i.id === ingresoId && i.tipo === 'ingreso');
+                        if (!ingreso) {
+                            UIService.showStatus("No se encontró el ingreso", "error");
+                            return;
+                        }
+                        UIService.showEditarIngresoModal(ingreso);
+                    },
+
+                    async processEditarRetiro() {
+                        const retiroId = document.getElementById('edit-retiro-id').value;
+                        const montoInput = document.getElementById('edit-monto-retiro');
+                        const conceptoInput = document.getElementById('edit-concepto-retiro');
+                        const categoriaInput = document.getElementById('edit-categoria-retiro');
+
+                        const monto = parseFloat(montoInput.value);
+                        const concepto = conceptoInput.value.trim();
+                        const categoria = categoriaInput.value;
+
+                        if (!monto || monto <= 0 || isNaN(monto) || !isFinite(monto)) {
+                            UIService.showStatus("Ingrese un monto válido mayor a 0", "error");
+                            return;
+                        }
+
+                        if (!concepto) {
+                            UIService.showStatus("Ingrese un concepto para el retiro", "error");
+                            return;
+                        }
+
+                        try {
+                            UIService.showLoading(true);
+                            await AppState.db.collection("RETIROS").doc(retiroId).update({
+                                monto: monto,
+                                concepto: concepto,
+                                categoria: categoria
+                            });
+
+                            UIService.showStatus("Retiro actualizado correctamente", "success");
+                            ModalService.closeEditarRetiroModal();
+                            await this.loadHistorial();
+                        } catch (error) {
+                            UIService.showStatus("Error al actualizar retiro: " + error.message, "error");
+                        } finally {
+                            UIService.showLoading(false);
+                        }
+                    },
+
+                    async processEditarIngreso() {
+                        const ingresoId = document.getElementById('edit-ingreso-id').value;
+                        const montoInput = document.getElementById('edit-monto-ingreso');
+                        const conceptoInput = document.getElementById('edit-concepto-ingreso');
+                        const categoriaInput = document.getElementById('edit-categoria-ingreso');
+
+                        const monto = parseFloat(montoInput.value);
+                        const concepto = conceptoInput.value.trim();
+                        const categoria = categoriaInput.value;
+
+                        if (!monto || monto <= 0 || isNaN(monto) || !isFinite(monto)) {
+                            UIService.showStatus("Ingrese un monto válido mayor a 0", "error");
+                            return;
+                        }
+
+                        if (!concepto) {
+                            UIService.showStatus("Ingrese un concepto para el ingreso", "error");
+                            return;
+                        }
+
+                        try {
+                            UIService.showLoading(true);
+                            await AppState.db.collection("INGRESOS").doc(ingresoId).update({
+                                monto: monto,
+                                concepto: concepto,
+                                categoria: categoria
+                            });
+
+                            UIService.showStatus("Ingreso actualizado correctamente", "success");
+                            ModalService.closeEditarIngresoModal();
+                            await this.loadHistorial();
+                        } catch (error) {
+                            UIService.showStatus("Error al actualizar ingreso: " + error.message, "error");
+                        } finally {
+                            UIService.showLoading(false);
+                        }
+                    },
+
                     async cancelInvoice(invoiceId) {
                         if (!confirm("¿Está seguro de cancelar esta factura? Se cambiará el estado a CONTADO.")) return;
 
@@ -5764,6 +6184,55 @@
                         }
                     },
 
+                    async processIngreso() {
+                        const montoInput = document.getElementById('monto-ingreso');
+                        const conceptoInput = document.getElementById('concepto-ingreso');
+                        const categoriaInput = document.getElementById('categoria-ingreso');
+
+                        const monto = parseFloat(montoInput.value);
+                        const concepto = conceptoInput.value.trim();
+                        const categoria = categoriaInput.value;
+
+                        if (!monto || monto <= 0 || isNaN(monto) || !isFinite(monto)) {
+                            UIService.showStatus("Ingrese un monto válido mayor a 0", "error");
+                            return;
+                        }
+
+                        if (!/^\d+(\.\d{1,2})?$/.test(montoInput.value)) {
+                            UIService.showStatus("El monto debe tener máximo 2 decimales", "error");
+                            return;
+                        }
+
+                        if (!concepto) {
+                            UIService.showStatus("Ingrese un concepto para el ingreso", "error");
+                            return;
+                        }
+
+                        try {
+                            UIService.showLoading(true);
+                            const ingresoData = {
+                                monto: monto,
+                                concepto: concepto,
+                                categoria: categoria,
+                                timestamp: DateUtils.getCurrentTimestampElSalvador(),
+                                date: DateUtils.getCurrentDateStringElSalvador()
+                            };
+
+                            await DataService.saveIngreso(ingresoData);
+
+                            UIService.showStatus(`Ingreso de $${monto.toFixed(2)} registrado correctamente`, "success");
+
+                            UIService.closeIngresoModal();
+
+                            await this.loadHistorial();
+
+                        } catch (error) {
+                            UIService.showStatus("Error al procesar ingreso: " + error.message, "error");
+                        } finally {
+                            UIService.showLoading(false);
+                        }
+                    },
+
                     async printCurrentHistorial() {
                         const movimientos = AppState.filteredHistorial;
 
@@ -5782,16 +6251,21 @@
                         let totalPendiente = 0;
                         let totalAbonos = 0;
                         let totalRetiros = 0;
+                        let totalIngresos = 0;
                         let ventasContado = 0;
                         let ventasPendiente = 0;
                         let ventasConAbonos = 0;
                         let cantidadRetiros = 0;
+                        let cantidadIngresos = 0;
 
                         movimientos.forEach(movimiento => {
                             if (movimiento.tipo === 'retiro') {
                                 totalRetiros += movimiento.monto || 0;
                                 cantidadRetiros++;
-                            } else {
+                            } else if (movimiento.tipo === 'ingreso') {
+                                totalIngresos += movimiento.monto || 0;
+                                cantidadIngresos++;
+                            } else if (movimiento.tipo === 'venta') {
                                 if (movimiento.paymentType === 'contado') {
                                     totalContado += movimiento.total || 0;
                                     ventasContado++;
@@ -5899,6 +6373,14 @@
                                 font-size: 9px;
                                 font-weight: bold;
                             }
+                            .ingreso-badge {
+                                background: #27ae60;
+                                color: white;
+                                padding: 3px 6px;
+                                border-radius: 3px;
+                                font-size: 9px;
+                                font-weight: bold;
+                            }
                             .resumen-section {
                                 margin-top: 25px;
                                 padding: 15px;
@@ -5929,8 +6411,8 @@
                                 page-break-before: always;
                             }
                             @page {
-                                size: A4 landscape;
-                                margin: 1cm;
+                                size: A4 portrait;
+                                margin: 1.5cm 1cm;
                             }
                             .footer {
                                 text-align: center;
@@ -5939,6 +6421,40 @@
                                 border-top: 1px solid #ddd;
                                 font-size: 10px;
                                 color: #7f8c8d;
+                            }
+                            .movimiento-card {
+                                margin-bottom: 15px;
+                                border: 1px solid #ddd;
+                                border-radius: 6px;
+                                overflow: hidden;
+                                page-break-inside: avoid;
+                            }
+                            .movimiento-header {
+                                background: #f8f9fa;
+                                padding: 10px 12px;
+                                border-bottom: 1px solid #ddd;
+                                display: flex;
+                                justify-content: space-between;
+                                align-items: center;
+                            }
+                            .productos-table {
+                                width: 100%;
+                                border-collapse: collapse;
+                                font-size: 10px;
+                            }
+                            .productos-table th {
+                                background: #ecf0f1;
+                                padding: 6px 8px;
+                                text-align: left;
+                                font-weight: bold;
+                                border-bottom: 2px solid #bdc3c7;
+                            }
+                            .productos-table td {
+                                padding: 5px 8px;
+                                border-bottom: 1px solid #ecf0f1;
+                            }
+                            .productos-table tr:last-child td {
+                                border-bottom: none;
                             }
                         </style>
                     </head>
@@ -5949,68 +6465,103 @@
                         </div>
                 `;
 
-                        reportHTML += `
-                    <div class="table-container">
-                        <table class="ventas-table">
-                            <thead>
-                                <tr>
-                                    <th width="40%">Descripción</th>
-                                    <th width="10%">Factura/Retiro</th>
-                                    <th width="8%">Equipo</th>
-                                    <th width="10%">Monto</th>
-                                    <th width="8%">Estado</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                `;
-
-                        movimientos.forEach((movimiento, index) => {
-                            if (index > 0 && index % 20 === 0) {
-                                reportHTML += `</tbody></table></div><div class="page-break"></div><div class="table-container"><table class="ventas-table"><thead><tr><th width="40%">Descripción</th><th width="10%">Factura/Retiro</th><th width="8%">Equipo</th><th width="10%">Monto</th><th width="8%">Estado</th></tr></thead><tbody>`;
-                            }
+                        movimientos.forEach((movimiento) => {
+                            const fecha = movimiento.timestamp ? new Date(movimiento.timestamp.toDate ? movimiento.timestamp.toDate() : movimiento.timestamp).toLocaleString('es-ES') : 'N/A';
 
                             if (movimiento.tipo === 'retiro') {
                                 const tipoBadge = 'retiro-badge';
                                 const tipoText = 'RETIRO';
+                                const color = '#e74c3c';
 
                                 reportHTML += `
-                            <tr>
-                                <td>${movimiento.concepto || 'Sin concepto'}</td>
-                                <td><strong>RET-${movimiento.id.substring(0, 8)}</strong></td>
-                                <td>-</td>
-                                <td style="color: #e74c3c;">-$${movimiento.monto.toFixed(2)}</td>
-                                <td><span class="${tipoBadge}">${tipoText}</span></td>
-                            </tr>
+                            <div class="movimiento-card" style="border-left: 4px solid ${color};">
+                                <div class="movimiento-header" style="background: white;">
+                                    <div>
+                                        <strong>${tipoText}</strong> - ${movimiento.concepto || 'Sin concepto'}
+                                        <br><span style="font-size: 9px; color: #666;">${fecha}</span>
+                                    </div>
+                                    <div style="text-align: right;">
+                                        <div style="font-size: 14px; font-weight: bold; color: ${color};">
+                                            -$${movimiento.monto.toFixed(2)}
+                                        </div>
+                                        <span class="${tipoBadge}">${tipoText}</span>
+                                    </div>
+                                </div>
+                            </div>
                         `;
-                            } else {
+                            } else if (movimiento.tipo === 'ingreso') {
+                                const tipoBadge = 'ingreso-badge';
+                                const tipoText = 'INGRESO';
+                                const color = '#27ae60';
+
+                                reportHTML += `
+                            <div class="movimiento-card" style="border-left: 4px solid ${color};">
+                                <div class="movimiento-header" style="background: white;">
+                                    <div>
+                                        <strong>${tipoText}</strong> - ${movimiento.concepto || 'Sin concepto'}
+                                        <br><span style="font-size: 9px; color: #666;">${fecha}</span>
+                                    </div>
+                                    <div style="text-align: right;">
+                                        <div style="font-size: 14px; font-weight: bold; color: ${color};">
+                                            +$${movimiento.monto.toFixed(2)}
+                                        </div>
+                                        <span class="${tipoBadge}">${tipoText}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                            } else if (movimiento.tipo === 'venta') {
                                 const venta = movimiento;
                                 const tipoBadge = venta.paymentType === 'contado' ? 'contado-badge' : 'pendiente-badge';
                                 const tipoText = venta.paymentType === 'contado' ? 'CONTADO' : 'PENDIENTE';
 
-                                let productosHTML = '';
+                                let productosRows = '';
                                 if (venta.products && venta.products.length > 0) {
                                     venta.products.forEach(producto => {
-                                        productosHTML += `
-                                    <div class="producto-item">
-                                        • ${producto.descripcion} x${producto.cantidad} - $${(producto.precio * producto.cantidad).toFixed(2)}
-                                    </div>
+                                        productosRows += `
+                                    <tr>
+                                        <td width="10%" style="text-align: center;">${producto.cantidad}</td>
+                                        <td width="50%">${producto.descripcion}</td>
+                                        <td width="20%" style="text-align: right;">$${producto.precio.toFixed(2)}</td>
+                                        <td width="20%" style="text-align: right;">$${(producto.precio * producto.cantidad).toFixed(2)}</td>
+                                    </tr>
                                 `;
                                     });
+                                } else {
+                                    productosRows = '<tr><td colspan="4" style="text-align: center; color: #999;">Sin productos registrados</td></tr>';
                                 }
 
                                 reportHTML += `
-                            <tr>
-                                <td>${productosHTML || 'Sin productos'}</td>
-                                <td><strong>${venta.invoiceNumber || 'N/A'}</strong></td>
-                                <td>${venta.equipoNumber || 'N/A'}</td>
-                                <td>$${(venta.total || 0).toFixed(2)}</td>
-                                <td><span class="${tipoBadge}">${tipoText}</span></td>
-                            </tr>
+                            <div class="movimiento-card">
+                                <div class="movimiento-header">
+                                    <div>
+                                        <strong>Factura #${venta.invoiceNumber || 'N/A'}</strong> - Equipo: ${venta.equipoNumber || 'N/A'}
+                                        <br><span style="font-size: 9px; color: #666;">${fecha} - ${venta.clientName || 'Cliente'}</span>
+                                    </div>
+                                    <div style="text-align: right;">
+                                        <div style="font-size: 14px; font-weight: bold;">$${(venta.total || 0).toFixed(2)}</div>
+                                        <span class="${tipoBadge}">${tipoText}</span>
+                                    </div>
+                                </div>
+                                <div style="padding: 5px 10px;">
+                                    <table class="productos-table">
+                                        <thead>
+                                            <tr>
+                                                <th width="10%" style="text-align: center;">Cant.</th>
+                                                <th width="50%">Descripción</th>
+                                                <th width="20%" style="text-align: right;">Precio</th>
+                                                <th width="20%" style="text-align: right;">Total</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${productosRows}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
                         `;
                             }
                         });
-
-                        reportHTML += `</tbody></table></div>`;
 
                         let abonosHTML = '';
                         const ventasConAbonosList = movimientos.filter(mov =>
@@ -6057,6 +6608,7 @@
 
                         reportHTML += abonosHTML;
 
+                        const flujoNeto = totalContado + totalAbonos + totalIngresos - totalRetiros;
                         reportHTML += `
                     <div class="resumen-section">
                         <h3 style="margin: 0 0 15px 0; text-align: center; color: #2c3e50;">RESUMEN</h3>
@@ -6072,15 +6624,20 @@
                                 <div style="font-size: 10px; color: #666;">${ventasConAbonos} ventas</div>
                             </div>
                             <div class="resumen-item">
-                                <div>VENTAS PENDIENTES</div>
-                                <div class="resumen-valor">$${totalPendiente.toFixed(2)}</div>
-                                <div style="font-size: 10px; color: #666;">${ventasPendiente} ventas</div>
+                                <div>INGRESOS</div>
+                                <div class="resumen-valor" style="color: #27ae60;">+$${totalIngresos.toFixed(2)}</div>
+                                <div style="font-size: 10px; color: #666;">${cantidadIngresos} ingresos</div>
                             </div>
                             <div class="resumen-item">
                                 <div>RETIROS</div>
                                 <div class="resumen-valor" style="color: #e74c3c;">-$${totalRetiros.toFixed(2)}</div>
                                 <div style="font-size: 10px; color: #666;">${cantidadRetiros} retiros</div>
                             </div>
+                        </div>
+                        <div style="margin-top: 20px; padding: 15px; background: #2c3e50; color: white; border-radius: 6px; text-align: center;">
+                            <div style="font-size: 14px; margin-bottom: 5px;">FLUJO NETO DE CAJA</div>
+                            <div style="font-size: 24px; font-weight: bold;">${flujoNeto >= 0 ? '+' : ''}$${flujoNeto.toFixed(2)}</div>
+                            <div style="font-size: 11px; margin-top: 5px; opacity: 0.8;">Ventas + Abonos + Ingresos - Retiros</div>
                         </div>
                     </div>
                     
@@ -6591,6 +7148,14 @@
 
                         document.getElementById('close-retiro-modal').addEventListener('click', () => {
                             ModalService.closeRetiroModal();
+                        });
+
+                        document.getElementById('process-ingreso-btn').addEventListener('click', () => {
+                            SalesService.processIngreso();
+                        });
+
+                        document.getElementById('close-ingreso-modal').addEventListener('click', () => {
+                            UIService.closeIngresoModal();
                         });
 
                         document.getElementById('close-detalle-modal').addEventListener('click', () => {
