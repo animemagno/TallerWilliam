@@ -246,6 +246,7 @@
             text-align: center;
             font-size: 0.8rem;
             -moz-appearance: textfield;
+            appearance: textfield;
         }
 
         .quantity-input::-webkit-outer-spin-button,
@@ -7404,10 +7405,6 @@
                             ModalService.closeAbonoInicialModal();
                         });
 
-                        // Retiro Listeners
-                        document.getElementById('process-retiro-btn').addEventListener('click', () => SalesService.processRetiro());
-                        document.getElementById('close-retiro-modal').addEventListener('click', () => ModalService.closeRetiroModal());
-
                         // Bulk Abono Modal Listener
                         document.getElementById('close-bulk-abono-modal').addEventListener('click', () => {
                             document.getElementById('bulk-abono-modal').style.display = 'none';
@@ -7431,10 +7428,6 @@
                             } finally {
                                 UIService.showLoading(false);
                             }
-                        });
-
-                        document.getElementById('close-bulk-abono-modal').addEventListener('click', () => {
-                            document.getElementById('bulk-abono-modal').style.display = 'none';
                         });
 
                         document.getElementById('abonar-grupo-btn').addEventListener('click', () => {
