@@ -2640,7 +2640,7 @@
                                 <button class="grupo-action-btn btn-info" onclick="GrupoManager.showGroupPaymentModal('${grupo.id}')" title="Abonar a Grupo" style="background-color: #17a2b8; color: white;">
                                     <i class="fas fa-money-bill-wave"></i>
                                 </button>
-                                <button class="grupo-action-btn btn-delete-grupo" onclick="eliminarGrupo('${grupo.id}')" title="Eliminar grupo">
+                                <button class="grupo-action-btn btn-delete-grupo" onclick="GrupoManager.eliminarGrupo('${grupo.id}')" title="Eliminar grupo">
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </div>
@@ -2826,9 +2826,13 @@
                         // Configurar el botón para procesar facturas seleccionadas
                         const processBtn = document.getElementById('process-bulk-abono-btn');
                         processBtn.onclick = async () => {
+                            if (processBtn.disabled) return;
+                            processBtn.disabled = true;
+
                             const monto = parseFloat(document.getElementById('monto-bulk-abono').value);
                             if (!monto || monto <= 0) {
                                 UIService.showStatus("Ingrese un monto válido", "error");
+                                processBtn.disabled = false;
                                 return;
                             }
 
@@ -2846,6 +2850,7 @@
                                 UIService.showStatus("Error: " + error.message, "error");
                             } finally {
                                 UIService.showLoading(false);
+                                processBtn.disabled = false;
                             }
                         };
                     },
@@ -2868,14 +2873,19 @@
 
                         const processBtn = document.getElementById('process-bulk-abono-btn');
                         processBtn.onclick = async () => {
+                            if (processBtn.disabled) return;
+                            processBtn.disabled = true;
+
                             const monto = parseFloat(document.getElementById('monto-bulk-abono').value);
                             if (!monto || monto <= 0) {
                                 UIService.showStatus("Ingrese un monto válido", "error");
+                                processBtn.disabled = false;
                                 return;
                             }
 
                             if (monto > grupo.total) {
                                 UIService.showStatus("El monto no puede ser mayor al total del grupo", "error");
+                                processBtn.disabled = false;
                                 return;
                             }
 
@@ -2890,6 +2900,7 @@
                                 UIService.showStatus("Error: " + error.message, "error");
                             } finally {
                                 UIService.showLoading(false);
+                                processBtn.disabled = false;
                             }
                         };
                     },
@@ -3679,10 +3690,31 @@
                                     throw new Error("El monto del abono no puede ser mayor al saldo pendiente");
                                 }
 
+                                const abonoDateString = abonoData.fechaString ? abonoData.fechaString.split(',')[0].trim().split('/').reverse().join('-') : DateUtils.getCurrentDateStringElSalvador();
+
+                                // 1. Guardar en colección INGRESOS para que aparezca en historial y caja del día
+                                const ingresoData = {
+                                    monto: abonoData.monto,
+                                    concepto: `Abono a Factura #${venta.invoiceNumber}`,
+                                    categoria: 'abono',
+                                    timestamp: abonoData.fecha || DateUtils.getCurrentTimestampElSalvador(),
+                                    date: abonoDateString,
+                                    invoiceId: invoiceId,
+                                    invoiceNumber: venta.invoiceNumber,
+                                    clientName: venta.clientName || 'Cliente',
+                                    equipoNumber: venta.equipoNumber || '0000'
+                                };
+
+                                await AppState.db.collection("INGRESOS").add(ingresoData);
+
+                                // 2. Actualizar venta
                                 // CORRECCIÓN 1: Usar firebase.firestore.FieldValue consistentemente
                                 await ErrorHandler.withRetry(
                                     () => ventaRef.update({
-                                        abonos: firebase.firestore.FieldValue.arrayUnion(abonoData),
+                                        abonos: firebase.firestore.FieldValue.arrayUnion({
+                                            ...abonoData,
+                                            savedInIngresos: true // Bandera para evitar duplicados en historial
+                                        }),
                                         saldoPendiente: nuevoSaldo,
                                         fechaActualizacion: DateUtils.getCurrentTimestampElSalvador()
                                     }),
@@ -3956,6 +3988,15 @@
 
                             const movimientos = [];
 
+                            // Agregar Ingresos (incluyendo abonos migrados)
+                            ingresos.forEach(ingreso => {
+                                movimientos.push({
+                                    ...ingreso,
+                                    tipo: ingreso.categoria === 'abono' ? 'abono' : 'ingreso',
+                                    descripcion: ingreso.concepto || ingreso.descripcion
+                                });
+                            });
+
                             // 3. Procesar Ventas y Abonos
                             ventas.forEach(venta => {
                                 // A. Es una venta de este día?
@@ -3970,6 +4011,9 @@
                                 // B. Tiene abonos de este día?
                                 if (venta.abonos && venta.abonos.length > 0) {
                                     venta.abonos.forEach(abono => {
+                                        // Si ya se guardó en INGRESOS, ignorar para evitar duplicados
+                                        if (abono.savedInIngresos) return;
+
                                         // Verificar fecha del abono
                                         let abonoDateStr = '';
                                         if (abono.fechaString) {
@@ -4155,8 +4199,25 @@
                                         fecha: DateUtils.getCurrentTimestampElSalvador(),
                                         fechaString: DateUtils.getCurrentTimestampElSalvador().toLocaleString('es-ES'),
                                         tipo: 'abono_grupal',
+                                        grupoId: grupoId,
+                                        savedInIngresos: true // Bandera para evitar duplicados en historial
+                                    };
+
+                                    // Guardar en INGRESOS
+                                    const ingresoRef = AppState.db.collection("INGRESOS").doc();
+                                    const ingresoData = {
+                                        monto: montoAbonar,
+                                        concepto: `Abono Grupal a Factura #${factura.invoiceNumber}`,
+                                        categoria: 'abono',
+                                        timestamp: DateUtils.getCurrentTimestampElSalvador(),
+                                        date: DateUtils.getCurrentDateStringElSalvador(),
+                                        invoiceId: factura.id,
+                                        invoiceNumber: factura.invoiceNumber,
+                                        clientName: factura.clientName || 'Cliente',
+                                        equipoNumber: factura.equipoNumber || '0000',
                                         grupoId: grupoId
                                     };
+                                    batch.set(ingresoRef, ingresoData);
 
                                     const updateData = {
                                         abonos: firebase.firestore.FieldValue.arrayUnion(abonoData),
@@ -4234,8 +4295,24 @@
                                         monto: montoAbonar,
                                         fecha: DateUtils.getCurrentTimestampElSalvador(),
                                         fechaString: DateUtils.getCurrentTimestampElSalvador().toLocaleString('es-ES'),
-                                        tipo: 'abono_masivo'
+                                        tipo: 'abono_masivo',
+                                        savedInIngresos: true // Bandera para evitar duplicados en historial
                                     };
+
+                                    // Guardar en INGRESOS
+                                    const ingresoRef = AppState.db.collection("INGRESOS").doc();
+                                    const ingresoData = {
+                                        monto: montoAbonar,
+                                        concepto: `Abono Masivo a Factura #${factura.invoiceNumber}`,
+                                        categoria: 'abono',
+                                        timestamp: DateUtils.getCurrentTimestampElSalvador(),
+                                        date: DateUtils.getCurrentDateStringElSalvador(),
+                                        invoiceId: factura.id,
+                                        invoiceNumber: factura.invoiceNumber,
+                                        clientName: factura.clientName || 'Cliente',
+                                        equipoNumber: factura.equipoNumber || '0000'
+                                    };
+                                    batch.set(ingresoRef, ingresoData);
 
                                     const updateData = {
                                         abonos: firebase.firestore.FieldValue.arrayUnion(abonoData),
@@ -5310,6 +5387,12 @@
                             UIService.updatePaymentButtonsState(true);
                             UIService.showLoading(true);
 
+                            // Bloqueo explícito de botones para prevenir doble clic
+                            const contadoBtn = document.getElementById('contado-btn');
+                            const pendienteBtn = document.getElementById('pendiente-btn');
+                            if (contadoBtn) contadoBtn.disabled = true;
+                            if (pendienteBtn) pendienteBtn.disabled = true;
+
                             // Para ventas contado, procesar directamente
                             if (paymentType === 'contado') {
                                 await this.procesarVentaContado(equipo, cliente, fechaVenta, totalVenta);
@@ -5326,9 +5409,19 @@
                             UIService.showStatus("Error al procesar la venta: " + error.message, "error");
                             console.error("Error en processSale:", error);
                         } finally {
+                            // Solo desbloquear si NO se mostró el modal de confirmación (que maneja su propio flujo)
+                            // O si hubo un error. Si es pendiente y no hubo error, el modal está abierto y los botones deben seguir bloqueados o manejados por el modal.
+                            // Pero processSale retorna antes para 'pendiente', así que este finally se ejecuta.
+                            // Si es pendiente, el usuario debe interactuar con el modal. Los botones principales pueden reactivarse porque el modal es un overlay.
+
                             AppState.processingSale = false;
                             UIService.updatePaymentButtonsState(false);
                             UIService.showLoading(false);
+
+                            const contadoBtn = document.getElementById('contado-btn');
+                            const pendienteBtn = document.getElementById('pendiente-btn');
+                            if (contadoBtn) contadoBtn.disabled = false;
+                            if (pendienteBtn) pendienteBtn.disabled = false;
                         }
                     },
 
@@ -7228,19 +7321,30 @@
                         });
 
                         // Event listeners para los nuevos modales de abono inicial
-                        document.getElementById('confirmar-con-abono-btn').addEventListener('click', () => {
+                        document.getElementById('confirmar-con-abono-btn').addEventListener('click', (e) => {
+                            if (e.target.disabled) return;
+                            e.target.disabled = true;
                             const datos = AppState.datosVentaPendiente;
                             if (datos) {
                                 document.getElementById('confirmacion-abono-modal').style.display = 'none';
                                 SalesService.mostrarModalAbonoInicial(datos.equipo, datos.cliente, datos.totalVenta, datos.fechaVenta);
                             }
+                            setTimeout(() => e.target.disabled = false, 1000);
                         });
 
-                        document.getElementById('continuar-sin-abono-btn').addEventListener('click', () => {
+                        document.getElementById('continuar-sin-abono-btn').addEventListener('click', async (e) => {
+                            if (e.target.disabled) return;
+                            e.target.disabled = true;
                             const datos = AppState.datosVentaPendiente;
                             if (datos) {
                                 document.getElementById('confirmacion-abono-modal').style.display = 'none';
-                                SalesService.procesarVentaPendienteSinAbono(datos.equipo, datos.cliente, datos.fechaVenta, datos.totalVenta);
+                                try {
+                                    await SalesService.procesarVentaPendienteSinAbono(datos.equipo, datos.cliente, datos.fechaVenta, datos.totalVenta);
+                                } finally {
+                                    e.target.disabled = false;
+                                }
+                            } else {
+                                e.target.disabled = false;
                             }
                         });
 
@@ -7264,27 +7368,36 @@
                             }
                         });
 
-                        document.getElementById('procesar-venta-con-abono-btn').addEventListener('click', () => {
+                        document.getElementById('procesar-venta-con-abono-btn').addEventListener('click', async (e) => {
+                            if (e.target.disabled) return;
+                            e.target.disabled = true;
                             const montoAbono = parseFloat(document.getElementById('monto-abono-inicial').value) || 0;
                             const datos = AppState.datosVentaPendiente;
 
                             if (!datos) {
                                 UIService.showStatus("Error: No hay datos de venta disponibles", "error");
+                                e.target.disabled = false;
                                 return;
                             }
 
                             if (montoAbono <= 0) {
                                 UIService.showStatus("Ingrese un monto de abono válido", "error");
+                                e.target.disabled = false;
                                 return;
                             }
 
                             if (montoAbono > datos.totalVenta) {
                                 UIService.showStatus("El monto del abono no puede ser mayor al total de la venta", "error");
+                                e.target.disabled = false;
                                 return;
                             }
 
                             document.getElementById('abono-inicial-modal').style.display = 'none';
-                            SalesService.procesarVentaPendienteConAbono(datos.equipo, datos.cliente, datos.fechaVenta, datos.totalVenta, montoAbono);
+                            try {
+                                await SalesService.procesarVentaPendienteConAbono(datos.equipo, datos.cliente, datos.fechaVenta, datos.totalVenta, montoAbono);
+                            } finally {
+                                e.target.disabled = false;
+                            }
                         });
 
                         document.getElementById('cancelar-abono-inicial-btn').addEventListener('click', () => {
@@ -7294,6 +7407,11 @@
                         // Retiro Listeners
                         document.getElementById('process-retiro-btn').addEventListener('click', () => SalesService.processRetiro());
                         document.getElementById('close-retiro-modal').addEventListener('click', () => ModalService.closeRetiroModal());
+
+                        // Bulk Abono Modal Listener
+                        document.getElementById('close-bulk-abono-modal').addEventListener('click', () => {
+                            document.getElementById('bulk-abono-modal').style.display = 'none';
+                        });
 
                         // CORRECCIÓN 8: Cleanup al cerrar la página
                         window.addEventListener('beforeunload', () => {
