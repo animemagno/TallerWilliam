@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Gestión - Modular V2</title>
+    <link rel="stylesheet" href="src/assets/css/main.css">
+    <style>
+        /* Estilos específicos para el dashboard principal */
+        body {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 900px;
+            width: 100%;
+            text-align: center;
+        }
+
+        h1 {
+            color: #2a5298;
+            margin-bottom: 10px;
+            font-size: 2.5rem;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 40px;
+            font-size: 1.2rem;
+        }
+
+        .cards-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 25px;
+            margin-top: 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            width: 200px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .card-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            color: #2a5298;
+        }
+
+        .card-title {
+            font-size: 1.4rem;
+            margin-bottom: 10px;
+            color: #2a5298;
+            font-weight: bold;
+        }
+
+        .card-description {
+            font-size: 0.95rem;
+            color: #666;
+            line-height: 1.5;
+        }
+
+        .inventory {
+            border-top: 4px solid #4CAF50;
+        }
+
+        .registros {
+            border-top: 4px solid #17a2b8;
+        }
+
+        .sales {
+            border-top: 4px solid #FF9800;
+        }
+
+        .orders {
+            border-top: 4px solid #9C27B0;
+        }
+
+        .income {
+            border-top: 4px solid #E91E63;
+        }
+
+        footer {
+            margin-top: 40px;
+            color: white;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .cards-container {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .card {
+                width: 100%;
+                max-width: 300px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Sistema de Gestión</h1>
+        <p class="subtitle">Accede a los módulos del sistema (Versión Modular V2)</p>
+
+        <div class="cards-container">
+            <a href="inventario_v2.html" class="card inventory">
+                <div class="card-icon">📦</div>
+                <h3 class="card-title">Inventario</h3>
+                <p class="card-description">Gestiona productos, stock y categorías del inventario.</p>
+            </a>
+
+            <a href="registros_v2.html" class="card registros">
+                <div class="card-icon">📋</div>
+                <h3 class="card-title">Registros</h3>
+                <p class="card-description">Control de equipos en revisión por mecánicos.</p>
+            </a>
+
+            <a href="ventas_v2.html" class="card sales">
+                <div class="card-icon">💰</div>
+                <h3 class="card-title">Ventas</h3>
+                <p class="card-description">Consulta y administra las ventas realizadas.</p>
+            </a>
+
+            <a href="#" class="card orders" onclick="alert('Módulo de Órdenes aún no migrado a V2')">
+                <div class="card-icon">🔧</div>
+                <h3 class="card-title">Órdenes</h3>
+                <p class="card-description">Crea y gestiona órdenes de trabajo para equipos.</p>
+            </a>
+
+            <a href="control_entrega_v2.html" class="card income">
+                <div class="card-icon">🏍️</div>
+                <h3 class="card-title">Ingresos</h3>
+                <p class="card-description">Control de ingresos de mototaxis y clientes.</p>
+            </a>
+        </div>
+    </div>
+
+    <footer>
+        <p>Sistema de Gestión &copy; 2023 - Versión Modular</p>
+    </footer>
+</body>
+
+</html>

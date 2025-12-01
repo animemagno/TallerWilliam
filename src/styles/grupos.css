@@ -1,0 +1,304 @@
+/* Estilos para Gestión de Grupos */
+
+.grupos-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-top: 15px;
+    overflow-y: auto;
+    flex: 1;
+    min-height: 0;
+    padding-right: 5px;
+}
+
+.grupo-card {
+    background: white;
+    border: 2px solid #3498db;
+    border-radius: 8px;
+    padding: 12px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.grupo-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    border-color: #2980b9;
+}
+
+.grupo-header {
+    text-align: center;
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #ddd;
+    position: relative;
+}
+
+.grupo-name {
+    font-size: 1rem;
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+.grupo-equipos-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 6px;
+    margin-bottom: 8px;
+}
+
+.grupo-equipo-item {
+    background: #f8f9fa;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    padding: 5px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.75rem;
+}
+
+.grupo-equipo-item:hover {
+    background: #e8f4fd;
+    border-color: #3498db;
+}
+
+.grupo-equipo-number {
+    font-size: 0.8rem;
+    font-weight: bold;
+    color: #2c3e50;
+    margin-bottom: 2px;
+}
+
+.grupo-equipo-total {
+    font-size: 0.7rem;
+    font-weight: bold;
+    color: #27ae60;
+}
+
+.grupo-total {
+    text-align: center;
+    font-weight: bold;
+    font-size: 0.9rem;
+    color: #2c3e50;
+    padding: 6px;
+    background: #e8f4fd;
+    border-radius: 4px;
+    border-top: 2px solid #3498db;
+    margin-top: 8px;
+}
+
+/* Botones de acción de grupos */
+.grupo-actions {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    display: flex;
+    gap: 4px;
+    opacity: 1;
+    transition: opacity 0.3s ease;
+    z-index: 10;
+}
+
+.grupo-card:hover .grupo-actions {
+    opacity: 1;
+}
+
+.grupo-action-btn {
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.7rem;
+}
+
+.grupo-action-btn:hover {
+    transform: scale(1.1);
+}
+
+.btn-edit-grupo {
+    color: #27ae60;
+    border-color: #27ae60;
+}
+
+.btn-edit-grupo:hover {
+    background: #27ae60;
+    color: white;
+}
+
+.btn-delete-grupo {
+    color: #e74c3c;
+    border-color: #e74c3c;
+}
+
+.btn-delete-grupo:hover {
+    background: #e74c3c;
+    color: white;
+}
+
+.btn-detalle-grupo {
+    color: #3498db;
+    border-color: #3498db;
+}
+
+.btn-detalle-grupo:hover {
+    background: #3498db;
+    color: white;
+}
+
+/* Estilos para gestión de grupos */
+.grupos-management {
+    padding: 15px;
+}
+
+.grupos-actions {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.grupos-list {
+    max-height: 400px;
+    overflow-y: auto;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    padding: 10px;
+    background: #f8f9fa;
+}
+
+.grupo-management-item {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 15px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.grupo-management-info {
+    flex: 1;
+}
+
+.grupo-management-name {
+    font-weight: bold;
+    font-size: 1rem;
+    color: #2c3e50;
+    margin-bottom: 5px;
+}
+
+.grupo-management-details {
+    font-size: 0.8rem;
+    color: #666;
+}
+
+.grupo-management-actions {
+    display: flex;
+    gap: 5px;
+}
+
+/* Grid de selección de equipos */
+.all-equipos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 8px;
+    padding: 12px;
+    max-height: 350px;
+    overflow-y: auto;
+    background: #f8f9fa;
+    border-radius: 6px;
+    border: 1px solid #e0e0e0;
+}
+
+.all-equipo-item {
+    background: white;
+    border: 2px solid #ddd;
+    border-radius: 6px;
+    padding: 8px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.85rem;
+    font-weight: bold;
+}
+
+.all-equipo-item:hover {
+    background: #e8f4fd;
+    border-color: #3498db;
+}
+
+.all-equipo-item.selected {
+    background: #3498db;
+    color: white;
+    border-color: #2980b9;
+}
+
+.all-equipo-item.equipo-en-grupo {
+    background: #f8d7da;
+    border-color: #e74c3c;
+    color: #721c24;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.all-equipo-item.has-facturas {
+    border-color: #27ae60;
+    background: #f0fff0;
+}
+
+.selected-equipo-badge {
+    display: inline-block;
+    background: #3498db;
+    color: white;
+    padding: 3px 8px;
+    border-radius: 12px;
+    margin: 3px;
+    font-size: 0.75rem;
+    font-weight: bold;
+}
+
+/* Detalles de equipos y grupos */
+.detalle-equipo {
+    background: #f8f9fa;
+    padding: 12px;
+    border-radius: 6px;
+    margin: 8px 0;
+    font-size: 0.9rem;
+}
+
+.grupo-facturas {
+    margin-top: 8px;
+}
+
+.grupo-detalle-equipo {
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    padding: 12px;
+    margin: 10px 0;
+}
+
+.grupo-detalle-factura {
+    background: #f8f9fa;
+    padding: 10px;
+    border-radius: 4px;
+    margin: 8px 0;
+    border-left: 3px solid #3498db;
+}
+
+.grupo-resumen {
+    background: #e8f4fd;
+    padding: 15px;
+    border-radius: 6px;
+    margin-bottom: 15px;
+    font-size: 0.9rem;
+}

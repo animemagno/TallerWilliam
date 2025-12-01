@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Equipos - Modular V2</title>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Estilos Modulares -->
+    <link rel="stylesheet" href="src/assets/css/main.css">
+    <style>
+        /* Estilos específicos de registros */
+        .registros-list {
+            margin-top: 20px;
+        }
+
+        .registro-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+            background-color: white;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .registro-info {
+            flex: 1;
+        }
+
+        .registro-mecanico {
+            font-weight: bold;
+            color: #2a5298;
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+
+        .registro-equipo {
+            color: #27ae60;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .registro-fecha {
+            color: #666;
+            font-size: 12px;
+        }
+
+        .filtros {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .filtro-group {
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .imprimir-btn {
+            background-color: #9b59b6;
+            color: white;
+        }
+
+        .imprimir-btn:hover {
+            background-color: #8e44ad;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="status" id="status-message"></div>
+    <div class="loading-overlay" id="loading-overlay">
+        <div style="text-align: center;">
+            <i class="fas fa-spinner fa-spin" style="font-size: 3rem; margin-bottom: 15px;"></i>
+            <div>Cargando Registros Modular...</div>
+        </div>
+    </div>
+
+    <div class="container">
+        <header>
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0 15px;">
+                <h1>Registro de Equipos (V2)</h1>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <div class="filtros">
+                <div class="filtro-group">
+                    <label for="filtro-fecha">Filtrar por fecha:</label>
+                    <input type="date" id="filtro-fecha">
+                </div>
+
+                <div class="filtro-group">
+                    <label for="filtro-mecanico">Filtrar por mecánico:</label>
+                    <select id="filtro-mecanico">
+                        <option value="">Todos los mecánicos</option>
+                    </select>
+                </div>
+            </div>
+
+            <button class="btn btn-primary" id="agregar-registro">Agregar Nuevo Registro</button>
+            <button class="btn btn-warning" id="gestionar-mecanicos">Gestionar Mecánicos</button>
+            <button class="btn imprimir-btn" id="imprimir-registros">Imprimir Registros del Día</button>
+
+            <div class="registros-list" id="lista-registros">
+                <div style="text-align: center; padding: 20px;">Cargando registros...</div>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 20px;">
+            <a href="index_v2.html" class="btn btn-info">Volver al Menú Principal</a>
+        </div>
+    </div>
+
+    <!-- Punto de Entrada Modular -->
+    <script type="module" src="src/main.js"></script>
+</body>
+
+</html>

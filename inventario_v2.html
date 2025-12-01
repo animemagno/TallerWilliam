@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventario Taller Wilian - Modular V2</title>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+
+    <!-- Librerías Externas -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Estilos Modulares -->
+    <link rel="stylesheet" href="src/assets/css/main.css">
+    <style>
+        /* Estilos específicos de inventario que no están en main.css */
+        .inventory-list {
+            background-color: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .list-header {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr 1fr 0.8fr 0.8fr 0.8fr 0.8fr 1fr;
+            padding: 10px 12px;
+            background-color: #2c3e50;
+            color: white;
+            font-weight: bold;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 0.85rem;
+        }
+
+        .list-item {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr 1fr 0.8fr 0.8fr 0.8fr 0.8fr 1fr;
+            padding: 8px 12px;
+            border-bottom: 1px solid #e2e8f0;
+            align-items: center;
+            min-height: 45px;
+        }
+
+        .list-item:hover {
+            background-color: #f7fafc;
+        }
+
+        .low-stock-row {
+            background-color: rgba(229, 62, 62, 0.15) !important;
+        }
+
+        .controls {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 280px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="status" id="status-message"></div>
+    <div class="loading-overlay" id="loading-overlay">
+        <div style="text-align: center;">
+            <i class="fas fa-spinner fa-spin" style="font-size: 3rem; margin-bottom: 15px;"></i>
+            <div>Cargando Inventario Modular...</div>
+        </div>
+    </div>
+
+    <div class="container">
+        <header>
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0 15px;">
+                <h1>Inventario Taller Wilian (V2)</h1>
+                <div class="header-info">
+                    <span>Total: <span id="total-products">0</span></span>
+                </div>
+            </div>
+        </header>
+
+        <div class="controls">
+            <div class="search-box">
+                <input type="text" id="search-input" placeholder="Buscar producto...">
+            </div>
+            <button class="btn btn-primary" id="add-product-btn">Agregar Producto</button>
+            <button class="btn btn-success" id="order-btn">Ingresar Pedido</button>
+            <button class="btn btn-info" id="export-excel-btn">Exportar Excel</button>
+        </div>
+
+        <div class="inventory-list">
+            <div class="list-header">
+                <div>Código</div>
+                <div>Descripción</div>
+                <div>Descripción Taller</div>
+                <div>Marca</div>
+                <div>Stock</div>
+                <div>Precio Unidad</div>
+                <div>Precio Venta</div>
+                <div>Acciones</div>
+            </div>
+            <div id="inventory-body">
+                <div style="text-align: center; padding: 20px;">Cargando inventario...</div>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 20px;">
+            <a href="index_v2.html" class="btn btn-info">Volver al Menú Principal</a>
+        </div>
+    </div>
+
+    <!-- Punto de Entrada Modular -->
+    <script type="module" src="src/main.js"></script>
+</body>
+
+</html>
