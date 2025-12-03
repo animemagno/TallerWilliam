@@ -3689,7 +3689,7 @@
                                 // 1. Guardar en colección INGRESOS para que aparezca en historial y caja del día
                                 const ingresoData = {
                                     monto: abonoData.monto,
-                                    concepto: `Abono a Factura #${venta.invoiceNumber}`,
+                                    concepto: `Abono a EQUIPO ${venta.equipoNumber || '0000'}`,
                                     categoria: 'abono',
                                     timestamp: abonoData.fecha || DateUtils.getCurrentTimestampElSalvador(),
                                     date: abonoDateString,
@@ -3949,7 +3949,7 @@
                             const allMovements = [
                                 ...ventas.map(v => ({ ...v, tipo: 'venta' })),
                                 ...retiros.map(r => ({ ...r, tipo: 'retiro' })),
-                                ...ingresos.map(i => ({ ...i, tipo: 'ingreso' }))
+                                ...ingresos.map(i => ({ ...i, tipo: i.categoria === 'abono' ? 'abono' : 'ingreso' }))
                             ];
 
                             return allMovements.sort((a, b) => {
@@ -4029,7 +4029,7 @@
                                                 clientName: venta.clientName || venta.equipoNumber, // Mostrar grupo o equipo
                                                 equipoNumber: venta.equipoNumber,
                                                 timestamp: abono.fecha || new Date(),
-                                                descripcion: `Abono a Factura #${venta.invoiceNumber}`
+                                                descripcion: `Abono a EQUIPO ${venta.equipoNumber || '0000'}`
                                             });
                                         }
                                     });
@@ -4201,7 +4201,7 @@
                                     const ingresoRef = AppState.db.collection("INGRESOS").doc();
                                     const ingresoData = {
                                         monto: montoAbonar,
-                                        concepto: `Abono Grupal a Factura #${factura.invoiceNumber}`,
+                                        concepto: `Abono Grupal a EQUIPO ${factura.equipoNumber || '0000'}`,
                                         categoria: 'abono',
                                         timestamp: DateUtils.getCurrentTimestampElSalvador(),
                                         date: DateUtils.getCurrentDateStringElSalvador(),
@@ -4833,7 +4833,7 @@
                                 <td><strong>ABO-${movimiento.id.substring(0, 6)}</strong></td>
                                 <td>
                                     <div class="cliente-equipo">${movimiento.equipoNumber || '-'}</div>
-                                    <div class="cliente-nombre">${movimiento.clientName || 'Cliente'}</div>
+                                    <div class="cliente-nombre">Abono a EQUIPO ${movimiento.equipoNumber || 'X'}</div>
                                     <div style="font-size: 0.75rem; color: #7f8c8d;">Fac. #${movimiento.invoiceNumber}</div>
                                 </td>
                                 <td>
