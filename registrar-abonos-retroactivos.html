@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrar Abonos en Historial - Taller William</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 28px;
+            text-align: center;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .info-box {
+            background: #e8f4f8;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            font-size: 14px;
+            color: #2c3e50;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #34495e;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        input[type="number"],
+        input[type="date"],
+        textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        input:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .help-text {
+            font-size: 12px;
+            color: #95a5a6;
+            margin-top: 5px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .status-message {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .status-message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            display: block;
+        }
+
+        .status-message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            display: block;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .preview {
+            background: #f8f9fa;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .preview.show {
+            display: block;
+        }
+
+        .preview h3 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .preview-item {
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+            margin: 5px 0;
+            display: flex;
+            justify-content: space-between;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>📝 Registrar Abonos en Historial</h1>
+        <p class="subtitle">Crea registros de abonos para que aparezcan en el historial</p>
+
+        <div class="info-box">
+            <strong>💡 Uso:</strong><br>
+            Ingresa los equipos, el monto del abono y la fecha. Se creará un registro por cada equipo que aparecerá en
+            el historial como ABONO.
+        </div>
+
+        <form id="abono-form">
+            <div class="form-group">
+                <label for="equipos">Números de Equipos:</label>
+                <textarea id="equipos"
+                    placeholder="Ingresa los números de equipo&#10;Ejemplo:&#10;58&#10;95&#10;&#10;O separados por comas: 58, 95"
+                    required></textarea>
+                <div class="help-text">Separa por líneas o comas. Se creará un abono para cada equipo.</div>
+            </div>
+
+            <div class="form-group">
+                <label for="monto">Monto del Abono:</label>
+                <input type="number" id="monto" step="0.01" min="0.01" placeholder="366.50" required>
+                <div class="help-text">Este monto se aplicará a CADA equipo</div>
+            </div>
+
+            <div class="form-group">
+                <label for="fecha">Fecha del Abono:</label>
+                <input type="date" id="fecha" required>
+                <div class="help-text">Por defecto: hoy. Cambia si fue en otra fecha.</div>
+            </div>
+
+            <button type="submit" class="btn" id="submit-btn">
+                ✅ Crear Registros de Abono
+            </button>
+        </form>
+
+        <div class="preview" id="preview">
+            <h3>Vista previa:</h3>
+            <div id="preview-content"></div>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p style="margin-top: 10px; color: #667eea;">Creando registros...</p>
+        </div>
+
+        <div class="status-message" id="status"></div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDh074AarXaYCc-Htw-lsCeIc_95QQNSnY",
+            authDomain: "tallerwilliam-732b3.firebaseapp.com",
+            projectId: "tallerwilliam-732b3",
+            storageBucket: "tallerwilliam-732b3.firebasestorage.app",
+            messagingSenderId: "822262666247",
+            appId: "1:822262666247:web:6680487bbf1108006b86a2"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // Establecer fecha de hoy por defecto
+        document.getElementById('fecha').valueAsDate = new Date();
+
+        function showStatus(message, type = 'success') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = message;
+            statusDiv.className = 'status-message ' + type;
+        }
+
+        function parseEquipoNumbers(text) {
+            return text
+                .split(/[\n,]+/)
+                .map(num => num.trim())
+                .filter(num => num.length > 0);
+        }
+
+        // Preview en tiempo real
+        document.getElementById('equipos').addEventListener('input', updatePreview);
+        document.getElementById('monto').addEventListener('input', updatePreview);
+
+        function updatePreview() {
+            const equiposText = document.getElementById('equipos').value;
+            const monto = parseFloat(document.getElementById('monto').value) || 0;
+            const equipos = parseEquipoNumbers(equiposText);
+
+            const previewDiv = document.getElementById('preview');
+            const contentDiv = document.getElementById('preview-content');
+
+            if (equipos.length === 0 || monto === 0) {
+                previewDiv.classList.remove('show');
+                return;
+            }
+
+            let html = '';
+            equipos.forEach(equipo => {
+                html += `
+                    <div class="preview-item">
+                        <span>Equipo ${equipo}</span>
+                        <span style="color: #27ae60; font-weight: 600;">$${monto.toFixed(2)}</span>
+                    </div>
+                `;
+            });
+
+            html += `
+                <div style="margin-top: 10px; padding-top: 10px; border-top: 2px solid #e0e0e0; font-weight: 600;">
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>Total (${equipos.length} equipo${equipos.length > 1 ? 's' : ''}):</span>
+                        <span style="color: #667eea;">$${(monto * equipos.length).toFixed(2)}</span>
+                    </div>
+                </div>
+            `;
+
+            contentDiv.innerHTML = html;
+            previewDiv.classList.add('show');
+        }
+
+        // Procesar formulario
+        document.getElementById('abono-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const equiposText = document.getElementById('equipos').value;
+            const monto = parseFloat(document.getElementById('monto').value);
+            const fechaInput = document.getElementById('fecha').value;
+
+            const equipos = parseEquipoNumbers(equiposText);
+
+            if (equipos.length === 0) {
+                showStatus('❌ Debes ingresar al menos un número de equipo', 'error');
+                return;
+            }
+
+            if (!monto || monto <= 0) {
+                showStatus('❌ El monto debe ser mayor a 0', 'error');
+                return;
+            }
+
+            if (!fechaInput) {
+                showStatus('❌ Debes seleccionar una fecha', 'error');
+                return;
+            }
+
+            try {
+                document.getElementById('loading').classList.add('active');
+                document.getElementById('submit-btn').disabled = true;
+                document.getElementById('status').className = 'status-message';
+
+                const fechaAbono = new Date(fechaInput + 'T12:00:00');
+                const batch = db.batch();
+                const registrosCreados = [];
+
+                // Crear un registro de abono para cada equipo
+                for (const equipoNum of equipos) {
+                    const ingresoRef = db.collection("INGRESOS").doc();
+                    const ingresoData = {
+                        monto: monto,
+                        concepto: `Abono a EQUIPO ${equipoNum}`,
+                        categoria: 'abono',
+                        timestamp: fechaAbono,
+                        date: fechaInput,
+                        equipoNumber: equipoNum,
+                        clientName: `Equipo ${equipoNum}`
+                    };
+
+                    batch.set(ingresoRef, ingresoData);
+                    registrosCreados.push({
+                        equipo: equipoNum,
+                        monto: monto
+                    });
+                }
+
+                await batch.commit();
+
+                document.getElementById('loading').classList.remove('active');
+                document.getElementById('submit-btn').disabled = false;
+
+                let detalles = '<br><br><strong>Registros creados:</strong><br><br>';
+                registrosCreados.forEach(r => {
+                    detalles += `✅ Equipo ${r.equipo}: $${r.monto.toFixed(2)}<br>`;
+                });
+                detalles += `<br><strong>Fecha:</strong> ${new Date(fechaInput).toLocaleDateString('es-ES')}<br>`;
+                detalles += `<strong>Total registrado:</strong> $${(monto * registrosCreados.length).toFixed(2)}`;
+
+                showStatus(
+                    `¡Éxito! Se crearon ${registrosCreados.length} registro(s) de abono en el historial.${detalles}`,
+                    'success'
+                );
+
+                // Limpiar formulario
+                document.getElementById('equipos').value = '';
+                document.getElementById('monto').value = '';
+                document.getElementById('preview').classList.remove('show');
+
+            } catch (error) {
+                console.error('Error:', error);
+                showStatus('❌ Error al crear registros: ' + error.message, 'error');
+                document.getElementById('loading').classList.remove('active');
+                document.getElementById('submit-btn').disabled = false;
+            }
+        });
+    </script>
+</body>
+
+</html>

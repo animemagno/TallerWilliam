@@ -3730,6 +3730,71 @@
                         }, "Registrar abono");
                     },
 
+                    async deleteAbono(abonoId, invoiceId) {
+                        return await ConcurrencyManager.withLock(async () => {
+                            if (AppState.firebaseInitialized) {
+                                // 1. Obtener el ingreso (abono) para saber el monto
+                                const ingresoDoc = await AppState.db.collection("INGRESOS").doc(abonoId).get();
+                                if (!ingresoDoc.exists) {
+                                    throw new Error("No se encontró el abono");
+                                }
+
+                                const ingresoData = ingresoDoc.data();
+                                const montoAbono = ingresoData.monto;
+                                const facturaId = ingresoData.invoiceId || invoiceId;
+
+                                // 2. Verificar si la venta existe y actualizarla solo si existe
+                                if (facturaId) {
+                                    const ventaRef = AppState.db.collection("VENTAS").doc(facturaId);
+                                    const ventaDoc = await ventaRef.get();
+
+                                    if (ventaDoc.exists) {
+                                        const venta = ventaDoc.data();
+
+                                        // 3. Calcular el nuevo saldo (aumentar porque estamos eliminando el abono)
+                                        const saldoActual = venta.saldoPendiente !== undefined ? venta.saldoPendiente : 0;
+                                        const nuevoSaldo = saldoActual + montoAbono;
+
+                                        // 4. Eliminar el abono del array de abonos en la venta
+                                        const nuevosAbonos = (venta.abonos || []).filter(abono => {
+                                            // Filtrar por fecha y monto para identificar el abono correcto
+                                            const abonoFecha = abono.fechaString || '';
+                                            const ingresoFecha = ingresoData.timestamp ?
+                                                new Date(ingresoData.timestamp.toDate ? ingresoData.timestamp.toDate() : ingresoData.timestamp).toLocaleString('es-ES') : '';
+                                            return !(abono.monto === montoAbono && abonoFecha === ingresoFecha);
+                                        });
+
+                                        // 5. Actualizar la venta
+                                        await ErrorHandler.withRetry(
+                                            () => ventaRef.update({
+                                                abonos: nuevosAbonos,
+                                                saldoPendiente: nuevoSaldo,
+                                                paymentType: nuevoSaldo > 0 ? 'pendiente' : 'contado',
+                                                status: nuevoSaldo > 0 ? 'pendiente' : 'pagado',
+                                                fechaActualizacion: DateUtils.getCurrentTimestampElSalvador()
+                                            }),
+                                            3,
+                                            "Actualización de venta al eliminar abono"
+                                        );
+
+                                        // 7. Actualizar grupos si aplica
+                                        await GrupoManager.actualizarDesdeVenta({ ...venta, id: facturaId });
+                                    }
+                                }
+
+                                // 6. Eliminar el ingreso (siempre, incluso si la factura no existe)
+                                await ErrorHandler.withRetry(
+                                    () => AppState.db.collection("INGRESOS").doc(abonoId).delete(),
+                                    3,
+                                    "Eliminación de abono"
+                                );
+
+                            } else {
+                                throw new Error("No hay conexión a la base de datos");
+                            }
+                        }, "Eliminar abono");
+                    },
+
                     async getSaleById(invoiceId) {
                         try {
                             if (AppState.firebaseInitialized) {
@@ -4845,6 +4910,9 @@
                                     <div class="action-buttons historial-actions-container">
                                         <button class="icon-btn btn-view" onclick="SalesService.viewInvoice('${movimiento.invoiceNumber}')" title="Ver factura origen">
                                             <i class="fas fa-file-invoice"></i>
+                                        </button>
+                                        <button class="icon-btn btn-delete" onclick="SalesService.deleteAbono('${movimiento.id}', '${movimiento.invoiceId || ''}')" title="Eliminar abono">
+                                            <i class="fas fa-trash"></i>
                                         </button>
                                     </div>
                                 </td>
@@ -6206,6 +6274,21 @@
 
                         } catch (error) {
                             UIService.showStatus("Error al procesar abono: " + error.message, "error");
+                        } finally {
+                            UIService.showLoading(false);
+                        }
+                    },
+
+                    async deleteAbono(abonoId, invoiceId) {
+                        if (!confirm("¿Está seguro de eliminar este abono? El saldo de la factura aumentará.")) return;
+
+                        try {
+                            UIService.showLoading(true);
+                            await DataService.deleteAbono(abonoId, invoiceId);
+                            UIService.showStatus("Abono eliminado correctamente", "success");
+                            await this.loadHistorial();
+                        } catch (error) {
+                            UIService.showStatus("Error al eliminar abono: " + error.message, "error");
                         } finally {
                             UIService.showLoading(false);
                         }
