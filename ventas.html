@@ -2336,7 +2336,7 @@
 
                             // Actualizar las facturas con la información del grupo
                             for (const equipoNum of equiposConFacturas) {
-                                this.equiposPendientes.forEach(async (equipo, key) => {
+                                for (const [key, equipo] of this.equiposPendientes.entries()) {
                                     if (equipo.numero === equipoNum) {
                                         for (const factura of equipo.facturas) {
                                             try {
@@ -2349,7 +2349,7 @@
                                             }
                                         }
                                     }
-                                });
+                                }
                             }
 
                             await this.loadEquiposPendientes();
@@ -2408,7 +2408,7 @@
 
                             // Actualizar facturas con el nuevo grupo
                             for (const equipoNum of equiposConFacturas) {
-                                this.equiposPendientes.forEach(async (equipo, key) => {
+                                for (const [key, equipo] of this.equiposPendientes.entries()) {
                                     if (equipo.numero === equipoNum) {
                                         for (const factura of equipo.facturas) {
                                             try {
@@ -2421,7 +2421,7 @@
                                             }
                                         }
                                     }
-                                });
+                                }
                             }
 
                             // Remover grupo de facturas que ya no están en el grupo
@@ -2429,7 +2429,7 @@
                             if (grupoOriginal) {
                                 for (const equipoNum of grupoOriginal.equipos) {
                                     if (!equiposConFacturas.includes(equipoNum)) {
-                                        this.equiposPendientes.forEach(async (equipo, key) => {
+                                        for (const [key, equipo] of this.equiposPendientes.entries()) {
                                             if (equipo.numero === equipoNum) {
                                                 for (const factura of equipo.facturas) {
                                                     try {
@@ -2445,7 +2445,7 @@
                                                     }
                                                 }
                                             }
-                                        });
+                                        }
                                     }
                                 }
                             }
@@ -2470,7 +2470,7 @@
                             const grupo = this.grupos.get(grupoId);
                             if (grupo) {
                                 for (const equipoNum of grupo.equipos) {
-                                    this.equiposPendientes.forEach(async (equipo, key) => {
+                                    for (const [key, equipo] of this.equiposPendientes.entries()) {
                                         if (equipo.numero === equipoNum) {
                                             for (const factura of equipo.facturas) {
                                                 try {
@@ -2486,7 +2486,7 @@
                                                 }
                                             }
                                         }
-                                    });
+                                    }
                                 }
                             }
 
@@ -6201,15 +6201,8 @@
 
                             ModalService.closeAbonoModal();
 
-                            const ventaActualizada = await DataService.getSaleById(venta.id);
-                            if (ventaActualizada) {
-                                const indexHistorial = AppState.historial.findIndex(v => v.id === venta.id);
-                                if (indexHistorial !== -1) {
-                                    AppState.historial[indexHistorial] = { ...ventaActualizada, tipo: 'venta' };
-                                }
-
-                                UIService.updateHistorial(AppState.historial);
-                            }
+                            // Recargar historial completo para mostrar el nuevo abono
+                            await this.loadHistorial();
 
                         } catch (error) {
                             UIService.showStatus("Error al procesar abono: " + error.message, "error");
