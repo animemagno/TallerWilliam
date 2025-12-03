@@ -889,6 +889,7 @@
             gap: 4px;
             opacity: 0;
             transition: opacity 0.3s ease;
+            z-index: 10;
         }
 
         .grupo-card:hover .grupo-actions {
@@ -2134,6 +2135,7 @@
                             .where("status", "==", "pendiente")
                             .onSnapshot(async (snapshot) => {
                                 await this.loadEquiposPendientes(true); // Force update
+                                await this.actualizarTotalesGrupos(true); // Force update totals
                                 this.updateUI();
                             }, (error) => {
                                 console.error("Error en listener tiempo real:", error);
@@ -2176,33 +2178,25 @@
                             let updatesCount = 0;
 
                             for (const [grupoId, grupo] of this.grupos.entries()) {
-                                const cacheKey = `${grupoId}-${grupo.equipos.join('-')}`;
-                                const cachedTotal = this.totalesCache.get(cacheKey);
-
+                                // CORRECCIÓN: Siempre recalcular el total desde equiposPendientes
+                                // No usar caché porque los saldos cambian con abonos
                                 let nuevoTotal = 0;
-                                let needsUpdate = false;
 
-                                // Calcular total solo si no está en cache o si los equipos cambiaron
-                                if (!cachedTotal) {
-                                    for (const equipoNum of grupo.equipos) {
-                                        let equipoEncontrado = null;
-                                        this.equiposPendientes.forEach((equipo, key) => {
-                                            if (equipo.numero === equipoNum && equipo.total > 0) {
-                                                equipoEncontrado = equipo;
-                                            }
-                                        });
-
-                                        if (equipoEncontrado) {
-                                            nuevoTotal += equipoEncontrado.total;
+                                for (const equipoNum of grupo.equipos) {
+                                    let equipoEncontrado = null;
+                                    this.equiposPendientes.forEach((equipo, key) => {
+                                        if (equipo.numero === equipoNum && equipo.total > 0) {
+                                            equipoEncontrado = equipo;
                                         }
+                                    });
+
+                                    if (equipoEncontrado) {
+                                        nuevoTotal += equipoEncontrado.total;
                                     }
-                                    this.totalesCache.set(cacheKey, nuevoTotal);
-                                    needsUpdate = true;
-                                } else {
-                                    nuevoTotal = cachedTotal;
                                 }
 
-                                if (grupo.total !== nuevoTotal && needsUpdate) {
+                                // Actualizar si hay diferencia
+                                if (grupo.total !== nuevoTotal) {
                                     grupo.total = nuevoTotal;
 
                                     if (AppState.firebaseInitialized) {
@@ -2232,7 +2226,6 @@
                             }
 
                             this.lastUpdateTime = now;
-                            MemoryManager.cleanupIfNeeded(this.totalesCache);
 
                         } catch (error) {
                             console.error("Error actualizando totales de grupos:", error);
@@ -6322,6 +6315,40 @@
 
                         } catch (error) {
                             UIService.showStatus("Error al procesar ingreso: " + error.message, "error");
+                        } finally {
+                            UIService.showLoading(false);
+                        }
+                    },
+
+                    async processGroupAbono(grupoId, montoTotal) {
+                        try {
+                            UIService.showLoading(true);
+                            const facturasAfectadas = await DataService.processGroupAbono(grupoId, montoTotal);
+
+                            // Recargar datos
+                            await this.loadHistorial();
+
+                            return facturasAfectadas;
+                        } catch (error) {
+                            console.error("Error en processGroupAbono:", error);
+                            throw error;
+                        } finally {
+                            UIService.showLoading(false);
+                        }
+                    },
+
+                    async processMultiAbono(facturasIds, montoTotal) {
+                        try {
+                            UIService.showLoading(true);
+                            const facturasAfectadas = await DataService.processMultiAbono(facturasIds, montoTotal);
+
+                            // Recargar datos
+                            await this.loadHistorial();
+
+                            return facturasAfectadas;
+                        } catch (error) {
+                            console.error("Error en processMultiAbono:", error);
+                            throw error;
                         } finally {
                             UIService.showLoading(false);
                         }
