@@ -4031,167 +4031,56 @@
                                 return dateB - dateA;
                             }).slice(0, limit);
                         } catch (error) {
-                            console.error("Error cargando todos los movimientos:", error);
-                            return [];
+                            throw new Error("Ingrese un nombre de producto para buscar");
                         }
-                    },
 
-                    async getDailyCashFlow(dateString) {
-                        try {
-                            // 1. Cargar Retiros e Ingresos del día
-                            const [retiros, ingresos] = await Promise.all([
-                                this.loadRetirosByDate(dateString),
-                                this.loadIngresosByDate(dateString)
-                            ]);
+                        const searchTerm = productName.trim().toLowerCase();
 
-                            // 2. Cargar Ventas recientes (para buscar abonos y ventas del día)
-                            // Cargamos suficientes para encontrar abonos recientes en facturas viejas
-                            const ventasSnapshot = await AppState.db.collection("VENTAS")
-                                .orderBy("timestamp", "desc")
-                                .limit(1000)
-                                .get();
+                        // Cargar ventas en el rango de fechas (sin orderBy para evitar índice compuesto)
+                        const ventasSnapshot = await AppState.db.collection("VENTAS")
+                            .where("date", ">=", startDate)
+                            .where("date", "<=", endDate)
+                            .get();
 
-                            const ventas = ventasSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                        let ventas = ventasSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-                            const movimientos = [];
-
-                            // Agregar Ingresos (incluyendo abonos migrados)
-                            ingresos.forEach(ingreso => {
-                                movimientos.push({
-                                    ...ingreso,
-                                    tipo: ingreso.categoria === 'abono' ? 'abono' : 'ingreso',
-                                    descripcion: ingreso.concepto || ingreso.descripcion
-                                });
-                            });
-
-                            // 3. Procesar Ventas y Abonos
-                            ventas.forEach(venta => {
-                                // A. Es una venta de este día?
-                                if (venta.date === dateString) {
-                                    movimientos.push({
-                                        ...venta,
-                                        tipo: 'venta',
-                                        montoReal: venta.total // Para el flujo de caja, si es contado cuenta todo, si es crédito cuenta 0 (se suman los abonos)
-                                    });
-                                }
-
-                                // B. Tiene abonos de este día?
-                                if (venta.abonos && venta.abonos.length > 0) {
-                                    venta.abonos.forEach(abono => {
-                                        // Si ya se guardó en INGRESOS, ignorar para evitar duplicados
-                                        if (abono.savedInIngresos) return;
-
-                                        // Verificar fecha del abono
-                                        let abonoDateStr = '';
-                                        if (abono.fechaString) {
-                                            abonoDateStr = abono.fechaString.split(',')[0].trim(); // "dd/mm/yyyy, hh:mm:ss" -> "dd/mm/yyyy"
-                                            // Convertir a formato YYYY-MM-DD para comparar
-                                            const parts = abonoDateStr.split('/');
-                                            if (parts.length === 3) abonoDateStr = `${parts[2]}-${parts[1]}-${parts[0]}`;
-                                        } else if (abono.fecha) {
-                                            const abonoDate = abono.fecha.toDate ? abono.fecha.toDate() : new Date(abono.fecha);
-                                            abonoDateStr = abonoDate.toISOString().split('T')[0];
-                                        }
-
-                                        if (abonoDateStr === dateString) {
-                                            movimientos.push({
-                                                id: venta.id + '_abono_' + Math.random().toString(36).substr(2, 9),
-                                                tipo: 'abono',
-                                                monto: abono.monto,
-                                                invoiceNumber: venta.invoiceNumber,
-                                                clientName: venta.clientName || venta.equipoNumber, // Mostrar grupo o equipo
-                                                equipoNumber: venta.equipoNumber,
-                                                timestamp: abono.fecha || new Date(),
-                                                descripcion: `Abono a EQUIPO ${venta.equipoNumber || '0000'}`
-                                            });
-                                        }
-                                    });
-                                }
-                            });
-
-                            // 4. Agregar Retiros
-                            retiros.forEach(retiro => {
-                                movimientos.push({
-                                    ...retiro,
-                                    tipo: 'retiro',
-                                    monto: retiro.monto * -1 // Negativo para flujo
-                                });
-                            });
-
-                            // 5. Agregar Ingresos
-                            ingresos.forEach(ingreso => {
-                                movimientos.push({
-                                    ...ingreso,
-                                    tipo: 'ingreso'
-                                });
-                            });
-
-                            // 6. Ordenar por hora
-                            return movimientos.sort((a, b) => {
-                                const dateA = a.timestamp?.toDate ? a.timestamp.toDate() : new Date(a.timestamp);
-                                const dateB = b.timestamp?.toDate ? b.timestamp.toDate() : new Date(b.timestamp);
-                                return dateB - dateA;
-                            });
-
-                        } catch (error) {
-                            console.error("Error al obtener flujo de caja diario:", error);
-                            throw error;
-                        }
-                    },
-
-                    async searchProductInHistory(productName, startDate, endDate) {
-                        try {
-                            if (!productName || productName.trim() === '') {
-                                throw new Error("Ingrese un nombre de producto para buscar");
+                        // Ordenar client-side
+                        ventas.sort((a, b) => {
+                            // Primero por fecha (desc)
+                            if (a.date !== b.date) {
+                                return b.date.localeCompare(a.date);
                             }
+                            // Luego por timestamp (desc)
+                            const timeA = a.timestamp?.toDate ? a.timestamp.toDate() : new Date(a.timestamp);
+                            const timeB = b.timestamp?.toDate ? b.timestamp.toDate() : new Date(b.timestamp);
+                            return timeB - timeA;
+                        });
 
-                            const searchTerm = productName.trim().toLowerCase();
+                        // Filtrar ventas que contengan el producto buscado
+                        const resultados = [];
 
-                            // Cargar ventas en el rango de fechas (sin orderBy para evitar índice compuesto)
-                            const ventasSnapshot = await AppState.db.collection("VENTAS")
-                                .where("date", ">=", startDate)
-                                .where("date", "<=", endDate)
-                                .get();
+                        ventas.forEach(venta => {
+                            if (venta.products && venta.products.length > 0) {
+                                const productosEncontrados = venta.products.filter(prod =>
+                                    prod.descripcion && prod.descripcion.toLowerCase().includes(searchTerm)
+                                );
 
-                            let ventas = ventasSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-                            // Ordenar client-side
-                            ventas.sort((a, b) => {
-                                // Primero por fecha (desc)
-                                if (a.date !== b.date) {
-                                    return b.date.localeCompare(a.date);
+                                if (productosEncontrados.length > 0) {
+                                    // Agregar resultado con detalles de la venta y productos encontrados
+                                    resultados.push({
+                                        ...venta,
+                                        productosEncontrados
+                                    });
                                 }
-                                // Luego por timestamp (desc)
-                                const timeA = a.timestamp?.toDate ? a.timestamp.toDate() : new Date(a.timestamp);
-                                const timeB = b.timestamp?.toDate ? b.timestamp.toDate() : new Date(b.timestamp);
-                                return timeB - timeA;
-                            });
+                            }
+                        });
 
-                            // Filtrar ventas que contengan el producto buscado
-                            const resultados = [];
-
-                            ventas.forEach(venta => {
-                                if (venta.products && venta.products.length > 0) {
-                                    const productosEncontrados = venta.products.filter(prod =>
-                                        prod.descripcion && prod.descripcion.toLowerCase().includes(searchTerm)
-                                    );
-
-                                    if (productosEncontrados.length > 0) {
-                                        // Agregar resultado con detalles de la venta y productos encontrados
-                                        resultados.push({
-                                            ...venta,
-                                            productosEncontrados
-                                        });
-                                    }
-                                }
-                            });
-
-                            return resultados;
-                        } catch (error) {
-                            console.error("Error buscando producto:", error);
-                            throw error;
-                        }
-                    },
+                        return resultados;
+                    } catch(error) {
+                        console.error("Error buscando producto:", error);
+                        throw error;
+                    }
+                },
 
                     async loadMovementsByDate(date = DateUtils.getCurrentDateStringElSalvador(), limit = 500) {
                         try {
@@ -4218,235 +4107,235 @@
                         }
                     },
 
-                    async processGroupAbono(grupoId, montoTotal) {
-                        return await ConcurrencyManager.withLock(async () => {
-                            if (!AppState.firebaseInitialized) throw new Error("No hay conexión a la base de datos");
+                        async processGroupAbono(grupoId, montoTotal) {
+                    return await ConcurrencyManager.withLock(async () => {
+                        if (!AppState.firebaseInitialized) throw new Error("No hay conexión a la base de datos");
 
-                            // 1. Obtener todas las facturas pendientes del grupo
-                            const snapshot = await AppState.db.collection("VENTAS")
-                                .where("grupo", "==", grupoId)
-                                .where("paymentType", "==", "pendiente")
-                                .where("status", "==", "pendiente")
-                                .get();
+                        // 1. Obtener todas las facturas pendientes del grupo
+                        const snapshot = await AppState.db.collection("VENTAS")
+                            .where("grupo", "==", grupoId)
+                            .where("paymentType", "==", "pendiente")
+                            .where("status", "==", "pendiente")
+                            .get();
 
-                            if (snapshot.empty) throw new Error("El grupo no tiene facturas pendientes");
+                        if (snapshot.empty) throw new Error("El grupo no tiene facturas pendientes");
 
-                            let facturas = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                        let facturas = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-                            // 2. Ordenar por fecha (más antiguas primero)
-                            facturas.sort((a, b) => {
-                                const dateA = a.timestamp?.toDate ? a.timestamp.toDate() : new Date(a.timestamp);
-                                const dateB = b.timestamp?.toDate ? b.timestamp.toDate() : new Date(b.timestamp);
-                                return dateA - dateB;
-                            });
+                        // 2. Ordenar por fecha (más antiguas primero)
+                        facturas.sort((a, b) => {
+                            const dateA = a.timestamp?.toDate ? a.timestamp.toDate() : new Date(a.timestamp);
+                            const dateB = b.timestamp?.toDate ? b.timestamp.toDate() : new Date(b.timestamp);
+                            return dateA - dateB;
+                        });
 
-                            let montoRestante = montoTotal;
-                            const batch = AppState.db.batch();
-                            let updatesCount = 0;
-                            const facturasAfectadas = [];
+                        let montoRestante = montoTotal;
+                        const batch = AppState.db.batch();
+                        let updatesCount = 0;
+                        const facturasAfectadas = [];
 
-                            // 3. Distribuir el abono
-                            for (const factura of facturas) {
-                                if (montoRestante <= 0.009) break; // Margen de error por decimales
+                        // 3. Distribuir el abono
+                        for (const factura of facturas) {
+                            if (montoRestante <= 0.009) break; // Margen de error por decimales
 
-                                let saldoPendiente = factura.total;
-                                if (factura.abonos && factura.abonos.length > 0) {
-                                    const totalAbonado = factura.abonos.reduce((sum, a) => sum + a.monto, 0);
-                                    saldoPendiente = factura.total - totalAbonado;
-                                }
-
-                                const montoAbonar = Math.min(montoRestante, saldoPendiente);
-
-                                if (montoAbonar > 0) {
-                                    const facturaRef = AppState.db.collection("VENTAS").doc(factura.id);
-                                    const nuevoSaldo = saldoPendiente - montoAbonar;
-
-                                    const abonoData = {
-                                        monto: montoAbonar,
-                                        fecha: DateUtils.getCurrentTimestampElSalvador(),
-                                        fechaString: DateUtils.getCurrentTimestampElSalvador().toLocaleString('es-ES'),
-                                        tipo: 'abono_grupal',
-                                        grupoId: grupoId,
-                                        savedInIngresos: true // Bandera para evitar duplicados en historial
-                                    };
-
-                                    // Guardar en INGRESOS
-                                    const ingresoRef = AppState.db.collection("INGRESOS").doc();
-                                    const ingresoData = {
-                                        monto: montoAbonar,
-                                        concepto: `Abono Grupal a EQUIPO ${factura.equipoNumber || '0000'}`,
-                                        categoria: 'abono',
-                                        timestamp: DateUtils.getCurrentTimestampElSalvador(),
-                                        date: DateUtils.getCurrentDateStringElSalvador(),
-                                        invoiceId: factura.id,
-                                        invoiceNumber: factura.invoiceNumber,
-                                        clientName: factura.clientName || 'Cliente',
-                                        equipoNumber: factura.equipoNumber || '0000',
-                                        grupoId: grupoId
-                                    };
-                                    batch.set(ingresoRef, ingresoData);
-
-                                    const updateData = {
-                                        abonos: firebase.firestore.FieldValue.arrayUnion(abonoData),
-                                        saldoPendiente: nuevoSaldo,
-                                        fechaActualizacion: DateUtils.getCurrentTimestampElSalvador()
-                                    };
-
-                                    if (nuevoSaldo <= 0.009) {
-                                        updateData.paymentType = 'contado';
-                                        updateData.status = 'pagado';
-                                    }
-
-                                    batch.update(facturaRef, updateData);
-                                    updatesCount++;
-
-                                    montoRestante -= montoAbonar;
-                                    facturasAfectadas.push({ ...factura, abono: montoAbonar });
-                                }
+                            let saldoPendiente = factura.total;
+                            if (factura.abonos && factura.abonos.length > 0) {
+                                const totalAbonado = factura.abonos.reduce((sum, a) => sum + a.monto, 0);
+                                saldoPendiente = factura.total - totalAbonado;
                             }
 
-                            if (updatesCount > 0) {
-                                await batch.commit();
-                                await GrupoManager.loadEquiposPendientes(); // Recargar datos
-                                return facturasAfectadas;
-                            } else {
-                                throw new Error("No se pudo aplicar el abono a ninguna factura");
+                            const montoAbonar = Math.min(montoRestante, saldoPendiente);
+
+                            if (montoAbonar > 0) {
+                                const facturaRef = AppState.db.collection("VENTAS").doc(factura.id);
+                                const nuevoSaldo = saldoPendiente - montoAbonar;
+
+                                const abonoData = {
+                                    monto: montoAbonar,
+                                    fecha: DateUtils.getCurrentTimestampElSalvador(),
+                                    fechaString: DateUtils.getCurrentTimestampElSalvador().toLocaleString('es-ES'),
+                                    tipo: 'abono_grupal',
+                                    grupoId: grupoId,
+                                    savedInIngresos: true // Bandera para evitar duplicados en historial
+                                };
+
+                                // Guardar en INGRESOS
+                                const ingresoRef = AppState.db.collection("INGRESOS").doc();
+                                const ingresoData = {
+                                    monto: montoAbonar,
+                                    concepto: `Abono Grupal a EQUIPO ${factura.equipoNumber || '0000'}`,
+                                    categoria: 'abono',
+                                    timestamp: DateUtils.getCurrentTimestampElSalvador(),
+                                    date: DateUtils.getCurrentDateStringElSalvador(),
+                                    invoiceId: factura.id,
+                                    invoiceNumber: factura.invoiceNumber,
+                                    clientName: factura.clientName || 'Cliente',
+                                    equipoNumber: factura.equipoNumber || '0000',
+                                    grupoId: grupoId
+                                };
+                                batch.set(ingresoRef, ingresoData);
+
+                                const updateData = {
+                                    abonos: firebase.firestore.FieldValue.arrayUnion(abonoData),
+                                    saldoPendiente: nuevoSaldo,
+                                    fechaActualizacion: DateUtils.getCurrentTimestampElSalvador()
+                                };
+
+                                if (nuevoSaldo <= 0.009) {
+                                    updateData.paymentType = 'contado';
+                                    updateData.status = 'pagado';
+                                }
+
+                                batch.update(facturaRef, updateData);
+                                updatesCount++;
+
+                                montoRestante -= montoAbonar;
+                                facturasAfectadas.push({ ...factura, abono: montoAbonar });
                             }
-                        }, "Abono Grupal");
-                    },
+                        }
+
+                        if (updatesCount > 0) {
+                            await batch.commit();
+                            await GrupoManager.loadEquiposPendientes(); // Recargar datos
+                            return facturasAfectadas;
+                        } else {
+                            throw new Error("No se pudo aplicar el abono a ninguna factura");
+                        }
+                    }, "Abono Grupal");
+                },
 
                     async processMultiAbono(facturasIds, montoTotal) {
-                        return await ConcurrencyManager.withLock(async () => {
-                            if (!AppState.firebaseInitialized) throw new Error("No hay conexión a la base de datos");
+                    return await ConcurrencyManager.withLock(async () => {
+                        if (!AppState.firebaseInitialized) throw new Error("No hay conexión a la base de datos");
 
-                            // 1. Obtener las facturas
-                            const facturas = [];
-                            for (const id of facturasIds) {
-                                const doc = await AppState.db.collection("VENTAS").doc(id).get();
-                                if (doc.exists) {
-                                    facturas.push({ id: doc.id, ...doc.data() });
-                                }
+                        // 1. Obtener las facturas
+                        const facturas = [];
+                        for (const id of facturasIds) {
+                            const doc = await AppState.db.collection("VENTAS").doc(id).get();
+                            if (doc.exists) {
+                                facturas.push({ id: doc.id, ...doc.data() });
+                            }
+                        }
+
+                        if (facturas.length === 0) throw new Error("No se encontraron las facturas seleccionadas");
+
+                        // 2. Ordenar por fecha (más antiguas primero)
+                        facturas.sort((a, b) => {
+                            const dateA = a.timestamp?.toDate ? a.timestamp.toDate() : new Date(a.timestamp);
+                            const dateB = b.timestamp?.toDate ? b.timestamp.toDate() : new Date(b.timestamp);
+                            return dateA - dateB;
+                        });
+
+                        let montoRestante = montoTotal;
+                        const batch = AppState.db.batch();
+                        let updatesCount = 0;
+                        const facturasAfectadas = [];
+
+                        // 3. Distribuir el abono
+                        for (const factura of facturas) {
+                            if (montoRestante <= 0.009) break;
+
+                            let saldoPendiente = factura.total;
+                            if (factura.abonos && factura.abonos.length > 0) {
+                                const totalAbonado = factura.abonos.reduce((sum, a) => sum + a.monto, 0);
+                                saldoPendiente = factura.total - totalAbonado;
                             }
 
-                            if (facturas.length === 0) throw new Error("No se encontraron las facturas seleccionadas");
+                            const montoAbonar = Math.min(montoRestante, saldoPendiente);
 
-                            // 2. Ordenar por fecha (más antiguas primero)
-                            facturas.sort((a, b) => {
-                                const dateA = a.timestamp?.toDate ? a.timestamp.toDate() : new Date(a.timestamp);
-                                const dateB = b.timestamp?.toDate ? b.timestamp.toDate() : new Date(b.timestamp);
-                                return dateA - dateB;
-                            });
+                            if (montoAbonar > 0) {
+                                const facturaRef = AppState.db.collection("VENTAS").doc(factura.id);
+                                const nuevoSaldo = saldoPendiente - montoAbonar;
 
-                            let montoRestante = montoTotal;
-                            const batch = AppState.db.batch();
-                            let updatesCount = 0;
-                            const facturasAfectadas = [];
+                                const abonoData = {
+                                    monto: montoAbonar,
+                                    fecha: DateUtils.getCurrentTimestampElSalvador(),
+                                    fechaString: DateUtils.getCurrentTimestampElSalvador().toLocaleString('es-ES'),
+                                    tipo: 'abono_masivo',
+                                    savedInIngresos: true // Bandera para evitar duplicados en historial
+                                };
 
-                            // 3. Distribuir el abono
-                            for (const factura of facturas) {
-                                if (montoRestante <= 0.009) break;
+                                // Guardar en INGRESOS
+                                const ingresoRef = AppState.db.collection("INGRESOS").doc();
+                                const ingresoData = {
+                                    monto: montoAbonar,
+                                    concepto: `Abono Masivo a Factura #${factura.invoiceNumber}`,
+                                    categoria: 'abono',
+                                    timestamp: DateUtils.getCurrentTimestampElSalvador(),
+                                    date: DateUtils.getCurrentDateStringElSalvador(),
+                                    invoiceId: factura.id,
+                                    invoiceNumber: factura.invoiceNumber,
+                                    clientName: factura.clientName || 'Cliente',
+                                    equipoNumber: factura.equipoNumber || '0000'
+                                };
+                                batch.set(ingresoRef, ingresoData);
 
-                                let saldoPendiente = factura.total;
-                                if (factura.abonos && factura.abonos.length > 0) {
-                                    const totalAbonado = factura.abonos.reduce((sum, a) => sum + a.monto, 0);
-                                    saldoPendiente = factura.total - totalAbonado;
+                                const updateData = {
+                                    abonos: firebase.firestore.FieldValue.arrayUnion(abonoData),
+                                    saldoPendiente: nuevoSaldo,
+                                    fechaActualizacion: DateUtils.getCurrentTimestampElSalvador()
+                                };
+
+                                if (nuevoSaldo <= 0.009) {
+                                    updateData.paymentType = 'contado';
+                                    updateData.status = 'pagado';
                                 }
 
-                                const montoAbonar = Math.min(montoRestante, saldoPendiente);
+                                batch.update(facturaRef, updateData);
+                                updatesCount++;
 
-                                if (montoAbonar > 0) {
-                                    const facturaRef = AppState.db.collection("VENTAS").doc(factura.id);
-                                    const nuevoSaldo = saldoPendiente - montoAbonar;
-
-                                    const abonoData = {
-                                        monto: montoAbonar,
-                                        fecha: DateUtils.getCurrentTimestampElSalvador(),
-                                        fechaString: DateUtils.getCurrentTimestampElSalvador().toLocaleString('es-ES'),
-                                        tipo: 'abono_masivo',
-                                        savedInIngresos: true // Bandera para evitar duplicados en historial
-                                    };
-
-                                    // Guardar en INGRESOS
-                                    const ingresoRef = AppState.db.collection("INGRESOS").doc();
-                                    const ingresoData = {
-                                        monto: montoAbonar,
-                                        concepto: `Abono Masivo a Factura #${factura.invoiceNumber}`,
-                                        categoria: 'abono',
-                                        timestamp: DateUtils.getCurrentTimestampElSalvador(),
-                                        date: DateUtils.getCurrentDateStringElSalvador(),
-                                        invoiceId: factura.id,
-                                        invoiceNumber: factura.invoiceNumber,
-                                        clientName: factura.clientName || 'Cliente',
-                                        equipoNumber: factura.equipoNumber || '0000'
-                                    };
-                                    batch.set(ingresoRef, ingresoData);
-
-                                    const updateData = {
-                                        abonos: firebase.firestore.FieldValue.arrayUnion(abonoData),
-                                        saldoPendiente: nuevoSaldo,
-                                        fechaActualizacion: DateUtils.getCurrentTimestampElSalvador()
-                                    };
-
-                                    if (nuevoSaldo <= 0.009) {
-                                        updateData.paymentType = 'contado';
-                                        updateData.status = 'pagado';
-                                    }
-
-                                    batch.update(facturaRef, updateData);
-                                    updatesCount++;
-
-                                    montoRestante -= montoAbonar;
-                                    facturasAfectadas.push({ ...factura, abono: montoAbonar });
-                                }
+                                montoRestante -= montoAbonar;
+                                facturasAfectadas.push({ ...factura, abono: montoAbonar });
                             }
+                        }
 
-                            if (updatesCount > 0) {
-                                await batch.commit();
-                                await GrupoManager.loadEquiposPendientes();
-                                return facturasAfectadas;
-                            } else {
-                                throw new Error("No se pudo aplicar el abono a ninguna factura");
-                            }
-                        }, "Abono Masivo");
-                    },
+                        if (updatesCount > 0) {
+                            await batch.commit();
+                            await GrupoManager.loadEquiposPendientes();
+                            return facturasAfectadas;
+                        } else {
+                            throw new Error("No se pudo aplicar el abono a ninguna factura");
+                        }
+                    }, "Abono Masivo");
+                },
 
                     async exportBackup() {
-                        try {
-                            const ventas = await this.loadSales(10000); // Limit high enough to get all
-                            const retiros = await this.loadRetiros(10000);
-                            const grupos = Array.from(GrupoManager.grupos.entries());
+                    try {
+                        const ventas = await this.loadSales(10000); // Limit high enough to get all
+                        const retiros = await this.loadRetiros(10000);
+                        const grupos = Array.from(GrupoManager.grupos.entries());
 
-                            const backupData = {
-                                version: '1.0',
-                                timestamp: new Date().toISOString(),
-                                ventas: ventas,
-                                retiros: retiros,
-                                grupos: grupos
-                            };
+                        const backupData = {
+                            version: '1.0',
+                            timestamp: new Date().toISOString(),
+                            ventas: ventas,
+                            retiros: retiros,
+                            grupos: grupos
+                        };
 
-                            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData));
-                            const downloadAnchorNode = document.createElement('a');
-                            downloadAnchorNode.setAttribute("href", dataStr);
-                            downloadAnchorNode.setAttribute("download", "taller_willian_backup_" + DateUtils.getCurrentDateStringElSalvador() + ".json");
-                            document.body.appendChild(downloadAnchorNode); // required for firefox
-                            downloadAnchorNode.click();
-                            downloadAnchorNode.remove();
+                        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData));
+                        const downloadAnchorNode = document.createElement('a');
+                        downloadAnchorNode.setAttribute("href", dataStr);
+                        downloadAnchorNode.setAttribute("download", "taller_willian_backup_" + DateUtils.getCurrentDateStringElSalvador() + ".json");
+                        document.body.appendChild(downloadAnchorNode); // required for firefox
+                        downloadAnchorNode.click();
+                        downloadAnchorNode.remove();
 
-                            return true;
-                        } catch (error) {
-                            console.error("Error exportando backup:", error);
-                            throw error;
-                        }
-                    },
+                        return true;
+                    } catch (error) {
+                        console.error("Error exportando backup:", error);
+                        throw error;
+                    }
+                },
 
                     async checkConnection() {
-                        try {
-                            await AppState.db.collection("COUNTERS").doc("sales").get({ source: 'server' });
-                            return true;
-                        } catch (error) {
-                            return false;
-                        }
+                    try {
+                        await AppState.db.collection("COUNTERS").doc("sales").get({ source: 'server' });
+                        return true;
+                    } catch (error) {
+                        return false;
                     }
+                }
                 };
 
                 const ModalService = {
