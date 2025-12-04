@@ -4,23 +4,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Corregir Fechas de Facturas - Taller William</title>
+    <title>Editor de Fechas - Taller William</title>
 
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
 
     <style>
-        :root {
-            --primary-color: #2c3e50;
-            --secondary-color: #34495e;
-            --accent-color: #e67e22;
-            --success-color: #27ae60;
-            --danger-color: #c0392b;
-            --light-bg: #ecf0f1;
-            --border-color: #bdc3c7;
-        }
-
         * {
             margin: 0;
             padding: 0;
@@ -29,171 +19,194 @@
 
         body {
             font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--light-bg);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             padding: 20px;
             color: #333;
+            min-height: 100vh;
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 95%;
             margin: 0 auto;
             background: white;
             padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
         }
 
         h1 {
-            color: var(--primary-color);
+            color: #2c3e50;
             text-align: center;
             margin-bottom: 10px;
-            border-bottom: 3px solid var(--accent-color);
-            padding-bottom: 15px;
+            font-size: 2em;
         }
 
-        .warning-box {
-            background: #fff3cd;
-            border: 2px solid #ffc107;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 25px;
+        .subtitle {
             text-align: center;
-        }
-
-        .warning-box strong {
-            color: #856404;
-            display: block;
-            margin-bottom: 5px;
-        }
-
-        .control-panel {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 25px;
-            border-radius: 10px;
+            color: #7f8c8d;
             margin-bottom: 25px;
-            color: white;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            font-size: 1.1em;
         }
 
-        .search-grid {
-            display: grid;
-            grid-template-columns: 1fr auto;
-            gap: 15px;
-            align-items: end;
-        }
-
-        .form-group {
+        .controls {
             display: flex;
-            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border: 2px solid #e0e0e0;
         }
 
-        label {
+        .info-panel {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .badge {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 20px;
             font-weight: bold;
-            margin-bottom: 8px;
-            font-size: 14px;
-        }
-
-        input[type="date"] {
-            padding: 12px;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-radius: 6px;
-            font-size: 16px;
-            background: rgba(255, 255, 255, 0.9);
-            transition: all 0.3s;
-        }
-
-        input[type="date"]:focus {
-            outline: none;
-            border-color: var(--accent-color);
-            background: white;
+            font-size: 1.1em;
         }
 
         button {
             padding: 12px 24px;
             border: none;
-            border-radius: 6px;
+            border-radius: 8px;
             cursor: pointer;
             font-weight: bold;
             transition: all 0.3s;
-            font-size: 16px;
+            font-size: 15px;
         }
 
-        .btn-search {
-            background-color: white;
-            color: var(--primary-color);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-        }
-
-        .btn-search:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-        }
-
-        .btn-action {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            width: 100%;
-            margin-top: 20px;
-            padding: 15px;
-            font-size: 18px;
-            box-shadow: 0 4px 15px rgba(245, 87, 108, 0.4);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
         }
 
-        .btn-action:hover:not(:disabled) {
+        .btn-primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(245, 87, 108, 0.6);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
         }
 
-        .btn-action:disabled {
-            background: #bdc3c7;
-            cursor: not-allowed;
-            transform: none;
+        .btn-success {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            padding: 8px 16px;
+            font-size: 13px;
+        }
+
+        .btn-success:hover {
+            transform: scale(1.05);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+            color: white;
+            padding: 8px 16px;
+            font-size: 13px;
+        }
+
+        .table-wrapper {
+            max-height: 600px;
+            overflow: auto;
+            border-radius: 10px;
+            border: 2px solid #e0e0e0;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        th,
-        td {
-            padding: 14px;
-            text-align: left;
-            border-bottom: 1px solid var(--border-color);
+            background: white;
         }
 
         th {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
+            padding: 15px 10px;
+            text-align: left;
             font-weight: 600;
             position: sticky;
             top: 0;
+            z-index: 10;
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #e0e0e0;
+            vertical-align: middle;
         }
 
         tbody tr:hover {
             background-color: #f8f9fa;
         }
 
-        .checkbox-col {
-            width: 50px;
-            text-align: center;
+        tbody tr.modified {
+            background-color: #fff3cd;
         }
 
-        input[type="checkbox"] {
-            width: 20px;
-            height: 20px;
-            cursor: pointer;
+        input[type="date"],
+        input[type="text"] {
+            padding: 8px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 13px;
+            width: 100%;
+            transition: border-color 0.3s;
+        }
+
+        input[type="date"]:focus,
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        input.modified {
+            border-color: #f39c12;
+            background-color: #fff9e6;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 50px;
+        }
+
+        .spinner {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #667eea;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-bottom: 15px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
 
         .status-message {
             margin-top: 20px;
             padding: 15px;
             border-radius: 8px;
-            display: none;
             text-align: center;
             font-weight: bold;
+            display: none;
             animation: slideIn 0.3s ease-out;
         }
 
@@ -227,79 +240,43 @@
             border: 2px solid #bee5eb;
         }
 
-        .loading {
-            display: none;
-            text-align: center;
-            margin: 30px 0;
+        .date-cell {
+            min-width: 150px;
         }
 
-        .spinner {
-            border: 5px solid #f3f3f3;
-            border-top: 5px solid var(--accent-color);
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            animation: spin 1s linear infinite;
-            display: inline-block;
-            margin-bottom: 10px;
-        }
-
-        @keyframes spin {
-            0% {
-                transform: rotate(0deg);
-            }
-
-            100% {
-                transform: rotate(360deg);
-            }
-        }
-
-        .results-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 30px;
-            margin-bottom: 15px;
-        }
-
-        .results-header h3 {
-            color: var(--primary-color);
-        }
-
-        .count-badge {
-            background: var(--accent-color);
-            color: white;
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-weight: bold;
-        }
-
-        .table-wrapper {
-            max-height: 450px;
-            overflow-y: auto;
-            border-radius: 8px;
-            border: 2px solid var(--border-color);
-        }
-
-        .correction-panel {
-            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-            padding: 25px;
-            border-radius: 10px;
-            margin-top: 25px;
-            color: white;
-            box-shadow: 0 4px 15px rgba(17, 153, 142, 0.4);
-        }
-
-        .correction-grid {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 20px;
-            align-items: end;
-        }
-
-        .hora-col {
+        .timestamp-display {
+            font-size: 0.85em;
             color: #7f8c8d;
-            font-size: 0.9em;
+            margin-top: 3px;
+        }
+
+        .id-col {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .actions-col {
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .hint {
+            background: #e8f4fd;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #667eea;
+            font-size: 0.95em;
+        }
+
+        .warning {
+            background: #fff3cd;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #ffc107;
+            font-size: 0.95em;
+            color: #856404;
         }
     </style>
 </head>
@@ -307,68 +284,53 @@
 <body>
 
     <div class="container">
-        <h1>🛠️ Herramienta de Corrección de Fechas</h1>
+        <h1>📅 Editor de Fechas de Facturas</h1>
+        <p class="subtitle">Visualice y edite las fechas de todas las facturas</p>
 
-        <div class="warning-box">
-            <strong>⚠️ IMPORTANTE</strong>
-            Esta herramienta modifica directamente las fechas en la base de datos. Use con precaución.
+        <div class="warning">
+            <strong>⚠️ ADVERTENCIA:</strong> Esta herramienta modifica directamente la base de datos. Los cambios son
+            permanentes.
         </div>
 
-        <div class="control-panel">
-            <h3 style="margin-bottom: 15px;">📅 Paso 1: Buscar Facturas</h3>
-            <div class="search-grid">
-                <div class="form-group">
-                    <label for="searchDate">Seleccione la fecha INCORRECTA donde están las facturas:</label>
-                    <input type="date" id="searchDate">
-                </div>
-                <button class="btn-search" onclick="buscarFacturas()">🔍 Buscar Facturas</button>
+        <div class="hint">
+            <strong>💡 Instrucciones:</strong>
+            1. Las facturas se cargan automáticamente (más recientes primero)
+            2. Edite la fecha haciendo clic en el campo
+            3. El botón "Guardar" aparece cuando modifica una fecha
+            4. Los cambios se guardan inmediatamente en Firebase
+        </div>
+
+        <div class="controls">
+            <div class="info-panel">
+                <span class="badge" id="countBadge">0 facturas</span>
+                <span style="color: #7f8c8d;">Ordenadas: Más recientes primero</span>
             </div>
+            <button class="btn-primary" onclick="cargarFacturas()">🔄 Recargar Todo</button>
         </div>
 
-        <div id="loading" class="loading">
+        <div id="loadingArea" class="loading">
             <div class="spinner"></div>
-            <p style="font-size: 18px; color: #666;">Buscando facturas en la base de datos...</p>
+            <p style="font-size: 18px; color: #666;">Cargando facturas desde Firebase...</p>
         </div>
 
-        <div id="resultsArea" style="display: none;">
-            <div class="results-header">
-                <h3>📋 Resultados Encontrados</h3>
-                <span class="count-badge" id="countResults">0</span>
-            </div>
-
+        <div id="tableArea" style="display: none;">
             <div class="table-wrapper">
-                <table id="resultsTable">
+                <table>
                     <thead>
                         <tr>
-                            <th class="checkbox-col">
-                                <input type="checkbox" id="selectAll" onclick="toggleSelectAll()"
-                                    title="Seleccionar todas">
-                            </th>
-                            <th>Factura #</th>
-                            <th>Hora</th>
-                            <th>Cliente</th>
-                            <th>Equipo</th>
-                            <th>Total</th>
-                            <th>Fecha Actual</th>
+                            <th style="width: 100px;">Factura #</th>
+                            <th style="width: 150px;">Cliente</th>
+                            <th style="width: 100px;">Equipo</th>
+                            <th style="width: 100px;">Total</th>
+                            <th style="width: 180px;">Fecha (Editable)</th>
+                            <th style="width: 200px;">Timestamp (Info)</th>
+                            <th style="width: 120px;">Acciones</th>
                         </tr>
                     </thead>
                     <tbody id="tableBody">
-                        <!-- Filas generadas dinámicamente -->
+                        <!-- Contenido dinámico -->
                     </tbody>
                 </table>
-            </div>
-
-            <div class="correction-panel">
-                <h3 style="margin-bottom: 15px;">✅ Paso 2: Corregir Fechas Seleccionadas</h3>
-                <div class="correction-grid">
-                    <div class="form-group">
-                        <label for="targetDate">Mover las facturas seleccionadas a la fecha CORRECTA:</label>
-                        <input type="date" id="targetDate">
-                    </div>
-                    <button class="btn-action" id="btnCorregir" onclick="corregirFechas()">
-                        ✨ Corregir Fechas Ahora
-                    </button>
-                </div>
             </div>
         </div>
 
@@ -376,7 +338,7 @@
     </div>
 
     <script>
-        // Configuración de Firebase (copiada de ventas.html)
+        // Configuración de Firebase
         const firebase = window.firebase;
 
         const CONFIG = {
@@ -394,9 +356,9 @@
         firebase.initializeApp(CONFIG.firebase);
         const db = firebase.firestore();
 
-        // Estado de la aplicación
-        let facturasEncontradas = [];
-        let seleccionadas = new Set();
+        // Estado
+        let todasLasFacturas = [];
+        let facturasModificadas = new Map(); // id -> nuevaFecha
 
         // Utilities para fechas (El Salvador -6 UTC)
         const DateUtils = {
@@ -418,11 +380,9 @@
             },
 
             createTimestampFromDateString(dateString) {
-                // dateString formato: "YYYY-MM-DD"
                 const [year, month, day] = dateString.split('-').map(Number);
                 const date = new Date(year, month - 1, day, 12, 0, 0);
 
-                // Ajustar a El Salvador
                 const offset = -6 * 60;
                 const localTime = date.getTime();
                 const localOffset = date.getTimezoneOffset() * 60000;
@@ -430,23 +390,22 @@
                 const elSalvadorTime = utc + (offset * 60000);
 
                 return firebase.firestore.Timestamp.fromDate(new Date(elSalvadorTime));
+            },
+
+            formatTimestamp(timestamp) {
+                if (!timestamp) return 'N/A';
+                const fecha = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+                return fecha.toLocaleString('es-ES', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
             }
         };
 
-        // Inicializar fechas por defecto
-        window.addEventListener('DOMContentLoaded', () => {
-            const hoy = DateUtils.getCurrentDateElSalvador();
-            const manana = new Date(hoy);
-            manana.setDate(manana.getDate() + 1);
-
-            // Por defecto, buscar en "mañana" (la fecha incorrecta común)
-            document.getElementById('searchDate').value = DateUtils.formatDateToYYYYMMDD(manana);
-
-            // Por defecto, corregir a "hoy"
-            document.getElementById('targetDate').value = DateUtils.formatDateToYYYYMMDD(hoy);
-        });
-
-        // Función para mostrar mensajes de estado
+        // Mostrar mensaje
         function mostrarMensaje(texto, tipo = 'info') {
             const msgElement = document.getElementById('statusMessage');
             msgElement.textContent = texto;
@@ -458,200 +417,176 @@
             }, 5000);
         }
 
-        // Buscar facturas en una fecha específica
-        async function buscarFacturas() {
-            const searchDate = document.getElementById('searchDate').value;
-
-            if (!searchDate) {
-                mostrarMensaje('⚠️ Por favor seleccione una fecha para buscar', 'error');
-                return;
-            }
-
-            document.getElementById('loading').style.display = 'block';
-            document.getElementById('resultsArea').style.display = 'none';
-            facturasEncontradas = [];
-            seleccionadas.clear();
+        // Cargar todas las facturas
+        async function cargarFacturas() {
+            document.getElementById('loadingArea').style.display = 'block';
+            document.getElementById('tableArea').style.display = 'none';
+            todasLasFacturas = [];
+            facturasModificadas.clear();
 
             try {
                 const snapshot = await db.collection('VENTAS')
-                    .where('fecha', '==', searchDate)
+                    .orderBy('timestamp', 'desc')
                     .get();
 
                 if (snapshot.empty) {
-                    document.getElementById('loading').style.display = 'none';
-                    mostrarMensaje(`ℹ️ No se encontraron facturas en la fecha ${searchDate}`, 'info');
+                    document.getElementById('loadingArea').style.display = 'none';
+                    mostrarMensaje('ℹ️ No se encontraron facturas en la base de datos', 'info');
                     return;
                 }
 
                 snapshot.forEach(doc => {
                     const data = doc.data();
-                    facturasEncontradas.push({
+                    todasLasFacturas.push({
                         id: doc.id,
-                        ...data
+                        ...data,
+                        fechaOriginal: data.fecha // Guardar el valor original
                     });
                 });
 
-                renderizarResultados();
-                document.getElementById('loading').style.display = 'none';
-                document.getElementById('resultsArea').style.display = 'block';
+                renderizarTabla();
+                document.getElementById('loadingArea').style.display = 'none';
+                document.getElementById('tableArea').style.display = 'block';
 
-                mostrarMensaje(`✅ Se encontraron ${facturasEncontradas.length} facturas`, 'success');
+                mostrarMensaje(`✅ Se cargaron ${todasLasFacturas.length} facturas exitosamente`, 'success');
 
             } catch (error) {
-                console.error('Error al buscar facturas:', error);
-                document.getElementById('loading').style.display = 'none';
-                mostrarMensaje('❌ Error al buscar facturas: ' + error.message, 'error');
+                console.error('Error al cargar facturas:', error);
+                document.getElementById('loadingArea').style.display = 'none';
+                mostrarMensaje('❌ Error al cargar facturas: ' + error.message, 'error');
             }
         }
 
-        // Renderizar los resultados en la tabla
-        function renderizarResultados() {
+        // Renderizar tabla
+        function renderizarTabla() {
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = '';
 
-            document.getElementById('countResults').textContent = facturasEncontradas.length;
+            document.getElementById('countBadge').textContent = `${todasLasFacturas.length} facturas`;
 
-            facturasEncontradas.forEach((factura, index) => {
+            todasLasFacturas.forEach((factura, index) => {
                 const row = document.createElement('tr');
+                row.id = `row-${factura.id}`;
 
-                const timestamp = factura.timestamp;
-                let fechaHora = 'N/A';
-                let horaStr = '';
-
-                if (timestamp) {
-                    const fecha = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-                    fechaHora = fecha.toLocaleDateString('es-ES');
-                    horaStr = fecha.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-                }
+                const timestampStr = DateUtils.formatTimestamp(factura.timestamp);
+                const fechaActual = factura.fecha || 'N/A';
 
                 row.innerHTML = `
-                <td class="checkbox-col">
-                    <input type="checkbox" 
-                           data-index="${index}" 
-                           onchange="toggleFactura(${index})"
-                           ${seleccionadas.has(index) ? 'checked' : ''}>
-                </td>
-                <td><strong>#${factura.invoiceNumber || 'N/A'}</strong></td>
-                <td class="hora-col">${horaStr}</td>
+                <td class="id-col">#${factura.invoiceNumber || 'N/A'}</td>
                 <td>${factura.clientName || 'Cliente General'}</td>
-                <td>${factura.equipoNumber || '----'}</td>
-                <td style="font-weight: bold;">$${(factura.total || 0).toFixed(2)}</td>
-                <td>${factura.fecha || fechaHora}</td>
+                <td style="text-align: center; font-weight: bold;">${factura.equipoNumber || '----'}</td>
+                <td style="font-weight: bold; color: #27ae60;">$${(factura.total || 0).toFixed(2)}</td>
+                <td class="date-cell">
+                    <input type="date" 
+                           id="fecha-${factura.id}" 
+                           value="${fechaActual}" 
+                           onchange="marcarModificada('${factura.id}', this.value)"
+                           style="width: 100%;">
+                </td>
+                <td>
+                    <div style="font-weight: 500;">${timestampStr}</div>
+                    <div class="timestamp-display">Original: ${factura.fechaOriginal || 'N/A'}</div>
+                </td>
+                <td class="actions-col">
+                    <button class="btn-success" 
+                            id="btn-${factura.id}" 
+                            onclick="guardarCambio('${factura.id}')"
+                            style="display: none;">
+                        💾 Guardar
+                    </button>
+                    <span id="saved-${factura.id}" style="color: #27ae60; display: none;">✓</span>
+                </td>
             `;
 
                 tbody.appendChild(row);
             });
         }
 
-        // Toggle selección individual
-        function toggleFactura(index) {
-            if (seleccionadas.has(index)) {
-                seleccionadas.delete(index);
+        // Marcar como modificada
+        function marcarModificada(id, nuevaFecha) {
+            const factura = todasLasFacturas.find(f => f.id === id);
+            if (!factura) return;
+
+            const fechaOriginal = factura.fechaOriginal;
+            const input = document.getElementById(`fecha-${id}`);
+            const btn = document.getElementById(`btn-${id}`);
+            const row = document.getElementById(`row-${id}`);
+            const saved = document.getElementById(`saved-${id}`);
+
+            if (nuevaFecha !== fechaOriginal) {
+                facturasModificadas.set(id, nuevaFecha);
+                input.classList.add('modified');
+                btn.style.display = 'inline-block';
+                row.classList.add('modified');
+                saved.style.display = 'none';
             } else {
-                seleccionadas.add(index);
-            }
-            actualizarSelectAll();
-        }
-
-        // Toggle seleccionar todas
-        function toggleSelectAll() {
-            const selectAllCheckbox = document.getElementById('selectAll');
-            const checkboxes = document.querySelectorAll('#tableBody input[type="checkbox"]');
-
-            if (selectAllCheckbox.checked) {
-                checkboxes.forEach((cb, index) => {
-                    cb.checked = true;
-                    seleccionadas.add(index);
-                });
-            } else {
-                checkboxes.forEach(cb => cb.checked = false);
-                seleccionadas.clear();
-            }
-        }
-
-        // Actualizar estado del checkbox "Seleccionar todas"
-        function actualizarSelectAll() {
-            const selectAllCheckbox = document.getElementById('selectAll');
-            const totalCheckboxes = document.querySelectorAll('#tableBody input[type="checkbox"]').length;
-
-            if (totalCheckboxes === 0) {
-                selectAllCheckbox.checked = false;
-                selectAllCheckbox.indeterminate = false;
-            } else if (seleccionadas.size === 0) {
-                selectAllCheckbox.checked = false;
-                selectAllCheckbox.indeterminate = false;
-            } else if (seleccionadas.size === totalCheckboxes) {
-                selectAllCheckbox.checked = true;
-                selectAllCheckbox.indeterminate = false;
-            } else {
-                selectAllCheckbox.checked = false;
-                selectAllCheckbox.indeterminate = true;
+                facturasModificadas.delete(id);
+                input.classList.remove('modified');
+                btn.style.display = 'none';
+                row.classList.remove('modified');
             }
         }
 
-        // Corregir las fechas seleccionadas
-        async function corregirFechas() {
-            if (seleccionadas.size === 0) {
-                mostrarMensaje('⚠️ Por favor seleccione al menos una factura', 'error');
+        // Guardar cambio individual
+        async function guardarCambio(id) {
+            const nuevaFecha = facturasModificadas.get(id);
+            if (!nuevaFecha) {
+                mostrarMensaje('⚠️ No hay cambios para guardar', 'error');
                 return;
             }
 
-            const targetDate = document.getElementById('targetDate').value;
-            if (!targetDate) {
-                mostrarMensaje('⚠️ Por favor seleccione la fecha correcta', 'error');
-                return;
-            }
-
-            const confirmMsg = `¿Está seguro de mover ${seleccionadas.size} factura(s) a la fecha ${targetDate}?\n\nEsta acción modificará la base de datos.`;
-            if (!confirm(confirmMsg)) {
-                return;
-            }
-
-            document.getElementById('btnCorregir').disabled = true;
-            document.getElementById('loading').style.display = 'block';
-
-            let exitosas = 0;
-            let errores = 0;
+            const btn = document.getElementById(`btn-${id}`);
+            btn.disabled = true;
+            btn.textContent = '⏳ Guardando...';
 
             try {
-                const nuevoTimestamp = DateUtils.createTimestampFromDateString(targetDate);
+                const nuevoTimestamp = DateUtils.createTimestampFromDateString(nuevaFecha);
 
-                for (const index of seleccionadas) {
-                    const factura = facturasEncontradas[index];
+                await db.collection('VENTAS').doc(id).update({
+                    fecha: nuevaFecha,
+                    timestamp: nuevoTimestamp
+                });
 
-                    try {
-                        await db.collection('VENTAS').doc(factura.id).update({
-                            fecha: targetDate,
-                            timestamp: nuevoTimestamp
-                        });
-                        exitosas++;
-                    } catch (error) {
-                        console.error(`Error al actualizar factura ${factura.id}:`, error);
-                        errores++;
-                    }
+                // Actualizar el registro local
+                const factura = todasLasFacturas.find(f => f.id === id);
+                if (factura) {
+                    factura.fecha = nuevaFecha;
+                    factura.fechaOriginal = nuevaFecha;
+                    factura.timestamp = nuevoTimestamp;
                 }
 
-                document.getElementById('loading').style.display = 'none';
-                document.getElementById('btnCorregir').disabled = false;
+                // Limpiar estado modificado
+                facturasModificadas.delete(id);
+                const input = document.getElementById(`fecha-${id}`);
+                const row = document.getElementById(`row-${id}`);
+                const saved = document.getElementById(`saved-${id}`);
 
-                if (errores === 0) {
-                    mostrarMensaje(`✅ Se corrigieron ${exitosas} facturas exitosamente`, 'success');
+                input.classList.remove('modified');
+                row.classList.remove('modified');
+                btn.style.display = 'none';
+                btn.disabled = false;
+                btn.textContent = '💾 Guardar';
+                saved.style.display = 'inline';
 
-                    // Limpiar selección y recargar
-                    setTimeout(() => {
-                        buscarFacturas();
-                    }, 2000);
-                } else {
-                    mostrarMensaje(`⚠️ Se corrigieron ${exitosas} facturas. ${errores} fallaron.`, 'error');
-                }
+                // Re-renderizar para actualizar timestamp
+                setTimeout(() => {
+                    cargarFacturas();
+                }, 500);
+
+                mostrarMensaje(`✅ Factura #${todasLasFacturas.find(f => f.id === id)?.invoiceNumber} actualizada correctamente`, 'success');
 
             } catch (error) {
-                console.error('Error crítico:', error);
-                document.getElementById('loading').style.display = 'none';
-                document.getElementById('btnCorregir').disabled = false;
-                mostrarMensaje('❌ Error crítico: ' + error.message, 'error');
+                console.error('Error al guardar:', error);
+                btn.disabled = false;
+                btn.textContent = '💾 Guardar';
+                mostrarMensaje('❌ Error al guardar: ' + error.message, 'error');
             }
         }
+
+        // Cargar al inicio
+        window.addEventListener('DOMContentLoaded', () => {
+            cargarFacturas();
+        });
     </script>
 
 </body>
