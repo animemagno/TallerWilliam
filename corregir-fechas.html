@@ -106,13 +106,6 @@
             transform: scale(1.05);
         }
 
-        .btn-danger {
-            background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
-            color: white;
-            padding: 8px 16px;
-            font-size: 13px;
-        }
-
         .table-wrapper {
             max-height: 600px;
             overflow: auto;
@@ -240,19 +233,10 @@
             border: 2px solid #bee5eb;
         }
 
-        .date-cell {
-            min-width: 150px;
-        }
-
         .timestamp-display {
             font-size: 0.85em;
             color: #7f8c8d;
             margin-top: 3px;
-        }
-
-        .id-col {
-            font-weight: bold;
-            color: #2c3e50;
         }
 
         .actions-col {
@@ -284,8 +268,8 @@
 <body>
 
     <div class="container">
-        <h1>📅 Editor de Fechas de Facturas</h1>
-        <p class="subtitle">Visualice y edite las fechas de todas las facturas</p>
+        <h1>📅 Editor de Fechas y Números de Factura</h1>
+        <p class="subtitle">Corrija fechas y números de factura afectados por el bug del timezone</p>
 
         <div class="warning">
             <strong>⚠️ ADVERTENCIA:</strong> Esta herramienta modifica directamente la base de datos. Los cambios son
@@ -295,8 +279,8 @@
         <div class="hint">
             <strong>💡 Instrucciones:</strong>
             1. Las facturas se cargan automáticamente (más recientes primero)
-            2. Edite la fecha haciendo clic en el campo
-            3. El botón "Guardar" aparece cuando modifica una fecha
+            2. Edite la fecha O el número de factura haciendo clic en el campo
+            3. El botón "Guardar" aparece cuando modifica cualquier campo
             4. Los cambios se guardan inmediatamente en Firebase
         </div>
 
@@ -318,7 +302,7 @@
                 <table>
                     <thead>
                         <tr>
-                            <th style="width: 100px;">Factura #</th>
+                            <th style="width: 150px;">Factura # (Editable)</th>
                             <th style="width: 150px;">Cliente</th>
                             <th style="width: 100px;">Equipo</th>
                             <th style="width: 100px;">Total</th>
@@ -338,7 +322,6 @@
     </div>
 
     <script>
-        // Configuración de Firebase
         const firebase = window.firebase;
 
         const CONFIG = {
@@ -352,15 +335,12 @@
             }
         };
 
-        // Inicializar Firebase
         firebase.initializeApp(CONFIG.firebase);
         const db = firebase.firestore();
 
-        // Estado
         let todasLasFacturas = [];
-        let facturasModificadas = new Map(); // id -> nuevaFecha
+        let facturasModificadas = new Map(); // id -> { fecha?, invoiceNumber? }
 
-        // Utilities para fechas (El Salvador -6 UTC)
         const DateUtils = {
             getCurrentDateElSalvador() {
                 const now = new Date();
@@ -405,7 +385,6 @@
             }
         };
 
-        // Mostrar mensaje
         function mostrarMensaje(texto, tipo = 'info') {
             const msgElement = document.getElementById('statusMessage');
             msgElement.textContent = texto;
@@ -417,7 +396,6 @@
             }, 5000);
         }
 
-        // Cargar todas las facturas
         async function cargarFacturas() {
             document.getElementById('loadingArea').style.display = 'block';
             document.getElementById('tableArea').style.display = 'none';
@@ -440,7 +418,8 @@
                     todasLasFacturas.push({
                         id: doc.id,
                         ...data,
-                        fechaOriginal: data.fecha // Guardar el valor original
+                        fechaOriginal: data.fecha,
+                        invoiceNumberOriginal: data.invoiceNumber
                     });
                 });
 
@@ -457,7 +436,6 @@
             }
         }
 
-        // Renderizar tabla
         function renderizarTabla() {
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = '';
@@ -470,22 +448,29 @@
 
                 const timestampStr = DateUtils.formatTimestamp(factura.timestamp);
                 const fechaActual = factura.fecha || 'N/A';
+                const invoiceNum = factura.invoiceNumber || 'N/A';
 
                 row.innerHTML = `
-                <td class="id-col">#${factura.invoiceNumber || 'N/A'}</td>
+                <td>
+                    <input type="text" 
+                           id="invoice-${factura.id}" 
+                           value="${invoiceNum}" 
+                           onchange="marcarModificada('${factura.id}', 'invoice', this.value)"
+                           style="width: 100%; font-weight: bold;">
+                </td>
                 <td>${factura.clientName || 'Cliente General'}</td>
                 <td style="text-align: center; font-weight: bold;">${factura.equipoNumber || '----'}</td>
                 <td style="font-weight: bold; color: #27ae60;">$${(factura.total || 0).toFixed(2)}</td>
-                <td class="date-cell">
+                <td>
                     <input type="date" 
                            id="fecha-${factura.id}" 
                            value="${fechaActual}" 
-                           onchange="marcarModificada('${factura.id}', this.value)"
+                           onchange="marcarModificada('${factura.id}', 'fecha', this.value)"
                            style="width: 100%;">
                 </td>
                 <td>
                     <div style="font-weight: 500;">${timestampStr}</div>
-                    <div class="timestamp-display">Original: ${factura.fechaOriginal || 'N/A'}</div>
+                    <div class="timestamp-display">Orig: ${factura.invoiceNumberOriginal} | ${factura.fechaOriginal || 'N/A'}</div>
                 </td>
                 <td class="actions-col">
                     <button class="btn-success" 
@@ -502,35 +487,44 @@
             });
         }
 
-        // Marcar como modificada
-        function marcarModificada(id, nuevaFecha) {
+        function marcarModificada(id, campo, nuevoValor) {
             const factura = todasLasFacturas.find(f => f.id === id);
             if (!factura) return;
 
-            const fechaOriginal = factura.fechaOriginal;
-            const input = document.getElementById(`fecha-${id}`);
+            const valorOriginal = campo === 'fecha' ? factura.fechaOriginal : factura.invoiceNumberOriginal;
+            const input = document.getElementById(`${campo === 'fecha' ? 'fecha' : 'invoice'}-${id}`);
             const btn = document.getElementById(`btn-${id}`);
             const row = document.getElementById(`row-${id}`);
             const saved = document.getElementById(`saved-${id}`);
 
-            if (nuevaFecha !== fechaOriginal) {
-                facturasModificadas.set(id, nuevaFecha);
+            if (nuevoValor !== valorOriginal) {
+                const cambios = facturasModificadas.get(id) || {};
+                cambios[campo === 'fecha' ? 'fecha' : 'invoiceNumber'] = nuevoValor;
+                facturasModificadas.set(id, cambios);
+
                 input.classList.add('modified');
                 btn.style.display = 'inline-block';
                 row.classList.add('modified');
                 saved.style.display = 'none';
             } else {
-                facturasModificadas.delete(id);
+                const cambios = facturasModificadas.get(id) || {};
+                delete cambios[campo === 'fecha' ? 'fecha' : 'invoiceNumber'];
+
+                if (Object.keys(cambios).length === 0) {
+                    facturasModificadas.delete(id);
+                    btn.style.display = 'none';
+                    row.classList.remove('modified');
+                } else {
+                    facturasModificadas.set(id, cambios);
+                }
+
                 input.classList.remove('modified');
-                btn.style.display = 'none';
-                row.classList.remove('modified');
             }
         }
 
-        // Guardar cambio individual
         async function guardarCambio(id) {
-            const nuevaFecha = facturasModificadas.get(id);
-            if (!nuevaFecha) {
+            const cambios = facturasModificadas.get(id);
+            if (!cambios || Object.keys(cambios).length === 0) {
                 mostrarMensaje('⚠️ No hay cambios para guardar', 'error');
                 return;
             }
@@ -540,40 +534,51 @@
             btn.textContent = '⏳ Guardando...';
 
             try {
-                const nuevoTimestamp = DateUtils.createTimestampFromDateString(nuevaFecha);
+                const updateData = {};
 
-                await db.collection('VENTAS').doc(id).update({
-                    fecha: nuevaFecha,
-                    timestamp: nuevoTimestamp
-                });
-
-                // Actualizar el registro local
-                const factura = todasLasFacturas.find(f => f.id === id);
-                if (factura) {
-                    factura.fecha = nuevaFecha;
-                    factura.fechaOriginal = nuevaFecha;
-                    factura.timestamp = nuevoTimestamp;
+                if (cambios.fecha) {
+                    updateData.fecha = cambios.fecha;
+                    updateData.timestamp = DateUtils.createTimestampFromDateString(cambios.fecha);
                 }
 
-                // Limpiar estado modificado
+                if (cambios.invoiceNumber) {
+                    updateData.invoiceNumber = cambios.invoiceNumber;
+                }
+
+                await db.collection('VENTAS').doc(id).update(updateData);
+
+                const factura = todasLasFacturas.find(f => f.id === id);
+                if (factura) {
+                    if (cambios.fecha) {
+                        factura.fecha = cambios.fecha;
+                        factura.fechaOriginal = cambios.fecha;
+                        factura.timestamp = updateData.timestamp;
+                    }
+                    if (cambios.invoiceNumber) {
+                        factura.invoiceNumber = cambios.invoiceNumber;
+                        factura.invoiceNumberOriginal = cambios.invoiceNumber;
+                    }
+                }
+
                 facturasModificadas.delete(id);
-                const input = document.getElementById(`fecha-${id}`);
+                const inputFecha = document.getElementById(`fecha-${id}`);
+                const inputInvoice = document.getElementById(`invoice-${id}`);
                 const row = document.getElementById(`row-${id}`);
                 const saved = document.getElementById(`saved-${id}`);
 
-                input.classList.remove('modified');
+                inputFecha.classList.remove('modified');
+                inputInvoice.classList.remove('modified');
                 row.classList.remove('modified');
                 btn.style.display = 'none';
                 btn.disabled = false;
                 btn.textContent = '💾 Guardar';
                 saved.style.display = 'inline';
 
-                // Re-renderizar para actualizar timestamp
                 setTimeout(() => {
                     cargarFacturas();
                 }, 500);
 
-                mostrarMensaje(`✅ Factura #${todasLasFacturas.find(f => f.id === id)?.invoiceNumber} actualizada correctamente`, 'success');
+                mostrarMensaje(`✅ Factura actualizada correctamente`, 'success');
 
             } catch (error) {
                 console.error('Error al guardar:', error);
@@ -583,7 +588,6 @@
             }
         }
 
-        // Cargar al inicio
         window.addEventListener('DOMContentLoaded', () => {
             cargarFacturas();
         });
