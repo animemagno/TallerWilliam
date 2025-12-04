@@ -6454,6 +6454,7 @@
                         let ventasConAbonos = 0;
                         let cantidadRetiros = 0;
                         let cantidadIngresos = 0;
+                        let cantidadAbonos = 0;
 
                         movimientos.forEach(movimiento => {
                             if (movimiento.tipo === 'retiro') {
@@ -6462,6 +6463,9 @@
                             } else if (movimiento.tipo === 'ingreso') {
                                 totalIngresos += movimiento.monto || 0;
                                 cantidadIngresos++;
+                            } else if (movimiento.tipo === 'abono') {
+                                totalAbonos += movimiento.monto || 0;
+                                cantidadAbonos++;
                             } else if (movimiento.tipo === 'venta') {
                                 if (movimiento.paymentType === 'contado') {
                                     totalContado += movimiento.total || 0;
@@ -6572,6 +6576,14 @@
                             }
                             .ingreso-badge {
                                 background: #27ae60;
+                                color: white;
+                                padding: 3px 6px;
+                                border-radius: 3px;
+                                font-size: 9px;
+                                font-weight: bold;
+                            }
+                            .abono-badge {
+                                background: #2ecc71;
                                 color: white;
                                 padding: 3px 6px;
                                 border-radius: 3px;
@@ -6707,6 +6719,28 @@
                                 </div>
                             </div>
                         `;
+                            } else if (movimiento.tipo === 'abono') {
+                                const tipoBadge = 'abono-badge';
+                                const tipoText = 'ABONO';
+                                const color = '#2ecc71';
+
+                                reportHTML += `
+                            <div class="movimiento-card" style="border-left: 4px solid ${color};">
+                                <div class="movimiento-header" style="background: white;">
+                                    <div>
+                                        <strong>${tipoText}</strong> - ${movimiento.concepto || 'Abono a cuenta'}
+                                        <br><span style="font-size: 9px; color: #666;">${fecha}</span>
+                                        <br><span style="font-size: 10px;">Cliente: ${movimiento.clientName || 'General'} (Eq: ${movimiento.equipoNumber || '-'})</span>
+                                    </div>
+                                    <div style="text-align: right;">
+                                        <div style="font-size: 14px; font-weight: bold; color: ${color};">
+                                            +$${(movimiento.monto || 0).toFixed(2)}
+                                        </div>
+                                        <span class="${tipoBadge}">${tipoText}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
                             } else if (movimiento.tipo === 'venta') {
                                 const venta = movimiento;
                                 const tipoBadge = venta.paymentType === 'contado' ? 'contado-badge' : 'pendiente-badge';
@@ -6816,9 +6850,9 @@
                                 <div style="font-size: 10px; color: #666;">${ventasContado} ventas</div>
                             </div>
                             <div class="resumen-item">
-                                <div>ABONOS</div>
-                                <div class="resumen-valor">$${totalAbonos.toFixed(2)}</div>
-                                <div style="font-size: 10px; color: #666;">${ventasConAbonos} ventas</div>
+                                <div>TOTAL ABONOS</div>
+                                <div class="resumen-valor" style="color: #2ecc71;">$${totalAbonos.toFixed(2)}</div>
+                                <div style="font-size: 10px; color: #666;">${cantidadAbonos + ventasConAbonos} transacciones</div>
                             </div>
                             <div class="resumen-item">
                                 <div>INGRESOS</div>
