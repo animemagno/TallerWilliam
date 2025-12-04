@@ -4059,7 +4059,7 @@
                             // 3. Procesar Ventas y Abonos
                             ventas.forEach(venta => {
                                 // A. Es una venta de este día?
-                                if (venta.fecha === dateString) {
+                                if (venta.date === dateString) {
                                     movimientos.push({
                                         ...venta,
                                         tipo: 'venta',
@@ -4663,7 +4663,7 @@
                             case 'hoy':
                                 const today = DateUtils.getCurrentDateStringElSalvador();
                                 filtered = filtered.filter(mov => {
-                                    return mov.fecha === today;
+                                    return mov.date === today;
                                 });
                                 break;
                             case 'todo':
