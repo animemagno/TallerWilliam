@@ -3792,7 +3792,9 @@
                                     invoiceId: invoiceId,
                                     invoiceNumber: venta.invoiceNumber,
                                     clientName: venta.clientName || 'Cliente',
-                                    equipoNumber: venta.equipoNumber || '0000'
+                                    equipoNumber: venta.equipoNumber || '0000',
+                                    saldoAnterior: venta.saldoPendiente !== undefined ? venta.saldoPendiente : venta.total,
+                                    nuevoSaldo: nuevoSaldo
                                 };
 
                                 await AppState.db.collection("INGRESOS").add(ingresoData);
@@ -4854,7 +4856,16 @@
                                 <td><strong>ABO-${movimiento.id.substring(0, 6)}</strong></td>
                                 <td>
                                     <div class="cliente-equipo">${movimiento.equipoNumber || '-'}</div>
-                                    <div class="cliente-nombre">Abono a EQUIPO ${movimiento.equipoNumber || 'X'}</div>
+                                    <div class="cliente-nombre">
+                                        Abono a EQUIPO ${movimiento.equipoNumber || 'X'}
+                                        ${movimiento.saldoAnterior !== undefined ? `
+                                            <div style="font-size: 0.85em; color: #555; margin-top: 4px;">
+                                                Saldo Anterior: <b>$${movimiento.saldoAnterior.toFixed(2)}</b> &rarr;
+                                                Abono: <b>$${movimiento.monto.toFixed(2)}</b> &rarr;
+                                                Nuevo: <b>$${movimiento.nuevoSaldo.toFixed(2)}</b>
+                                            </div>
+                                        ` : ''}
+                                    </div>
                                     <div style="font-size: 0.75rem; color: #7f8c8d;">Fac. #${movimiento.invoiceNumber}</div>
                                 </td>
                                 <td>
@@ -4963,6 +4974,90 @@
                         });
 
                         historialBody.innerHTML = historialHTML;
+
+                        // Agregar Resumen de Productos si el filtro es 'hoy'
+                        if (AppState.currentFilter === 'hoy' && movimientos.length > 0) {
+                            const resumenHTML = this.generarResumenProductos(movimientos);
+                            // Insertar como una fila al final que abarque todas las columnas
+                            if (resumenHTML) {
+                                const row = document.createElement('tr');
+                                row.innerHTML = `<td colspan="6" style="padding: 0;">${resumenHTML}</td>`;
+                                historialBody.appendChild(row);
+                            }
+                        }
+                    },
+
+                    generarResumenProductos(movimientos) {
+                        // Filtrar solo ventas
+                        const ventas = movimientos.filter(m => !m.tipo || m.tipo === 'venta');
+                        if (ventas.length === 0) return '';
+
+                        const productosMap = {};
+
+                        ventas.forEach(venta => {
+                            if (venta.products && Array.isArray(venta.products)) {
+                                venta.products.forEach(p => {
+                                    const key = p.codigo || p.descripcion;
+                                    if (!productosMap[key]) {
+                                        productosMap[key] = {
+                                            codigo: p.codigo,
+                                            descripcion: p.descripcion,
+                                            cantidad: 0,
+                                            totalVenta: 0
+                                        };
+                                    }
+                                    productosMap[key].cantidad += (parseFloat(p.cantidad) || 0);
+                                    // Usar precio * cantidad de la venta para exactitud
+                                    productosMap[key].totalVenta += (parseFloat(p.precio) * parseFloat(p.cantidad));
+                                });
+                            }
+                        });
+
+                        const productos = Object.values(productosMap).sort((a, b) => b.totalVenta - a.totalVenta);
+
+                        if (productos.length === 0) return '';
+
+                        const totalGeneral = productos.reduce((sum, p) => sum + p.totalVenta, 0);
+                        const totalCantidad = productos.reduce((sum, p) => sum + p.cantidad, 0);
+
+                        let html = `
+                            <div style="background-color: #f8f9fa; padding: 15px; border-top: 2px solid #ddd; margin-top: 20px;">
+                                <h4 style="margin-bottom: 10px; color: #2c3e50; text-align: center;">RESUMEN DE PRODUCTOS VENDIDOS (HOY)</h4>
+                                <table class="table table-sm table-bordered" style="width: 100%; font-size: 0.9em; background: white;">
+                                    <thead class="thead-light">
+                                        <tr>
+                                            <th>Cód.</th>
+                                            <th>Descripción</th>
+                                            <th class="text-center">Cant.</th>
+                                            <th class="text-right">Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                        `;
+
+                        productos.forEach(p => {
+                            html += `
+                                <tr>
+                                    <td>${p.codigo || '-'}</td>
+                                    <td>${p.descripcion}</td>
+                                    <td class="text-center"><strong>${p.cantidad}</strong></td>
+                                    <td class="text-right">$${p.totalVenta.toFixed(2)}</td>
+                                </tr>
+                            `;
+                        });
+
+                        html += `
+                                    <tr style="background-color: #e8f4fd; font-weight: bold;">
+                                        <td colspan="2" class="text-right">TOTALES:</td>
+                                        <td class="text-center">${totalCantidad}</td>
+                                        <td class="text-right">$${totalGeneral.toFixed(2)}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        `;
+
+                        return html;
                     },
 
                     async searchProductInHistory() {
