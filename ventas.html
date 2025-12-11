@@ -4856,7 +4856,11 @@
                                             </div>
                                         ` : ''}
                                     </div>
-                                    <div style="font-size: 0.75rem; color: #7f8c8d;">Fac. #${movimiento.invoiceNumber}</div>
+                                    <div style="font-size: 0.75rem;">
+                                        <a href="#" onclick="event.preventDefault(); SalesService.viewInvoice('${movimiento.invoiceId || movimiento.invoiceNumber}');" style="color: #7f8c8d; text-decoration: underline;">
+                                            Fac. #${movimiento.invoiceNumber}
+                                        </a>
+                                    </div>
                                 </td>
                                 <td>
                                     <div class="saldo-pendiente-negro">+$${movimiento.monto.toFixed(2)}</div>
@@ -4942,7 +4946,11 @@
 
                                 historialHTML += `
                             <tr>
-                                <td><strong>#${venta.invoiceNumber}</strong></td>
+                                <td>
+                                    <a href="#" onclick="event.preventDefault(); SalesService.viewInvoice('${venta.id}');" style="color: #2c3e50; text-decoration: none; font-weight: bold;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">
+                                        #${venta.invoiceNumber}
+                                    </a>
+                                </td>
                                 <td>
                                     <div class="cliente-equipo">${venta.equipoNumber || '-'}</div>
                                     <div class="cliente-nombre">${venta.clientName || 'Cliente General'}</div>
@@ -4965,8 +4973,8 @@
 
                         historialBody.innerHTML = historialHTML;
 
-                        // Agregar Resumen de Productos si el filtro es 'hoy'
-                        if (AppState.currentFilter === 'hoy' && movimientos.length > 0) {
+                        // Agregar Resumen de Productos (siempre que haya movimientos)
+                        if (movimientos.length > 0) {
                             const resumenHTML = this.generarResumenProductos(movimientos);
                             // Insertar como una fila al final que abarque todas las columnas
                             if (resumenHTML) {
@@ -5014,7 +5022,7 @@
 
                         let html = `
                             <div style="background-color: #f8f9fa; padding: 15px; border-top: 2px solid #ddd; margin-top: 20px;">
-                                <h4 style="margin-bottom: 10px; color: #2c3e50; text-align: center;">RESUMEN DE PRODUCTOS VENDIDOS (HOY)</h4>
+                                <h4 style="margin-bottom: 10px; color: #2c3e50; text-align: center;">RESUMEN DE PRODUCTOS VENDIDOS</h4>
                                 <table class="table table-sm table-bordered" style="width: 100%; font-size: 0.9em; background: white;">
                                     <thead class="thead-light">
                                         <tr>
@@ -5856,17 +5864,39 @@
 
                         if (!venta) return;
 
-                        let productsHTML = '';
+                        let productsHTML = `
+                            <table class="table table-bordered table-sm" style="width:100%; margin-top:10px; margin-bottom:15px; background-color: #fff; font-size: 0.95em;">
+                                <thead style="background-color: #f8f9fa;">
+                                    <tr>
+                                        <th style="text-align: center; padding: 8px;" width="10%">CANT</th>
+                                        <th style="padding: 8px;">DESCRIPCIÓN</th>
+                                        <th style="text-align: right; padding: 8px;" width="20%">PRECIO</th>
+                                        <th style="text-align: right; padding: 8px;" width="20%">SUBTOTAL</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                        `;
+
                         if (venta.products && venta.products.length > 0) {
                             venta.products.forEach(product => {
+                                const precio = parseFloat(product.precio) || 0;
+                                const cantidad = parseFloat(product.cantidad) || 0;
+                                const subtotal = precio * cantidad;
+
                                 productsHTML += `
-                            <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #eee;">
-                                <div>${product.descripcion} (x${product.cantidad})</div>
-                                <div>$${(product.precio * product.cantidad).toFixed(2)}</div>
-                        </div>
+                            <tr>
+                                <td style="text-align: center; padding: 8px;">${cantidad}</td>
+                                <td style="padding: 8px;">${product.descripcion}</td>
+                                <td style="text-align: right; padding: 8px;">$${precio.toFixed(2)}</td>
+                                <td style="text-align: right; padding: 8px;">$${subtotal.toFixed(2)}</td>
+                            </tr>
                         `;
                             });
+                        } else {
+                            productsHTML += `<tr><td colspan="4" style="text-align: center; padding: 10px;">No hay productos registrados</td></tr>`;
                         }
+
+                        productsHTML += `</tbody></table>`;
 
                         let abonosHTML = '';
                         if (venta.abonos && venta.abonos.length > 0) {
