@@ -1,0 +1,3438 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Taller Willian - Ventas y Facturación (Mejorado)</title>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #eef2f5;
+            color: #333;
+            line-height: 1.4;
+            font-size: 14px;
+            padding: 10px;
+        }
+
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        header {
+            background: linear-gradient(135deg, #3498db, #2c3e50);
+            color: white;
+            padding: 12px 0;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            position: relative;
+        }
+
+        header h1 {
+            font-size: 1.3rem;
+            margin-bottom: 4px;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .dashboard-section {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e0e0e0;
+            height: 520px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .dashboard-section.full-width {
+            grid-column: 1 / -1;
+            height: auto;
+            min-height: 600px;
+        }
+
+        .section-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 1.2rem;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #3498db;
+        }
+
+        .fecha-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9rem;
+        }
+
+        .fecha-input {
+            padding: 6px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.85rem;
+        }
+
+        /* NUEVA DISTRIBUCIÓN - VENTA HEADER */
+        .venta-header {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .venta-line-1 {
+            display: grid;
+            grid-template-columns: 80px 1fr 100px;
+            gap: 10px;
+            align-items: end;
+        }
+
+        .venta-line-2 {
+            display: grid;
+            grid-template-columns: 1fr 100px;
+            gap: 10px;
+            align-items: end;
+        }
+
+        .form-group {
+            margin-bottom: 0;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 3px;
+            font-weight: 600;
+            color: #333;
+            font-size: 0.9rem;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            background: white;
+            color: #333;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .search-container {
+            position: relative;
+        }
+
+        .search-dropdown {
+            position: absolute;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            max-height: 200px;
+            overflow-y: auto;
+            width: 100%;
+            z-index: 1000;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            font-size: 0.8rem;
+            display: none;
+        }
+
+        .search-dropdown-item {
+            padding: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid #ddd;
+            transition: background-color 0.2s;
+        }
+
+        .search-dropdown-item:hover {
+            background-color: #3498db;
+            color: white;
+        }
+
+        /* CARRITO EXPANDIDO */
+        .cart-container {
+            background: #f8f9fa;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 10px 0;
+            border: 1px solid #e9ecef;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        .cart-items-container {
+            flex: 1;
+            overflow-y: auto;
+            max-height: none;
+            margin-bottom: 10px;
+            min-height: 0;
+        }
+
+        .cart-header {
+            display: grid;
+            grid-template-columns: 80px 1fr 100px 100px 80px;
+            gap: 10px;
+            padding: 8px 12px;
+            background: #2c3e50;
+            color: white;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            margin-bottom: 8px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .cart-item {
+            display: grid;
+            grid-template-columns: 80px 1fr 100px 100px 80px;
+            gap: 10px;
+            padding: 10px 12px;
+            background: white;
+            border-radius: 4px;
+            margin-bottom: 6px;
+            border: 1px solid #e9ecef;
+            align-items: center;
+            transition: all 0.2s ease;
+        }
+
+        .cart-item:hover {
+            background: #f8f9fa;
+            border-color: #3498db;
+        }
+
+        .cart-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .quantity-input {
+            width: 70px;
+            padding: 6px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            text-align: center;
+            font-size: 0.8rem;
+            -moz-appearance: textfield;
+            appearance: textfield;
+        }
+
+        .quantity-input::-webkit-outer-spin-button,
+        .quantity-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .price-input {
+            width: 90px;
+            padding: 6px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            text-align: center;
+            font-size: 0.8rem;
+        }
+
+        .product-desc {
+            font-size: 0.85rem;
+            line-height: 1.3;
+        }
+
+        .subtotal {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 0.85rem;
+        }
+
+        .cart-actions {
+            display: flex;
+            gap: 4px;
+        }
+
+        .cart-total {
+            background: #ecf0f1;
+            padding: 12px;
+            border-radius: 4px;
+            text-align: right;
+            font-weight: bold;
+            font-size: 1.1rem;
+            border-top: 2px solid #3498db;
+            margin-top: auto;
+            flex-shrink: 0;
+        }
+
+        .empty-cart {
+            text-align: center;
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            padding: 30px;
+            background: white;
+            border-radius: 4px;
+            border: 2px dashed #ddd;
+        }
+
+        /* BOTONES COMPACTOS */
+        .btn {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-size: 0.85rem;
+            text-align: center;
+            height: 38px;
+        }
+
+        .btn-primary {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+
+        .btn-success {
+            background-color: #27ae60;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background-color: #219a52;
+        }
+
+        .btn-warning {
+            background-color: #f39c12;
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background-color: #d35400;
+        }
+
+        .btn-danger {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #c0392b;
+        }
+
+        .btn-info {
+            background-color: #17a2b8;
+            color: white;
+        }
+
+        .btn-info:hover {
+            background-color: #138496;
+        }
+
+        .btn-full {
+            width: 100%;
+        }
+
+        .btn-small {
+            padding: 8px 12px;
+            font-size: 0.8rem;
+        }
+
+        .status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 6px;
+            z-index: 10000;
+            font-size: 0.85rem;
+            display: none;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .status.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .action-btn {
+            padding: 6px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.7rem;
+            margin: 2px;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 32px;
+            height: 28px;
+        }
+
+        .icon-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 6px;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+            margin: 0 2px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 28px;
+        }
+
+        .icon-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .btn-view {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .btn-view:hover {
+            background-color: #2980b9;
+        }
+
+        .btn-reprint {
+            background-color: #f39c12;
+            color: white;
+        }
+
+        .btn-reprint:hover {
+            background-color: #d35400;
+        }
+
+        .btn-edit {
+            background-color: #27ae60;
+            color: white;
+        }
+
+        .btn-edit:hover {
+            background-color: #219a52;
+        }
+
+        .btn-delete {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background-color: #c0392b;
+        }
+
+        .btn-abono {
+            background-color: #17a2b8;
+            color: white;
+        }
+
+        .btn-abono:hover {
+            background-color: #138496;
+        }
+
+        .btn-cancel {
+            background-color: #9b59b6;
+            color: white;
+        }
+
+        .btn-cancel:hover {
+            background-color: #8e44ad;
+        }
+
+        .history-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 400px;
+        }
+
+        .history-table-container {
+            flex: 1;
+            overflow: auto;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            margin-top: 10px;
+        }
+
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem;
+            min-width: 800px;
+        }
+
+        .history-table th,
+        .history-table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+            white-space: nowrap;
+        }
+
+        .history-table th {
+            background-color: #2c3e50;
+            color: white;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .history-table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .historial-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            gap: 10px;
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: white;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.3s ease;
+        }
+
+        .filter-btn.active {
+            background: #3498db;
+            color: white;
+            border-color: #3498db;
+        }
+
+        .filter-btn:hover {
+            background: #2980b9;
+            color: white;
+            border-color: #2980b9;
+        }
+
+        .contado-badge {
+            background: #27ae60;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+
+        .pendiente-badge {
+            background: #f39c12;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+
+        .abono-badge {
+            background: #17a2b8;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+
+        .retiro-badge {
+            background: #e74c3c;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+
+        .ingreso-badge {
+            background: #27ae60;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+
+        .venta-badge {
+            background: #3498db;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+
+        .total-display {
+            font-weight: bold;
+        }
+
+        .saldo-pendiente-rojo {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+
+        .saldo-pendiente-negro {
+            color: #333;
+            font-weight: bold;
+        }
+
+        .cliente-equipo {
+            font-weight: bold;
+        }
+
+        .cliente-nombre {
+            font-size: 0.7rem;
+            color: #666;
+            margin-top: 2px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+
+        .historial-actions-container {
+            min-width: 240px;
+        }
+
+        .delete-item-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            width: 28px;
+            height: 28px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            transition: all 0.2s ease;
+        }
+
+        .delete-item-btn:hover {
+            background: #c0392b;
+            transform: scale(1.1);
+        }
+
+        .tabs-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        .tabs-header {
+            display: flex;
+            border-bottom: 2px solid #3498db;
+            margin-bottom: 15px;
+            flex-shrink: 0;
+        }
+
+        .tab-btn {
+            padding: 10px 20px;
+            background: #f8f9fa;
+            border: none;
+            border-bottom: 2px solid transparent;
+            cursor: pointer;
+            font-weight: 600;
+            color: #666;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .tab-btn.active {
+            background: white;
+            color: #3498db;
+            border-bottom: 2px solid #3498db;
+        }
+
+        .tab-btn:hover {
+            background: #e9ecef;
+            color: #2980b9;
+        }
+
+        .tab-content {
+            display: none;
+            flex: 1;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        .tab-content.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .facturas-pendientes-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        .facturas-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #3498db;
+        }
+
+        .facturas-title {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .equipos-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+            overflow-y: auto;
+            flex: 1;
+            min-height: 0;
+        }
+
+        .equipo-card {
+            background: white;
+            border: 2px solid #3498db;
+            border-radius: 6px;
+            padding: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            min-height: 60px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            width: 80px;
+        }
+
+        .equipo-card:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+            border-color: #2980b9;
+        }
+
+        .equipo-number {
+            font-size: 1rem;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 3px;
+            line-height: 1;
+        }
+
+        .equipo-nombre {
+            font-size: 0.7rem;
+            color: #e74c3c;
+            font-weight: bold;
+            margin-bottom: 3px;
+            line-height: 1;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .equipo-total {
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: #27ae60;
+            line-height: 1;
+        }
+
+        .grupos-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 15px;
+            overflow-y: auto;
+            flex: 1;
+            min-height: 0;
+            padding-right: 5px;
+        }
+
+        .grupo-card {
+            background: white;
+            border: 2px solid #3498db;
+            border-radius: 8px;
+            padding: 12px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .grupo-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+            border-color: #2980b9;
+        }
+
+        .grupo-header {
+            text-align: center;
+            margin-bottom: 8px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid #ddd;
+            position: relative;
+        }
+
+        .grupo-name {
+            font-size: 1rem;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .grupo-equipos-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+
+        .grupo-equipos-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+
+        .grupo-equipo-item {
+            background: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            padding: 5px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.75rem;
+        }
+
+        .grupo-equipo-item:hover {
+            background: #e8f4fd;
+            border-color: #3498db;
+        }
+
+        .grupo-equipo-number {
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 2px;
+        }
+
+        .grupo-equipo-total {
+            font-size: 0.7rem;
+            font-weight: bold;
+            color: #27ae60;
+        }
+
+        .grupo-total {
+            text-align: center;
+            font-weight: bold;
+            font-size: 0.9rem;
+            color: #2c3e50;
+            padding: 6px;
+            background: #e8f4fd;
+            border-radius: 4px;
+            border-top: 2px solid #3498db;
+            margin-top: 8px;
+        }
+
+        .grupo-actions {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            display: flex;
+            gap: 4px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 10;
+        }
+
+        .grupo-card:hover .grupo-actions {
+            opacity: 1;
+        }
+
+        .grupo-action-btn {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.7rem;
+        }
+
+        .grupo-action-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .btn-edit-grupo {
+            color: #27ae60;
+            border-color: #27ae60;
+        }
+
+        .btn-edit-grupo:hover {
+            background: #27ae60;
+            color: white;
+        }
+
+        .btn-delete-grupo {
+            color: #e74c3c;
+            border-color: #e74c3c;
+        }
+
+        .btn-delete-grupo:hover {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .btn-detalle-grupo {
+            color: #3498db;
+            border-color: #3498db;
+        }
+
+        .btn-detalle-grupo:hover {
+            background: #3498db;
+            color: white;
+        }
+
+        .grupos-management {
+            padding: 15px;
+        }
+
+        .grupos-actions {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .grupos-list {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 10px;
+            background: #f8f9fa;
+        }
+
+        .grupo-management-item {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .grupo-management-info {
+            flex: 1;
+        }
+
+        .grupo-management-name {
+            font-weight: bold;
+            font-size: 1rem;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .grupo-management-details {
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        .grupo-management-actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .create-grupo-modal {
+            max-width: 400px;
+        }
+
+        .equipos-selection {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+        }
+
+        .equipo-selection-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+
+        .equipo-selection-item:hover {
+            background: #f8f9fa;
+        }
+
+        .equipo-selection-item.selected {
+            background: #3498db;
+            color: white;
+        }
+
+        .selected-equipos {
+            margin: 10px 0;
+            padding: 8px;
+            background: #e8f4fd;
+            border-radius: 4px;
+            min-height: 40px;
+            font-size: 0.85rem;
+        }
+
+        .selected-equipo-badge {
+            display: inline-block;
+            background: #3498db;
+            color: white;
+            padding: 3px 6px;
+            border-radius: 10px;
+            margin: 2px;
+            font-size: 0.75rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #7f8c8d;
+            padding: 30px 20px;
+        }
+
+        .empty-state i {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            opacity: 0.5;
+        }
+
+        .detalle-equipo {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 6px;
+            margin: 8px 0;
+            font-size: 0.9rem;
+        }
+
+        .factura-item {
+            background: white;
+            padding: 8px;
+            border-radius: 4px;
+            margin: 6px 0;
+            border-left: 3px solid #3498db;
+            font-size: 0.85rem;
+        }
+
+        .producto-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 3px 0;
+            font-size: 0.8rem;
+        }
+
+        .grupo-facturas {
+            margin-top: 8px;
+        }
+
+        .all-equipos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 8px;
+            margin: 10px 0;
+            max-height: 200px;
+            overflow-y: auto;
+            padding: 10px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            background: #fafafa;
+        }
+
+        .all-equipo-item {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 6px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.8rem;
+            width: 80px;
+        }
+
+        .all-equipo-item:hover {
+            border-color: #3498db;
+            background: #f0f8ff;
+        }
+
+        .all-equipo-item.selected {
+            background: #3498db;
+            color: white;
+            border-color: #2980b9;
+        }
+
+        .edit-grupo-modal {
+            max-width: 500px;
+        }
+
+        .grupo-detalle-equipo {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 6px;
+            margin: 8px 0;
+            border-left: 4px solid #3498db;
+        }
+
+        .grupo-detalle-factura {
+            background: white;
+            padding: 8px;
+            border-radius: 4px;
+            margin: 6px 0;
+            border: 1px solid #e0e0e0;
+        }
+
+        .grupo-resumen {
+            background: #e8f4fd;
+            padding: 12px;
+            border-radius: 6px;
+            margin: 15px 0;
+            border-left: 4px solid #2c3e50;
+            font-weight: bold;
+        }
+
+        .connection-status {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            padding: 8px 12px;
+            border-radius: 4px;
+            z-index: 10001;
+            font-size: 0.7rem;
+            font-weight: bold;
+            display: none;
+        }
+
+        .connection-status.online {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .connection-status.offline {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .price-warning {
+            border: 2px solid #e74c3c !important;
+            background-color: #fdf2f2 !important;
+        }
+
+        .date-warning {
+            border: 2px solid #f39c12 !important;
+            background-color: #fef9e7 !important;
+        }
+
+        .duplicate-warning {
+            border: 2px solid #e74c3c !important;
+            background-color: #fdf2f2 !important;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                border-color: #e74c3c;
+            }
+
+            50% {
+                border-color: #ff9999;
+            }
+
+            100% {
+                border-color: #e74c3c;
+            }
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn:disabled:hover {
+            transform: none;
+        }
+
+        .retiro-btn {
+            background-color: #9b59b6;
+            color: white;
+        }
+
+        .retiro-btn:hover {
+            background-color: #8e44ad;
+        }
+
+        .ingreso-btn {
+            background-color: #27ae60;
+            color: white;
+        }
+
+        .ingreso-btn:hover {
+            background-color: #219a52;
+        }
+
+        .equipo-en-grupo {
+            background: #f8d7da !important;
+            border-color: #e74c3c !important;
+            color: #721c24 !important;
+            cursor: not-allowed !important;
+        }
+
+        .equipo-en-grupo:hover {
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        /* Modal de confirmación de abono inicial */
+        .confirmacion-abono-modal {
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .confirmacion-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .confirmacion-buttons button {
+            flex: 1;
+            padding: 12px;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 3000;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 1.2rem;
+        }
+
+        .concurrency-lock {
+            pointer-events: none;
+            opacity: 0.7;
+        }
+
+        @media (max-width: 768px) {
+            .desktop-only {
+                display: none !important;
+            }
+
+            header {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            header h1 {
+                width: 100%;
+                text-align: center;
+                margin-bottom: 5px;
+            }
+
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+
+            .venta-header {
+                flex-direction: column;
+            }
+
+            .venta-line-1,
+            .venta-line-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* --- COMPATIBILITY STYLES FOR REFACTOR STRUCTURE --- */
+        .tabs {
+            display: flex;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #3498db;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            font-weight: 600;
+            color: #666;
+            background: #f8f9fa;
+            border: none;
+            margin-right: 2px;
+            border-radius: 4px 4px 0 0;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            background: #3498db;
+            color: white;
+        }
+
+        .tab:hover {
+            background: #e9ecef;
+            color: #3498db;
+        }
+
+        .tab.active:hover {
+            background: #2980b9;
+            color: white;
+        }
+
+        .loader {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+
+        .search-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+        }
+
+        .search-item:hover {
+            background: #f1f1f1;
+        }
+
+        .search-item-price {
+            font-weight: bold;
+            color: #27ae60;
+        }
+
+        .cart-items {
+            flex: 1;
+            overflow-y: auto;
+            min-height: 150px;
+        }
+
+        /* Badge Styles for History */
+        .badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: white;
+            display: inline-block;
+        }
+
+        .badge-success {
+            background-color: #27ae60;
+        }
+
+        .badge-info {
+            background-color: #3498db;
+        }
+
+        .badge-warning {
+            background-color: #f39c12;
+        }
+
+        .badge-danger {
+            background-color: #e74c3c;
+        }
+
+        /* Status Toast Styles */
+        .status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 6px;
+            z-index: 10000;
+            font-size: 0.85rem;
+            display: none;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            transition: opacity 0.3s ease;
+        }
+
+        .status.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        /* Modal Styles - Centering with Transform */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 9999;
+            overflow: auto;
+        }
+
+        .modal.active {
+            display: block;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        /* CARD STYLES FOR PENDING INVOICES (RESTORED) */
+        .equipos-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            padding: 5px;
+            justify-content: flex-start;
+            align-content: flex-start;
+        }
+
+        .equipo-card {
+            background: white;
+            border: 2px solid #3498db;
+            border-radius: 6px;
+            padding: 4px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            min-height: 70px;
+            width: 80px;
+            /* Fixed width matching original */
+            flex: 0 0 auto;
+            /* Prevent growing/shrinking */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .equipo-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            border-color: #2980b9;
+        }
+
+        .equipo-number {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 2px;
+            line-height: 1;
+        }
+
+        .equipo-nombre {
+            font-size: 0.8rem;
+            color: #e74c3c;
+            font-weight: bold;
+            margin-bottom: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            width: 100%;
+            line-height: 1.2;
+        }
+
+        .equipo-total {
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: #27ae60;
+            line-height: 1;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            color: #2c3e50;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #95a5a6;
+            transition: color 0.2s;
+        }
+
+        .close-modal:hover {
+            color: #e74c3c;
+        }
+    </style>
+
+</head>
+
+<body>
+    <!-- STATUS MESSAGE TOAST -->
+    <div id="status-message" class="status"></div>
+
+    <!-- LOADING OVERLAY -->
+    <div id="loading" class="loading-overlay">
+        <div class="loader"></div>
+        <h3 id="loading-text">Cargando...</h3>
+    </div>
+
+    <div class="container">
+        <!-- HEADER -->
+        <header>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h1><i class="fas fa-wrench"></i> Taller Willian</h1>
+                <div class="header-buttons">
+                    <button class="btn btn-success btn-small" onclick="ReportsController.showInventoryReport()">
+                        <i class="fas fa-file-alt"></i> Reporte Diario
+                    </button>
+                    <button class="btn btn-warning btn-small" onclick="ReportsController.showDailyCashReport()">
+                        <i class="fas fa-cash-register"></i> Corte de Caja
+                    </button>
+                    <button class="btn btn-info btn-small" onclick="BackupService.downloadBackup()">
+                        <i class="fas fa-download"></i> Respaldo
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- DASHBOARD -->
+        <div class="dashboard">
+            <!-- SECCIÓN 1: NUEVA VENTA -->
+            <div class="dashboard-section">
+                <h2 class="section-title">Nueva Venta</h2>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="form-group">
+                        <label>Buscar Producto</label>
+                        <div class="search-container">
+                            <input type="text" id="search-product" class="form-control"
+                                placeholder="Código o descripción...">
+                            <div id="search-results" class="search-dropdown"></div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Fecha Venta</label>
+                        <input type="date" id="sale-date" class="form-control">
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 15px;">
+                    <div class="form-group">
+                        <label>No. Equipo (Opcional)</label>
+                        <input type="text" id="sale-equipo" class="form-control" placeholder="0000" maxlength="4">
+                    </div>
+                    <div class="form-group">
+                        <label>Nombre Cliente / Grupo (Opcional)</label>
+                        <input type="text" id="sale-client" class="form-control" placeholder="Cliente General">
+                    </div>
+                </div>
+
+                <!-- CARRITO -->
+                <div class="cart-container">
+                    <div class="cart-header">
+                        <div>Cant</div>
+                        <div>Descripción</div>
+                        <div>Precio</div>
+                        <div>Subtotal</div>
+                        <div></div>
+                    </div>
+                    <div id="cart-items" class="cart-items">
+                        <!-- Items se inyectan via JS -->
+                        <div style="text-align: center; padding: 20px; color: #999;">Carrito vacío</div>
+                    </div>
+                    <div class="cart-total">
+                        TOTAL: $<span id="cart-total-display">0.00</span>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-top: 15px; justify-content: flex-end;">
+                    <button class="btn btn-danger" onclick="SalesController.clearCart()">
+                        <i class="fas fa-trash"></i> Limpiar
+                    </button>
+                    <button class="btn btn-success" onclick="SalesController.processSale('contado')">
+                        <i class="fas fa-check"></i> Contado
+                    </button>
+                    <button class="btn btn-warning" onclick="SalesController.processSale('credito')">
+                        <i class="fas fa-clock"></i> Crédito
+                    </button>
+                </div>
+            </div>
+
+            <!-- SECCIÓN 2: CRÉDITOS Y GRUPOS -->
+            <div class="dashboard-section">
+                <div class="tabs">
+                    <div class="tab active" onclick="UI.switchTab('facturas')">Facturas Pendientes</div>
+                    <div class="tab" onclick="UI.switchTab('grupos')">Grupos</div>
+                </div>
+
+                <!-- Tab Facturas -->
+                <div id="tab-facturas" class="tab-content active"
+                    style="height: 100%; overflow: hidden; display: flex; flex-direction: column;">
+                    <div class="table-responsive" style="flex: 1; overflow-y: auto;">
+                        <div id="pending-invoices-list" class="equipos-grid">
+                            <!-- JS Cards -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab Grupos -->
+                <div id="tab-grupos" class="tab-content" style="display: none; height: 100%; overflow-y: auto;">
+                    <div id="groups-list" style="height: 100%;">
+                        <!-- JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECCIÓN 3: HISTORIAL ÚNICO -->
+            <div class="dashboard-section full-width">
+                <h2 class="section-title">
+                    <span>Historial de Movimientos</span>
+                    <div>
+                        <button class="btn btn-info btn-small" onclick="HistoryController.showFilterModal()">
+                            <i class="fas fa-filter"></i> Filtrar
+                        </button>
+                        <button class="btn btn-danger btn-small" onclick="TransactionController.showRetiroModal()">
+                            <i class="fas fa-minus-circle"></i> Retiro
+                        </button>
+                        <button class="btn btn-success btn-small" onclick="TransactionController.showIngresoModal()">
+                            <i class="fas fa-plus-circle"></i> Ingreso
+                        </button>
+                    </div>
+                </h2>
+
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Hora</th>
+                                <th>Tipo</th>
+                                <th>Descripción / Factura</th>
+                                <th>Entrada</th>
+                                <th>Salida</th>
+                                <th>Saldo Caja (Día)</th>
+                                <th>Usuario</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="history-table-body">
+                            <!-- JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+
+
+    <!-- SCRIPTS MÓDULOS -->
+    <script>
+        /**
+         * TALLER WILLIAN - SISTEMA DE VENTAS REFACTORIZADO
+         * Arquitectura Modular
+         */
+
+        // ==========================================
+        // 1. CONFIGURACIÓN Y UTILIDADES
+        // ==========================================
+        const Config = {
+            firebase: {
+                apiKey: "AIzaSyDh074AarXaYCc-Htw-lsCeIc_95QQNSnY",
+                authDomain: "tallerwilliam-732b3.firebaseapp.com",
+                projectId: "tallerwilliam-732b3",
+                storageBucket: "tallerwilliam-732b3.firebasestorage.app",
+                messagingSenderId: "822262666247",
+                appId: "1:822262666247:web:6680487bbf1108006b86a2"
+            },
+            collections: {
+                PRODUCTS: 'INVENTARIO',
+                SALES: 'VENTAS',
+                GROUPS: 'GRUPOS',
+                WITHDRAWALS: 'RETIROS',
+                INCOMES: 'INGRESOS',
+                // NUEVAS COLECCIONES
+                PAYMENTS: 'ABONOS',
+                INVENTORY_LOGS: 'MOVIMIENTOS_INVENTARIO'
+            }
+        };
+
+        const DateUtils = {
+            getCurrentDate: () => {
+                // Return local date string YYYY-MM-DD
+                const now = new Date();
+                const offset = now.getTimezoneOffset() * 60000;
+                return new Date(now.getTime() - offset).toISOString().split('T')[0];
+            },
+            formatCurrency: (amount) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount),
+            timestampToDate: (timestamp) => {
+                if (!timestamp) return new Date();
+                return timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+            }
+        };
+
+        // ==========================================
+        // 2. ESTADO GLOBAL (STORE)
+        // ==========================================
+        const Store = {
+            cart: [],
+            products: [],
+            pendingInvoices: [], // Facturas con saldo > 0
+            groups: [],
+            history: [],
+            currentFilterDate: DateUtils.getCurrentDate(),
+
+            // Computed
+            get cartTotal() {
+                return this.cart.reduce((sum, item) => sum + (item.precio * item.cantidad), 0);
+            }
+        };
+
+        // ==========================================
+        // 3. DATA SERVICE (FIRESTORE)
+        // ==========================================
+        const DataService = {
+            db: null,
+
+            init() {
+                // Initializar Firebase con la config si no existe
+                if (firebase.apps.length === 0) {
+                    firebase.initializeApp(Config.firebase);
+                    console.log("Firebase inicializado con Config");
+                }
+
+                this.db = firebase.firestore();
+                this.enablePersistence();
+            },
+
+            async enablePersistence() {
+                try {
+                    await this.db.enablePersistence();
+                } catch (err) {
+                    console.log("Persistencia no habilitada:", err.code);
+                }
+            },
+
+            // --- PRODUCTOS ---
+            async getAllProducts() {
+                const snapshot = await this.db.collection(Config.collections.PRODUCTS).limit(500).get(); // Limitamos por rendimiento
+                return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            },
+
+            async searchProducts(term) {
+                term = term.toLowerCase();
+                // Búsqueda simple en memoria para mayor velocidad si la lista no es gigante
+                // O consulta compuesta en Firestore
+                return Store.products.filter(p =>
+                    (p.codigo && p.codigo.toLowerCase().includes(term)) ||
+                    (p.descripcion && p.descripcion.toLowerCase().includes(term))
+                ).slice(0, 10);
+            },
+
+            async generateInvoiceNumber(dateString) {
+                // Logic portada de ventas.html: YYMM + 4 digits counter
+                // dateString format YYYY-MM-DD
+                const datePart = dateString.replace(/-/g, '').substring(2); // YYMMDD
+                const counterRef = this.db.collection("COUNTERS").doc("sales");
+
+                // Note: In a real batch/transaction this should be atomic, 
+                // but since we are using a batch for the whole sale, we can read here and increment blindly or safely.
+                // However, Firestore strict atomic counters need shard or increment.
+                // We will try to read, increment, and write.
+
+                try {
+                    // We use a transaction for the counter to be safe
+                    return await this.db.runTransaction(async (t) => {
+                        const doc = await t.get(counterRef);
+                        let currentCount = 0;
+                        if (doc.exists) {
+                            currentCount = doc.data()[dateString] || 0;
+                        }
+                        currentCount++;
+                        t.set(counterRef, { [dateString]: currentCount, lastUpdate: new Date() }, { merge: true });
+
+                        const counterPart = currentCount.toString().padStart(4, '0');
+                        return datePart + counterPart;
+                    });
+                } catch (e) {
+                    console.error("Error creating invoice number", e);
+                    return datePart + Date.now().toString().substr(-4); // Fallback
+                }
+            },
+
+            // --- VENTAS Y TRANSACCIONES ---
+
+            /**
+             * Crea una nueva venta de manera transaccional:
+             * 1. Crea documento Venta
+             * 2. Descuenta stock de productos
+             * 3. Crea registros de movimiento de inventario (Log)
+             */
+            async createSale(saleData) {
+                const batch = this.db.batch();
+
+                // 1. Doc Venta
+                const saleRef = this.db.collection(Config.collections.SALES).doc();
+                // Generar número de factura (Legacy logic)
+                saleData.invoiceNumber = await this.generateInvoiceNumber(saleData.date);
+                saleData.id = saleRef.id;
+                batch.set(saleRef, saleData);
+
+                // 2. Transacciones de Inventario
+                for (const item of saleData.products) {
+                    // Actualizar Inventario (Decremento)
+                    const prodRef = this.db.collection(Config.collections.PRODUCTS).doc(item.id);
+                    batch.update(prodRef, {
+                        cantidad: firebase.firestore.FieldValue.increment(-item.cantidad)
+                    });
+
+                    // Crear Log de Movimiento
+                    const logRef = this.db.collection(Config.collections.INVENTORY_LOGS).doc();
+                    batch.set(logRef, {
+                        fecha: new Date(),
+                        fechaString: DateUtils.getCurrentDate(),
+                        productoId: item.id,
+                        codigo: item.codigo || 'S/C',
+                        descripcion: item.descripcion,
+                        cantidad: item.cantidad,
+                        tipo: 'SALIDA_VENTA',
+                        referenciaId: saleRef.id, // Venta ID
+                        precioVenta: item.precio
+                    });
+                }
+
+                await batch.commit();
+                return saleRef.id;
+            },
+
+            /**
+             * Registra un abono:
+             * 1. Crea documento en ABONOS
+             * 2. Actualiza documento en VENTAS (saldoPendiente y array resumen de abonos)
+             */
+            async registerAbono(invoiceId, abonoData) {
+                const batch = this.db.batch();
+
+                // 1. Doc Abono (COMPATIBILIDAD LEGACY: Usar INGRESOS con categoria 'abono')
+                const abonoRef = this.db.collection(Config.collections.INCOMES).doc();
+                abonoData.ventaId = invoiceId;
+                abonoData.id = abonoRef.id;
+                abonoData.categoria = 'abono'; // Campo clave para identificarlo
+                abonoData.concepto = `Abono a Factura #${invoiceId}`; // Descripción legible
+
+                batch.set(abonoRef, abonoData);
+
+                // 2. Actualizar Venta
+                const saleRef = this.db.collection(Config.collections.SALES).doc(invoiceId);
+
+                // Leemos venta para asegurar saldo (optimista se podría hacer con increment, 
+                // pero necesitamos saber si se paga completa)
+                const saleDoc = await saleRef.get();
+                if (!saleDoc.exists) throw new Error("Venta no encontrada");
+
+                const currentSaldo = saleDoc.data().saldoPendiente || saleDoc.data().total;
+                const newSaldo = currentSaldo - abonoData.monto;
+
+                // Estado de la venta
+                const newStatus = newSaldo <= 0.01 ? 'pagado' : 'pendiente'; // Tolerancia de centavos
+
+                batch.update(saleRef, {
+                    saldoPendiente: newSaldo,
+                    status: newStatus,
+                    // Mantenemos un array resumen para UI rápida
+                    abonos: firebase.firestore.FieldValue.arrayUnion({
+                        id: abonoRef.id,
+                        monto: abonoData.monto,
+                        fecha: abonoData.fecha
+                    })
+                });
+
+                await batch.commit();
+                return abonoRef.id;
+            },
+
+            // --- REPORTES E HISTORIAL ---
+            async getDailyMovements(dateString) {
+                // Promise.all para traer todo en paralelo
+
+                // Necesitamos índices compuestos para esto en Firestore (timestamp asc)
+                // O filtramos en cliente si los datos del día no son miles
+
+                const salesPromise = this.db.collection(Config.collections.SALES)
+                    .where('date', '==', dateString)
+                    .get();
+
+                // COMPATIBILIDAD: Traemos todos los ingresos y filtramos
+                const incomesPromise = this.db.collection(Config.collections.INCOMES)
+                    .where('date', '==', dateString)
+                    .get();
+
+                const withdrawalsPromise = this.db.collection(Config.collections.WITHDRAWALS)
+                    .where('date', '==', dateString)
+                    .get();
+
+                const [salesSnap, incomesSnap, withdrawSnap] = await Promise.all([salesPromise, incomesPromise, withdrawalsPromise]);
+
+                // Separar Ingresos y Abonos
+                const allIncomes = incomesSnap.docs.map(d => ({ ...d.data(), id: d.id }));
+                const payments = allIncomes.filter(i => i.categoria === 'abono').map(i => ({ ...i, type: 'ABONO' }));
+                const incomes = allIncomes.filter(i => i.categoria !== 'abono').map(i => ({ ...i, type: 'INGRESO' }));
+
+                return {
+                    sales: salesSnap.docs.map(d => ({ ...d.data(), id: d.id, type: 'VENTA' })),
+                    payments: payments,
+                    withdrawals: withdrawSnap.docs.map(d => ({ ...d.data(), id: d.id, type: 'RETIRO' })),
+                    incomes: incomes
+                };
+            }
+        };
+
+        // ==========================================
+        // 4. UI SERVICE (DOM)
+        // ==========================================
+        const UI = {
+            init() {
+                // Event Listeners Globales
+                document.getElementById('sale-date').valueAsDate = new Date();
+
+                // Search Input logic
+                const searchInput = document.getElementById('search-product');
+                searchInput.addEventListener('input', (e) => SalesController.handleSearch(e.target.value));
+            },
+
+            switchTab(tabName) {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+
+                // Activar lógica del tab (buscar botones por texto es frágil, mejor IDs o index)
+                // ... implementación simple:
+                const tabIndex = tabName === 'facturas' ? 0 : 1;
+                document.querySelectorAll('.tab')[tabIndex].classList.add('active');
+                document.getElementById('tab-' + tabName).style.display = 'flex'; // o block
+            },
+
+            renderCart() {
+                const container = document.getElementById('cart-items');
+                if (Store.cart.length === 0) {
+                    container.innerHTML = '<div style="text-align: center; padding: 20px;">Carrito Vacío</div>';
+                    document.getElementById('cart-total-display').innerText = '0.00';
+                    return;
+                }
+
+                container.innerHTML = Store.cart.map((item, index) => `
+                    <div class="cart-item">
+                        <div>
+                            <input type="number" value="${item.cantidad}" min="1" 
+                                style="width: 50px" onchange="SalesController.updateItem(${index}, this.value)">
+                        </div>
+                        <div>${item.descripcion}</div>
+                        <div>$${item.precio.toFixed(2)}</div>
+                        <div>$${(item.precio * item.cantidad).toFixed(2)}</div>
+                        <button class="btn btn-danger btn-small" onclick="SalesController.removeItem(${index})">&times;</button>
+                    </div>
+                `).join('');
+
+                document.getElementById('cart-total-display').innerText = Store.cartTotal.toFixed(2);
+            },
+
+            showModal(id) {
+                document.getElementById(id).classList.add('active');
+            },
+
+            closeModal(id) {
+                document.getElementById(id).classList.remove('active');
+            },
+
+            showLoading(msg) {
+                document.getElementById('loading-text').innerText = msg;
+                document.getElementById('loading').style.display = 'flex';
+            },
+
+            hideLoading() {
+                document.getElementById('loading').style.display = 'none';
+            },
+
+            showStatus(message, type = 'success') {
+                const el = document.getElementById('status-message');
+                el.textContent = message;
+                el.className = `status ${type}`; // reset classes
+                el.style.display = 'block';
+                el.style.opacity = '1';
+
+                setTimeout(() => {
+                    el.style.opacity = '0';
+                    setTimeout(() => el.style.display = 'none', 300);
+                }, 3000);
+            }
+        };
+
+        // ==========================================
+        // 5. CONTROLADORES (LÓGICA NEGOCIO)
+        // ==========================================
+
+        const SalesController = {
+            handleSearch(term) {
+                // Simple debounce podría ir aquí
+                if (term.length < 2) {
+                    document.getElementById('search-results').style.display = 'none';
+                    return;
+                }
+
+                DataService.searchProducts(term).then(results => {
+                    const dropdown = document.getElementById('search-results');
+                    dropdown.innerHTML = results.map(p => `
+                        <div class="search-item" onclick="SalesController.addToCart('${p.id}')">
+                            <div class="search-item-info">
+                                <strong>${p.descripcion}</strong>
+                                <small>${p.codigo || ''}</small>
+                            </div>
+                            <div class="search-item-price">
+                                $${(p.precio_venta || 0).toFixed(2)}
+                            </div>
+                        </div>
+                    `).join('');
+                    dropdown.style.display = results.length ? 'block' : 'none';
+                });
+            },
+
+            addToCart(productId) {
+                const product = Store.products.find(p => p.id === productId);
+                if (!product) return;
+
+                const existing = Store.cart.find(i => i.id === productId);
+                if (existing) {
+                    existing.cantidad++;
+                } else {
+                    Store.cart.push({
+                        id: product.id,
+                        codigo: product.codigo,
+                        descripcion: product.descripcion,
+                        precio: parseFloat(product.precio_venta) || 0,
+                        cantidad: 1
+                    });
+                }
+
+                UI.renderCart();
+                document.getElementById('search-results').style.display = 'none';
+                document.getElementById('search-product').value = '';
+                document.getElementById('search-product').focus();
+            },
+
+            updateItem(index, qty) {
+                if (qty < 1) qty = 1;
+                Store.cart[index].cantidad = parseInt(qty);
+                UI.renderCart();
+            },
+
+            removeItem(index) {
+                Store.cart.splice(index, 1);
+                UI.renderCart();
+            },
+
+            async processSale(type) {
+                if (Store.cart.length === 0) {
+                    alert("El carrito está vacío");
+                    return;
+                }
+
+                UI.showLoading("Procesando Venta...");
+
+                try {
+                    const saleData = {
+                        date: document.getElementById('sale-date').value,
+                        timestamp: new Date(),
+                        equipoNumber: document.getElementById('sale-equipo').value || 'S/N',
+                        clientName: document.getElementById('sale-client').value || 'Cliente General',
+                        total: Store.cartTotal,
+                        status: type === 'contado' ? 'pagado' : 'pendiente',
+                        paymentType: type,
+                        saldoPendiente: type === 'contado' ? 0 : Store.cartTotal,
+                        products: Store.cart.map(i => ({ ...i })) // Copia
+                    };
+
+                    const saleId = await DataService.createSale(saleData);
+
+                    UI.showStatus(`Venta registrada con éxito.`, "success");
+                    this.printTicket(saleData);
+
+                    this.clearCart();
+                    HistoryController.loadDayHistory();
+
+                } catch (error) {
+                    console.error(error);
+                    UI.showStatus("Error al procesar venta: " + error.message, "error");
+                } finally {
+                    UI.hideLoading();
+                }
+            },
+
+            printTicket(saleData) {
+                const printWindow = window.open('', '_blank');
+                const fecha = saleData.timestamp ? new Date(saleData.timestamp.toDate ? saleData.timestamp.toDate() : saleData.timestamp) : new Date();
+                const fechaFormateada = fecha.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' });
+
+                const saldoPendiente = saleData.saldoPendiente !== undefined ? saleData.saldoPendiente : saleData.total;
+
+                let itemsHTML = '';
+                saleData.products.forEach(item => {
+                    itemsHTML += `
+                        <div class="ticket-item">
+                            <div>${item.cantidad} x ${item.descripcion.substring(0, 20)}</div>
+                            <div style="text-align: right;">$${(item.precio * item.cantidad).toFixed(2)}</div>
+                        </div>
+                    `;
+                });
+
+                printWindow.document.write(`
+                    <html>
+                    <head>
+                        <style>
+                            body { font-family: 'Courier New', monospace; width: 300px; font-size: 12px; margin: 0; padding: 10px; }
+                            .header { text-align: center; margin-bottom: 10px; }
+                            .ticket-item { display: flex; justify-content: space-between; margin-bottom: 5px; }
+                            .total { text-align: right; font-weight: bold; font-size: 14px; margin-top: 10px; border-top: 1px dashed black; padding-top: 5px; }
+                            .footer { text-align: center; margin-top: 20px; font-size: 10px; }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="header">
+                            <h3>TALLER WILLIAN</h3>
+                            <p>Venta de Repuestos y Servicios</p>
+                            <p>Fecha: ${fechaFormateada}</p>
+                            <p>Factura #: <strong>${saleData.invoiceNumber || '---'}</strong></p>
+                            <p>Cliente: ${saleData.clientName}</p> 
+                        </div>
+                        <div style="border-bottom: 1px dashed black; margin-bottom: 10px;"></div>
+                        ${itemsHTML}
+                        <div class="total">TOTAL: $${saleData.total.toFixed(2)}</div>
+                        ${saleData.paymentType === 'pendiente' ? `<div style="text-align:right">SALDO PENDIENTE: $${saldoPendiente.toFixed(2)}</div>` : ''}
+                        <div class="footer">¡GRACIAS POR SU PREFERENCIA!</div>
+                    </body>
+                    </html>
+                `);
+
+                printWindow.document.close();
+                printWindow.focus();
+                setTimeout(() => {
+                    printWindow.print();
+                    setTimeout(() => printWindow.close(), 500);
+                }, 500);
+            },
+
+            clearCart() {
+                Store.cart = [];
+                UI.renderCart();
+                document.getElementById('sale-equipo').value = '';
+                document.getElementById('sale-client').value = '';
+                document.getElementById('search-product').value = '';
+                document.getElementById('search-product').focus();
+            }
+        };
+
+        const CreditsController = {
+            async init() {
+                await this.loadPendingInvoices();
+            },
+
+            async loadPendingInvoices() {
+                try {
+                    const snapshot = await DataService.db.collection(Config.collections.SALES)
+                        .where('status', '==', 'pendiente')
+                        .get();
+
+                    Store.pendingInvoices = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    this.renderInvoices(Store.pendingInvoices);
+                } catch (e) { console.error("Error cargando pendientes", e); }
+            },
+
+            filterInvoices() {
+                const term = document.getElementById('search-invoice').value.toLowerCase();
+                const filtered = Store.pendingInvoices.filter(inv =>
+                    (inv.equipoNumber && inv.equipoNumber.toString().includes(term)) ||
+                    (inv.clientName && inv.clientName.toLowerCase().includes(term))
+                );
+                this.renderInvoices(filtered);
+            },
+
+            renderInvoices(invoices) {
+                // Get list of equipment numbers that are in groups
+                const equiposEnGrupos = new Set();
+                if (Store.groups && Store.groups.length > 0) {
+                    Store.groups.forEach(grupo => {
+                        if (grupo.activo !== false && grupo.equipos && Array.isArray(grupo.equipos)) {
+                            grupo.equipos.forEach(equipoNum => {
+                                equiposEnGrupos.add(equipoNum.toString());
+                            });
+                        }
+                    });
+                }
+
+                // Filter: exclude invoices with grupo field AND exclude equipment in groups
+                const filtered = invoices.filter(inv => {
+                    // Skip if has grupo field
+                    if (inv.grupo) return false;
+
+                    // Skip if equipment number is in any group
+                    const equipoNum = (inv.equipoNumber || 'S/N').toString();
+                    if (equiposEnGrupos.has(equipoNum)) return false;
+
+                    return true;
+                });
+
+                // Group by equipment number
+                const grouped = {};
+                filtered.forEach(inv => {
+                    const num = inv.equipoNumber || 'S/N';
+                    if (!grouped[num]) {
+                        grouped[num] = {
+                            equipoNumber: num,
+                            clientName: inv.clientName || '',
+                            total: 0,
+                            count: 0
+                        };
+                    }
+                    grouped[num].total += (inv.saldoPendiente !== undefined ? inv.saldoPendiente : inv.total);
+                    grouped[num].count++;
+                });
+
+                // Convert to array, filter out zero balances, and sort
+                const sorted = Object.values(grouped)
+                    .filter(g => g.total > 0.01) // Only show equipment with pending balance
+                    .sort((a, b) => (parseInt(a.equipoNumber) || 0) - (parseInt(b.equipoNumber) || 0));
+
+                const container = document.getElementById('pending-invoices-list');
+                if (sorted.length === 0) {
+                    container.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 20px;">No hay facturas pendientes</div>';
+                    return;
+                }
+
+                container.innerHTML = sorted.map(group => {
+                    // Logic to check if client name is redundant
+                    const numero = (group.equipoNumber || '').toString();
+                    const cliente = (group.clientName || '').toString();
+
+                    let showName = true;
+                    if (cliente.trim() === numero.trim()) showName = false;
+                    if (cliente.toLowerCase().replace(/\s/g, '') === 'equipo' + numero.toLowerCase().replace(/\s/g, '')) showName = false;
+
+                    return `
+                    <div class="equipo-card" onclick="CreditsController.showEquipmentDetails('${group.equipoNumber}')">
+                        <div class="equipo-number">${group.equipoNumber}</div>
+                        ${showName ? `<div class="equipo-nombre">${group.clientName}</div>` : ''}
+                        <div class="equipo-total">$${group.total.toFixed(2)}</div>
+                    </div>
+                `}).join('');
+            },
+
+            showEquipmentDetails(equipoNumber) {
+                // Filter invoices for this equipment
+                const invoices = Store.pendingInvoices.filter(i => {
+                    const iNum = i.equipoNumber || 'S/N';
+                    return iNum == equipoNumber && !i.grupo && i.status === 'pendiente';
+                });
+
+                if (invoices.length === 0) return;
+
+                // Sort by Date ASCENDING (oldest first for payment order)
+                invoices.sort((a, b) => {
+                    const dateA = a.date ? new Date(a.date) : new Date(0);
+                    const dateB = b.date ? new Date(b.date) : new Date(0);
+                    return dateA - dateB;
+                });
+
+                // Calculate totals
+                const totalPendiente = invoices.reduce((sum, inv) => sum + (inv.saldoPendiente !== undefined ? inv.saldoPendiente : inv.total), 0);
+                const clientName = invoices.length > 0 ? invoices[0].clientName : 'N/A';
+
+                let html = `
+                    <div style="padding: 15px; background: #f8f9fa; border-radius: 4px; margin-bottom: 15px;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; font-size: 0.9rem; margin-bottom: 15px;">
+                            <div>
+                                <i class="fas fa-user" style="color: #666;"></i>
+                                <strong>Cliente:</strong> ${clientName}
+                            </div>
+                            <div>
+                                <i class="fas fa-file-invoice" style="color: #666;"></i>
+                                <strong>Facturas:</strong> ${invoices.length}
+                            </div>
+                            <div>
+                                <i class="fas fa-dollar-sign" style="color: #e74c3c;"></i>
+                                <strong style="color: #e74c3c;">Total Pendiente:</strong> 
+                                <span style="color: #e74c3c; font-weight: bold; font-size: 1.1rem;">$${totalPendiente.toFixed(2)}</span>
+                            </div>
+                        </div>
+                        <div style="text-align: right;">
+                            <button id="btn-abonar-selected" class="btn btn-success" 
+                                style="font-size: 0.9rem; padding: 8px 20px;" 
+                                onclick="CreditsController.processSelectedInvoicesAbono('${equipoNumber}')" 
+                                disabled>
+                                <i class="fas fa-money-bill-wave"></i> Abonar Seleccionadas
+                            </button>
+                        </div>
+                    </div>
+
+                    <div style="overflow-x: auto;">
+                        <table class="table" id="invoices-table-${equipoNumber}" style="width:100%; margin-bottom: 0; font-size: 0.85rem;">
+                            <thead>
+                                <tr style="background-color: #2c3e50; color: white;">
+                                    <th style="padding: 10px; width: 40px; text-align: center;">
+                                        <input type="checkbox" id="select-all-invoices" onclick="
+                                            const table = document.getElementById('invoices-table-${equipoNumber}');
+                                            const checkboxes = table.querySelectorAll('tbody input[type=checkbox]');
+                                            checkboxes.forEach(cb => cb.checked = this.checked);
+                                            CreditsController.updateAbonarButton();
+                                        ">
+                                    </th>
+                                    <th style="padding: 10px;">Factura</th>
+                                    <th style="padding: 10px;">Productos</th>
+                                    <th style="padding: 10px; text-align: right;">Total</th>
+                                    <th style="padding: 10px; text-align: right;">Abonos</th>
+                                    <th style="padding: 10px; text-align: right;">Saldo</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+
+                invoices.forEach(inv => {
+                    const fecha = DateUtils.timestampToDate(inv.date).toLocaleDateString();
+                    const pendiente = inv.saldoPendiente !== undefined ? inv.saldoPendiente : inv.total;
+                    const abonado = inv.total - pendiente;
+
+                    // Build products list
+                    let productsList = '';
+                    if (inv.products && inv.products.length > 0) {
+                        productsList = inv.products.map(prod => {
+                            return `
+                                <div style="padding: 2px 0; border-bottom: 1px solid #f0f0f0;">
+                                    <span style="font-weight: bold; color: #2c3e50;">${prod.cantidad}</span>
+                                    <span style="margin-left: 8px;">${prod.descripcion || 'N/A'}</span>
+                                    <span style="float: right; color: #666;">$${((prod.precio || 0) * (prod.cantidad || 0)).toFixed(2)}</span>
+                                </div>
+                            `;
+                        }).join('');
+                    } else {
+                        productsList = '<div style="color: #999; font-style: italic;">Sin productos</div>';
+                    }
+
+                    html += `
+                        <tr style="border-bottom: 2px solid #dee2e6;">
+                            <td style="padding: 10px; text-align: center; vertical-align: top;">
+                                <input type="checkbox" class="invoice-checkbox" data-invoice-id="${inv.id}" 
+                                    onchange="CreditsController.updateAbonarButton()">
+                            </td>
+                            <td style="padding: 10px; vertical-align: top;">
+                                <div style="font-weight: bold; color: #2c3e50;">#${inv.invoiceNumber || 'N/A'}</div>
+                                <div style="font-size: 0.8rem; color: #666;">${fecha}</div>
+                            </td>
+                            <td style="padding: 10px;">
+                                <div style="max-height: 200px; overflow-y: auto;">
+                                    ${productsList}
+                                </div>
+                            </td>
+                            <td style="padding: 10px; text-align: right; vertical-align: top; font-weight: bold;">
+                                $${inv.total.toFixed(2)}
+                            </td>
+                            <td style="padding: 10px; text-align: right; vertical-align: top; color: #27ae60;">
+                                ${abonado > 0 ? '$' + abonado.toFixed(2) : '-'}
+                            </td>
+                            <td style="padding: 10px; text-align: right; vertical-align: top;">
+                                <div style="color: #e74c3c; font-weight: bold; font-size: 1rem;">$${pendiente.toFixed(2)}</div>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                html += `</tbody></table></div>`;
+
+                document.getElementById('details-modal-title').innerHTML = `<i class="fas fa-wrench"></i> Equipo ${equipoNumber}`;
+                document.getElementById('details-modal-content').innerHTML = html;
+                UI.showModal('modal-details');
+            },
+
+            updateAbonarButton() {
+                const selectedCheckboxes = document.querySelectorAll('.invoice-checkbox:checked');
+                const btn = document.getElementById('btn-abonar-selected');
+                if (btn) {
+                    btn.disabled = selectedCheckboxes.length === 0;
+                }
+            },
+
+            processSelectedInvoicesAbono(equipoNumber) {
+                const selectedCheckboxes = document.querySelectorAll('.invoice-checkbox:checked');
+                if (selectedCheckboxes.length === 0) {
+                    alert('Por favor seleccione al menos una factura.');
+                    return;
+                }
+
+                // Get selected invoice IDs
+                const selectedIds = Array.from(selectedCheckboxes).map(cb => cb.dataset.invoiceId);
+
+                // Get the invoices and sort by date (oldest first)
+                const selectedInvoices = Store.pendingInvoices
+                    .filter(inv => selectedIds.includes(inv.id))
+                    .sort((a, b) => {
+                        const dateA = a.date ? new Date(a.date) : new Date(0);
+                        const dateB = b.date ? new Date(b.date) : new Date(0);
+                        return dateA - dateB; // Oldest first
+                    });
+
+                // Calculate total pending
+                const totalPending = selectedInvoices.reduce((sum, inv) => {
+                    return sum + (inv.saldoPendiente !== undefined ? inv.saldoPendiente : inv.total);
+                }, 0);
+
+                // Store selected invoices for payment processing
+                this.selectedInvoicesForPayment = selectedInvoices;
+
+                // Show abono modal with special content for multiple invoices
+                this.showMultipleInvoicesAbonoModal(selectedInvoices, totalPending, equipoNumber);
+            },
+
+            showMultipleInvoicesAbonoModal(invoices, totalPending, equipoNumber) {
+                const form = document.getElementById('abono-form-content');
+
+                let invoicesList = invoices.map(inv => {
+                    const saldo = inv.saldoPendiente !== undefined ? inv.saldoPendiente : inv.total;
+                    return `<div style="font-size: 0.85rem;">• Factura #${inv.invoiceNumber || 'N/A'}: $${saldo.toFixed(2)}</div>`;
+                }).join('');
+
+                form.innerHTML = `
+                    <div style="background: #f8f9fa; padding: 10px; border-radius: 4px; margin-bottom: 10px;">
+                        <strong>Facturas seleccionadas (${invoices.length}):</strong><br>
+                        ${invoicesList}
+                        <div style="margin-top: 10px; padding-top: 10px; border-top: 2px solid #dee2e6;">
+                            <strong>Total Pendiente:</strong> 
+                            <span style="color: #e74c3c; font-weight: bold; font-size: 1.1rem;">$${totalPending.toFixed(2)}</span>
+                        </div>
+                        <div style="margin-top: 8px; font-size: 0.8rem; color: #666;">
+                            <i class="fas fa-info-circle"></i> El abono se aplicará empezando por la factura más antigua.
+                        </div>
+                    </div>
+                    <input type="hidden" id="abono-equipment-number" value="${equipoNumber}">
+                `;
+
+                document.getElementById('abono-amount').value = '';
+                document.getElementById('abono-amount').max = totalPending;
+                UI.closeModal('modal-details');
+                UI.showModal('modal-abono');
+                setTimeout(() => document.getElementById('abono-amount').focus(), 100);
+            },
+
+
+
+            showAbonoModal(invoiceId) {
+                const invoice = Store.pendingInvoices.find(i => i.id === invoiceId);
+                if (!invoice) return;
+
+                const form = document.getElementById('abono-form-content');
+                const saldo = invoice.saldoPendiente || invoice.total;
+
+                form.innerHTML = `
+                    <div style="background: #f8f9fa; padding: 10px; border-radius: 4px; margin-bottom: 10px;">
+                        <strong>Factura:</strong> ${invoice.clientName} (Equipo ${invoice.equipoNumber})<br>
+                        <strong>Saldo Pendiente:</strong> $${saldo.toFixed(2)}
+                    </div>
+                    <input type="hidden" id="abono-invoice-id" value="${invoice.id}">
+                `;
+
+                document.getElementById('abono-amount').value = '';
+                document.getElementById('abono-amount').max = saldo;
+                UI.showModal('modal-abono');
+                setTimeout(() => document.getElementById('abono-amount').focus(), 100);
+            },
+
+            async submitAbono() {
+                const invoiceId = document.getElementById('abono-invoice-id').value;
+                let amount = parseFloat(document.getElementById('abono-amount').value);
+                const note = document.getElementById('abono-note').value;
+
+                if (!amount || amount <= 0) {
+                    alert('Monto inválido');
+                    return;
+                }
+
+                // Validar contra el saldo máximo permitido
+                const maxAmount = parseFloat(document.getElementById('abono-amount').max);
+                if (amount > maxAmount) {
+                    const confirmacion = confirm(
+                        `El monto ingresado ($${amount.toFixed(2)}) excede el saldo pendiente ($${maxAmount.toFixed(2)}).\n\n` +
+                        `¿Desea ajustar automáticamente a $${maxAmount.toFixed(2)}?`
+                    );
+
+                    if (!confirmacion) {
+                        return; // Usuario cancela
+                    }
+
+                    amount = maxAmount; // Ajustar al máximo permitido
+                    document.getElementById('abono-amount').value = amount; // Actualizar el input
+                }
+
+                UI.showLoading("Registrando Abono...");
+                try {
+                    await DataService.registerAbono(invoiceId, {
+                        monto: amount,
+                        notas: note,
+                        fecha: new Date(), // Timestamp
+                        fechaString: DateUtils.getCurrentDate()
+                    });
+
+                    alert("Abono registrado correctamente");
+                    UI.closeModal('modal-abono');
+                    await this.loadPendingInvoices(); // Recargar lista
+                    HistoryController.loadDayHistory(); // Refrescar historial
+                } catch (e) {
+                    console.error(e);
+                    alert("Error: " + e.message);
+                } finally {
+                    UI.hideLoading();
+                }
+            }
+        };
+
+        // STUB - Usando versión mejorada más abajo
+        /* const TransactionController = {
+            showRetiroModal() {
+                const amount = prompt("Monto a retirar:");
+                if (!amount) return;
+                const concept = prompt("Concepto / Motivo:");
+                if (!concept) return;
+
+                this.processTransaction('RETIRO', parseFloat(amount), concept);
+            },
+
+            showIngresoModal() {
+                const amount = prompt("Monto a ingresar:");
+                if (!amount) return;
+                const concept = prompt("Concepto / Fuente:");
+                if (!concept) return;
+
+                this.processTransaction('INGRESO', parseFloat(amount), concept);
+            },
+
+            async processTransaction(type, amount, concept) {
+                if (isNaN(amount) || amount <= 0) { alert("Monto inválido"); return; }
+
+                const collection = type === 'RETIRO' ? Config.collections.WITHDRAWALS : Config.collections.INCOMES;
+
+                UI.showLoading("Guardando...");
+                try {
+                    await DataService.db.collection(collection).add({
+                        monto: amount,
+                        concepto: concept,
+                        fecha: new Date(),
+                        date: DateUtils.getCurrentDate()
+                    });
+                    alert(`${type} registrado.`);
+                    HistoryController.loadDayHistory(); // Refrescar tabla
+                } catch (e) {
+                    alert("Error: " + e.message);
+                } finally {
+                    UI.hideLoading();
+                }
+            }
+        }; */
+
+        // STUB - Usando versión mejorada más abajo  
+        /* const HistoryController = {
+            init() {
+                this.loadDayHistory();
+            },
+
+            showFilterModal() {
+                const date = prompt("Ingrese fecha (YYYY-MM-DD):", Store.currentFilterDate);
+                if (date) {
+                    Store.currentFilterDate = date;
+                    this.loadDayHistory();
+                }
+            },
+
+            async loadDayHistory() {
+                UI.showLoading("Cargando Historial...");
+                try {
+                    const data = await DataService.getDailyMovements(Store.currentFilterDate);
+
+                    // Unificar flujos
+                    // Ingresos: Ventas Contado + Abonos + Ingresos Extras
+                    // Egresos: Retiros
+
+                    const rows = [];
+                    // NOTA: El saldo inicial debería venir de un registro de apertura, pero asumimos 0 por día por ahora
+                    // o se calcula diferencial. Aquí solo mostramos el flujo del día.
+
+                    // 1. Procesar Ventas
+                    data.sales.forEach(s => {
+                        if (s.paymentType === 'contado') {
+                            rows.push({
+                                fecha: s.timestamp,
+                                type: 'VENTA',
+                                desc: `Venta Contado - ${s.clientName}`,
+                                input: s.total,
+                                output: 0,
+                                raw: s
+                            });
+                        } else {
+                            // Ventas crédito no suman a caja, pero mostramos como informativo
+                            rows.push({
+                                fecha: s.timestamp,
+                                type: 'VENTA CRÉDITO',
+                                desc: `Crédito - ${s.clientName}`,
+                                input: 0,
+                                output: 0,
+                                isInfo: true,
+                                raw: s
+                            });
+                        }
+                    });
+
+                    // 2. Procesar Abonos
+                    data.payments.forEach(p => {
+                        rows.push({
+                            fecha: p.fecha,
+                            type: 'ABONO',
+                            desc: `Abono a Factura`, // Aquí se podría buscar el cliente si se cruza data
+                            input: p.monto,
+                            output: 0,
+                            raw: p
+                        });
+                    });
+
+                    // 3. Procesar Retiros
+                    data.withdrawals.forEach(w => {
+                        rows.push({
+                            fecha: w.fecha || w.timestamp, // Compatibilidad
+                            type: 'RETIRO',
+                            desc: w.concepto,
+                            input: 0,
+                            output: w.monto,
+                            raw: w
+                        });
+                    });
+
+                    // 4. Procesar Ingresos Extras
+                    data.incomes.forEach(i => {
+                        rows.push({
+                            fecha: i.fecha,
+                            type: 'INGRESO',
+                            desc: i.concepto,
+                            input: i.monto,
+                            output: 0,
+                            raw: i
+                        });
+                    });
+
+                    // Ordenar por hora
+                    rows.sort((a, b) => DateUtils.timestampToDate(a.fecha) - DateUtils.timestampToDate(b.fecha));
+
+                    // Render
+                    const tbody = document.getElementById('history-table-body');
+                    tbody.innerHTML = '';
+
+                    let runningBalance = 0;
+
+                    rows.forEach(row => {
+                        if (!row.isInfo) {
+                            runningBalance += (row.input - row.output);
+                        }
+
+                        const dateObj = DateUtils.timestampToDate(row.fecha);
+                        const timeStr = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${timeStr}</td>
+                            <td><span class="badge ${this.getBadgeClass(row.type)}">${row.type}</span></td>
+                            <td>${row.desc}</td>
+                            <td style="color: #27ae60; font-weight:bold;">${row.input > 0 ? '$' + row.input.toFixed(2) : '-'}</td>
+                            <td style="color: #e74c3c; font-weight:bold;">${row.output > 0 ? '$' + row.output.toFixed(2) : '-'}</td>
+                            <td><strong>$${runningBalance.toFixed(2)}</strong></td>
+                            <td>Admin</td>
+                            <td>
+                                <!-- Botones de acción futuros -->
+                            </td >
+            `;
+                        tbody.appendChild(tr);
+                    });
+
+                    if (rows.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center">No hay movimientos registrados hoy</td></tr>';
+                    }
+
+                } catch (e) {
+                    console.error("Error historial", e);
+                } finally {
+                    UI.hideLoading();
+                }
+            },
+
+            getBadgeClass(type) {
+                if (type === 'VENTA') return 'badge-success';
+                if (type === 'ABONO') return 'badge-info'; // Azul
+                if (type === 'INGRESO') return 'badge-success';
+                if (type === 'RETIRO') return 'badge-danger';
+                return 'badge-warning';
+            }
+        }; */
+
+        const ReportsController = {
+            async showInventoryReport() {
+                const date = prompt("Fecha del reporte (YYYY-MM-DD):", DateUtils.getCurrentDate());
+                if (!date) return;
+
+                UI.showLoading("Generando Reporte...");
+                try {
+                    // Consulta a MOVIMIENTOS_INVENTARIO
+                    const snapshot = await DataService.db.collection(Config.collections.INVENTORY_LOGS)
+                        .where('fechaString', '==', date)
+                        .get();
+
+                    if (snapshot.empty) {
+                        alert("No hay movimientos de inventario para esta fecha.");
+                        return;
+                    }
+
+                    // Construir HTML simple para imprimir
+                    let html = `
+            < html ><head><title>Reporte Inventario ${date}</title>
+                        <style>
+                            body { font-family: sans-serif; }
+                            table {width:100%; border-collapse: collapse; margin-top: 20px;} 
+                            th,td{border:1px solid #ddd; padding:8px; text-align:left;}
+                            th { background: #f0f0f0; }
+                        </style>
+                        </head><body>
+                        <h2>Reporte de Salidas de Inventario</h2>
+                        <p><strong>Fecha:</strong> ${date}</p>
+                        <table>
+                            <thead><tr><th>Hora</th><th>Código</th><th>Descripción</th><th>Cant.</th><th>Tipo</th></tr></thead>
+                            <tbody>
+                    `;
+
+                    snapshot.docs.forEach(doc => {
+                        const d = doc.data();
+                        const time = DateUtils.timestampToDate(d.fecha).toLocaleTimeString();
+                        html += `<tr>
+                            <td>${time}</td>
+                            <td>${d.codigo}</td>
+                            <td>${d.descripcion}</td>
+                            <td>${d.cantidad}</td>
+                            <td>${d.tipo}</td>
+                        </tr>`;
+                    });
+
+                    html += `</tbody></table></body></html > `;
+
+                    const win = window.open('', '_blank');
+                    win.document.write(html);
+                    win.document.close();
+                    setTimeout(() => win.print(), 500);
+
+                } catch (e) {
+                    alert("Error generando reporte: " + e.message);
+                } finally {
+                    UI.hideLoading();
+                }
+            },
+
+            showDailyCashReport() {
+                // Simplemente imprimimos la vista actual del historial con un título adecuado
+                window.print();
+            }
+        };
+
+        // Controlador de Grupos
+        const GroupsController = {
+            async init() {
+                this.loadGroups();
+            },
+
+            async loadGroups() {
+                try {
+                    const snapshot = await DataService.db.collection(Config.collections.GROUPS).get();
+                    Store.groups = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    this.renderGroups();
+                } catch (e) { console.error("Error loading groups", e); }
+            },
+
+            renderGroups() {
+                const container = document.getElementById('groups-list');
+                if (Store.groups.length === 0) {
+                    container.innerHTML = '<div class="empty-state"><i class="fas fa-users"></i><p>No hay grupos creados</p></div>';
+                    return;
+                }
+
+                container.innerHTML = Store.groups.map(g => `
+            < div class="grupo-management-item" >
+                        <div class="grupo-management-info">
+                            <div class="grupo-management-name">${g.nombre}</div>
+                            <div class="grupo-management-details">Equipos: ${g.equipos ? g.equipos.length : 0} | Saldo: $${(g.total || 0).toFixed(2)}</div>
+                        </div>
+                        <div class="grupo-management-actions">
+                             <button class="btn btn-danger btn-small" onclick="GroupsController.deleteGroup('${g.id}')">Eliminar</button>
+                        </div>
+                    </div >
+            `).join('');
+            },
+
+            async deleteGroup(groupId) {
+                if (!confirm("¿Eliminar este grupo?")) return;
+
+                UI.showLoading("Eliminando Grupo...");
+                try {
+                    await DataService.db.collection(Config.collections.GROUPS).doc(groupId).delete();
+                    UI.showStatus("Grupo eliminado", "success");
+                    this.loadGroups();
+                } catch (e) {
+                    console.error(e);
+                    UI.showStatus("Error: " + e.message, "error");
+                } finally {
+                    UI.hideLoading();
+                }
+            },
+
+            async init() {
+                await this.loadGroups();
+            },
+
+            async loadGroups() {
+                try {
+                    const snapshot = await DataService.db.collection(Config.collections.GROUPS).get();
+                    Store.groups = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    this.renderGroups();
+                } catch (e) {
+                    console.error("Error cargando grupos", e);
+                }
+            },
+
+            renderGroups() {
+                const container = document.getElementById('groups-list');
+
+                if (!Store.groups || Store.groups.length === 0) {
+                    container.innerHTML = `
+            < div class="empty-state" >
+                            <i class="fas fa-users"></i>
+                            <div>No hay grupos creados</div>
+                            <div style="font-size: 0.8rem; margin-top: 5px; color: #999;">Crea tu primer grupo para organizar los equipos</div>
+                        </div >
+            `;
+                    return;
+                }
+
+                // Filter active groups and sort
+                const activeGroups = Store.groups
+                    .filter(g => g.activo !== false)
+                    .sort((a, b) => a.nombre.localeCompare(b.nombre));
+
+                let html = '<div class="grupos-container">';
+
+                activeGroups.forEach(grupo => {
+                    // Calculate total for this group from pending invoices
+                    let grupoTotal = 0;
+                    const grupoEquipos = grupo.equipos || [];
+
+                    grupoEquipos.forEach(equipoNum => {
+                        const equipoInvoices = Store.pendingInvoices.filter(inv =>
+                            inv.equipoNumber == equipoNum && inv.status === 'pendiente'
+                        );
+
+                        equipoInvoices.forEach(inv => {
+                            grupoTotal += (inv.saldoPendiente !== undefined ? inv.saldoPendiente : inv.total);
+                        });
+                    });
+
+                    // Only show groups that have pending balance
+                    if (grupoTotal > 0) {
+                        const equiposHTML = grupoEquipos.map(num => {
+                            // Find equipment total
+                            let equipoTotal = 0;
+                            const equipoInvoices = Store.pendingInvoices.filter(inv =>
+                                inv.equipoNumber == num && inv.status === 'pendiente'
+                            );
+
+                            equipoInvoices.forEach(inv => {
+                                equipoTotal += (inv.saldoPendiente !== undefined ? inv.saldoPendiente : inv.total);
+                            });
+
+                            if (equipoTotal > 0) {
+                                return `
+            < div class="grupo-equipo-item" >
+                                        <div class="grupo-equipo-number">${num}</div>
+                                        <div class="grupo-equipo-total">$${equipoTotal.toFixed(2)}</div>
+                                    </div >
+            `;
+                            }
+                            return '';
+                        }).join('');
+
+                        html += `
+            < div class="grupo-card" >
+                                <div class="grupo-header">
+                                    <div class="grupo-name">${grupo.nombre}</div>
+                                </div>
+                                <div class="grupo-equipos-grid">
+                                    ${equiposHTML || '<div style="text-align: center; color: #999;">Sin equipos pendientes</div>'}
+                                </div>
+                                <div class="grupo-total">
+                                    Total: $${grupoTotal.toFixed(2)}
+                                </div>
+                            </div >
+            `;
+                    }
+                });
+
+                html += '</div>';
+                container.innerHTML = html;
+            }
+        };
+
+        // ==========================================
+        // HISTORY CONTROLLER
+        // ==========================================
+        const HistoryController = {
+            currentDate: DateUtils.getCurrentDate(),
+
+            async loadDayHistory(date = this.currentDate) {
+                UI.showLoading("Cargando Historial...");
+                try {
+                    const data = await DataService.getDailyMovements(date);
+                    this.renderHistory(data, date);
+                } catch (e) {
+                    console.error("Error loading history:", e);
+                    UI.showStatus("Error cargando historial", "error");
+                } finally {
+                    UI.hideLoading();
+                }
+            },
+
+            renderHistory(data, date) {
+                const tbody = document.getElementById('history-table-body');
+                const rows = [];
+                let runningBalance = 0;
+
+                // Procesar ventas contado
+                data.sales.forEach(sale => {
+                    if (sale.paymentType === 'contado') {
+                        runningBalance += sale.total;
+                        rows.push({
+                            time: this.formatTime(sale.timestamp),
+                            type: 'VENTA CONTADO',
+                            description: `Factura #${ sale.invoiceNumber || 'N/A' } - ${ sale.clientName || 'Cliente' } `,
+                            income: sale.total,
+                            expense: 0,
+                            balance: runningBalance,
+                            timestamp: sale.timestamp
+                        });
+                    }
+                });
+
+                // Procesar abonos (CON FORMATO MEJORADO)
+                data.payments.forEach(payment => {
+                    const invoice = data.sales.find(s => s.id === payment.ventaId || s.invoiceNumber === payment.invoiceNumber);
+                    if (invoice) {
+                        const saldoAnterior = (invoice.saldoPendiente || 0) + payment.monto;
+                        const nuevoSaldo = invoice.saldoPendiente || 0;
+
+                        runningBalance += payment.monto;
+                        rows.push({
+                            time: this.formatTime(payment.timestamp),
+                            type: 'ABONO',
+                            description: `
+            < div style = "font-weight: bold;" > Equipo ${ invoice.equipoNumber || 'N/A' }</div >
+                <div style="font-size: 0.85rem; color: #666;">
+                    Saldo Anterior: <span style="color: #e74c3c;">$${saldoAnterior.toFixed(2)}</span> →
+                    Abono: <span style="color: #27ae60;">$${payment.monto.toFixed(2)}</span> →
+                    Nuevo Saldo: <span style="color: ${nuevoSaldo > 0 ? '#e74c3c' : '#27ae60'};">$${nuevoSaldo.toFixed(2)}</span>
+                </div>
+        `,
+                            income: payment.monto,
+                            expense: 0,
+                            balance: runningBalance,
+                            timestamp: payment.timestamp
+                        });
+                    }
+                });
+
+                // Procesar ingresos
+                data.incomes.forEach(income => {
+                    runningBalance += income.monto;
+                    rows.push({
+                        time: this.formatTime(income.timestamp),
+                        type: 'INGRESO',
+                        description: income.concepto || 'Ingreso de caja',
+                        income: income.monto,
+                        expense: 0,
+                        balance: runningBalance,
+                        timestamp: income.timestamp
+                    });
+                });
+
+                // Procesar retiros
+                data.withdrawals.forEach(withdrawal => {
+                    runningBalance -= withdrawal.monto;
+                    rows.push({
+                        time: this.formatTime(withdrawal.timestamp),
+                        type: 'RETIRO',
+                        description: withdrawal.concepto || 'Retiro de caja',
+                        income: 0,
+                        expense: withdrawal.monto,
+                        balance: runningBalance,
+                        timestamp: withdrawal.timestamp
+                    });
+                });
+
+                // Ordenar por timestamp
+                rows.sort((a, b) => {
+                    const dateA = a.timestamp?.toDate ? a.timestamp.toDate() : new Date(a.timestamp);
+                    const dateB = b.timestamp?.toDate ? b.timestamp.toDate() : new Date(b.timestamp);
+                    return dateA - dateB;
+                });
+
+                // Renderizar tabla
+                let html = '';
+                rows.forEach(row => {
+                    const typeClass = row.type === 'RETIRO' ? 'retiro-badge' :
+                        row.type === 'ABONO' ? 'abono-badge' :
+                            row.type === 'INGRESO' ? 'ingreso-badge' : 'venta-badge';
+
+                    html += `
+            < tr >
+                            <td>${row.time}</td>
+                            <td><span class="${typeClass}">${row.type}</span></td>
+                            <td>${row.description}</td>
+                            <td style="color: #27ae60; font-weight: bold;">${row.income > 0 ? '$' + row.income.toFixed(2) : '-'}</td>
+                            <td style="color: #e74c3c; font-weight: bold;">${row.expense > 0 ? '$' + row.expense.toFixed(2) : '-'}</td>
+                            <td style="font-weight: bold;">$${row.balance.toFixed(2)}</td>
+                            <td>Admin</td>
+                            <td></td>
+                        </tr >
+            `;
+                });
+
+                if (rows.length === 0) {
+                    html = '<tr><td colspan="8" style="text-align:center; padding: 30px; color: #999;">No hay movimientos registrados hoy</td></tr>';
+                }
+
+                tbody.innerHTML = html;
+
+                // Generar resumen de productos
+                this.renderProductSummary(data.sales, date);
+            },
+
+            renderProductSummary(sales, date) {
+                // Crear elemento para el resumen si no existe
+                let summaryContainer = document.getElementById('product-summary-container');
+                if (!summaryContainer) {
+                    const historySection = document.querySelector('.dashboard-section.full-width');
+                    summaryContainer = document.createElement('div');
+                    summaryContainer.id = 'product-summary-container';
+                    summaryContainer.className = 'product-summary';
+                    historySection.appendChild(summaryContainer);
+                }
+
+                // Agrupar productos
+                const productMap = new Map();
+
+                sales.forEach(sale => {
+                    if (sale.products && Array.isArray(sale.products)) {
+                        sale.products.forEach(product => {
+                            const key = product.codigo || product.descripcion;
+                            if (!productMap.has(key)) {
+                                productMap.set(key, {
+                                    codigo: product.codigo || 'S/C',
+                                    descripcion: product.descripcion,
+                                    cantidad: 0,
+                                    totalVentas: 0
+                                });
+                            }
+
+                            const summary = productMap.get(key);
+                            summary.cantidad += product.cantidad;
+                            summary.totalVentas += product.precio * product.cantidad;
+                        });
+                    }
+                });
+
+                // Convertir a array y ordenar por total de ventas
+                const productos = Array.from(productMap.values())
+                    .sort((a, b) => b.totalVentas - a.totalVentas);
+
+                if (productos.length === 0) {
+                    summaryContainer.innerHTML = '';
+                    return;
+                }
+
+                // Renderizar resumen
+                let html = `
+            < div style = "margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 8px; border: 2px solid #3498db;" >
+                        <h3 style="margin-bottom: 15px; color: #2c3e50; display: flex; align-items: center; gap: 10px;">
+                            <i class="fas fa-chart-bar"></i> 
+                            Resumen de Productos Vendidos - ${date}
+                        </h3>
+                        <div class="table-responsive">
+                            <table class="table" style="background: white;">
+                                <thead style="background: #3498db; color: white;">
+                                    <tr>
+                                        <th style="text-align: center;">#</th>
+                                        <th>Código</th>
+                                        <th>Descripción</th>
+                                        <th style="text-align: center;">Cantidad</th>
+                                        <th style="text-align: right;">Total Ventas</th>
+                                        <th style="text-align: right;">Precio Promedio</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                `;
+
+                let totalCantidad = 0;
+                let totalVentas = 0;
+
+                productos.forEach((producto, index) => {
+                    const precioPromedio = producto.totalVentas / producto.cantidad;
+                    totalCantidad += producto.cantidad;
+                    totalVentas += producto.totalVentas;
+
+                    html += `
+                        <tr>
+                            <td style="text-align: center; font-weight: bold;">${index + 1}</td>
+                            <td>${producto.codigo}</td>
+                            <td>${producto.descripcion}</td>
+                            <td style="text-align: center; font-weight: bold;">${producto.cantidad}</td>
+                            <td style="text-align: right; font-weight: bold; color: #27ae60;">$${producto.totalVentas.toFixed(2)}</td>
+                            <td style="text-align: right;">$${precioPromedio.toFixed(2)}</td>
+                        </tr>
+                    `;
+                });
+
+                html += `
+                                </tbody>
+                                <tfoot style="background: #ecf0f1; font-weight: bold;">
+                                    <tr>
+                                        <th colspan="3" style="text-align: right;">TOTALES:</th>
+                                        <th style="text-align: center;">${totalCantidad}</th>
+                                        <th style="text-align: right; color: #27ae60;">$${totalVentas.toFixed(2)}</th>
+                                        <th></th>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div >
+                `;
+
+                summaryContainer.innerHTML = html;
+            },
+
+            formatTime(timestamp) {
+                if (!timestamp) return 'N/A';
+                const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+                return date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+            },
+
+            showFilterModal() {
+                const date = prompt("Ingrese fecha (YYYY-MM-DD):", this.currentDate);
+                if (date) {
+                    this.currentDate = date;
+                    this.loadDayHistory(date);
+                }
+            }
+        };
+
+        // ==========================================
+        // TRANSACTION CONTROLLER
+        // ==========================================
+        const TransactionController = {
+            showRetiroModal() {
+                const monto = prompt("Monto a retirar:");
+                if (!monto || parseFloat(monto) <= 0) return;
+
+                const concepto = prompt("Concepto del retiro:");
+                if (!concepto) return;
+
+                this.processRetiro(parseFloat(monto), concepto);
+            },
+
+            showIngresoModal() {
+                const monto = prompt("Monto del ingreso:");
+                if (!monto || parseFloat(monto) <= 0) return;
+
+                const concepto = prompt("Concepto del ingreso:");
+                if (!concepto) return;
+
+                this.processIngreso(parseFloat(monto), concepto);
+            },
+
+            async processRetiro(monto, concepto) {
+                UI.showLoading("Registrando Retiro...");
+                try {
+                    await DataService.db.collection(Config.collections.WITHDRAWALS).add({
+                        monto: monto,
+                        concepto: concepto,
+                        fecha: new Date(),
+                        date: DateUtils.getCurrentDate(),
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+
+                    UI.showStatus("Retiro registrado correctamente", "success");
+                    HistoryController.loadDayHistory();
+                } catch (e) {
+                    console.error(e);
+                    UI.showStatus("Error: " + e.message, "error");
+                } finally {
+                    UI.hideLoading();
+                }
+            },
+
+            async processIngreso(monto, concepto) {
+                UI.showLoading("Registrando Ingreso...");
+                try {
+                    await DataService.db.collection(Config.collections.INCOMES).add({
+                        monto: monto,
+                        concepto: concepto,
+                        categoria: 'otro',
+                        fecha: new Date(),
+                        date: DateUtils.getCurrentDate(),
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+
+                    UI.showStatus("Ingreso registrado correctamente", "success");
+                    HistoryController.loadDayHistory();
+                } catch (e) {
+                    console.error(e);
+                    UI.showStatus("Error: " + e.message, "error");
+                } finally {
+                    UI.hideLoading();
+                }
+            }
+        };
+
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', () => {
+            try {
+                // Initialize Data Service (will init Firebase if needed)
+                DataService.init();
+
+                // Initialize UI
+                UI.init();
+
+                // Load initial data - Groups MUST load before pending invoices for filter to work
+                UI.showLoading("Cargando Sistema...");
+                Promise.all([
+                    DataService.getAllProducts().then(p => {
+                        Store.products = p;
+                        console.log("Productos cargados:", p.length);
+                    }),
+                    GroupsController.init() // Load groups FIRST
+                ]).then(async () => {
+                    // Then load pending invoices (depends on groups being loaded)
+                    await CreditsController.loadPendingInvoices();
+                    await HistoryController.loadDayHistory();
+
+                    UI.hideLoading();
+                    UI.showStatus("Conectado a Base de Datos", "success");
+                }).catch(err => {
+                    console.error("Error cargando datos iniciales:", err);
+                    UI.hideLoading();
+                    alert("Error cargando datos: " + err.message);
+                });
+
+            } catch (e) {
+                console.error("Error crítico en inicialización:", e);
+                alert("Error de inicialización: " + e.message);
+            }
+        });
+
+    </script>
+
+    <!-- MODALES (POSICIONADOS AL FINAL DEL BODY) -->
+    <!-- Modal Abono -->
+    <div id="modal-abono" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Realizar Abono</h3>
+                <button class="close-modal" onclick="UI.closeModal('modal-abono')">&times;</button>
+            </div>
+            <div id="abono-form-content"></div>
+            <div class="form-group">
+                <label>Monto a Abonar ($)</label>
+                <input type="number" id="abono-amount" class="form-control" step="0.01" min="0.01">
+            </div>
+            <div class="form-group">
+                <label>Nota (Opcional)</label>
+                <input type="text" id="abono-note" class="form-control" maxlength="50">
+            </div>
+            <div style="margin-top: 20px;">
+                <button class="btn btn-success" style="width: 100%" onclick="CreditsController.submitAbono()">Confirmar
+                    Abono</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Detalle Equipo -->
+    <div id="modal-details" class="modal">
+        <div class="modal-content" style="width: 95%; max-width: 900px; padding: 0;">
+            <div class="modal-header" style="padding: 15px 20px;">
+                <h3 id="details-modal-title" style="margin:0">Detalle Equipo</h3>
+                <button class="close-modal" onclick="UI.closeModal('modal-details')">&times;</button>
+            </div>
+            <div id="details-modal-content" style="padding: 20px;"></div>
+            <div
+                style="padding: 10px 20px; background: #f8f9fa; border-top: 1px solid #eee; text-align: right; border-radius: 0 0 8px 8px;">
+                <button class="btn btn-secondary" onclick="UI.closeModal('modal-details')">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>

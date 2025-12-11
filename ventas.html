@@ -1308,6 +1308,36 @@
             pointer-events: none;
             opacity: 0.7;
         }
+
+        @media (max-width: 768px) {
+            .desktop-only {
+                display: none !important;
+            }
+
+            header {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            header h1 {
+                width: 100%;
+                text-align: center;
+                margin-bottom: 5px;
+            }
+
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+
+            .venta-header {
+                flex-direction: column;
+            }
+
+            .venta-line-1,
+            .venta-line-2 {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 
@@ -1325,17 +1355,27 @@
         <header>
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 0 15px;">
                 <h1>Taller Willian</h1>
-                <div style="display: flex; gap: 10px;">
+                <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end;">
+                    <a href="historial_ventas.html" class="btn btn-primary btn-small" title="Ver Historial Completo"
+                        style="text-decoration: none; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-history"></i> <span class="desktop-only"
+                            style="margin-left: 5px;">HISTORIAL</span>
+                    </a>
+                    <a href="resumen_repuestos.html" class="btn btn-secondary btn-small" title="Resumen de Repuestos"
+                        style="text-decoration: none; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-tools"></i> <span class="desktop-only"
+                            style="margin-left: 5px;">REPUESTOS</span>
+                    </a>
                     <button class="btn btn-success btn-small ingreso-btn" onclick="UIService.showIngresoModal()"
                         title="Registrar ingreso de caja">
-                        <i class="fas fa-plus-circle"></i> INGRESO
+                        <i class="fas fa-plus-circle"></i> <span class="desktop-only">INGRESO</span>
                     </button>
                     <button class="btn btn-info btn-small" id="backup-btn" title="Descargar copia de seguridad">
-                        <i class="fas fa-download"></i> RESPALDO
+                        <i class="fas fa-download"></i> <span class="desktop-only">RESPALDO</span>
                     </button>
                     <button class="btn btn-small retiro-btn" onclick="UIService.showRetiroModal()"
                         title="Registrar retiro de caja">
-                        <i class="fas fa-hand-holding-usd"></i> RETIRO
+                        <i class="fas fa-hand-holding-usd"></i> <span class="desktop-only">RETIRO</span>
                     </button>
                 </div>
             </div>
@@ -2642,7 +2682,7 @@
                                 <button class="grupo-action-btn btn-info" onclick="GrupoManager.showGroupPaymentModal('${grupo.id}')" title="Abonar a Grupo" style="background-color: #17a2b8; color: white;">
                                     <i class="fas fa-money-bill-wave"></i>
                                 </button>
-                                <button class="grupo-action-btn btn-delete-grupo" onclick="GrupoManager.eliminarGrupo('${grupo.id}')" title="Eliminar grupo">
+                                <button class="grupo-action-btn btn-delete-grupo" onclick="GrupoManager.solicitarEliminarGrupo('${grupo.id}')" title="Eliminar grupo">
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </div>
@@ -3093,6 +3133,7 @@
                     <!DOCTYPE html>
                     <html>
                     <head>
+                        <meta charset="UTF-8">
                         <title>Ticket #${factura.invoiceNumber}</title>
                         <style>
                             body { 
@@ -3123,18 +3164,20 @@
                     </head>
                     <body>
                         <div class="header">
-                            <h3 style="margin: 2px 0; font-size: 26px;">TALLER WILIAN</h3>
+                            <h3 style="margin: 2px 0; font-size: 26px;">TALLER WILLIAN</h3>
                             <div class="small-text">Factura: ${factura.invoiceNumber}</div>
                             <div class="small-text">${fechaFormateada}, ${tipoPago}</div>
                         </div>
                         
                         <div class="line"></div>
                         
-                        <div class="medium-text">
-                            <strong>Grupo:</strong> ${equipo.cliente}
-                        </div>
-                        <div class="equipo-text">
-                            Equipo: ${equipo.numero}
+                        ${equipo.cliente !== equipo.numero ? `
+                            <div class="medium-text">
+                                <strong>Grupo:</strong> ${equipo.cliente}
+                            </div>
+                        ` : ''}
+                        <div class="equipo-text" style="text-align: center;">
+                            ${equipo.numero}
                         </div>
                         
                         <div class="line"></div>
@@ -3219,7 +3262,7 @@
 
                             html += `
                         <div class="all-equipo-item ${estilo} ${estaSeleccionado ? 'selected' : ''}" 
-                             onclick="${estaEnOtroGrupo ? '' : `toggleEquipoGrid('${equipoNum}', '${modalType}')`}"
+                             onclick="${estaEnOtroGrupo ? '' : `GrupoManager.toggleEquipoSelection('${equipoNum}', '${modalType}')`}"
                              style="${tieneFacturas && !estaEnOtroGrupo ? 'border-color: #27ae60; background: #f0fff0;' : ''}${estaEnOtroGrupo ? 'border-color: #e74c3c; background: #f8d7da; color: #721c24; cursor: not-allowed;' : 'border-color: #ccc; background: #f5f5f5;'}">
                             ${equipoNum}
                             ${tieneFacturas ? '<br><small style="color: #27ae60;">$' + equipoEncontrado.total.toFixed(2) + '</small>' : '<br><small style="color: #999;">$0.00</small>'}
@@ -3307,6 +3350,51 @@
                             AppState.equiposEditSeleccionados.clear();
                         } catch (error) {
                             UIService.showStatus("Error al actualizar grupo: " + error.message, "error");
+                        }
+                    },
+
+                    toggleEquipoSelection(equipoNum, modalType = 'crear') {
+                        const selectedSet = modalType === 'crear' ? AppState.equiposSeleccionados : AppState.equiposEditSeleccionados;
+
+                        if (selectedSet.has(equipoNum)) {
+                            selectedSet.delete(equipoNum);
+                        } else {
+                            if (selectedSet.size >= 130) {
+                                UIService.showStatus("Máximo 130 equipos permitidos", "error");
+                                return;
+                            }
+                            selectedSet.add(equipoNum);
+                        }
+
+                        this.actualizarListaSeleccionados(modalType);
+
+                        const selector = modalType === 'crear' ? '.all-equipo-item' : '#editar-all-equipos-grid .all-equipo-item';
+                        document.querySelectorAll(selector).forEach(item => {
+                            const num = item.textContent.split('\n')[0].trim();
+                            if (num === equipoNum) {
+                                if (selectedSet.has(num)) {
+                                    item.classList.add('selected');
+                                } else {
+                                    item.classList.remove('selected');
+                                }
+                            }
+                        });
+                    },
+
+                    solicitarEliminarGrupo(grupoId) {
+                        if (!confirm("¿Está seguro de eliminar este grupo? Los equipos volverán a estar disponibles individualmente y se eliminarán las asociaciones de grupo.")) {
+                            return;
+                        }
+
+                        try {
+                            UIService.showLoading(true);
+                            this.eliminarGrupo(grupoId);
+                            UIService.showStatus("Grupo eliminado correctamente", "success");
+                            this.updateUI();
+                        } catch (error) {
+                            UIService.showStatus("Error al eliminar grupo: " + error.message, "error");
+                        } finally {
+                            UIService.showLoading(false);
                         }
                     }
                 };
@@ -3824,44 +3912,7 @@
                         }
                     },
 
-                    async processRetiro() {
-                        const concepto = document.getElementById('concepto-retiro').value.trim();
-                        const monto = parseFloat(document.getElementById('monto-retiro').value);
-                        const categoria = document.getElementById('categoria-retiro').value;
 
-                        if (!concepto) {
-                            UIService.showStatus("Por favor ingresa un concepto", "warning");
-                            return;
-                        }
-                        if (!monto || monto <= 0) {
-                            UIService.showStatus("Por favor ingresa un monto válido", "warning");
-                            return;
-                        }
-
-                        try {
-                            UIService.showLoading(true);
-                            await DataService.saveRetiro({
-                                concepto,
-                                monto,
-                                categoria,
-                                timestamp: new Date()
-                            });
-
-                            ModalService.closeRetiroModal();
-                            UIService.showStatus("Retiro registrado correctamente", "success");
-
-                            // Si estamos viendo el historial del día, actualizarlo
-                            if (document.getElementById('daily-summary-container').style.display === 'block') {
-                                UIService.filterHistoryByDate();
-                            } else {
-                                this.loadHistorial();
-                            }
-                        } catch (error) {
-                            UIService.showStatus("Error al registrar retiro: " + error.message, "error");
-                        } finally {
-                            UIService.showLoading(false);
-                        }
-                    },
 
                     async cancelInvoice(invoiceId) {
                         return await ConcurrencyManager.withLock(async () => {
@@ -4031,56 +4082,64 @@
                                 return dateB - dateA;
                             }).slice(0, limit);
                         } catch (error) {
-                            throw new Error("Ingrese un nombre de producto para buscar");
+                            console.error("Error loading all movements:", error);
+                            return [];
                         }
+                    },
 
-                        const searchTerm = productName.trim().toLowerCase();
-
-                        // Cargar ventas en el rango de fechas (sin orderBy para evitar índice compuesto)
-                        const ventasSnapshot = await AppState.db.collection("VENTAS")
-                            .where("date", ">=", startDate)
-                            .where("date", "<=", endDate)
-                            .get();
-
-                        let ventas = ventasSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-                        // Ordenar client-side
-                        ventas.sort((a, b) => {
-                            // Primero por fecha (desc)
-                            if (a.date !== b.date) {
-                                return b.date.localeCompare(a.date);
+                    async searchProductInHistory(productName, startDate, endDate) {
+                        try {
+                            if (!productName) {
+                                throw new Error("Ingrese un nombre de producto para buscar");
                             }
-                            // Luego por timestamp (desc)
-                            const timeA = a.timestamp?.toDate ? a.timestamp.toDate() : new Date(a.timestamp);
-                            const timeB = b.timestamp?.toDate ? b.timestamp.toDate() : new Date(b.timestamp);
-                            return timeB - timeA;
-                        });
 
-                        // Filtrar ventas que contengan el producto buscado
-                        const resultados = [];
+                            const searchTerm = productName.trim().toLowerCase();
 
-                        ventas.forEach(venta => {
-                            if (venta.products && venta.products.length > 0) {
-                                const productosEncontrados = venta.products.filter(prod =>
-                                    prod.descripcion && prod.descripcion.toLowerCase().includes(searchTerm)
-                                );
+                            // Cargar ventas en el rango de fechas
+                            const ventasSnapshot = await AppState.db.collection("VENTAS")
+                                .where("date", ">=", startDate)
+                                .where("date", "<=", endDate)
+                                .get();
 
-                                if (productosEncontrados.length > 0) {
-                                    // Agregar resultado con detalles de la venta y productos encontrados
-                                    resultados.push({
-                                        ...venta,
-                                        productosEncontrados
-                                    });
+                            let ventas = ventasSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+                            // Ordenar client-side
+                            ventas.sort((a, b) => {
+                                // Primero por fecha (desc)
+                                if (a.date !== b.date) {
+                                    return b.date.localeCompare(a.date);
                                 }
-                            }
-                        });
+                                // Luego por timestamp (desc)
+                                const timeA = a.timestamp?.toDate ? a.timestamp.toDate() : new Date(a.timestamp);
+                                const timeB = b.timestamp?.toDate ? b.timestamp.toDate() : new Date(b.timestamp);
+                                return timeB - timeA;
+                            });
 
-                        return resultados;
-                    } catch(error) {
-                        console.error("Error buscando producto:", error);
-                        throw error;
-                    }
-                },
+                            // Filtrar ventas que contengan el producto buscado
+                            const resultados = [];
+
+                            ventas.forEach(venta => {
+                                if (venta.products && venta.products.length > 0) {
+                                    const productosEncontrados = venta.products.filter(prod =>
+                                        prod.descripcion && prod.descripcion.toLowerCase().includes(searchTerm)
+                                    );
+
+                                    if (productosEncontrados.length > 0) {
+                                        // Agregar resultado con detalles de la venta y productos encontrados
+                                        resultados.push({
+                                            ...venta,
+                                            productosEncontrados
+                                        });
+                                    }
+                                }
+                            });
+
+                            return resultados;
+                        } catch (error) {
+                            console.error("Error buscando producto:", error);
+                            throw error;
+                        }
+                    },
 
                     async loadMovementsByDate(date = DateUtils.getCurrentDateStringElSalvador(), limit = 500) {
                         try {
@@ -4107,235 +4166,235 @@
                         }
                     },
 
-                        async processGroupAbono(grupoId, montoTotal) {
-                    return await ConcurrencyManager.withLock(async () => {
-                        if (!AppState.firebaseInitialized) throw new Error("No hay conexión a la base de datos");
+                    async processGroupAbono(grupoId, montoTotal) {
+                        return await ConcurrencyManager.withLock(async () => {
+                            if (!AppState.firebaseInitialized) throw new Error("No hay conexión a la base de datos");
 
-                        // 1. Obtener todas las facturas pendientes del grupo
-                        const snapshot = await AppState.db.collection("VENTAS")
-                            .where("grupo", "==", grupoId)
-                            .where("paymentType", "==", "pendiente")
-                            .where("status", "==", "pendiente")
-                            .get();
+                            // 1. Obtener todas las facturas pendientes del grupo
+                            const snapshot = await AppState.db.collection("VENTAS")
+                                .where("grupo", "==", grupoId)
+                                .where("paymentType", "==", "pendiente")
+                                .where("status", "==", "pendiente")
+                                .get();
 
-                        if (snapshot.empty) throw new Error("El grupo no tiene facturas pendientes");
+                            if (snapshot.empty) throw new Error("El grupo no tiene facturas pendientes");
 
-                        let facturas = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                            let facturas = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-                        // 2. Ordenar por fecha (más antiguas primero)
-                        facturas.sort((a, b) => {
-                            const dateA = a.timestamp?.toDate ? a.timestamp.toDate() : new Date(a.timestamp);
-                            const dateB = b.timestamp?.toDate ? b.timestamp.toDate() : new Date(b.timestamp);
-                            return dateA - dateB;
-                        });
+                            // 2. Ordenar por fecha (más antiguas primero)
+                            facturas.sort((a, b) => {
+                                const dateA = a.timestamp?.toDate ? a.timestamp.toDate() : new Date(a.timestamp);
+                                const dateB = b.timestamp?.toDate ? b.timestamp.toDate() : new Date(b.timestamp);
+                                return dateA - dateB;
+                            });
 
-                        let montoRestante = montoTotal;
-                        const batch = AppState.db.batch();
-                        let updatesCount = 0;
-                        const facturasAfectadas = [];
+                            let montoRestante = montoTotal;
+                            const batch = AppState.db.batch();
+                            let updatesCount = 0;
+                            const facturasAfectadas = [];
 
-                        // 3. Distribuir el abono
-                        for (const factura of facturas) {
-                            if (montoRestante <= 0.009) break; // Margen de error por decimales
+                            // 3. Distribuir el abono
+                            for (const factura of facturas) {
+                                if (montoRestante <= 0.009) break; // Margen de error por decimales
 
-                            let saldoPendiente = factura.total;
-                            if (factura.abonos && factura.abonos.length > 0) {
-                                const totalAbonado = factura.abonos.reduce((sum, a) => sum + a.monto, 0);
-                                saldoPendiente = factura.total - totalAbonado;
-                            }
-
-                            const montoAbonar = Math.min(montoRestante, saldoPendiente);
-
-                            if (montoAbonar > 0) {
-                                const facturaRef = AppState.db.collection("VENTAS").doc(factura.id);
-                                const nuevoSaldo = saldoPendiente - montoAbonar;
-
-                                const abonoData = {
-                                    monto: montoAbonar,
-                                    fecha: DateUtils.getCurrentTimestampElSalvador(),
-                                    fechaString: DateUtils.getCurrentTimestampElSalvador().toLocaleString('es-ES'),
-                                    tipo: 'abono_grupal',
-                                    grupoId: grupoId,
-                                    savedInIngresos: true // Bandera para evitar duplicados en historial
-                                };
-
-                                // Guardar en INGRESOS
-                                const ingresoRef = AppState.db.collection("INGRESOS").doc();
-                                const ingresoData = {
-                                    monto: montoAbonar,
-                                    concepto: `Abono Grupal a EQUIPO ${factura.equipoNumber || '0000'}`,
-                                    categoria: 'abono',
-                                    timestamp: DateUtils.getCurrentTimestampElSalvador(),
-                                    date: DateUtils.getCurrentDateStringElSalvador(),
-                                    invoiceId: factura.id,
-                                    invoiceNumber: factura.invoiceNumber,
-                                    clientName: factura.clientName || 'Cliente',
-                                    equipoNumber: factura.equipoNumber || '0000',
-                                    grupoId: grupoId
-                                };
-                                batch.set(ingresoRef, ingresoData);
-
-                                const updateData = {
-                                    abonos: firebase.firestore.FieldValue.arrayUnion(abonoData),
-                                    saldoPendiente: nuevoSaldo,
-                                    fechaActualizacion: DateUtils.getCurrentTimestampElSalvador()
-                                };
-
-                                if (nuevoSaldo <= 0.009) {
-                                    updateData.paymentType = 'contado';
-                                    updateData.status = 'pagado';
+                                let saldoPendiente = factura.total;
+                                if (factura.abonos && factura.abonos.length > 0) {
+                                    const totalAbonado = factura.abonos.reduce((sum, a) => sum + a.monto, 0);
+                                    saldoPendiente = factura.total - totalAbonado;
                                 }
 
-                                batch.update(facturaRef, updateData);
-                                updatesCount++;
+                                const montoAbonar = Math.min(montoRestante, saldoPendiente);
 
-                                montoRestante -= montoAbonar;
-                                facturasAfectadas.push({ ...factura, abono: montoAbonar });
+                                if (montoAbonar > 0) {
+                                    const facturaRef = AppState.db.collection("VENTAS").doc(factura.id);
+                                    const nuevoSaldo = saldoPendiente - montoAbonar;
+
+                                    const abonoData = {
+                                        monto: montoAbonar,
+                                        fecha: DateUtils.getCurrentTimestampElSalvador(),
+                                        fechaString: DateUtils.getCurrentTimestampElSalvador().toLocaleString('es-ES'),
+                                        tipo: 'abono_grupal',
+                                        grupoId: grupoId,
+                                        savedInIngresos: true // Bandera para evitar duplicados en historial
+                                    };
+
+                                    // Guardar en INGRESOS
+                                    const ingresoRef = AppState.db.collection("INGRESOS").doc();
+                                    const ingresoData = {
+                                        monto: montoAbonar,
+                                        concepto: `Abono Grupal a EQUIPO ${factura.equipoNumber || '0000'}`,
+                                        categoria: 'abono',
+                                        timestamp: DateUtils.getCurrentTimestampElSalvador(),
+                                        date: DateUtils.getCurrentDateStringElSalvador(),
+                                        invoiceId: factura.id,
+                                        invoiceNumber: factura.invoiceNumber,
+                                        clientName: factura.clientName || 'Cliente',
+                                        equipoNumber: factura.equipoNumber || '0000',
+                                        grupoId: grupoId
+                                    };
+                                    batch.set(ingresoRef, ingresoData);
+
+                                    const updateData = {
+                                        abonos: firebase.firestore.FieldValue.arrayUnion(abonoData),
+                                        saldoPendiente: nuevoSaldo,
+                                        fechaActualizacion: DateUtils.getCurrentTimestampElSalvador()
+                                    };
+
+                                    if (nuevoSaldo <= 0.009) {
+                                        updateData.paymentType = 'contado';
+                                        updateData.status = 'pagado';
+                                    }
+
+                                    batch.update(facturaRef, updateData);
+                                    updatesCount++;
+
+                                    montoRestante -= montoAbonar;
+                                    facturasAfectadas.push({ ...factura, abono: montoAbonar });
+                                }
                             }
-                        }
 
-                        if (updatesCount > 0) {
-                            await batch.commit();
-                            await GrupoManager.loadEquiposPendientes(); // Recargar datos
-                            return facturasAfectadas;
-                        } else {
-                            throw new Error("No se pudo aplicar el abono a ninguna factura");
-                        }
-                    }, "Abono Grupal");
-                },
+                            if (updatesCount > 0) {
+                                await batch.commit();
+                                await GrupoManager.loadEquiposPendientes(); // Recargar datos
+                                return facturasAfectadas;
+                            } else {
+                                throw new Error("No se pudo aplicar el abono a ninguna factura");
+                            }
+                        }, "Abono Grupal");
+                    },
 
                     async processMultiAbono(facturasIds, montoTotal) {
-                    return await ConcurrencyManager.withLock(async () => {
-                        if (!AppState.firebaseInitialized) throw new Error("No hay conexión a la base de datos");
+                        return await ConcurrencyManager.withLock(async () => {
+                            if (!AppState.firebaseInitialized) throw new Error("No hay conexión a la base de datos");
 
-                        // 1. Obtener las facturas
-                        const facturas = [];
-                        for (const id of facturasIds) {
-                            const doc = await AppState.db.collection("VENTAS").doc(id).get();
-                            if (doc.exists) {
-                                facturas.push({ id: doc.id, ...doc.data() });
-                            }
-                        }
-
-                        if (facturas.length === 0) throw new Error("No se encontraron las facturas seleccionadas");
-
-                        // 2. Ordenar por fecha (más antiguas primero)
-                        facturas.sort((a, b) => {
-                            const dateA = a.timestamp?.toDate ? a.timestamp.toDate() : new Date(a.timestamp);
-                            const dateB = b.timestamp?.toDate ? b.timestamp.toDate() : new Date(b.timestamp);
-                            return dateA - dateB;
-                        });
-
-                        let montoRestante = montoTotal;
-                        const batch = AppState.db.batch();
-                        let updatesCount = 0;
-                        const facturasAfectadas = [];
-
-                        // 3. Distribuir el abono
-                        for (const factura of facturas) {
-                            if (montoRestante <= 0.009) break;
-
-                            let saldoPendiente = factura.total;
-                            if (factura.abonos && factura.abonos.length > 0) {
-                                const totalAbonado = factura.abonos.reduce((sum, a) => sum + a.monto, 0);
-                                saldoPendiente = factura.total - totalAbonado;
+                            // 1. Obtener las facturas
+                            const facturas = [];
+                            for (const id of facturasIds) {
+                                const doc = await AppState.db.collection("VENTAS").doc(id).get();
+                                if (doc.exists) {
+                                    facturas.push({ id: doc.id, ...doc.data() });
+                                }
                             }
 
-                            const montoAbonar = Math.min(montoRestante, saldoPendiente);
+                            if (facturas.length === 0) throw new Error("No se encontraron las facturas seleccionadas");
 
-                            if (montoAbonar > 0) {
-                                const facturaRef = AppState.db.collection("VENTAS").doc(factura.id);
-                                const nuevoSaldo = saldoPendiente - montoAbonar;
+                            // 2. Ordenar por fecha (más antiguas primero)
+                            facturas.sort((a, b) => {
+                                const dateA = a.timestamp?.toDate ? a.timestamp.toDate() : new Date(a.timestamp);
+                                const dateB = b.timestamp?.toDate ? b.timestamp.toDate() : new Date(b.timestamp);
+                                return dateA - dateB;
+                            });
 
-                                const abonoData = {
-                                    monto: montoAbonar,
-                                    fecha: DateUtils.getCurrentTimestampElSalvador(),
-                                    fechaString: DateUtils.getCurrentTimestampElSalvador().toLocaleString('es-ES'),
-                                    tipo: 'abono_masivo',
-                                    savedInIngresos: true // Bandera para evitar duplicados en historial
-                                };
+                            let montoRestante = montoTotal;
+                            const batch = AppState.db.batch();
+                            let updatesCount = 0;
+                            const facturasAfectadas = [];
 
-                                // Guardar en INGRESOS
-                                const ingresoRef = AppState.db.collection("INGRESOS").doc();
-                                const ingresoData = {
-                                    monto: montoAbonar,
-                                    concepto: `Abono Masivo a Factura #${factura.invoiceNumber}`,
-                                    categoria: 'abono',
-                                    timestamp: DateUtils.getCurrentTimestampElSalvador(),
-                                    date: DateUtils.getCurrentDateStringElSalvador(),
-                                    invoiceId: factura.id,
-                                    invoiceNumber: factura.invoiceNumber,
-                                    clientName: factura.clientName || 'Cliente',
-                                    equipoNumber: factura.equipoNumber || '0000'
-                                };
-                                batch.set(ingresoRef, ingresoData);
+                            // 3. Distribuir el abono
+                            for (const factura of facturas) {
+                                if (montoRestante <= 0.009) break;
 
-                                const updateData = {
-                                    abonos: firebase.firestore.FieldValue.arrayUnion(abonoData),
-                                    saldoPendiente: nuevoSaldo,
-                                    fechaActualizacion: DateUtils.getCurrentTimestampElSalvador()
-                                };
-
-                                if (nuevoSaldo <= 0.009) {
-                                    updateData.paymentType = 'contado';
-                                    updateData.status = 'pagado';
+                                let saldoPendiente = factura.total;
+                                if (factura.abonos && factura.abonos.length > 0) {
+                                    const totalAbonado = factura.abonos.reduce((sum, a) => sum + a.monto, 0);
+                                    saldoPendiente = factura.total - totalAbonado;
                                 }
 
-                                batch.update(facturaRef, updateData);
-                                updatesCount++;
+                                const montoAbonar = Math.min(montoRestante, saldoPendiente);
 
-                                montoRestante -= montoAbonar;
-                                facturasAfectadas.push({ ...factura, abono: montoAbonar });
+                                if (montoAbonar > 0) {
+                                    const facturaRef = AppState.db.collection("VENTAS").doc(factura.id);
+                                    const nuevoSaldo = saldoPendiente - montoAbonar;
+
+                                    const abonoData = {
+                                        monto: montoAbonar,
+                                        fecha: DateUtils.getCurrentTimestampElSalvador(),
+                                        fechaString: DateUtils.getCurrentTimestampElSalvador().toLocaleString('es-ES'),
+                                        tipo: 'abono_masivo',
+                                        savedInIngresos: true // Bandera para evitar duplicados en historial
+                                    };
+
+                                    // Guardar en INGRESOS
+                                    const ingresoRef = AppState.db.collection("INGRESOS").doc();
+                                    const ingresoData = {
+                                        monto: montoAbonar,
+                                        concepto: `Abono Masivo a Factura #${factura.invoiceNumber}`,
+                                        categoria: 'abono',
+                                        timestamp: DateUtils.getCurrentTimestampElSalvador(),
+                                        date: DateUtils.getCurrentDateStringElSalvador(),
+                                        invoiceId: factura.id,
+                                        invoiceNumber: factura.invoiceNumber,
+                                        clientName: factura.clientName || 'Cliente',
+                                        equipoNumber: factura.equipoNumber || '0000'
+                                    };
+                                    batch.set(ingresoRef, ingresoData);
+
+                                    const updateData = {
+                                        abonos: firebase.firestore.FieldValue.arrayUnion(abonoData),
+                                        saldoPendiente: nuevoSaldo,
+                                        fechaActualizacion: DateUtils.getCurrentTimestampElSalvador()
+                                    };
+
+                                    if (nuevoSaldo <= 0.009) {
+                                        updateData.paymentType = 'contado';
+                                        updateData.status = 'pagado';
+                                    }
+
+                                    batch.update(facturaRef, updateData);
+                                    updatesCount++;
+
+                                    montoRestante -= montoAbonar;
+                                    facturasAfectadas.push({ ...factura, abono: montoAbonar });
+                                }
                             }
-                        }
 
-                        if (updatesCount > 0) {
-                            await batch.commit();
-                            await GrupoManager.loadEquiposPendientes();
-                            return facturasAfectadas;
-                        } else {
-                            throw new Error("No se pudo aplicar el abono a ninguna factura");
-                        }
-                    }, "Abono Masivo");
-                },
+                            if (updatesCount > 0) {
+                                await batch.commit();
+                                await GrupoManager.loadEquiposPendientes();
+                                return facturasAfectadas;
+                            } else {
+                                throw new Error("No se pudo aplicar el abono a ninguna factura");
+                            }
+                        }, "Abono Masivo");
+                    },
 
                     async exportBackup() {
-                    try {
-                        const ventas = await this.loadSales(10000); // Limit high enough to get all
-                        const retiros = await this.loadRetiros(10000);
-                        const grupos = Array.from(GrupoManager.grupos.entries());
+                        try {
+                            const ventas = await this.loadSales(10000); // Limit high enough to get all
+                            const retiros = await this.loadRetiros(10000);
+                            const grupos = Array.from(GrupoManager.grupos.entries());
 
-                        const backupData = {
-                            version: '1.0',
-                            timestamp: new Date().toISOString(),
-                            ventas: ventas,
-                            retiros: retiros,
-                            grupos: grupos
-                        };
+                            const backupData = {
+                                version: '1.0',
+                                timestamp: new Date().toISOString(),
+                                ventas: ventas,
+                                retiros: retiros,
+                                grupos: grupos
+                            };
 
-                        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData));
-                        const downloadAnchorNode = document.createElement('a');
-                        downloadAnchorNode.setAttribute("href", dataStr);
-                        downloadAnchorNode.setAttribute("download", "taller_willian_backup_" + DateUtils.getCurrentDateStringElSalvador() + ".json");
-                        document.body.appendChild(downloadAnchorNode); // required for firefox
-                        downloadAnchorNode.click();
-                        downloadAnchorNode.remove();
+                            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData));
+                            const downloadAnchorNode = document.createElement('a');
+                            downloadAnchorNode.setAttribute("href", dataStr);
+                            downloadAnchorNode.setAttribute("download", "taller_willian_backup_" + DateUtils.getCurrentDateStringElSalvador() + ".json");
+                            document.body.appendChild(downloadAnchorNode); // required for firefox
+                            downloadAnchorNode.click();
+                            downloadAnchorNode.remove();
 
-                        return true;
-                    } catch (error) {
-                        console.error("Error exportando backup:", error);
-                        throw error;
-                    }
-                },
+                            return true;
+                        } catch (error) {
+                            console.error("Error exportando backup:", error);
+                            throw error;
+                        }
+                    },
 
                     async checkConnection() {
-                    try {
-                        await AppState.db.collection("COUNTERS").doc("sales").get({ source: 'server' });
-                        return true;
-                    } catch (error) {
-                        return false;
+                        try {
+                            await AppState.db.collection("COUNTERS").doc("sales").get({ source: 'server' });
+                            return true;
+                        } catch (error) {
+                            return false;
+                        }
                     }
-                }
                 };
 
                 const ModalService = {
@@ -6677,7 +6736,7 @@
                                             <tr>
                                                 <th width="10%" style="text-align: center;">Cant.</th>
                                                 <th width="50%">Descripción</th>
-                                                <th width="20%" style="text-align: right;">Precio</th>
+                                                <th width="20%">Precio</th>
                                                 <th width="20%" style="text-align: right;">Total</th>
                                             </tr>
                                         </thead>
@@ -6777,7 +6836,6 @@
 
                         reportHTML += `</body></html>`;
 
-                        printWindow.document.write(reportHTML);
                         printWindow.document.close();
                         printWindow.focus();
 
@@ -6829,6 +6887,7 @@
                     <!DOCTYPE html>
                     <html>
                     <head>
+                        <meta charset="UTF-8">
                         <title>Ticket #${saleData.invoiceNumber}</title>
                         <style>
                             body { 
@@ -6859,18 +6918,20 @@
                     </head>
                     <body>
                         <div class="header">
-                            <h3 style="margin: 2px 0; font-size: 26px;">TALLER WILIAN</h3>
+                            <h3 style="margin: 2px 0; font-size: 26px;">TALLER WILLIAN</h3>
                             <div class="small-text">Factura: ${saleData.invoiceNumber}</div>
                             <div class="small-text">${fechaFormateada}, ${tipoPago}</div>
                         </div>
                         
                         <div class="line"></div>
                         
-                        <div class="medium-text">
-                            <strong>Grupo:</strong> ${saleData.clientName}
-                        </div>
-                        <div class="equipo-text">
-                            Equipo: ${saleData.equipoNumber}
+                        ${saleData.clientName !== saleData.equipoNumber ? `
+                            <div class="medium-text">
+                                <strong>Grupo:</strong> ${saleData.clientName}
+                            </div>
+                        ` : ''}
+                        <div class="equipo-text" style="text-align: center;">
+                            ${saleData.equipoNumber}
                         </div>
                         
                         <div class="line"></div>
@@ -6887,7 +6948,7 @@
 
                         ${abonosHTML}
 
-                        ${saleData.paymentType === 'pendiente' && saldoPendiente > 0 ? `
+                        ${tieneAbonos && saldoPendiente > 0 ? `
                             <div class="saldo-info">
                                 <div>SALDO PENDIENTE:</div>
                                 <div class="large-text">$${saldoPendiente.toFixed(2)}</div>
@@ -6921,6 +6982,7 @@
                     <!DOCTYPE html>
                     <html>
                     <head>
+                        <meta charset="UTF-8">
                         <title>Abono #${venta.invoiceNumber}</title>
                         <style>
                             body { 
@@ -6947,7 +7009,7 @@
                     </head>
                     <body>
                         <div class="header">
-                            <h3 style="margin: 2px 0; font-size: 26px;">TALLER WILIAN</h3>
+                            <h3 style="margin: 2px 0; font-size: 26px;">TALLER WILLIAN</h3>
                             <div class="small-text">COMPROBANTE DE ABONO</div>
                             <div class="small-text">${fechaFormateada}</div>
                         </div>
@@ -6956,10 +7018,10 @@
                         
                         <div class="medium-text">
                             <strong>Factura:</strong> ${venta.invoiceNumber}<br>
-                            <strong>Grupo:</strong> ${venta.clientName}
+                            ${venta.clientName !== venta.equipoNumber ? `<strong>Grupo:</strong> ${venta.clientName}` : ''}
                         </div>
-                        <div class="equipo-text">
-                            Equipo: ${venta.equipoNumber}
+                        <div class="equipo-text" style="text-align: center;">
+                            ${venta.equipoNumber}
                         </div>
                         
                         <div class="line"></div>
@@ -7012,6 +7074,7 @@
                     <!DOCTYPE html>
                     <html>
                     <head>
+                        <meta charset="UTF-8">
                         <title>Retiro de Fondos</title>
                         <style>
                             body { 
@@ -7037,7 +7100,7 @@
                     </head>
                     <body>
                         <div class="header">
-                            <h3 style="margin: 2px 0; font-size: 26px;">TALLER WILIAN</h3>
+                            <h3 style="margin: 2px 0; font-size: 26px;">TALLER WILLIAN</h3>
                             <div class="small-text">COMPROBANTE DE RETIRO</div>
                             <div class="small-text">${fechaFormateada}</div>
                         </div>
@@ -7474,48 +7537,7 @@
                     }
                 };
 
-                function toggleEquipoGrid(equipoNum, modalType = 'crear') {
-                    const selectedSet = modalType === 'crear' ? AppState.equiposSeleccionados : AppState.equiposEditSeleccionados;
 
-                    if (selectedSet.has(equipoNum)) {
-                        selectedSet.delete(equipoNum);
-                    } else {
-                        if (selectedSet.size >= 130) {
-                            UIService.showStatus("Máximo 130 equipos permitidos", "error");
-                            return;
-                        }
-                        selectedSet.add(equipoNum);
-                    }
-
-                    GrupoManager.actualizarListaSeleccionados(modalType);
-
-                    const selector = modalType === 'crear' ? '.all-equipo-item' : '#editar-all-equipos-grid .all-equipo-item';
-                    document.querySelectorAll(selector).forEach(item => {
-                        const num = item.textContent.split('\n')[0].trim();
-                        if (selectedSet.has(num)) {
-                            item.classList.add('selected');
-                        } else {
-                            item.classList.remove('selected');
-                        }
-                    });
-                }
-
-                function eliminarGrupo(grupoId) {
-                    if (!confirm("¿Está seguro de eliminar este grupo? Los equipos volverán a estar disponibles individualmente y se eliminarán las asociaciones de grupo.")) {
-                        return;
-                    }
-
-                    try {
-                        UIService.showLoading(true);
-                        GrupoManager.eliminarGrupo(grupoId);
-                        UIService.showStatus("Grupo eliminado correctamente", "success");
-                        GrupoManager.updateUI();
-                    } catch (error) {
-                        UIService.showStatus("Error al eliminar grupo: " + error.message, "error");
-                    } finally {
-                        UIService.showLoading(false);
-                    }
-                }
 
                 document.addEventListener('DOMContentLoaded', function () {
                     App.init();
