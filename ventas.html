@@ -1356,16 +1356,6 @@
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 0 15px;">
                 <h1>Taller Willian</h1>
                 <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end;">
-                    <a href="historial_ventas.html" class="btn btn-primary btn-small" title="Ver Historial Completo"
-                        style="text-decoration: none; display: flex; align-items: center; justify-content: center;">
-                        <i class="fas fa-history"></i> <span class="desktop-only"
-                            style="margin-left: 5px;">HISTORIAL</span>
-                    </a>
-                    <a href="resumen_repuestos.html" class="btn btn-secondary btn-small" title="Resumen de Repuestos"
-                        style="text-decoration: none; display: flex; align-items: center; justify-content: center;">
-                        <i class="fas fa-tools"></i> <span class="desktop-only"
-                            style="margin-left: 5px;">REPUESTOS</span>
-                    </a>
                     <button class="btn btn-success btn-small ingreso-btn" onclick="UIService.showIngresoModal()"
                         title="Registrar ingreso de caja">
                         <i class="fas fa-plus-circle"></i> <span class="desktop-only">INGRESO</span>
@@ -4997,6 +4987,8 @@
                         ventas.forEach(venta => {
                             if (venta.products && Array.isArray(venta.products)) {
                                 venta.products.forEach(p => {
+                                    if (p.codigo && p.codigo.toLowerCase() === 'manual') return;
+
                                     const key = p.codigo || p.descripcion;
                                     if (!productosMap[key]) {
                                         productosMap[key] = {
