@@ -5864,91 +5864,131 @@
 
                         if (!venta) return;
 
-                        let productsHTML = `
-                            <table class="table table-bordered table-sm" style="width:100%; margin-top:10px; margin-bottom:15px; background-color: #fff; font-size: 0.95em;">
-                                <thead style="background-color: #f8f9fa;">
-                                    <tr>
-                                        <th style="text-align: center; padding: 8px;" width="10%">CANT</th>
-                                        <th style="padding: 8px;">DESCRIPCIÓN</th>
-                                        <th style="text-align: right; padding: 8px;" width="20%">PRECIO</th>
-                                        <th style="text-align: right; padding: 8px;" width="20%">SUBTOTAL</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                        `;
-
+                        // Generar lista de productos estilo tabla interna
+                        let productosList = '';
                         if (venta.products && venta.products.length > 0) {
-                            venta.products.forEach(product => {
-                                const precio = parseFloat(product.precio) || 0;
-                                const cantidad = parseFloat(product.cantidad) || 0;
-                                const subtotal = precio * cantidad;
-
-                                productsHTML += `
-                            <tr>
-                                <td style="text-align: center; padding: 8px;">${cantidad}</td>
-                                <td style="padding: 8px;">${product.descripcion}</td>
-                                <td style="text-align: right; padding: 8px;">$${precio.toFixed(2)}</td>
-                                <td style="text-align: right; padding: 8px;">$${subtotal.toFixed(2)}</td>
-                            </tr>
-                        `;
+                            venta.products.forEach(p => {
+                                const precioTotal = p.precio * p.cantidad;
+                                productosList += `
+                                    <div style="display: flex; justify-content: space-between; font-size: 0.9em; margin-bottom: 5px; border-bottom: 1px dotted #eee; padding-bottom: 2px;">
+                                        <div style="display: flex; gap: 10px;">
+                                            <span style="font-weight: bold; min-width: 20px; text-align: center; color: #34495e;">${p.cantidad}</span>
+                                            <span style="color: #2c3e50;">${p.descripcion}</span>
+                                        </div>
+                                        <span style="font-weight: bold; color: #555;">$${precioTotal.toFixed(2)}</span>
+                                    </div>
+                                `;
                             });
                         } else {
-                            productsHTML += `<tr><td colspan="4" style="text-align: center; padding: 10px;">No hay productos registrados</td></tr>`;
+                            productosList = '<div style="color: #999; font-style: italic;">Sin productos detallados</div>';
                         }
 
-                        productsHTML += `</tbody></table>`;
-
-                        let abonosHTML = '';
+                        let abonosSection = '';
                         if (venta.abonos && venta.abonos.length > 0) {
-                            abonosHTML += `<div class="abono-section">
-                        <h4>Historial de Abonos:</h4>`;
-                            venta.abonos.forEach(abono => {
-                                const fechaAbono = abono.fecha ? new Date(abono.fecha.toDate ? abono.fecha.toDate() : abono.fecha).toLocaleString('es-ES') : 'N/A';
-                                abonosHTML += `
-                            <div class="abono-item">
-                                <div>${fechaAbono}</div>
-                                <div>$${abono.monto.toFixed(2)}</div>
-                            </div>
-                        `;
-                            });
-                            abonosHTML += `</div>`;
+                            abonosSection = `
+                                <div style="margin-top: 15px; background: #f9f9f9; padding: 10px; border-radius: 4px; border: 1px solid #eee;">
+                                    <h5 style="margin-bottom: 8px; color: #34495e; font-size: 0.9em;">Historial de Abonos:</h5>
+                                    ${venta.abonos.map(a => `
+                                        <div style="display: flex; justify-content: space-between; font-size: 0.85em; color: #666; margin-bottom: 3px;">
+                                            <span>${a.fecha ? new Date(a.fecha.toDate ? a.fecha.toDate() : a.fecha).toLocaleString('es-ES') : '-'}</span>
+                                            <span style="font-weight: bold; color: #27ae60;">+$${a.monto.toFixed(2)}</span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            `;
                         }
 
                         const saldoPendiente = venta.saldoPendiente !== undefined ? venta.saldoPendiente : venta.total;
-                        const saldoInfo = venta.paymentType === 'pendiente' && saldoPendiente > 0 ?
-                            `<div class="saldo-info">
-                        Saldo Pendiente: $${saldoPendiente.toFixed(2)}
-                    </div>` : '';
-
+                        const totalAbonado = venta.total - saldoPendiente;
                         const fecha = venta.timestamp ? new Date(venta.timestamp.toDate ? venta.timestamp.toDate() : venta.timestamp).toLocaleString('es-ES') : 'N/A';
-                        const fechaActualizacion = venta.fechaActualizacion ?
-                            new Date(venta.fechaActualizacion.toDate ? venta.fechaActualizacion.toDate() : venta.fechaActualizacion).toLocaleString('es-ES') :
-                            'No actualizada';
 
-                        let estadoMostrar = venta.paymentType;
-                        if (venta.paymentType === 'pendiente' && saldoPendiente <= 0) {
-                            estadoMostrar = 'contado';
+                        let estadoTexto = 'PENDIENTE';
+                        let estadoColor = '#e74c3c'; // Rojo
+
+                        if (venta.paymentType === 'contado') {
+                            estadoTexto = 'CONTADO';
+                            estadoColor = '#27ae60'; // Verde
+                        } else if (saldoPendiente <= 0) {
+                            estadoTexto = 'PAGADO';
+                            estadoColor = '#27ae60'; // Verde
                         }
-                        const tipo = estadoMostrar === 'contado' ? 'CONTADO' : 'PENDIENTE';
-
-                        const infoActualizacion = venta.fechaActualizacion ?
-                            `<div><strong>Última Actualización:</strong> ${fechaActualizacion}</div>` : '';
 
                         const modalContent = `
-                    <h3 style="margin-bottom: 15px; text-align: center;">Factura #${venta.invoiceNumber}</h3>
-                    <div class="invoice-details">
-                        <strong>Grupo:</strong> ${venta.clientName || 'N/A'}<br>
-                        <strong>Equipo:</strong> ${venta.equipoNumber || 'N/A'}<br>
-                        <strong>Tipo:</strong> ${tipo}<br>
-                        <strong>Fecha de Creación:</strong> ${fecha}<br>
-                        ${infoActualizacion}
-                        <strong>Total:</strong> $${(venta.total || 0).toFixed(2)}
-                    </div>
-                    ${saldoInfo}
-                    <h4 style="margin: 15px 0 10px 0;">Productos:</h4>
-                    ${productsHTML || '<p>No hay productos</p>'}
-                    ${abonosHTML}
-                `;
+                            <div class="invoice-detail-view" style="font-family: 'Segoe UI', sans-serif;">
+                                
+                                <div style="text-align: center; margin-bottom: 20px;">
+                                    <h3 style="color: #2c3e50; font-weight: bold; margin-bottom: 5px;">
+                                        <i class="fas fa-tools"></i> Equipo ${venta.equipoNumber || 'N/A'}
+                                    </h3>
+                                </div>
+
+                                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border: 1px solid #e9ecef; flex-wrap: wrap; gap: 10px;">
+                                    <div style="text-align: center; flex: 1;">
+                                        <div style="color: #7f8c8d; font-size: 0.85em; font-weight: bold; text-transform: uppercase;">CLIENTE</div>
+                                        <div style="font-weight: bold; color: #2c3e50;">${venta.clientName || 'Cliente General'}</div>
+                                    </div>
+                                    <div style="height: 30px; width: 1px; background: #ddd;"></div>
+                                    <div style="text-align: center; flex: 1;">
+                                        <div style="color: #7f8c8d; font-size: 0.85em; font-weight: bold; text-transform: uppercase;">ESTADO</div>
+                                        <div style="font-weight: bold; color: ${estadoColor};">
+                                            ${estadoTexto}
+                                        </div>
+                                    </div>
+                                    <div style="height: 30px; width: 1px; background: #ddd;"></div>
+                                    <div style="text-align: center; flex: 1;">
+                                         <div style="color: #7f8c8d; font-size: 0.85em; font-weight: bold; text-transform: uppercase;">TOTAL ${estadoTexto === 'PENDIENTE' ? 'PENDIENTE' : 'PAGADO'}</div>
+                                         <div style="font-weight: bold; color: ${estadoColor}; font-size: 1.1em;">$${saldoPendiente.toFixed(2)}</div>
+                                    </div>
+                                </div>
+
+                                <div style="overflow-x: auto;">
+                                    <table style="width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid #dfe6e9; border-radius: 6px; overflow: hidden;">
+                                        <thead style="background-color: #34495e; color: white;">
+                                            <tr>
+                                                <th style="padding: 12px; text-align: left; font-weight: 500;">Factura</th>
+                                                <th style="padding: 12px; text-align: left; font-weight: 500;">Productos</th>
+                                                <th style="padding: 12px; text-align: right; font-weight: 500;">Total</th>
+                                                <th style="padding: 12px; text-align: right; font-weight: 500;">Abonos</th>
+                                                <th style="padding: 12px; text-align: right; font-weight: 500;">Saldo</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr style="background-color: white;">
+                                                <td style="padding: 15px; vertical-align: top; border-bottom: 1px solid #eee;">
+                                                    <div style="font-weight: bold; color: #2c3e50; font-size: 1.1em;">#${venta.invoiceNumber}</div>
+                                                    <div style="font-size: 0.85em; color: #95a5a6; margin-top: 4px;">${fecha}</div>
+                                                </td>
+                                                <td style="padding: 15px; vertical-align: top; border-bottom: 1px solid #eee; width: 40%;">
+                                                    ${productosList}
+                                                </td>
+                                                <td style="padding: 15px; text-align: right; vertical-align: top; border-bottom: 1px solid #eee;">
+                                                    <div style="font-weight: bold; font-size: 1.1em;">$${venta.total.toFixed(2)}</div>
+                                                </td>
+                                                <td style="padding: 15px; text-align: right; vertical-align: top; border-bottom: 1px solid #eee;">
+                                                    <div style="color: #636e72;">${totalAbonado > 0 ? '$' + totalAbonado.toFixed(2) : '-'}</div>
+                                                </td>
+                                                <td style="padding: 15px; text-align: right; vertical-align: top; border-bottom: 1px solid #eee;">
+                                                    <div style="font-weight: bold; font-size: 1.2em; color: ${estadoColor};">
+                                                        $${saldoPendiente.toFixed(2)}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                ${abonosSection}
+
+                                <div style="display: flex; gap: 15px; margin-top: 25px;">
+                                    <button onclick="ModalService.closeInvoiceModal()" style="flex: 1; padding: 12px; background-color: #3498db; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; transition: background 0.2s;">
+                                        CERRAR
+                                    </button>
+                                    <button onclick="SalesService.reprintInvoice('${venta.id}')" style="flex: 1; padding: 12px; background-color: #27ae60; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; transition: background 0.2s;">
+                                        <i class="fas fa-print"></i> IMPRIMIR
+                                    </button>
+                                </div>
+                            </div>
+                        `;
 
                         UIService.showInvoiceModal(modalContent);
                     },
