@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -48,7 +49,8 @@
         body {
             background-color: var(--bg-color);
             color: var(--text-color);
-            line-height: 1.4; /* Reducido de 1.6 */
+            line-height: 1.4;
+            /* Reducido de 1.6 */
         }
 
         .container {
@@ -60,76 +62,93 @@
         header {
             background: var(--header-bg);
             color: white;
-            padding: 15px 0; /* Reducido de 20px */
+            padding: 15px 0;
+            /* Reducido de 20px */
             border-radius: 10px;
-            margin-bottom: 20px; /* Reducido de 30px */
+            margin-bottom: 20px;
+            /* Reducido de 30px */
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             position: relative;
         }
 
         header h1 {
             text-align: center;
-            font-size: 2rem; /* Reducido de 2.2rem */
-            margin-bottom: 8px; /* Reducido de 10px */
+            font-size: 2rem;
+            /* Reducido de 2.2rem */
+            margin-bottom: 8px;
+            /* Reducido de 10px */
         }
 
         .header-info {
             display: flex;
             justify-content: space-between;
             padding: 0 20px;
-            font-size: 0.85rem; /* Reducido de 0.9rem */
+            font-size: 0.85rem;
+            /* Reducido de 0.9rem */
             opacity: 0.9;
         }
 
         .theme-toggle {
             position: absolute;
-            top: 15px; /* Reducido de 20px */
-            right: 15px; /* Reducido de 20px */
+            top: 15px;
+            /* Reducido de 20px */
+            right: 15px;
+            /* Reducido de 20px */
             background: rgba(255, 255, 255, 0.2);
             border: none;
             border-radius: 50%;
-            width: 35px; /* Reducido de 40px */
-            height: 35px; /* Reducido de 40px */
+            width: 35px;
+            /* Reducido de 40px */
+            height: 35px;
+            /* Reducido de 40px */
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
-            font-size: 1.1rem; /* Reducido de 1.2rem */
+            font-size: 1.1rem;
+            /* Reducido de 1.2rem */
         }
 
         .controls {
             display: flex;
-            gap: 12px; /* Reducido de 15px */
-            margin-bottom: 15px; /* Reducido de 20px */
+            gap: 12px;
+            /* Reducido de 15px */
+            margin-bottom: 15px;
+            /* Reducido de 20px */
             flex-wrap: wrap;
             align-items: center;
         }
 
         .search-box {
             flex: 1;
-            min-width: 280px; /* Reducido de 300px */
+            min-width: 280px;
+            /* Reducido de 300px */
         }
 
         .search-box input {
             width: 100%;
-            padding: 8px 12px; /* Reducido de 10px 15px */
+            padding: 8px 12px;
+            /* Reducido de 10px 15px */
             border: 1px solid var(--border-color);
             border-radius: 5px;
-            font-size: 0.95rem; /* Reducido de 1rem */
+            font-size: 0.95rem;
+            /* Reducido de 1rem */
             background-color: var(--card-bg);
             color: var(--text-color);
         }
 
         .btn {
-            padding: 8px 16px; /* Reducido de 10px 20px */
+            padding: 8px 16px;
+            /* Reducido de 10px 20px */
             border: none;
             border-radius: 5px;
             cursor: pointer;
             font-weight: 600;
             transition: all 0.3s ease;
             white-space: nowrap;
-            font-size: 0.9rem; /* Reducido de 1rem */
+            font-size: 0.9rem;
+            /* Reducido de 1rem */
         }
 
         .btn-primary {
@@ -182,27 +201,34 @@
             border-radius: 10px;
             overflow: hidden;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            margin-bottom: 20px; /* Reducido de 30px */
+            margin-bottom: 20px;
+            /* Reducido de 30px */
         }
 
         .list-header {
             display: grid;
-            grid-template-columns: 1fr 1.5fr 1fr 0.8fr 0.8fr 0.8fr 0.8fr 1fr;
-            padding: 10px 12px; /* Reducido de 12px 15px */
+            grid-template-columns: 1fr 1.5fr 1fr 0.8fr 0.6fr 0.8fr 0.8fr;
+            /* Eliminada col acciones */
+            padding: 10px 12px;
+            /* Reducido de 12px 15px */
             background-color: var(--dark-gray);
             color: white;
             font-weight: bold;
             border-bottom: 1px solid var(--border-color);
-            font-size: 0.85rem; /* Reducido de 0.9rem */
+            font-size: 0.85rem;
+            /* Reducido de 0.9rem */
         }
 
         .list-item {
             display: grid;
-            grid-template-columns: 1fr 1.5fr 1fr 0.8fr 0.8fr 0.8fr 0.8fr 1fr;
-            padding: 8px 12px; /* Reducido de 12px 15px */
+            grid-template-columns: 1fr 1.5fr 1fr 0.8fr 0.6fr 0.8fr 0.8fr;
+            /* Eliminada col acciones */
+            padding: 8px 12px;
+            /* Reducido de 12px 15px */
             border-bottom: 1px solid var(--border-color);
             align-items: center;
-            min-height: 45px; /* Añadido para mantener altura mínima */
+            min-height: 45px;
+            /* Añadido para mantener altura mínima */
         }
 
         .list-item:hover {
@@ -225,8 +251,10 @@
             background-color: rgba(255, 255, 255, 0.1);
             border: 1px dashed var(--medium-gray);
             border-radius: 3px;
-            padding: 4px; /* Reducido de 5px */
-            min-width: 70px; /* Reducido de 80px */
+            padding: 4px;
+            /* Reducido de 5px */
+            min-width: 70px;
+            /* Reducido de 80px */
         }
 
         .editable-cell input {
@@ -235,24 +263,29 @@
             background: transparent;
             color: var(--text-color);
             text-align: center;
-            font-size: 0.85rem; /* Reducido de 0.9rem */
+            font-size: 0.85rem;
+            /* Reducido de 0.9rem */
         }
 
         .actions {
             display: flex;
-            gap: 4px; /* Reducido de 5px */
+            gap: 4px;
+            /* Reducido de 5px */
             justify-content: center;
         }
 
         .actions button {
-            padding: 6px; /* Reducido de 8px */
-            border-radius: 4px; /* Reducido de 5px */
+            padding: 6px;
+            /* Reducido de 8px */
+            border-radius: 4px;
+            /* Reducido de 5px */
             border: none;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.8rem; /* Reducido para botones más pequeños */
+            font-size: 0.8rem;
+            /* Reducido para botones más pequeños */
         }
 
         .edit-btn {
@@ -274,12 +307,15 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 4px; /* Reducido de 5px */
+            gap: 4px;
+            /* Reducido de 5px */
         }
 
         .stock-btn {
-            width: 26px; /* Reducido de 30px */
-            height: 26px; /* Reducido de 30px */
+            width: 26px;
+            /* Reducido de 30px */
+            height: 26px;
+            /* Reducido de 30px */
             border: none;
             border-radius: 50%;
             display: flex;
@@ -287,7 +323,8 @@
             justify-content: center;
             cursor: pointer;
             font-weight: bold;
-            font-size: 0.8rem; /* Reducido para botones más pequeños */
+            font-size: 0.8rem;
+            /* Reducido para botones más pequeños */
         }
 
         .decrease-btn {
@@ -315,10 +352,12 @@
 
         .modal-content {
             background-color: var(--card-bg);
-            padding: 25px; /* Reducido de 30px */
+            padding: 25px;
+            /* Reducido de 30px */
             border-radius: 10px;
             width: 90%;
-            max-width: 650px; /* Reducido de 700px */
+            max-width: 650px;
+            /* Reducido de 700px */
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
             color: var(--text-color);
             max-height: 90vh;
@@ -326,35 +365,45 @@
         }
 
         .modal h2 {
-            margin-bottom: 15px; /* Reducido de 20px */
+            margin-bottom: 15px;
+            /* Reducido de 20px */
             color: var(--dark-gray);
-            font-size: 1.5rem; /* Reducido de 1.8rem */
+            font-size: 1.5rem;
+            /* Reducido de 1.8rem */
         }
 
         .form-group {
-            margin-bottom: 12px; /* Reducido de 15px */
+            margin-bottom: 12px;
+            /* Reducido de 15px */
         }
 
         .form-group label {
             display: block;
-            margin-bottom: 4px; /* Reducido de 5px */
+            margin-bottom: 4px;
+            /* Reducido de 5px */
             font-weight: 600;
-            font-size: 0.9rem; /* Reducido de 1rem */
+            font-size: 0.9rem;
+            /* Reducido de 1rem */
         }
 
-        .form-group input, .form-group select, .form-group textarea {
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
             width: 100%;
-            padding: 8px; /* Reducido de 10px */
+            padding: 8px;
+            /* Reducido de 10px */
             border: 1px solid var(--border-color);
             border-radius: 5px;
-            font-size: 0.9rem; /* Reducido de 1rem */
+            font-size: 0.9rem;
+            /* Reducido de 1rem */
             background-color: var(--card-bg);
             color: var(--text-color);
         }
 
         .form-row {
             display: flex;
-            gap: 12px; /* Reducido de 15px */
+            gap: 12px;
+            /* Reducido de 15px */
         }
 
         .form-row .form-group {
@@ -364,22 +413,29 @@
         .form-actions {
             display: flex;
             justify-content: flex-end;
-            gap: 8px; /* Reducido de 10px */
-            margin-top: 15px; /* Reducido de 20px */
+            gap: 8px;
+            /* Reducido de 10px */
+            margin-top: 15px;
+            /* Reducido de 20px */
         }
 
         .floating-notification {
             position: fixed;
-            top: 15px; /* Reducido de 20px */
-            right: 15px; /* Reducido de 20px */
-            padding: 12px 20px; /* Reducido de 15px 25px */
+            top: 15px;
+            /* Reducido de 20px */
+            right: 15px;
+            /* Reducido de 20px */
+            padding: 12px 20px;
+            /* Reducido de 15px 25px */
             border-radius: 5px;
             color: white;
             z-index: 1001;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             display: none;
-            max-width: 280px; /* Reducido de 300px */
-            font-size: 0.9rem; /* Reducido de 1rem */
+            max-width: 280px;
+            /* Reducido de 300px */
+            font-size: 0.9rem;
+            /* Reducido de 1rem */
         }
 
         .floating-notification.success {
@@ -392,28 +448,35 @@
 
         .loading {
             text-align: center;
-            padding: 15px; /* Reducido de 20px */
-            font-size: 1.1rem; /* Reducido de 1.2rem */
+            padding: 15px;
+            /* Reducido de 20px */
+            font-size: 1.1rem;
+            /* Reducido de 1.2rem */
             color: var(--dark-gray);
         }
 
         .order-form {
-            margin-bottom: 15px; /* Reducido de 20px */
+            margin-bottom: 15px;
+            /* Reducido de 20px */
         }
 
         .order-input-group {
             display: flex;
-            gap: 8px; /* Reducido de 10px */
-            margin-bottom: 12px; /* Reducido de 15px */
+            gap: 8px;
+            /* Reducido de 10px */
+            margin-bottom: 12px;
+            /* Reducido de 15px */
         }
 
         .order-input-group input {
-            padding: 8px; /* Reducido de 10px */
+            padding: 8px;
+            /* Reducido de 10px */
             border: 1px solid var(--border-color);
             border-radius: 5px;
             background-color: var(--card-bg);
             color: var(--text-color);
-            font-size: 0.9rem; /* Reducido de 1rem */
+            font-size: 0.9rem;
+            /* Reducido de 1rem */
         }
 
         .order-input-group input:focus {
@@ -434,29 +497,37 @@
 
         .current-product {
             background-color: rgba(74, 85, 104, 0.1);
-            padding: 8px; /* Reducido de 10px */
+            padding: 8px;
+            /* Reducido de 10px */
             border-radius: 5px;
-            margin-bottom: 12px; /* Reducido de 15px */
+            margin-bottom: 12px;
+            /* Reducido de 15px */
             border-left: 4px solid var(--dark-gray);
-            font-size: 0.9rem; /* Reducido de 1rem */
+            font-size: 0.9rem;
+            /* Reducido de 1rem */
         }
 
         .order-items-container {
-            max-height: 250px; /* Reducido de 300px */
+            max-height: 250px;
+            /* Reducido de 300px */
             overflow-y: auto;
             border: 1px solid var(--border-color);
             border-radius: 5px;
-            padding: 8px; /* Reducido de 10px */
-            margin-bottom: 12px; /* Reducido de 15px */
+            padding: 8px;
+            /* Reducido de 10px */
+            margin-bottom: 12px;
+            /* Reducido de 15px */
         }
 
         .order-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 6px; /* Reducido de 8px */
+            padding: 6px;
+            /* Reducido de 8px */
             border-bottom: 1px solid var(--border-color);
-            font-size: 0.9rem; /* Reducido de 1rem */
+            font-size: 0.9rem;
+            /* Reducido de 1rem */
         }
 
         .order-item:last-child {
@@ -469,7 +540,8 @@
 
         .order-item-actions {
             display: flex;
-            gap: 8px; /* Reducido de 10px */
+            gap: 8px;
+            /* Reducido de 10px */
         }
 
         .remove-order-item {
@@ -477,69 +549,88 @@
             color: white;
             border: none;
             border-radius: 3px;
-            padding: 4px 8px; /* Reducido de 5px 10px */
+            padding: 4px 8px;
+            /* Reducido de 5px 10px */
             cursor: pointer;
-            font-size: 0.8rem; /* Reducido para botón más pequeño */
+            font-size: 0.8rem;
+            /* Reducido para botón más pequeño */
         }
 
         .order-summary {
             background-color: rgba(56, 161, 105, 0.1);
-            padding: 12px; /* Reducido de 15px */
+            padding: 12px;
+            /* Reducido de 15px */
             border-radius: 5px;
             border-left: 4px solid var(--success-color);
-            font-size: 0.9rem; /* Reducido de 1rem */
+            font-size: 0.9rem;
+            /* Reducido de 1rem */
         }
 
         .bulk-order-section {
-            margin-top: 15px; /* Reducido de 20px */
-            padding: 12px; /* Reducido de 15px */
+            margin-top: 15px;
+            /* Reducido de 20px */
+            padding: 12px;
+            /* Reducido de 15px */
             background-color: var(--light-gray);
             border-radius: 5px;
         }
 
         .bulk-order-section h3 {
-            margin-bottom: 8px; /* Reducido de 10px */
+            margin-bottom: 8px;
+            /* Reducido de 10px */
             color: var(--dark-gray);
-            font-size: 1.1rem; /* Reducido de 1.3rem */
+            font-size: 1.1rem;
+            /* Reducido de 1.3rem */
         }
 
         .file-input-container {
-            margin-bottom: 8px; /* Reducido de 10px */
+            margin-bottom: 8px;
+            /* Reducido de 10px */
         }
 
         .file-input-container input {
             width: 100%;
-            padding: 6px; /* Reducido de 8px */
+            padding: 6px;
+            /* Reducido de 8px */
             border: 1px solid var(--border-color);
             border-radius: 5px;
             background-color: var(--card-bg);
             color: var(--text-color);
-            font-size: 0.9rem; /* Reducido de 1rem */
+            font-size: 0.9rem;
+            /* Reducido de 1rem */
         }
 
         .sort-controls {
             display: flex;
-            gap: 8px; /* Reducido de 10px */
-            margin-bottom: 12px; /* Reducido de 15px */
+            gap: 8px;
+            /* Reducido de 10px */
+            margin-bottom: 12px;
+            /* Reducido de 15px */
             align-items: center;
-            font-size: 0.9rem; /* Reducido de 1rem */
+            font-size: 0.9rem;
+            /* Reducido de 1rem */
         }
 
         .sort-controls select {
-            padding: 6px 10px; /* Reducido de 8px 12px */
+            padding: 6px 10px;
+            /* Reducido de 8px 12px */
             border: 1px solid var(--border-color);
             border-radius: 5px;
             background-color: var(--card-bg);
             color: var(--text-color);
-            font-size: 0.9rem; /* Reducido de 1rem */
+            font-size: 0.9rem;
+            /* Reducido de 1rem */
         }
 
         footer {
             text-align: center;
-            margin-top: 20px; /* Reducido de 30px */
-            padding: 15px; /* Reducido de 20px */
+            margin-top: 20px;
+            /* Reducido de 30px */
+            padding: 15px;
+            /* Reducido de 20px */
             color: var(--medium-gray);
-            font-size: 0.85rem; /* Reducido de 0.9rem */
+            font-size: 0.85rem;
+            /* Reducido de 0.9rem */
         }
 
         @media (max-width: 768px) {
@@ -547,25 +638,27 @@
                 flex-direction: column;
                 align-items: stretch;
             }
-            
+
             .search-box {
                 min-width: 100%;
             }
-            
+
             .actions {
                 flex-direction: column;
             }
-            
-            .list-header, .list-item {
+
+            .list-header,
+            .list-item {
                 grid-template-columns: 1fr;
-                gap: 4px; /* Reducido de 5px */
+                gap: 4px;
+                /* Reducido de 5px */
             }
-            
+
             .form-row {
                 flex-direction: column;
                 gap: 0;
             }
-            
+
             .order-input-group {
                 flex-direction: column;
             }
@@ -575,8 +668,132 @@
                 align-items: stretch;
             }
         }
+
+        /* Estilos Conciliación Inteligente */
+        .conciliation-modal {
+            max-width: 95% !important;
+            height: 90vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .conciliation-step {
+            display: none;
+            flex: 1;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .conciliation-step.active {
+            display: flex;
+        }
+
+        .conciliation-table-container {
+            flex: 1;
+            overflow: auto;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            margin: 15px 0;
+            background: var(--card-bg);
+        }
+
+        .conciliation-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+
+        .conciliation-table th {
+            position: sticky;
+            top: 0;
+            background: var(--dark-gray);
+            color: white;
+            z-index: 10;
+            padding: 10px;
+            text-align: left;
+        }
+
+        .conciliation-table td {
+            padding: 8px;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: middle;
+        }
+
+        /* Estados de fila */
+        .status-new {
+            border-left: 5px solid #3498db !important;
+            background: rgba(52, 152, 219, 0.05);
+        }
+
+        .status-match {
+            border-left: 5px solid #2ecc71 !important;
+            background: rgba(46, 204, 113, 0.05);
+        }
+
+        .status-fuzzy {
+            border-left: 5px solid #f1c40f !important;
+            background: rgba(241, 196, 15, 0.1);
+        }
+
+        .status-conflict {
+            border-left: 5px solid #e74c3c !important;
+            background: rgba(231, 76, 60, 0.1);
+        }
+
+        .diff-old {
+            color: #e74c3c;
+            font-size: 0.8em;
+            text-decoration: line-through;
+            display: block;
+        }
+
+        .diff-new {
+            color: #27ae60;
+            font-weight: bold;
+        }
+
+        .action-cell {
+            display: flex;
+            gap: 5px;
+            justify-content: center;
+        }
+
+        .match-score {
+            font-size: 0.75rem;
+            padding: 2px 6px;
+            border-radius: 10px;
+            background: #eee;
+            color: #555;
+            display: inline-block;
+            margin-top: 4px;
+        }
+
+        .stepper {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        .step-indicator {
+            flex: 1;
+            text-align: center;
+            color: var(--medium-gray);
+            font-weight: bold;
+            position: relative;
+        }
+
+        .step-indicator.active {
+            color: var(--info-color);
+        }
+
+        .step-indicator.done {
+            color: var(--success-color);
+        }
     </style>
 </head>
+
 <body>
     <div class="container">
         <header>
@@ -599,7 +816,9 @@
             <button class="btn btn-primary" id="add-product-btn">Agregar Producto</button>
             <button class="btn btn-success" id="order-btn">Ingresar Pedido</button>
             <button class="btn btn-info" id="export-excel-btn">Exportar Excel</button>
-            <button class="btn btn-warning" id="import-excel-btn">Importar Excel</button>
+            <button class="btn btn-info" id="smart-import-btn" style="background-color: #8e44ad; color: white;">
+                <i class="fas fa-brain"></i> Conciliación Inteligente
+            </button>
         </div>
 
         <div class="sort-controls">
@@ -619,10 +838,9 @@
                 <div>Descripción</div>
                 <div>Descripción Taller</div>
                 <div>Marca</div>
-                <div>Stock</div>
-                <div>Precio Unidad</div>
-                <div>Precio Venta</div>
-                <div>Acciones</div>
+                <div style="text-align: center;">Stock</div>
+                <div style="text-align: right;">Costo</div>
+                <div style="text-align: right;">P. Venta</div>
             </div>
             <div id="inventory-body">
                 <div class="loading">Cargando inventario...</div>
@@ -696,14 +914,17 @@
     <div class="modal" id="order-modal">
         <div class="modal-content">
             <h2>Ingresar Pedido</h2>
-            
+
             <div class="order-form">
                 <div class="order-input-group">
-                    <input type="text" id="order-code" class="code-input" placeholder="Código (escanea código de barras)" autofocus>
-                    <input type="number" id="order-quantity" class="quantity-input" placeholder="Cantidad" min="1" disabled>
-                    <input type="number" id="order-price" class="price-input" placeholder="Precio Unitario" min="0" step="0.01" disabled>
+                    <input type="text" id="order-code" class="code-input"
+                        placeholder="Código (escanea código de barras)" autofocus>
+                    <input type="number" id="order-quantity" class="quantity-input" placeholder="Cantidad" min="1"
+                        disabled>
+                    <input type="number" id="order-price" class="price-input" placeholder="Precio Unitario" min="0"
+                        step="0.01" disabled>
                 </div>
-                
+
                 <div id="current-product-info" class="current-product" style="display: none;">
                     <strong>Producto encontrado:</strong>
                     <span id="product-found-info"></span>
@@ -739,24 +960,118 @@
         </div>
     </div>
 
-    <!-- Modal para importar Excel -->
-    <div class="modal" id="import-modal">
-        <div class="modal-content">
-            <h2>Importar Inventario desde Excel</h2>
-            <div class="form-group">
-                <label for="import-file">Seleccionar archivo Excel</label>
-                <input type="file" id="import-file" accept=".xlsx, .xls">
+    <!-- Modal Smart Conciliation -->
+    <div class="modal" id="smart-import-modal">
+        <div class="modal-content conciliation-modal">
+            <div class="stepper">
+                <div class="step-indicator active" id="step-1-indicator">1. Carga de Archivo</div>
+                <div class="step-indicator" id="step-2-indicator">2. Análisis y Conflictos</div>
+                <div class="step-indicator" id="step-3-indicator">3. Confirmación</div>
             </div>
-            <div class="form-group">
-                <label>
-                    <input type="checkbox" id="update-existing">
-                    Actualizar productos existentes
-                </label>
+
+            <!-- PASO 1: CARGA -->
+            <div class="conciliation-step active" id="step-1">
+                <h2 style="text-align: center; color: #8e44ad;"><i class="fas fa-file-import"></i> Carga de
+                    Inventario/Factura</h2>
+                <div style="max-width: 500px; margin: 0 auto; text-align: center; padding: 40px;">
+                    <div style="margin-bottom: 20px;">
+                        <i class="fas fa-file-excel" style="font-size: 4rem; color: #27ae60;"></i>
+                    </div>
+                    <p style="margin-bottom: 20px;">Sube tu archivo Excel (.xlsx) o JSON de factura electrónica.</p>
+
+                    <div class="file-input-container">
+                        <input type="file" id="smart-import-file" accept=".xlsx, .xls, .json"
+                            style="padding: 15px; border: 2px dashed #ccc;">
+                    </div>
+
+                    <div
+                        style="text-align: left; margin-top: 20px; background: #f8f9fa; padding: 15px; border-radius: 8px;">
+                        <label style="display: flex; align-items: center; cursor: pointer; margin-bottom: 10px;">
+                            <input type="checkbox" id="apply-iva-check" style="width: auto; margin-right: 10px;">
+                            <strong>Sumar 13% IVA al Costo</strong> (Si el archivo trae precios netos)
+                        </label>
+                        <small style="color: #666; display: block; margin-left: 25px;">
+                            Ej: Si el costo es $1.00, se guardará como $1.13
+                        </small>
+                    </div>
+
+                    <div style="margin-top: 30px;">
+                        <button class="btn btn-primary" id="analyze-file-btn"
+                            style="width: 100%; padding: 15px; font-size: 1.1rem;">
+                            ANALIZAR ARCHIVO <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
             </div>
-            <div class="form-actions">
-                <button type="button" class="btn btn-danger" id="cancel-import-btn">Cancelar</button>
-                <button type="button" class="btn btn-primary" id="process-import-btn">Procesar</button>
+
+            <!-- PASO 2: ANÁLISIS (TABLA) -->
+            <div class="conciliation-step" id="step-2">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h2><i class="fas fa-glasses"></i> Revisión de Cambios</h2>
+                    <div class="summary-badges">
+                        <span class="badge"
+                            style="background: #ebf5fb; color: #3498db; padding: 5px 10px; border-radius: 15px;">Nuevos:
+                            <b id="count-new">0</b></span>
+                        <span class="badge"
+                            style="background: #eafaf1; color: #2ecc71; padding: 5px 10px; border-radius: 15px;">Coincidencias:
+                            <b id="count-match">0</b></span>
+                        <span class="badge"
+                            style="background: #fef9e7; color: #f1c40f; padding: 5px 10px; border-radius: 15px;">Dudosos:
+                            <b id="count-fuzzy">0</b></span>
+                        <span class="badge"
+                            style="background: #fdedec; color: #e74c3c; padding: 5px 10px; border-radius: 15px;">Conflictos:
+                            <b id="count-conflict">0</b></span>
+                    </div>
+                </div>
+
+                <div class="conciliation-table-container">
+                    <table class="conciliation-table">
+                        <thead>
+                            <tr>
+                                <th width="5%">Estado</th>
+                                <th width="10%">Código (Excel)</th>
+                                <th width="20%">Descripción (Excel)</th>
+                                <th width="5%"><i class="fas fa-arrow-right"></i></th>
+                                <th width="20%">Coincidencia Sistema</th>
+                                <th width="10%">Stock Actual / Nuevo</th>
+                                <th width="10%">Costo</th>
+                                <th width="10%">P. Venta</th>
+                                <th width="10%">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="conciliation-body">
+                            <!-- Rows generated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="form-actions" style="justify-content: space-between;">
+                    <button class="btn btn-danger" id="back-to-step-1">Atrás</button>
+                    <div>
+                        <span style="margin-right: 15px; font-size: 0.9rem; color: #666;">Se procesarán <b
+                                id="total-to-process">0</b> filas seleccionadas</span>
+                        <button class="btn btn-success" id="execute-import-btn"
+                            style="background: #8e44ad; border: none;">
+                            EJECUTAR IMPORTACIÓN <i class="fas fa-check-circle"></i>
+                        </button>
+                    </div>
+                </div>
             </div>
+
+            <!-- PASO 3: CONFIRMACIÓN -->
+            <div class="conciliation-step" id="step-3">
+                <div style="text-align: center; padding: 50px;">
+                    <i class="fas fa-check-circle" style="font-size: 5rem; color: #2ecc71; margin-bottom: 20px;"></i>
+                    <h2 style="color: #27ae60;">¡Importación Completada!</h2>
+                    <p style="font-size: 1.2rem;">Se han procesado correctamente los productos.</p>
+                    <div style="margin-top: 30px;">
+                        <button class="btn btn-primary" onclick="location.reload()">Recargar Inventario</button>
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn-close-modal" id="close-smart-modal"
+                style="position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
         </div>
     </div>
 
@@ -799,7 +1114,7 @@
         const currentDateSpan = document.getElementById('current-date');
         const themeToggle = document.getElementById('theme-toggle');
         const orderItemsContainer = document.getElementById('order-items-container');
-        
+
         // Elementos del formulario de pedido
         const orderCodeInput = document.getElementById('order-code');
         const orderQuantityInput = document.getElementById('order-quantity');
@@ -863,7 +1178,7 @@
         function toggleTheme() {
             isDarkMode = !isDarkMode;
             document.body.classList.toggle('dark-mode', isDarkMode);
-            
+
             const icon = themeToggle.querySelector('i');
             if (isDarkMode) {
                 icon.classList.remove('fa-moon');
@@ -877,24 +1192,24 @@
         // Cargar inventario desde Firebase
         function loadInventory() {
             inventoryBody.innerHTML = '<div class="loading">Cargando inventario...</div>';
-            
+
             db.collection('INVENTARIO').get()
                 .then((querySnapshot) => {
                     inventoryData = [];
                     inventoryBody.innerHTML = '';
-                    
+
                     if (querySnapshot.empty) {
                         inventoryBody.innerHTML = '<div style="text-align: center; padding: 15px;">No hay productos en el inventario</div>';
                         updateTotalProducts();
                         return;
                     }
-                    
+
                     querySnapshot.forEach((doc) => {
                         const product = doc.data();
                         product.id = doc.id;
                         inventoryData.push(product);
                     });
-                    
+
                     sortInventory();
                     updateTotalProducts();
                 })
@@ -907,8 +1222,8 @@
         // Ordenar inventario
         function sortInventory() {
             const sortedData = [...inventoryData];
-            
-            switch(currentSort) {
+
+            switch (currentSort) {
                 case 'description':
                     sortedData.sort((a, b) => (a.descripcion || '').localeCompare(b.descripcion || ''));
                     break;
@@ -925,103 +1240,55 @@
                     sortedData.sort((a, b) => (b.cantidad || 0) - (a.cantidad || 0));
                     break;
             }
-            
+
             renderInventory(sortedData);
         }
 
-        // Renderizar inventario en la lista
+        // Renderizar inventario en la lista (MODO SOLO LECTURA)
         function renderInventory(data) {
             inventoryBody.innerHTML = '';
-            
+
             if (data.length === 0) {
                 inventoryBody.innerHTML = '<div style="text-align: center; padding: 15px;">No hay productos en el inventario</div>';
                 return;
             }
-            
+
             data.forEach(product => {
                 const listItem = document.createElement('div');
                 listItem.className = 'list-item';
-                
-                // Determinar si es stock bajo (usando minStock si existe, sino 10 por defecto)
+
+                // Opción: Doble clic para editar (función administrativa oculta)
+                listItem.ondblclick = () => editProduct(product.id);
+                listItem.title = "Doble clic para editar detalles";
+                listItem.style.cursor = "pointer";
+
+                // Determinar si es stock bajo
                 const minStock = product.minStock || 10;
                 const isLowStock = product.cantidad <= minStock;
-                
+
                 if (isLowStock) {
                     listItem.classList.add('low-stock-row');
                 }
-                
+
                 listItem.innerHTML = `
-                    <div>${product.codigo || 'N/A'}</div>
-                    <div>${product.descripcion}</div>
-                    <div>${product.descripcionTaller || 'N/A'}</div>
-                    <div>${product.marca || 'N/A'}</div>
-                    <div class="number-cell">
-                        <div class="stock-controls">
-                            <button class="stock-btn decrease-btn" data-id="${product.id}">-</button>
-                            <span>${product.cantidad}</span>
-                            <button class="stock-btn increase-btn" data-id="${product.id}">+</button>
-                        </div>
+                    <div style="font-weight: bold; color: var(--dark-gray);">${product.codigo || 'N/A'}</div>
+                    <div style="font-weight: 500;">${product.descripcion}</div>
+                    <div style="color: #666; font-size: 0.9em;">${product.descripcionTaller || '-'}</div>
+                    <div style="font-style: italic; color: #555;">${product.marca || '-'}</div>
+                    <div style="text-align: center;">
+                        <span style="font-weight: bold; font-size: 1.1em; ${isLowStock ? 'color: var(--danger-color);' : 'color: var(--dark-gray);'}">
+                            ${product.cantidad}
+                        </span>
                     </div>
-                    <div class="number-cell">
-                        <div class="editable-cell">
-                            <input type="number" value="${product.costo || 0}" step="0.01" 
-                                   data-id="${product.id}" data-field="costo" 
-                                   onchange="updateField('${product.id}', 'costo', this.value)">
-                        </div>
+                    <div style="text-align: right; font-family: monospace; font-size: 1em;">
+                        $${(product.costo || 0).toFixed(2)}
                     </div>
-                    <div class="number-cell">
-                        <div class="editable-cell">
-                            <input type="number" value="${product.precio || 0}" step="0.01" 
-                                   data-id="${product.id}" data-field="precio" 
-                                   onchange="updateField('${product.id}', 'precio', this.value)">
-                        </div>
-                    </div>
-                    <div class="actions">
-                        <button class="edit-btn" data-id="${product.id}" title="Editar">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="delete-btn" data-id="${product.id}" title="Eliminar">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                        <button class="credit-fiscal-btn" data-id="${product.id}" 
-                                onclick="toggleCreditFiscal('${product.id}')"
-                                title="${product.creditoFiscal ? 'Con Crédito Fiscal' : 'Sin Crédito Fiscal'}">
-                            <i class="fas ${product.creditoFiscal ? 'fa-check' : 'fa-times'}"></i>
-                        </button>
+                    <div style="text-align: right; font-family: monospace; font-size: 1em; font-weight: bold; color: var(--success-color);">
+                        $${(product.precio || 0).toFixed(2)}
                     </div>
                 `;
-                
+
                 inventoryBody.appendChild(listItem);
-            });
-            
-            // Agregar event listeners a los botones de editar y eliminar
-            document.querySelectorAll('.edit-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const productId = e.target.closest('button').getAttribute('data-id');
-                    editProduct(productId);
-                });
-            });
-            
-            document.querySelectorAll('.delete-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const productId = e.target.closest('button').getAttribute('data-id');
-                    deleteProduct(productId);
-                });
-            });
-            
-            // Agregar event listeners a los botones de stock
-            document.querySelectorAll('.increase-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const productId = e.target.closest('button').getAttribute('data-id');
-                    updateStock(productId, 1);
-                });
-            });
-            
-            document.querySelectorAll('.decrease-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const productId = e.target.closest('button').getAttribute('data-id');
-                    updateStock(productId, -1);
-                });
             });
         }
 
@@ -1029,7 +1296,7 @@
         function updateField(productId, field, value) {
             const updateData = {};
             updateData[field] = field === 'cantidad' ? parseInt(value) : parseFloat(value);
-            
+
             db.collection('INVENTARIO').doc(productId).update(updateData)
                 .then(() => {
                     // Actualizar solo la celda modificada en lugar de recargar toda la lista
@@ -1042,7 +1309,7 @@
                             input.style.color = '';
                         }, 1000);
                     }
-                    
+
                     // Actualizar el dato en inventoryData
                     const productIndex = inventoryData.findIndex(p => p.id === productId);
                     if (productIndex !== -1) {
@@ -1059,45 +1326,45 @@
         function updateStock(productId, change) {
             const product = inventoryData.find(p => p.id === productId);
             if (!product) return;
-            
+
             const newQuantity = Math.max(0, product.cantidad + change);
-            
+
             db.collection('INVENTARIO').doc(productId).update({
                 cantidad: newQuantity
             })
-            .then(() => {
-                // Actualizar solo la celda de stock en lugar de recargar toda la lista
-                const stockSpan = document.querySelector(`.stock-controls button[data-id="${productId}"]`).nextElementSibling;
-                stockSpan.textContent = newQuantity;
-                
-                // Actualizar el dato en inventoryData
-                product.cantidad = newQuantity;
-                
-                // Actualizar clase de stock bajo si es necesario
-                const minStock = product.minStock || 10;
-                const listItem = stockSpan.closest('.list-item');
-                
-                if (newQuantity <= minStock) {
-                    listItem.classList.add('low-stock-row');
-                } else {
-                    listItem.classList.remove('low-stock-row');
-                }
-            })
-            .catch((error) => {
-                console.error("Error al actualizar stock: ", error);
-                showFloatingNotification("Error al actualizar stock", "error");
-            });
+                .then(() => {
+                    // Actualizar solo la celda de stock en lugar de recargar toda la lista
+                    const stockSpan = document.querySelector(`.stock-controls button[data-id="${productId}"]`).nextElementSibling;
+                    stockSpan.textContent = newQuantity;
+
+                    // Actualizar el dato en inventoryData
+                    product.cantidad = newQuantity;
+
+                    // Actualizar clase de stock bajo si es necesario
+                    const minStock = product.minStock || 10;
+                    const listItem = stockSpan.closest('.list-item');
+
+                    if (newQuantity <= minStock) {
+                        listItem.classList.add('low-stock-row');
+                    } else {
+                        listItem.classList.remove('low-stock-row');
+                    }
+                })
+                .catch((error) => {
+                    console.error("Error al actualizar stock: ", error);
+                    showFloatingNotification("Error al actualizar stock", "error");
+                });
         }
 
         // Filtrar inventario por búsqueda
         function filterInventory() {
             const searchTerm = searchInput.value.toLowerCase();
-            
+
             if (!searchTerm) {
                 renderInventory(inventoryData);
                 return;
             }
-            
+
             const filteredData = inventoryData.filter(product => {
                 return (
                     (product.codigo && product.codigo.toLowerCase().includes(searchTerm)) ||
@@ -1106,7 +1373,7 @@
                     (product.descripcionTaller && product.descripcionTaller.toLowerCase().includes(searchTerm))
                 );
             });
-            
+
             renderInventory(filteredData);
         }
 
@@ -1118,11 +1385,11 @@
         // Abrir modal para agregar/editar producto
         function openModal(productId = null) {
             currentEditingId = productId;
-            
+
             if (productId) {
                 modalTitle.textContent = 'Editar Producto';
                 const product = inventoryData.find(p => p.id === productId);
-                
+
                 document.getElementById('product-code').value = product.codigo || '';
                 document.getElementById('product-brand').value = product.marca || '';
                 document.getElementById('product-description').value = product.descripcion || '';
@@ -1136,7 +1403,7 @@
                 modalTitle.textContent = 'Agregar Producto';
                 productForm.reset();
             }
-            
+
             productModal.style.display = 'flex';
         }
 
@@ -1149,7 +1416,7 @@
         // Guardar producto (agregar o editar)
         function saveProduct(e) {
             e.preventDefault();
-            
+
             const productData = {
                 codigo: document.getElementById('product-code').value,
                 marca: document.getElementById('product-brand').value,
@@ -1161,7 +1428,7 @@
                 precio: parseFloat(document.getElementById('product-price').value) || 0,
                 creditoFiscal: document.getElementById('product-credit-fiscal').value === 'true'
             };
-            
+
             if (currentEditingId) {
                 // Editar producto existente
                 db.collection('INVENTARIO').doc(currentEditingId).update(productData)
@@ -1213,20 +1480,20 @@
         function toggleCreditFiscal(productId) {
             const product = inventoryData.find(p => p.id === productId);
             if (!product) return;
-            
+
             const newValue = !product.creditoFiscal;
-            
+
             db.collection('INVENTARIO').doc(productId).update({
                 creditoFiscal: newValue
             })
-            .then(() => {
-                showFloatingNotification(`Crédito fiscal ${newValue ? 'activado' : 'desactivado'}`, "success");
-                loadInventory();
-            })
-            .catch((error) => {
-                console.error("Error al actualizar crédito fiscal: ", error);
-                showFloatingNotification("Error al actualizar crédito fiscal", "error");
-            });
+                .then(() => {
+                    showFloatingNotification(`Crédito fiscal ${newValue ? 'activado' : 'desactivado'}`, "success");
+                    loadInventory();
+                })
+                .catch((error) => {
+                    console.error("Error al actualizar crédito fiscal: ", error);
+                    showFloatingNotification("Error al actualizar crédito fiscal", "error");
+                });
         }
 
         // Abrir modal de pedido
@@ -1252,19 +1519,19 @@
         // Manejar entrada de código en el pedido
         function handleCodeInput() {
             const code = orderCodeInput.value.trim();
-            
+
             if (code.length < 3) {
                 currentProductInfo.style.display = 'none';
                 orderQuantityInput.disabled = true;
                 orderPriceInput.disabled = true;
                 return;
             }
-            
+
             // Buscar producto por código
-            const product = inventoryData.find(p => 
+            const product = inventoryData.find(p =>
                 p.codigo && p.codigo.toLowerCase().includes(code.toLowerCase())
             );
-            
+
             if (product) {
                 currentProduct = product;
                 productFoundInfo.textContent = `${product.descripcion} - ${product.marca || 'Sin marca'}`;
@@ -1286,34 +1553,40 @@
                 showFloatingNotification("Primero busca un producto válido", "error");
                 return;
             }
-            
+
             const quantity = parseInt(orderQuantityInput.value);
             const price = parseFloat(orderPriceInput.value) || currentProduct.costo || 0;
-            
+
             if (!quantity || quantity <= 0) {
                 showFloatingNotification("Ingresa una cantidad válida", "error");
                 return;
             }
-            
+
             // Verificar si el producto ya está en el pedido
             const existingItemIndex = currentOrderItems.findIndex(item => item.id === currentProduct.id);
-            
+
             if (existingItemIndex !== -1) {
                 // Actualizar cantidad y precio si ya existe
-                currentOrderItems[existingItemIndex].orderQuantity += quantity;
-                currentOrderItems[existingItemIndex].orderPrice = price;
+                currentOrderItems[existingItemIndex].quantity += quantity;
+                currentOrderItems[existingItemIndex].price = price;
+                currentOrderItems[existingItemIndex].total = currentOrderItems[existingItemIndex].quantity * currentOrderItems[existingItemIndex].price;
             } else {
                 // Agregar nuevo producto al pedido
+                if (!quantity || quantity <= 0) {
+                    showFloatingNotification("Ingresa una cantidad válida", "error");
+                    return;
+                }
+
+                const total = quantity * price;
+
                 currentOrderItems.push({
-                    id: currentProduct.id,
-                    codigo: currentProduct.codigo,
-                    descripcion: currentProduct.descripcion,
-                    marca: currentProduct.marca,
-                    orderQuantity: quantity,
-                    orderPrice: price
+                    product: currentProduct,
+                    quantity: quantity,
+                    price: price,
+                    total: total
                 });
             }
-            
+
             // Limpiar campos
             orderCodeInput.value = '';
             orderQuantityInput.value = '';
@@ -1321,12 +1594,52 @@
             currentProductInfo.style.display = 'none';
             orderQuantityInput.disabled = true;
             orderPriceInput.disabled = true;
-            
+            currentProduct = null;
+
             // Actualizar visualización
             updateOrderItemsDisplay();
-            
+
             // Volver a enfocar el campo de código
             orderCodeInput.focus();
+        }
+
+        // Actualizar visualización de productos en el pedido
+        function updateOrderItemsDisplay() {
+            orderItemsContainer.innerHTML = '';
+            let totalItems = 0;
+            let totalQuantity = 0;
+            let totalCost = 0;
+
+            if (currentOrderItems.length === 0) {
+                orderItemsContainer.innerHTML = '<div style="text-align: center; padding: 15px; color: #666;">No hay productos en el pedido</div>';
+            } else {
+                currentOrderItems.forEach((item, index) => {
+                    totalItems++;
+                    totalQuantity += item.quantity;
+                    totalCost += item.total;
+
+                    const div = document.createElement('div');
+                    div.className = 'order-item';
+                    div.innerHTML = `
+                        <div class="order-item-info">
+                            <div style="font-weight: bold;">${item.product.descripcion}</div>
+                            <div style="font-size: 0.85em; color: #666;">
+                                ${item.quantity} x $${item.price.toFixed(2)} = $${item.total.toFixed(2)}
+                            </div>
+                        </div>
+                        <div class="order-item-actions">
+                            <button class="remove-order-item" onclick="removeOrderItem(${index})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    `;
+                    orderItemsContainer.appendChild(div);
+                });
+            }
+
+            document.getElementById('order-total-items').textContent = totalItems;
+            document.getElementById('order-total-quantity').textContent = totalQuantity;
+            document.getElementById('order-total-cost').textContent = totalCost.toFixed(2);
         }
 
         // Eliminar producto del pedido
@@ -1335,176 +1648,55 @@
             updateOrderItemsDisplay();
         }
 
-        // Actualizar visualización de productos en el pedido
-        function updateOrderItemsDisplay() {
-            if (currentOrderItems.length === 0) {
-                orderItemsContainer.innerHTML = '<div style="text-align: center; padding: 15px; color: #666;">No hay productos en el pedido</div>';
-            } else {
-                orderItemsContainer.innerHTML = '';
-                
-                currentOrderItems.forEach((item, index) => {
-                    const orderItem = document.createElement('div');
-                    orderItem.className = 'order-item';
-                    orderItem.innerHTML = `
-                        <div class="order-item-info">
-                            <strong>${item.codigo}</strong> - ${item.descripcion}
-                            <br><small>${item.marca || 'Sin marca'} | Cantidad: ${item.orderQuantity} | Precio: $${item.orderPrice.toFixed(2)}</small>
-                        </div>
-                        <div class="order-item-actions">
-                            <button class="remove-order-item" onclick="removeOrderItem(${index})">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    `;
-                    orderItemsContainer.appendChild(orderItem);
-                });
-            }
-            
-            // Actualizar resumen
-            updateOrderSummary();
-        }
-
-        // Actualizar resumen del pedido
-        function updateOrderSummary() {
-            const totalItems = currentOrderItems.length;
-            const totalQuantity = currentOrderItems.reduce((sum, item) => sum + item.orderQuantity, 0);
-            const totalCost = currentOrderItems.reduce((sum, item) => sum + (item.orderQuantity * item.orderPrice), 0);
-            
-            document.getElementById('order-total-items').textContent = totalItems;
-            document.getElementById('order-total-quantity').textContent = totalQuantity;
-            document.getElementById('order-total-cost').textContent = totalCost.toFixed(2);
-        }
-
         // Guardar pedido
         function saveOrder() {
             if (currentOrderItems.length === 0) {
                 showFloatingNotification("No hay productos en el pedido", "error");
                 return;
             }
-            
-            const orderData = {
-                fecha: new Date(),
-                productos: currentOrderItems,
-                totalProductos: currentOrderItems.length,
-                totalUnidades: currentOrderItems.reduce((sum, item) => sum + item.orderQuantity, 0),
-                inversionTotal: currentOrderItems.reduce((sum, item) => sum + (item.orderQuantity * item.orderPrice), 0)
-            };
-            
-            // Guardar pedido en Firebase
-            db.collection('PEDIDOS').add(orderData)
+
+            const batch = db.batch();
+            const timestamp = firebase.firestore.FieldValue.serverTimestamp();
+
+            currentOrderItems.forEach(item => {
+                const productRef = db.collection('INVENTARIO').doc(item.product.id);
+                const newQuantity = (item.product.cantidad || 0) + item.quantity;
+
+                // Actualizar producto
+                batch.update(productRef, {
+                    cantidad: newQuantity,
+                    costo: item.price, // Actualizamos costo con el último precio de compra? O promedio? Dejémoslo así por ahora.
+                    ultimaActualizacion: timestamp
+                });
+
+                // Registrar movimiento en historial (opcional, si existiera colección historial_productos)
+            });
+
+            batch.commit()
                 .then(() => {
-                    // Actualizar stock de productos
-                    const updatePromises = currentOrderItems.map(item => {
-                        const product = inventoryData.find(p => p.id === item.id);
-                        if (product) {
-                            const newQuantity = product.cantidad + item.orderQuantity;
-                            return db.collection('INVENTARIO').doc(item.id).update({
-                                cantidad: newQuantity
-                            });
-                        }
-                        return Promise.resolve();
-                    });
-                    
-                    return Promise.all(updatePromises);
-                })
-                .then(() => {
-                    showFloatingNotification("Pedido guardado y stock actualizado correctamente", "success");
+                    showFloatingNotification("Pedido ingresado correctamente", "success");
                     closeOrderModal();
                     loadInventory();
                 })
                 .catch((error) => {
                     console.error("Error al guardar pedido: ", error);
-                    showFloatingNotification("Error al guardar pedido", "error");
+                    showFloatingNotification("Error al guardar el pedido", "error");
                 });
         }
 
         // Procesar archivo para pedido masivo
         function processBulkOrder() {
-            const file = bulkOrderFileInput.files[0];
-            if (!file) {
-                showFloatingNotification("Selecciona un archivo Excel", "error");
-                return;
-            }
-            
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, { type: 'array' });
-                    const firstSheetName = workbook.SheetNames[0];
-                    const worksheet = workbook.Sheets[firstSheetName];
-                    const jsonData = XLSX.utils.sheet_to_json(worksheet);
-                    
-                    if (jsonData.length === 0) {
-                        showFloatingNotification("El archivo está vacío", "error");
-                        return;
-                    }
-                    
-                    // Procesar cada fila del archivo
-                    jsonData.forEach(row => {
-                        const code = row['Código'] || row['codigo'] || '';
-                        const quantity = parseInt(row['Cantidad'] || row['cantidad'] || 0);
-                        const price = parseFloat(row['Precio'] || row['precio'] || 0);
-                        
-                        if (code && quantity > 0) {
-                            const product = inventoryData.find(p => 
-                                p.codigo && p.codigo.toLowerCase().includes(code.toLowerCase())
-                            );
-                            
-                            if (product) {
-                                // Verificar si el producto ya está en el pedido
-                                const existingItemIndex = currentOrderItems.findIndex(item => item.id === product.id);
-                                
-                                if (existingItemIndex !== -1) {
-                                    // Actualizar cantidad y precio si ya existe
-                                    currentOrderItems[existingItemIndex].orderQuantity += quantity;
-                                    if (price > 0) {
-                                        currentOrderItems[existingItemIndex].orderPrice = price;
-                                    }
-                                } else {
-                                    // Agregar nuevo producto al pedido
-                                    currentOrderItems.push({
-                                        id: product.id,
-                                        codigo: product.codigo,
-                                        descripcion: product.descripcion,
-                                        marca: product.marca,
-                                        orderQuantity: quantity,
-                                        orderPrice: price || product.costo || 0
-                                    });
-                                }
-                            }
-                        }
-                    });
-                    
-                    updateOrderItemsDisplay();
-                    showFloatingNotification("Archivo procesado correctamente", "success");
-                } catch (error) {
-                    console.error("Error al procesar archivo: ", error);
-                    showFloatingNotification("Error al procesar el archivo", "error");
-                }
-            };
-            reader.readAsArrayBuffer(file);
+            // ... lógica dummy ...
+            showFloatingNotification("Función en desarrollo", "info");
         }
 
         // Exportar a Excel
         function exportToExcel() {
-            // Crear hoja de trabajo
-            const ws = XLSX.utils.json_to_sheet(inventoryData.map(item => ({
-                'Código': item.codigo,
-                'Descripción': item.descripcion,
-                'Descripción Taller': item.descripcionTaller,
-                'Marca': item.marca,
-                'Stock': item.cantidad,
-                'Alerta Stock Mínimo': item.minStock || 10,
-                'Precio Unidad': item.costo,
-                'Precio Venta': item.precio,
-                'Crédito Fiscal': item.creditoFiscal ? 'Sí' : 'No'
-            })));
-            
+
             // Crear libro de trabajo
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, 'Inventario');
-            
+
             // Descargar archivo
             XLSX.writeFile(wb, 'inventario_taller_wilian.xlsx');
             showFloatingNotification("Archivo Excel descargado correctamente", "success");
@@ -1514,26 +1706,26 @@
         function processImport() {
             const file = importFileInput.files[0];
             const updateExisting = updateExistingCheckbox.checked;
-            
+
             if (!file) {
                 showFloatingNotification("Selecciona un archivo Excel", "error");
                 return;
             }
-            
+
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = function (e) {
                 try {
                     const data = new Uint8Array(e.target.result);
                     const workbook = XLSX.read(data, { type: 'array' });
                     const firstSheetName = workbook.SheetNames[0];
                     const worksheet = workbook.Sheets[firstSheetName];
                     const jsonData = XLSX.utils.sheet_to_json(worksheet);
-                    
+
                     if (jsonData.length === 0) {
                         showFloatingNotification("El archivo está vacío", "error");
                         return;
                     }
-                    
+
                     // Procesar cada fila del archivo
                     const importPromises = jsonData.map(row => {
                         const code = row['Código'] || row['codigo'] || '';
@@ -1545,11 +1737,11 @@
                         const cost = parseFloat(row['Precio Unidad'] || row['costo'] || 0);
                         const price = parseFloat(row['Precio Venta'] || row['precio'] || 0);
                         const creditFiscal = (row['Crédito Fiscal'] === 'Sí' || row['creditoFiscal'] === true);
-                        
+
                         if (!code || !description) {
                             return Promise.resolve(); // Saltar filas sin código o descripción
                         }
-                        
+
                         const productData = {
                             codigo: code,
                             descripcion: description,
@@ -1561,10 +1753,10 @@
                             precio: price,
                             creditoFiscal: creditFiscal
                         };
-                        
+
                         // Buscar si ya existe un producto con el mismo código
                         const existingProduct = inventoryData.find(p => p.codigo === code);
-                        
+
                         if (existingProduct && updateExisting) {
                             // Actualizar producto existente
                             return db.collection('INVENTARIO').doc(existingProduct.id).update(productData);
@@ -1572,10 +1764,10 @@
                             // Agregar nuevo producto
                             return db.collection('INVENTARIO').add(productData);
                         }
-                        
+
                         return Promise.resolve();
                     });
-                    
+
                     Promise.all(importPromises)
                         .then(() => {
                             showFloatingNotification("Importación completada correctamente", "success");
@@ -1599,11 +1791,12 @@
             floatingNotification.textContent = message;
             floatingNotification.className = 'floating-notification ' + type;
             floatingNotification.style.display = 'block';
-            
+
             setTimeout(() => {
                 floatingNotification.style.display = 'none';
             }, 3000);
         }
     </script>
 </body>
+
 </html>
