@@ -1341,17 +1341,41 @@
 
         @media print {
 
+            /* REGLA MAESTRA: Ocultar todo por defecto y resetear cajas */
+            * {
+                box-shadow: none !important;
+                text-shadow: none !important;
+            }
+
             body,
-            html,
+            html {
+                margin: 0;
+                padding: 0;
+                width: 100%;
+                height: 100%;
+                background: white;
+            }
+
+            /* Contenedores principales visibles y reseteados */
             .container,
             .dashboard,
             .dashboard-section,
+            .history-container,
+            .history-table-container,
             .tab-content {
+                width: 100% !important;
                 height: auto !important;
                 overflow: visible !important;
+                display: block !important;
+                position: static !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                border: none !important;
+                flex: none !important;
                 background: white !important;
             }
 
+            /* Ocultar elementos de interfaz no imprimibles */
             header,
             .venta-header,
             .cart-container,
@@ -1359,36 +1383,58 @@
             .filter-buttons,
             .historial-actions,
             .status,
-            .loading-overlay {
+            .loading-overlay,
+            #panel-venta-section,
+            #panel-derecho,
+            .btn,
+            .action-buttons,
+            .search-container {
                 display: none !important;
             }
 
-            .dashboard {
+            /* Asegurar visibilidad del contenido del historial */
+            #historial-ventas-section {
                 display: block !important;
             }
 
-            .dashboard-section {
-                box-shadow: none !important;
-                border: none !important;
-                padding: 0 !important;
-                margin: 0 !important;
-                height: auto !important;
-            }
-
-            .dashboard-section.full-width {
-                display: block !important;
-            }
-
-            .history-table-container {
-                overflow: visible !important;
-                border: none !important;
+            /* Estilos específicos para la tabla de historial */
+            .history-table {
+                width: 100% !important;
+                border-collapse: collapse !important;
+                table-layout: fixed;
+                /* O auto, según preferencia */
             }
 
             .history-table th {
-                position: static !important;
+                background-color: #f0f0f0 !important;
                 color: black !important;
-                background: none !important;
-                border-bottom: 2px solid black !important;
+                font-weight: bold !important;
+                border: 1px solid #999 !important;
+                position: static !important;
+                /* Quitar sticky header */
+            }
+
+            .history-table td {
+                color: black !important;
+                border: 1px solid #ccc !important;
+                word-wrap: break-word;
+            }
+
+            .history-table tr {
+                page-break-inside: avoid;
+            }
+
+            /* Ajustes para badges en blanco y negro/grises */
+            .badge,
+            .contado-badge,
+            .pendiente-badge,
+            .abono-badge,
+            .retiro-badge,
+            .ingreso-badge {
+                border: 1px solid #000;
+                color: #000 !important;
+                background: #fff !important;
+                padding: 2px 4px;
             }
         }
     </style>
@@ -7193,92 +7239,106 @@
                     },
 
                     printAbonoTicket(venta, abonoData, nuevoSaldo) {
-                        const printWindow = window.open('', '_blank');
+                        const printWindow = window.open('', '_blank', 'width=300,height=600');
                         const fechaAbono = abonoData.fecha ? new Date(abonoData.fecha.toDate ? abonoData.fecha.toDate() : abonoData.fecha) : DateUtils.getCurrentTimestampElSalvador();
                         const fechaFormateada = fechaAbono.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' });
 
                         printWindow.document.write(`
-                    < !DOCTYPE html >
-                        <html>
-                            <head>
-                                <meta charset="UTF-8">
-                                    <title>Abono #${venta.invoiceNumber}</title>
-                                    <style>
-                                        body {
-                                            font - family: 'Courier New', monospace;
-                                        font-size: 22px;
-                                        margin: 0;
-                                        padding: 6px;
-                                        width: 58mm;
-                                        font-weight: bold;
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <meta charset="UTF-8">
+                        <title>Abono #${venta.invoiceNumber}</title>
+                        <style>
+                            body { 
+                                font-family: 'Courier New', monospace; 
+                                font-size: 22px; 
+                                margin: 0; 
+                                padding: 6px;
+                                width: 58mm;
+                                font-weight: bold;
                             }
-                                        .header {text - align: center; margin-bottom: 12px; }
-                                        .line {border - bottom: 2px dashed #000; margin: 4px 0; }
-                                        .abono-detail {
-                                            margin: 8px 0;
-                                        font-size: 20px;
+                            .header { text-align: center; margin-bottom: 12px; }
+                            .line { border-bottom: 2px dashed #000; margin: 4px 0; }
+                            .abono-detail { 
+                                margin: 8px 0;
+                                font-size: 20px;
                             }
-                                        .total {font - weight: bold; text-align: center; margin-top: 12px; font-size: 24px; }
-                                        .footer {text - align: center; margin-top: 12px; font-size: 18px; font-weight: bold; }
-                                        .small-text {font - size: 18px; }
-                                        .medium-text {font - size: 20px; }
-                                        .large-text {font - size: 26px; }
-                                        .equipo-text {font - size: 32px; font-weight: 900; margin: 5px 0; }
-                                    </style>
-                            </head>
-                            <body>
-                                <div class="header">
-                                    <h3 style="margin: 2px 0; font-size: 26px;">TALLER WILLIAN</h3>
-                                    <div class="small-text">COMPROBANTE DE ABONO</div>
-                                    <div class="small-text">${fechaFormateada}</div>
-                                </div>
+                            .total { font-weight: bold; text-align: center; margin-top: 12px; font-size: 24px; }
+                            .footer { text-align: center; margin-top: 12px; font-size: 18px; font-weight: bold; }
+                            .small-text { font-size: 18px; }
+                            .medium-text { font-size: 20px; }
+                            .large-text { font-size: 26px; }
+                            .equipo-text { font-size: 32px; font-weight: 900; margin: 5px 0; }
+                            .thank-you { text-align: center; margin-top: 15px; font-weight: bold; font-size: 20px; }
+                            .saldo-info {
+                                background: #f0f0f0;
+                                padding: 8px;
+                                margin: 8px 0;
+                                border-radius: 4px;
+                                font-size: 18px;
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="header">
+                            <h3 style="margin: 2px 0; font-size: 26px;">TALLER WILLIAN</h3>
+                            <div class="small-text">COMPROBANTE DE ABONO</div>
+                            <div class="small-text">${fechaFormateada}</div>
+                        </div>
+                        
+                        <div class="line"></div>
+                        
+                        <div class="medium-text">
+                            <strong>Factura:</strong> ${venta.invoiceNumber}<br>
+                            ${venta.clientName !== venta.equipoNumber ? `<strong>Grupo:</strong> ${venta.clientName}` : ''}
+                        </div>
+                        <div class="equipo-text" style="text-align: center;">
+                            ${venta.equipoNumber}
+                        </div>
+                        
+                        <div class="line"></div>
+                        
+                        <div class="abono-detail">
+                            <div style="text-align: center; font-size: 24px; margin: 10px 0;">
+                                MONTO DEL ABONO
+                            </div>
+                            <div style="text-align: center; font-size: 28px; font-weight: bold;">
+                                $${abonoData.monto.toFixed(2)}
+                            </div>
+                        </div>
 
-                                <div class="line"></div>
-
-                                <div class="medium-text">
-                                    <strong>Factura:</strong> ${venta.invoiceNumber}<br>
-                                        ${venta.clientName !== venta.equipoNumber ? `<strong>Grupo:</strong> ${venta.clientName}` : ''}
-                                </div>
-                                <div class="equipo-text" style="text-align: center;">
-                                    ${venta.equipoNumber}
-                                </div>
-
-                                <div class="line"></div>
-
-                                <div class="abono-detail">
-                                    <div style="text-align: center; font-size: 24px; margin: 10px 0;">
-                                        MONTO DEL ABONO
-                                    </div>
-                                    <div style="text-align: center; font-size: 28px; font-weight: bold;">
-                                        $${abonoData.monto.toFixed(2)}
-                                    </div>
-                                </div>
-
-                                <div class="saldo-info">
-                                    <div>SALDO ANTERIOR: $${(venta.saldoPendiente || venta.total).toFixed(2)}</div>
-                                    <div>NUEVO SALDO: $${nuevoSaldo.toFixed(2)}</div>
-                                </div>
-
-                                <div class="thank-you">
-                                    GRACIAS POR PREFERIRNOS
-                                </div>
-                            </body>
-                        </html>
-                `);
+                        <div class="saldo-info">
+                            <div>SALDO ANTERIOR: $${(venta.saldoPendiente || venta.total).toFixed(2)}</div>
+                            <div>NUEVO SALDO: $${nuevoSaldo.toFixed(2)}</div>
+                        </div>
+                        
+                        <div class="thank-you">
+                            GRACIAS POR PREFERIRNOS
+                        </div>
+                    </body>
+                    </html>
+                        `);
 
                         printWindow.document.close();
                         printWindow.focus();
 
-                        setTimeout(() => {
-                            printWindow.print();
+                        printWindow.onload = function () {
                             setTimeout(() => {
-                                printWindow.close();
+                                printWindow.print();
+                                printWindow.onafterprint = function () {
+                                    printWindow.close();
+                                };
                             }, 500);
-                        }, 500);
+                        };
+
+                        if (printWindow.document.readyState === 'complete') {
+                            printWindow.onload();
+                        }
                     },
 
                     printRetiroTicket(retiroData) {
-                        const printWindow = window.open('', '_blank');
+                        const printWindow = window.open('', '_blank', 'width=300,height=600');
                         const fecha = retiroData.timestamp ? new Date(retiroData.timestamp.toDate ? retiroData.timestamp.toDate() : retiroData.timestamp) : DateUtils.getCurrentTimestampElSalvador();
                         const fechaFormateada = fecha.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' });
 
@@ -7290,34 +7350,90 @@
                         }[retiroData.categoria] || retiroData.categoria;
 
                         printWindow.document.write(`
-                    < !DOCTYPE html >
-                        <html>
-                            <head>
-                                <meta charset="UTF-8">
-                                    <title>Retiro de Fondos</title>
-                                    <style>
-                                        body {
-                                            font - family: 'Courier New', monospace;
-                                        font-size: 22px;
-                                        margin: 0;
-                                        padding: 6px;
-                                        width: 58mm;
-                                        font-weight: bold;
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <meta charset="UTF-8">
+                        <title>Retiro de Fondos</title>
+                        <style>
+                            body { 
+                                font-family: 'Courier New', monospace; 
+                                font-size: 22px; 
+                                margin: 0; 
+                                padding: 6px;
+                                width: 58mm;
+                                font-weight: bold;
                             }
-                                        .header {text - align: center; margin-bottom: 12px; }
-                                        .line {border - bottom: 2px dashed #000; margin: 4px 0; }
-                                        .retiro-detail {
-                                            margin: 8px 0;
-                                        font-size: 20px;
+                            .header { text-align: center; margin-bottom: 12px; }
+                            .line { border-bottom: 2px dashed #000; margin: 4px 0; }
+                            .retiro-detail { 
+                                margin: 8px 0;
+                                font-size: 20px;
                             }
-                                        .total {font - weight: bold; text-align: center; margin-top: 12px; font-size: 24px; }
-                                        .footer {text - align: center; margin-top: 12px; font-size: 18px; font-weight: bold; }
-                                        .small-text {font - size: 18px; }
-                                        .medium-text {font - size: 20px; }
-                                        .large-text {font - size: 26px; }
-                                    </style>
-                            </head>
-                            <body>
+                            .total { font-weight: bold; text-align: center; margin-top: 12px; font-size: 24px; }
+                            .footer { text-align: center; margin-top: 12px; font-size: 18px; font-weight: bold; }
+                            .small-text { font-size: 18px; }
+                            .medium-text { font-size: 20px; }
+                            .large-text { font-size: 26px; }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="header">
+                            <h3 style="margin: 2px 0; font-size: 26px;">TALLER WILLIAN</h3>
+                            <div class="small-text">COMPROBANTE DE RETIRO</div>
+                            <div class="small-text">${fechaFormateada}</div>
+                        </div>
+                        
+                        <div class="line"></div>
+                        
+                        <div class="medium-text">
+                            <strong>Concepto:</strong><br>
+                            ${retiroData.concepto || 'Sin descripción'}
+                        </div>
+                        
+                        <div class="medium-text" style="margin-top: 5px;">
+                            <strong>Categoría:</strong> ${categoriaText}
+                        </div>
+                        
+                        <div class="line"></div>
+                        
+                        <div class="retiro-detail">
+                            <div style="text-align: center; font-size: 24px; margin: 10px 0;">
+                                MONTO RETIRADO
+                            </div>
+                            <div style="text-align: center; font-size: 28px; font-weight: bold;">
+                                $${Math.abs(retiroData.monto).toFixed(2)}
+                            </div>
+                        </div>
+                        
+                        <div class="line"></div>
+                        
+                        <div class="footer">
+                            Firma de Responsable
+                            <br><br><br>
+                            _____________________
+                        </div>
+                    </body>
+                    </html>
+                        `);
+
+                        printWindow.document.close();
+                        printWindow.focus();
+
+                        printWindow.onload = function () {
+                            setTimeout(() => {
+                                printWindow.print();
+                                printWindow.onafterprint = function () {
+                                    printWindow.close();
+                                };
+                            }, 500);
+                        };
+
+                        if (printWindow.document.readyState === 'complete') {
+                            printWindow.onload();
+                        }
+                    },
+                            < body >
                                 <div class="header">
                                     <h3 style="margin: 2px 0; font-size: 26px;">TALLER WILLIAN</h3>
                                     <div class="small-text">COMPROBANTE DE RETIRO</div>
@@ -7345,9 +7461,9 @@
                                 <div class="footer">
                                     CONTROL DE FONDOS
                                 </div>
-                            </body>
-                        </html>
-                `);
+                            </body >
+                        </html >
+                    `);
 
                         printWindow.document.close();
                         printWindow.focus();
