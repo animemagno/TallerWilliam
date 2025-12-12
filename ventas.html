@@ -7433,48 +7433,7 @@
                             printWindow.onload();
                         }
                     },
-                            < body >
-                                <div class="header">
-                                    <h3 style="margin: 2px 0; font-size: 26px;">TALLER WILLIAN</h3>
-                                    <div class="small-text">COMPROBANTE DE RETIRO</div>
-                                    <div class="small-text">${fechaFormateada}</div>
-                                </div>
 
-                                <div class="line"></div>
-
-                                <div class="medium-text">
-                                    <strong>Concepto:</strong> ${retiroData.concepto}<br>
-                                        <strong>Categoría:</strong> ${categoriaText}
-                                </div>
-
-                                <div class="line"></div>
-
-                                <div class="retiro-detail">
-                                    <div style="text-align: center; font-size: 24px; margin: 10px 0;">
-                                        MONTO DEL RETIRO
-                                    </div>
-                                    <div style="text-align: center; font-size: 28px; font-weight: bold; color: #e74c3c;">
-                                        -$${retiroData.monto.toFixed(2)}
-                                    </div>
-                                </div>
-
-                                <div class="footer">
-                                    CONTROL DE FONDOS
-                                </div>
-                            </body >
-                        </html >
-                    `);
-
-                        printWindow.document.close();
-                        printWindow.focus();
-
-                        setTimeout(() => {
-                            printWindow.print();
-                            setTimeout(() => {
-                                printWindow.close();
-                            }, 500);
-                        }, 500);
-                    },
 
                     setTodayDate() {
                         const today = DateUtils.getCurrentDateStringElSalvador();
