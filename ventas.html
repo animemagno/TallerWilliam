@@ -6247,7 +6247,40 @@
 
                         const fecha = retiro.timestamp ? new Date(retiro.timestamp.toDate ? retiro.timestamp.toDate() : retiro.timestamp).toLocaleString('es-ES') : 'N/A';
 
-                        alert(`RETIRO DE CAJA\n\nConcepto: ${retiro.concepto}\nCategoría: ${categoriaText}\nMonto: $${retiro.monto.toFixed(2)}\nFecha: ${fecha}`);
+                        const modalContent = `
+                            <div class="invoice-detail-view" style="font-family: 'Segoe UI', sans-serif;">
+                                <div style="text-align: center; margin-bottom: 20px;">
+                                    <h3 style="color: #c0392b; font-weight: bold; margin: 0;">
+                                        <i class="fas fa-hand-holding-usd"></i> DETALLE DE RETIRO
+                                    </h3>
+                                    <div style="color: #7f8c8d; font-size: 0.9em; margin-top: 5px;">${fecha}</div>
+                                </div>
+                                
+                                <div style="background: #fff5f5; padding: 20px; border-radius: 8px; border: 1px solid #feb2b2;">
+                                    <div style="margin-bottom: 15px;">
+                                        <div style="color: #7f8c8d; font-size: 0.8em; font-weight: bold; text-transform: uppercase;">Concepto</div>
+                                        <div style="font-size: 1.1em; color: #2d3748; font-weight: 500;">${retiro.concepto}</div>
+                                    </div>
+                                    
+                                    <div style="margin-bottom: 15px;">
+                                        <div style="color: #7f8c8d; font-size: 0.8em; font-weight: bold; text-transform: uppercase;">Categoría</div>
+                                        <div style="font-size: 1.1em; color: #2d3748;">${categoriaText}</div>
+                                    </div>
+
+                                    <div style="border-top: 1px dashed #fc8181; padding-top: 15px; margin-top: 15px; display: flex; justify-content: space-between; align-items: center;">
+                                        <div style="color: #c53030; font-weight: bold;">TOTAL RETIRADO</div>
+                                        <div style="font-size: 1.8em; font-weight: bold; color: #c53030;">$${retiro.monto.toFixed(2)}</div>
+                                    </div>
+                                </div>
+
+                                <div style="margin-top: 25px;">
+                                    <button onclick="ModalService.closeInvoiceModal()" style="width: 100%; padding: 12px; background-color: #718096; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: background 0.2s;">
+                                        CERRAR
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                        UIService.showInvoiceModal(modalContent);
                     },
 
                     async viewIngreso(ingresoId) {
@@ -6265,7 +6298,40 @@
 
                         const fecha = ingreso.timestamp ? new Date(ingreso.timestamp.toDate ? ingreso.timestamp.toDate() : ingreso.timestamp).toLocaleString('es-ES') : 'N/A';
 
-                        alert(`INGRESO DE CAJA\n\nConcepto: ${ingreso.concepto}\nCategoría: ${categoriaText}\nMonto: $${ingreso.monto.toFixed(2)}\nFecha: ${fecha}`);
+                        const modalContent = `
+                            <div class="invoice-detail-view" style="font-family: 'Segoe UI', sans-serif;">
+                                <div style="text-align: center; margin-bottom: 20px;">
+                                    <h3 style="color: #27ae60; font-weight: bold; margin: 0;">
+                                        <i class="fas fa-donate"></i> DETALLE DE INGRESO
+                                    </h3>
+                                    <div style="color: #7f8c8d; font-size: 0.9em; margin-top: 5px;">${fecha}</div>
+                                </div>
+                                
+                                <div style="background: #f0fff4; padding: 20px; border-radius: 8px; border: 1px solid #9ae6b4;">
+                                    <div style="margin-bottom: 15px;">
+                                        <div style="color: #7f8c8d; font-size: 0.8em; font-weight: bold; text-transform: uppercase;">Concepto</div>
+                                        <div style="font-size: 1.1em; color: #2d3748; font-weight: 500;">${ingreso.concepto}</div>
+                                    </div>
+                                    
+                                    <div style="margin-bottom: 15px;">
+                                        <div style="color: #7f8c8d; font-size: 0.8em; font-weight: bold; text-transform: uppercase;">Categoría</div>
+                                        <div style="font-size: 1.1em; color: #2d3748;">${categoriaText}</div>
+                                    </div>
+
+                                    <div style="border-top: 1px dashed #68d391; padding-top: 15px; margin-top: 15px; display: flex; justify-content: space-between; align-items: center;">
+                                        <div style="color: #2f855a; font-weight: bold;">TOTAL INGRESADO</div>
+                                        <div style="font-size: 1.8em; font-weight: bold; color: #2f855a;">$${ingreso.monto.toFixed(2)}</div>
+                                    </div>
+                                </div>
+
+                                <div style="margin-top: 25px;">
+                                    <button onclick="ModalService.closeInvoiceModal()" style="width: 100%; padding: 12px; background-color: #718096; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: background 0.2s;">
+                                        CERRAR
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                        UIService.showInvoiceModal(modalContent);
                     },
 
                     async deleteIngreso(ingresoId) {
