@@ -1338,6 +1338,59 @@
                 grid-template-columns: 1fr;
             }
         }
+
+        @media print {
+
+            body,
+            html,
+            .container,
+            .dashboard,
+            .dashboard-section,
+            .tab-content {
+                height: auto !important;
+                overflow: visible !important;
+                background: white !important;
+            }
+
+            header,
+            .venta-header,
+            .cart-container,
+            .tabs-header,
+            .filter-buttons,
+            .historial-actions,
+            .status,
+            .loading-overlay {
+                display: none !important;
+            }
+
+            .dashboard {
+                display: block !important;
+            }
+
+            .dashboard-section {
+                box-shadow: none !important;
+                border: none !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                height: auto !important;
+            }
+
+            .dashboard-section.full-width {
+                display: block !important;
+            }
+
+            .history-table-container {
+                overflow: visible !important;
+                border: none !important;
+            }
+
+            .history-table th {
+                position: static !important;
+                color: black !important;
+                background: none !important;
+                border-bottom: 2px solid black !important;
+            }
+        }
     </style>
 </head>
 
@@ -7003,7 +7056,7 @@
                     },
 
                     printTicket(saleData) {
-                        const printWindow = window.open('', '_blank');
+                        const printWindow = window.open('', '_blank', 'width=300,height=600');
                         const fecha = saleData.timestamp ? new Date(saleData.timestamp.toDate ? saleData.timestamp.toDate() : saleData.timestamp) : DateUtils.getCurrentTimestampElSalvador();
                         const fechaFormateada = fecha.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' });
 
@@ -7040,7 +7093,7 @@
                             });
                         }
 
-                        printWindow.document.write(`
+                        const contenido = `
                     <!DOCTYPE html>
                     <html>
                     <head>
@@ -7117,17 +7170,26 @@
                         </div>
                     </body>
                     </html>
-                `);
+                        `;
 
+                        printWindow.document.open();
+                        printWindow.document.write(contenido);
                         printWindow.document.close();
                         printWindow.focus();
 
-                        setTimeout(() => {
-                            printWindow.print();
+                        printWindow.onload = function () {
                             setTimeout(() => {
-                                printWindow.close();
+                                printWindow.print();
+                                printWindow.onafterprint = function () {
+                                    printWindow.close(); // Cerrar solo después de imprimir
+                                };
                             }, 500);
-                        }, 500);
+                        };
+
+                        // Fallback
+                        if (printWindow.document.readyState === 'complete') {
+                            printWindow.onload();
+                        }
                     },
 
                     printAbonoTicket(venta, abonoData, nuevoSaldo) {
@@ -7136,72 +7198,72 @@
                         const fechaFormateada = fechaAbono.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' });
 
                         printWindow.document.write(`
-                    <!DOCTYPE html>
-                    <html>
-                    <head>
-                        <meta charset="UTF-8">
-                        <title>Abono #${venta.invoiceNumber}</title>
-                        <style>
-                            body { 
-                                font-family: 'Courier New', monospace; 
-                                font-size: 22px; 
-                                margin: 0; 
-                                padding: 6px;
-                                width: 58mm;
-                                font-weight: bold;
+                    < !DOCTYPE html >
+                        <html>
+                            <head>
+                                <meta charset="UTF-8">
+                                    <title>Abono #${venta.invoiceNumber}</title>
+                                    <style>
+                                        body {
+                                            font - family: 'Courier New', monospace;
+                                        font-size: 22px;
+                                        margin: 0;
+                                        padding: 6px;
+                                        width: 58mm;
+                                        font-weight: bold;
                             }
-                            .header { text-align: center; margin-bottom: 12px; }
-                            .line { border-bottom: 2px dashed #000; margin: 4px 0; }
-                            .abono-detail { 
-                                margin: 8px 0;
-                                font-size: 20px;
+                                        .header {text - align: center; margin-bottom: 12px; }
+                                        .line {border - bottom: 2px dashed #000; margin: 4px 0; }
+                                        .abono-detail {
+                                            margin: 8px 0;
+                                        font-size: 20px;
                             }
-                            .total { font-weight: bold; text-align: center; margin-top: 12px; font-size: 24px; }
-                            .footer { text-align: center; margin-top: 12px; font-size: 18px; font-weight: bold; }
-                            .small-text { font-size: 18px; }
-                            .medium-text { font-size: 20px; }
-                            .large-text { font-size: 26px; }
-                            .equipo-text { font-size: 32px; font-weight: 900; margin: 5px 0; }
-                        </style>
-                    </head>
-                    <body>
-                        <div class="header">
-                            <h3 style="margin: 2px 0; font-size: 26px;">TALLER WILLIAN</h3>
-                            <div class="small-text">COMPROBANTE DE ABONO</div>
-                            <div class="small-text">${fechaFormateada}</div>
-                        </div>
-                        
-                        <div class="line"></div>
-                        
-                        <div class="medium-text">
-                            <strong>Factura:</strong> ${venta.invoiceNumber}<br>
-                            ${venta.clientName !== venta.equipoNumber ? `<strong>Grupo:</strong> ${venta.clientName}` : ''}
-                        </div>
-                        <div class="equipo-text" style="text-align: center;">
-                            ${venta.equipoNumber}
-                        </div>
-                        
-                        <div class="line"></div>
-                        
-                        <div class="abono-detail">
-                            <div style="text-align: center; font-size: 24px; margin: 10px 0;">
-                                MONTO DEL ABONO
-                            </div>
-                            <div style="text-align: center; font-size: 28px; font-weight: bold;">
-                                $${abonoData.monto.toFixed(2)}
-                            </div>
-                        </div>
+                                        .total {font - weight: bold; text-align: center; margin-top: 12px; font-size: 24px; }
+                                        .footer {text - align: center; margin-top: 12px; font-size: 18px; font-weight: bold; }
+                                        .small-text {font - size: 18px; }
+                                        .medium-text {font - size: 20px; }
+                                        .large-text {font - size: 26px; }
+                                        .equipo-text {font - size: 32px; font-weight: 900; margin: 5px 0; }
+                                    </style>
+                            </head>
+                            <body>
+                                <div class="header">
+                                    <h3 style="margin: 2px 0; font-size: 26px;">TALLER WILLIAN</h3>
+                                    <div class="small-text">COMPROBANTE DE ABONO</div>
+                                    <div class="small-text">${fechaFormateada}</div>
+                                </div>
 
-                        <div class="saldo-info">
-                            <div>SALDO ANTERIOR: $${(venta.saldoPendiente || venta.total).toFixed(2)}</div>
-                            <div>NUEVO SALDO: $${nuevoSaldo.toFixed(2)}</div>
-                        </div>
-                        
-                        <div class="thank-you">
-                            GRACIAS POR PREFERIRNOS
-                        </div>
-                    </body>
-                    </html>
+                                <div class="line"></div>
+
+                                <div class="medium-text">
+                                    <strong>Factura:</strong> ${venta.invoiceNumber}<br>
+                                        ${venta.clientName !== venta.equipoNumber ? `<strong>Grupo:</strong> ${venta.clientName}` : ''}
+                                </div>
+                                <div class="equipo-text" style="text-align: center;">
+                                    ${venta.equipoNumber}
+                                </div>
+
+                                <div class="line"></div>
+
+                                <div class="abono-detail">
+                                    <div style="text-align: center; font-size: 24px; margin: 10px 0;">
+                                        MONTO DEL ABONO
+                                    </div>
+                                    <div style="text-align: center; font-size: 28px; font-weight: bold;">
+                                        $${abonoData.monto.toFixed(2)}
+                                    </div>
+                                </div>
+
+                                <div class="saldo-info">
+                                    <div>SALDO ANTERIOR: $${(venta.saldoPendiente || venta.total).toFixed(2)}</div>
+                                    <div>NUEVO SALDO: $${nuevoSaldo.toFixed(2)}</div>
+                                </div>
+
+                                <div class="thank-you">
+                                    GRACIAS POR PREFERIRNOS
+                                </div>
+                            </body>
+                        </html>
                 `);
 
                         printWindow.document.close();
@@ -7228,63 +7290,63 @@
                         }[retiroData.categoria] || retiroData.categoria;
 
                         printWindow.document.write(`
-                    <!DOCTYPE html>
-                    <html>
-                    <head>
-                        <meta charset="UTF-8">
-                        <title>Retiro de Fondos</title>
-                        <style>
-                            body { 
-                                font-family: 'Courier New', monospace; 
-                                font-size: 22px; 
-                                margin: 0; 
-                                padding: 6px;
-                                width: 58mm;
-                                font-weight: bold;
+                    < !DOCTYPE html >
+                        <html>
+                            <head>
+                                <meta charset="UTF-8">
+                                    <title>Retiro de Fondos</title>
+                                    <style>
+                                        body {
+                                            font - family: 'Courier New', monospace;
+                                        font-size: 22px;
+                                        margin: 0;
+                                        padding: 6px;
+                                        width: 58mm;
+                                        font-weight: bold;
                             }
-                            .header { text-align: center; margin-bottom: 12px; }
-                            .line { border-bottom: 2px dashed #000; margin: 4px 0; }
-                            .retiro-detail { 
-                                margin: 8px 0;
-                                font-size: 20px;
+                                        .header {text - align: center; margin-bottom: 12px; }
+                                        .line {border - bottom: 2px dashed #000; margin: 4px 0; }
+                                        .retiro-detail {
+                                            margin: 8px 0;
+                                        font-size: 20px;
                             }
-                            .total { font-weight: bold; text-align: center; margin-top: 12px; font-size: 24px; }
-                            .footer { text-align: center; margin-top: 12px; font-size: 18px; font-weight: bold; }
-                            .small-text { font-size: 18px; }
-                            .medium-text { font-size: 20px; }
-                            .large-text { font-size: 26px; }
-                        </style>
-                    </head>
-                    <body>
-                        <div class="header">
-                            <h3 style="margin: 2px 0; font-size: 26px;">TALLER WILLIAN</h3>
-                            <div class="small-text">COMPROBANTE DE RETIRO</div>
-                            <div class="small-text">${fechaFormateada}</div>
-                        </div>
-                        
-                        <div class="line"></div>
-                        
-                        <div class="medium-text">
-                            <strong>Concepto:</strong> ${retiroData.concepto}<br>
-                            <strong>Categoría:</strong> ${categoriaText}
-                        </div>
-                        
-                        <div class="line"></div>
-                        
-                        <div class="retiro-detail">
-                            <div style="text-align: center; font-size: 24px; margin: 10px 0;">
-                                MONTO DEL RETIRO
-                            </div>
-                            <div style="text-align: center; font-size: 28px; font-weight: bold; color: #e74c3c;">
-                                -$${retiroData.monto.toFixed(2)}
-                            </div>
-                        </div>
-                        
-                        <div class="footer">
-                            CONTROL DE FONDOS
-                        </div>
-                    </body>
-                    </html>
+                                        .total {font - weight: bold; text-align: center; margin-top: 12px; font-size: 24px; }
+                                        .footer {text - align: center; margin-top: 12px; font-size: 18px; font-weight: bold; }
+                                        .small-text {font - size: 18px; }
+                                        .medium-text {font - size: 20px; }
+                                        .large-text {font - size: 26px; }
+                                    </style>
+                            </head>
+                            <body>
+                                <div class="header">
+                                    <h3 style="margin: 2px 0; font-size: 26px;">TALLER WILLIAN</h3>
+                                    <div class="small-text">COMPROBANTE DE RETIRO</div>
+                                    <div class="small-text">${fechaFormateada}</div>
+                                </div>
+
+                                <div class="line"></div>
+
+                                <div class="medium-text">
+                                    <strong>Concepto:</strong> ${retiroData.concepto}<br>
+                                        <strong>Categoría:</strong> ${categoriaText}
+                                </div>
+
+                                <div class="line"></div>
+
+                                <div class="retiro-detail">
+                                    <div style="text-align: center; font-size: 24px; margin: 10px 0;">
+                                        MONTO DEL RETIRO
+                                    </div>
+                                    <div style="text-align: center; font-size: 28px; font-weight: bold; color: #e74c3c;">
+                                        -$${retiroData.monto.toFixed(2)}
+                                    </div>
+                                </div>
+
+                                <div class="footer">
+                                    CONTROL DE FONDOS
+                                </div>
+                            </body>
+                        </html>
                 `);
 
                         printWindow.document.close();
@@ -7464,10 +7526,10 @@
 
                             if (filtered.length === 0) {
                                 historialBody.innerHTML = `
-                            <tr>
-                                <td colspan="6" class="empty-cart">No hay movimientos para el equipo ${filter}</td>
-                            </tr>
-                        `;
+                    < tr >
+                    <td colspan="6" class="empty-cart">No hay movimientos para el equipo ${filter}</td>
+                            </tr >
+                    `;
                             } else {
                                 AppState.filteredHistorial = filtered;
                                 UIService.renderHistorial();
