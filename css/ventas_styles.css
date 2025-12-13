@@ -669,13 +669,23 @@
             border: 1px solid #ddd;
             border-radius: 6px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            z-index: 100;
+            z-index: 1000;
             min-width: 140px;
-            overflow: hidden;
+            overflow: visible;
         }
 
         .action-dropdown.show {
             display: block;
+        }
+
+        /* Asegurar que la fila con menú abierto tenga mayor z-index */
+        .history-table tr:has(.action-dropdown.show) {
+            position: relative;
+            z-index: 999;
+        }
+
+        .action-menu-wrapper:has(.action-dropdown.show) {
+            z-index: 1001;
         }
 
         .action-dropdown-item {
@@ -1624,4 +1634,108 @@
             .venta-panel {
                 max-width: 100%;
             }
+        }
+
+        /* === ESTILOS DE SCROLL PARA HISTORIAL === */
+        /* Tab no activo: debe estar oculto */
+        .tab-content {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        /* Tab activo: visible con flex */
+        .tab-content.active {
+            display: flex !important;
+        }
+
+        #tab-historial .history-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            min-height: 0;
+        }
+
+        #tab-historial .history-table-container {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            /* Sin scroll horizontal */
+            min-height: 0;
+            max-height: calc(100vh - 400px);
+        }
+
+        /* Tabla del historial ocupa todo el ancho sin exceder */
+        #tab-historial .history-table {
+            width: 100%;
+            table-layout: fixed;
+            min-width: 0;
+            /* No forzar ancho mínimo */
+        }
+
+        #tab-historial .history-table th:nth-child(1),
+        #tab-historial .history-table td:nth-child(1) {
+            width: 15%;
+            /* Factura */
+        }
+
+        #tab-historial .history-table th:nth-child(2),
+        #tab-historial .history-table td:nth-child(2) {
+            width: 12%;
+            /* Equipo */
+        }
+
+        #tab-historial .history-table th:nth-child(3),
+        #tab-historial .history-table td:nth-child(3) {
+            width: 12%;
+            /* Total */
+        }
+
+        #tab-historial .history-table th:nth-child(4),
+        #tab-historial .history-table td:nth-child(4) {
+            width: 12%;
+            /* Estado */
+        }
+
+        #tab-historial .history-table th:nth-child(5),
+        #tab-historial .history-table td:nth-child(5) {
+            width: 10%;
+            /* Fecha */
+        }
+
+        #tab-historial .history-table th:nth-child(6),
+        #tab-historial .history-table td:nth-child(6) {
+            width: 12%;
+            /* Acciones */
+        }
+
+        /* Asegurar que el texto se ajuste en las celdas */
+        #tab-historial .history-table td {
+            white-space: normal;
+            word-wrap: break-word;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Permitir que la celda de acciones muestre el menú completo */
+        #tab-historial .history-table td:nth-child(6) {
+            overflow: visible;
+            position: relative;
+        }
+
+        /* Asegurar que el contenedor de tabs derecho tenga scroll */
+        .dashboard-section:last-child {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .tabs-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            min-height: 0;
         }

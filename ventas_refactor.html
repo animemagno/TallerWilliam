@@ -123,6 +123,12 @@
 
                     <!-- TAB: FACTURAS -->
                     <div class="tab-content" id="tab-facturas">
+                        <div style="display: flex; justify-content: flex-end; margin-bottom: 10px;">
+                            <button class="btn btn-info" id="imprimir-saldos-btn"
+                                onclick="GrupoManager.imprimirSaldosEquipos()">
+                                <i class="fas fa-print"></i> IMPRIMIR SALDOS
+                            </button>
+                        </div>
                         <div class="facturas-pendientes-container" id="facturas-pendientes-container">
                             <div class="equipos-container">
                                 <div id="equipos-individuales" class="equipos-grid">
@@ -210,7 +216,7 @@
                                             <th>Total</th>
                                             <th>Estado</th>
                                             <th>Fecha</th>
-                                            <th width="250">Acciones</th>
+                                            <th>Acciones</th>
                                         </tr>
                                     </thead>
                                     <tbody id="historial-body">
@@ -1889,16 +1895,29 @@
 
                 let html = '';
 
-                for (let i = 1; i <= 130; i++) {
-                    const equipoNum = i.toString();
-                    let equipoEncontrado = null;
-                    this.equiposPendientes.forEach((equipo, key) => {
-                        if (equipo.numero === equipoNum && equipo.total > 0) {
-                            equipoEncontrado = equipo;
-                        }
-                    });
+                // Recopilar todos los equipos con deuda
+                const equiposConDeuda = [];
+                this.equiposPendientes.forEach((equipo, key) => {
+                    if (equipo.total > 0) {
+                        equiposConDeuda.push({
+                            numero: equipo.numero,
+                            total: equipo.total,
+                            cliente: equipo.cliente || null,
+                            facturas: equipo.facturas
+                        });
+                    }
+                });
 
-                    const tieneFacturas = equipoEncontrado && equipoEncontrado.facturas.length > 0;
+                // Ordenar por número de equipo
+                equiposConDeuda.sort((a, b) => {
+                    const numA = parseFloat(a.numero) || 0;
+                    const numB = parseFloat(b.numero) || 0;
+                    return numA - numB;
+                });
+
+                // Generar HTML para cada equipo con deuda
+                equiposConDeuda.forEach(equipo => {
+                    const equipoNum = equipo.numero;
                     const estaSeleccionado = selectedSet.has(equipoNum);
                     const estaEnOtroGrupo = equiposEnGrupos.has(equipoNum) &&
                         (modalType === 'crear' ||
@@ -1906,24 +1925,205 @@
                                 !this.currentEditingGroup.equipos.includes(equipoNum)));
 
                     let estilo = '';
+                    let estiloInline = '';
+
                     if (estaEnOtroGrupo) {
                         estilo = 'equipo-en-grupo';
-                    } else if (tieneFacturas) {
+                        estiloInline = 'border-color: #e74c3c; background: #f8d7da; color: #721c24; cursor: not-allowed;';
+                    } else {
                         estilo = 'has-facturas';
+                        estiloInline = 'border-color: #27ae60; background: #f0fff0;';
                     }
+
+                    // Mostrar etiqueta de localidad/cliente si existe
+                    const etiquetaCliente = equipo.cliente ?
+                        `<br><small style="color: #e74c3c; font-size: 0.65rem;">${equipo.cliente}</small>` : '';
 
                     html += `
                         <div class="all-equipo-item ${estilo} ${estaSeleccionado ? 'selected' : ''}" 
                              onclick="${estaEnOtroGrupo ? '' : `GrupoManager.toggleEquipoSelection('${equipoNum}', '${modalType}')`}"
-                             style="${tieneFacturas && !estaEnOtroGrupo ? 'border-color: #27ae60; background: #f0fff0;' : ''}${estaEnOtroGrupo ? 'border-color: #e74c3c; background: #f8d7da; color: #721c24; cursor: not-allowed;' : 'border-color: #ccc; background: #f5f5f5;'}">
+                             style="${estiloInline}">
                             ${equipoNum}
-                            ${tieneFacturas ? '<br><small style="color: #27ae60;">$' + equipoEncontrado.total.toFixed(2) + '</small>' : '<br><small style="color: #999;">$0.00</small>'}
+                            ${etiquetaCliente}
+                            <br><small style="color: #27ae60;">$${equipo.total.toFixed(2)}</small>
                             ${estaEnOtroGrupo ? '<br><small style="color: #e74c3c; font-size: 0.6rem;">EN GRUPO</small>' : ''}
                         </div>
                     `;
+                });
+
+                if (equiposConDeuda.length === 0) {
+                    html = '<div style="text-align: center; color: #999; padding: 20px;">No hay equipos con deuda pendiente</div>';
                 }
 
                 grid.innerHTML = html;
+            },
+
+            // Función para imprimir saldos de equipos (formato ticket)
+            imprimirSaldosEquipos() {
+                // Recopilar todos los equipos con deuda
+                const equiposData = [];
+                let totalGeneral = 0;
+                let totalFacturas = 0;
+
+                this.equiposPendientes.forEach((equipo, key) => {
+                    if (equipo.total > 0) {
+                        equiposData.push({
+                            numero: equipo.numero,
+                            cliente: equipo.cliente || '',
+                            total: equipo.total,
+                            facturas: equipo.facturas.length
+                        });
+                        totalGeneral += equipo.total;
+                        totalFacturas += equipo.facturas.length;
+                    }
+                });
+
+                // Ordenar por número de equipo
+                equiposData.sort((a, b) => {
+                    const numA = parseFloat(a.numero) || 0;
+                    const numB = parseFloat(b.numero) || 0;
+                    return numA - numB;
+                });
+
+                const fecha = new Date().toLocaleDateString('es-ES', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric'
+                });
+
+                const hora = new Date().toLocaleTimeString('es-ES', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+
+                // Generar contenido del ticket
+                let equiposHTML = '';
+                equiposData.forEach((equipo) => {
+                    // No mostrar cliente si es igual a "Equipo X" o vacío
+                    let clienteLabel = '';
+                    if (equipo.cliente) {
+                        const esEquipoGenerico = equipo.cliente.toLowerCase() === `equipo ${equipo.numero}`.toLowerCase();
+                        if (!esEquipoGenerico) {
+                            clienteLabel = `  ${equipo.cliente}`;
+                        }
+                    }
+
+                    equiposHTML += `
+                        <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dotted #ccc;">
+                            <div>
+                                <strong>Equipo ${equipo.numero}${clienteLabel}</strong>
+                                <div style="font-size: 10px; color: #888;">${equipo.facturas} factura${equipo.facturas > 1 ? 's' : ''}</div>
+                            </div>
+                            <div style="text-align: right; font-weight: bold;">
+                                $${equipo.total.toFixed(2)}
+                            </div>
+                        </div>
+                    `;
+                });
+
+                const printWindow = window.open('', '_blank');
+                printWindow.document.write(`
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <title>Ticket Saldos - Taller Willian</title>
+                        <style>
+                            * { margin: 0; padding: 0; box-sizing: border-box; }
+                            body { 
+                                font-family: 'Courier New', monospace; 
+                                width: 80mm;
+                                margin: 0 auto;
+                                padding: 10px;
+                                font-size: 12px;
+                            }
+                            .header { 
+                                text-align: center; 
+                                border-bottom: 2px solid #000; 
+                                padding-bottom: 8px; 
+                                margin-bottom: 10px; 
+                            }
+                            .header h1 { font-size: 16px; margin-bottom: 4px; }
+                            .header .fecha { font-size: 11px; color: #666; }
+                            .equipos-list { margin-bottom: 15px; }
+                            .total-section {
+                                border-top: 2px solid #000;
+                                padding-top: 10px;
+                                margin-top: 10px;
+                            }
+                            .total-row {
+                                display: flex;
+                                justify-content: space-between;
+                                padding: 3px 0;
+                                font-size: 11px;
+                            }
+                            .total-final {
+                                display: flex;
+                                justify-content: space-between;
+                                font-size: 16px;
+                                font-weight: bold;
+                                margin-top: 8px;
+                                padding-top: 5px;
+                                border-top: 1px dashed #000;
+                            }
+                            .footer {
+                                text-align: center;
+                                margin-top: 15px;
+                                font-size: 10px;
+                                color: #888;
+                            }
+                            @media print { 
+                                body { width: 80mm; margin: 0; padding: 5px; }
+                                .no-print { display: none; }
+                            }
+                            @media screen {
+                                body { 
+                                    border: 1px solid #ccc; 
+                                    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                                    margin-top: 20px;
+                                }
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="header">
+                            <h1>TALLER WILLIAN</h1>
+                            <div>SALDOS PENDIENTES</div>
+                            <div class="fecha">${fecha} - ${hora}</div>
+                        </div>
+
+                        <div class="equipos-list">
+                            ${equiposHTML}
+                        </div>
+
+                        <div class="total-section">
+                            <div class="total-row">
+                                <span>Total Equipos:</span>
+                                <span>${equiposData.length}</span>
+                            </div>
+                            <div class="total-row">
+                                <span>Total Facturas:</span>
+                                <span>${totalFacturas}</span>
+                            </div>
+                            <div class="total-final">
+                                <span>SALDO TOTAL:</span>
+                                <span>$${totalGeneral.toFixed(2)}</span>
+                            </div>
+                        </div>
+
+                        <div class="footer">
+                            --------------------------------
+                            <br>Gracias por su preferencia
+                        </div>
+
+                        <div class="no-print" style="text-align: center; margin-top: 20px;">
+                            <button onclick="window.print()" style="padding: 10px 20px; font-size: 14px; cursor: pointer; background: #3498db; color: white; border: none; border-radius: 4px;">
+                                IMPRIMIR TICKET
+                            </button>
+                        </div>
+                    </body>
+                    </html>
+                `);
+                printWindow.document.close();
             },
 
             actualizarListaSeleccionados(modalType = 'crear') {
@@ -2048,6 +2248,99 @@
                 } finally {
                     UIService.showLoading(false);
                 }
+            },
+
+            // Función para mostrar selector de grupos para abono
+            showGroupPaymentModalSelector() {
+                const gruposActivos = Array.from(this.grupos.values()).filter(g => g.activo && g.total > 0);
+
+                if (gruposActivos.length === 0) {
+                    UIService.showStatus("No hay grupos con saldo pendiente", "info");
+                    return;
+                }
+
+                // Si solo hay un grupo, abrir directamente
+                if (gruposActivos.length === 1) {
+                    this.showGroupPaymentModal(gruposActivos[0].id);
+                    return;
+                }
+
+                // Mostrar selector de grupos
+                let gruposHTML = '';
+                gruposActivos.forEach(grupo => {
+                    gruposHTML += `
+                        <div style="padding: 12px; border: 1px solid #ddd; border-radius: 6px; margin-bottom: 8px; cursor: pointer; transition: all 0.2s;"
+                             onclick="GrupoManager.showGroupPaymentModal('${grupo.id}'); document.getElementById('grupo-selector-modal').style.display='none';"
+                             onmouseover="this.style.background='#e8f4fd'; this.style.borderColor='#3498db';"
+                             onmouseout="this.style.background='white'; this.style.borderColor='#ddd';">
+                            <div style="font-weight: bold; color: #2c3e50;">${grupo.nombre}</div>
+                            <div style="font-size: 0.85rem; color: #666;">Equipos: ${grupo.equipos.length} | Saldo: $${grupo.total.toFixed(2)}</div>
+                        </div>
+                    `;
+                });
+
+                // Crear modal temporal si no existe
+                let modal = document.getElementById('grupo-selector-modal');
+                if (!modal) {
+                    modal = document.createElement('div');
+                    modal.id = 'grupo-selector-modal';
+                    modal.className = 'modal-overlay';
+                    modal.innerHTML = `
+                        <div class="modal-content" style="max-width: 400px;">
+                            <h3 style="margin-bottom: 15px; text-align: center;">Seleccionar Grupo</h3>
+                            <div id="grupo-selector-list" style="max-height: 300px; overflow-y: auto;"></div>
+                            <button class="btn btn-secondary" style="width: 100%; margin-top: 15px;" 
+                                    onclick="document.getElementById('grupo-selector-modal').style.display='none';">
+                                CANCELAR
+                            </button>
+                        </div>
+                    `;
+                    document.body.appendChild(modal);
+                }
+
+                document.getElementById('grupo-selector-list').innerHTML = gruposHTML;
+                modal.style.display = 'block';
+            },
+
+            // Función para mostrar modal de abono a grupo específico
+            showGroupPaymentModal(grupoId) {
+                const grupo = this.grupos.get(grupoId);
+                if (!grupo) {
+                    UIService.showStatus("Grupo no encontrado", "error");
+                    return;
+                }
+
+                // Calcular total real del grupo
+                let totalReal = 0;
+                const equiposInfo = [];
+                grupo.equipos.forEach(equipoNum => {
+                    this.equiposPendientes.forEach((equipo, key) => {
+                        if (equipo.numero === equipoNum && equipo.total > 0) {
+                            totalReal += equipo.total;
+                            equiposInfo.push({ numero: equipoNum, total: equipo.total });
+                        }
+                    });
+                });
+
+                AppState.currentGrupoAbono = { id: grupoId, nombre: grupo.nombre, total: totalReal, equipos: grupo.equipos };
+
+                // Actualizar contenido del modal existente
+                const infoHTML = `
+                    <div style="text-align: center; margin-bottom: 10px;">
+                        <strong style="font-size: 1.2rem; color: #2c3e50;">${grupo.nombre}</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                        <span>Equipos:</span>
+                        <span><strong>${equiposInfo.length}</strong></span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 1.1rem;">
+                        <span>Saldo Total:</span>
+                        <span style="color: #e74c3c; font-weight: bold;">$${totalReal.toFixed(2)}</span>
+                    </div>
+                `;
+                document.getElementById('bulk-abono-info').innerHTML = infoHTML;
+                document.getElementById('monto-bulk-abono').value = '';
+                document.getElementById('bulk-abono-modal').style.display = 'block';
             }
         };
 
@@ -6298,16 +6591,17 @@
                 });
 
                 document.getElementById('filter-historial').addEventListener('input', (e) => {
-                    const filter = e.target.value;
+                    const filter = e.target.value.trim();
                     if (filter === '') {
                         UIService.applyCurrentFilter();
                         return;
                     }
 
+                    // Búsqueda EXACTA: el número de equipo debe coincidir exactamente
                     const filtered = AppState.historial.filter(movimiento => {
                         if (movimiento.tipo === 'venta') {
-                            const equipo = movimiento.equipoNumber || '';
-                            return equipo.includes(filter);
+                            const equipo = (movimiento.equipoNumber || '').trim();
+                            return equipo === filter;
                         }
                         return false;
                     });
@@ -6460,7 +6754,7 @@
                 });
 
                 document.getElementById('cancelar-confirmacion-btn').addEventListener('click', () => {
-                    ModalService.closeConfirmacionAbonoModal();
+                    GrupoManager.closeConfirmacionAbonoModal();
                 });
 
                 // Event listener para el campo de monto de abono inicial
@@ -6512,12 +6806,68 @@
                 });
 
                 document.getElementById('cancelar-abono-inicial-btn').addEventListener('click', () => {
-                    ModalService.closeAbonoInicialModal();
+                    GrupoManager.closeAbonoInicialModal();
                 });
 
-                // Bulk Abono Modal Listener
+                // Bulk Abono Modal Listeners
                 document.getElementById('close-bulk-abono-modal').addEventListener('click', () => {
                     document.getElementById('bulk-abono-modal').style.display = 'none';
+                });
+
+                document.getElementById('process-bulk-abono-btn').addEventListener('click', async (e) => {
+                    if (e.target.disabled) return;
+                    e.target.disabled = true;
+
+                    const monto = parseFloat(document.getElementById('monto-bulk-abono').value) || 0;
+                    const grupoData = AppState.currentGrupoAbono;
+
+                    if (!grupoData) {
+                        UIService.showStatus("Error: No hay grupo seleccionado", "error");
+                        e.target.disabled = false;
+                        return;
+                    }
+
+                    if (monto <= 0) {
+                        UIService.showStatus("Ingrese un monto válido", "error");
+                        e.target.disabled = false;
+                        return;
+                    }
+
+                    if (monto > grupoData.total) {
+                        UIService.showStatus("El monto no puede ser mayor al saldo del grupo", "error");
+                        e.target.disabled = false;
+                        return;
+                    }
+
+                    try {
+                        UIService.showLoading(true);
+
+                        // Obtener todas las facturas del grupo
+                        const facturasIds = [];
+                        grupoData.equipos.forEach(equipoNum => {
+                            GrupoManager.equiposPendientes.forEach((equipo, key) => {
+                                if (equipo.numero === equipoNum && equipo.facturas) {
+                                    equipo.facturas.forEach(f => facturasIds.push(f.id));
+                                }
+                            });
+                        });
+
+                        if (facturasIds.length > 0) {
+                            await DataService.procesarAbonoMasivo(facturasIds, monto);
+                            UIService.showStatus(`Abono de $${monto.toFixed(2)} aplicado al grupo "${grupoData.nombre}"`, "success");
+                            document.getElementById('bulk-abono-modal').style.display = 'none';
+                            await GrupoManager.loadEquiposPendientes();
+                            await GrupoManager.actualizarTotalesGrupos();
+                            GrupoManager.updateUI();
+                        } else {
+                            UIService.showStatus("No se encontraron facturas para abonar", "error");
+                        }
+                    } catch (error) {
+                        UIService.showStatus("Error al procesar abono: " + error.message, "error");
+                    } finally {
+                        UIService.showLoading(false);
+                        e.target.disabled = false;
+                    }
                 });
 
                 // CORRECCIÓN 8: Cleanup al cerrar la página
