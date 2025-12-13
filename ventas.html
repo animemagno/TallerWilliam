@@ -43,6 +43,26 @@
             position: relative;
         }
 
+        .nav-btn {
+            position: absolute;
+            top: 50%;
+            right: 20px;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .nav-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
         header h1 {
             font-size: 1.3rem;
             margin-bottom: 4px;
@@ -1453,7 +1473,14 @@
     <div class="container">
         <header>
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 0 15px;">
-                <h1>Taller Willian</h1>
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <h1>Taller Willian</h1>
+                    <button onclick="window.location.href='ventas_refactor.html'" class="btn btn-info btn-small"
+                        title="Ir a la nueva versión refactorizada"
+                        style="padding: 4px 10px; font-size: 0.8rem; border: none;">
+                        <i class="fas fa-rocket"></i> Nueva Versión
+                    </button>
+                </div>
                 <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end;">
                     <button class="btn btn-success btn-small ingreso-btn" onclick="UIService.showIngresoModal()"
                         title="Registrar ingreso de caja">

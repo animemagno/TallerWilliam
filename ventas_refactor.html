@@ -23,71 +23,43 @@
 
     <div class="container">
         <header>
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0 15px;">
-                <h1>Taller Willian</h1>
-                <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end;">
-                    <button class="btn btn-success btn-small ingreso-btn" onclick="UIService.showIngresoModal()"
-                        title="Registrar ingreso de caja">
-                        <i class="fas fa-plus-circle"></i> <span class="desktop-only">INGRESO</span>
-                    </button>
-                    <button class="btn btn-info btn-small" id="backup-btn" title="Descargar copia de seguridad">
-                        <i class="fas fa-download"></i> <span class="desktop-only">RESPALDO</span>
-                    </button>
-                    <button class="btn btn-small retiro-btn" onclick="UIService.showRetiroModal()"
-                        title="Registrar retiro de caja">
-                        <i class="fas fa-hand-holding-usd"></i> <span class="desktop-only">RETIRO</span>
-                    </button>
+            <div style="display: flex; flex-direction: column; gap: 10px; padding: 5px 15px;">
+                <!-- Fila superior: Título y Navegación -->
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <h1 style="margin: 0; font-size: 1.5rem;">Taller Willian</h1>
+                        <button onclick="window.location.href='ventas.html'" class="btn btn-secondary btn-small"
+                            title="Volver a versión anterior"
+                            style="padding: 4px 10px; font-size: 0.8rem; background-color: #95a5a6; border: none;">
+                            <i class="fas fa-history"></i> Antigua
+                        </button>
+                        <button onclick="UIService.toggleDashboardLayout()" class="btn btn-info btn-small"
+                            title="Intercambiar izquierda/derecha"
+                            style="padding: 4px 10px; font-size: 0.8rem; border: none;">
+                            <i class="fas fa-exchange-alt"></i> VISTA
+                        </button>
+                    </div>
+
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end;">
+                        <button class="btn btn-success btn-small ingreso-btn" onclick="UIService.showIngresoModal()"
+                            title="Registrar ingreso de caja">
+                            <i class="fas fa-plus-circle"></i> <span class="desktop-only">INGRESO</span>
+                        </button>
+                        <button class="btn btn-info btn-small" id="backup-btn" title="Descargar copia de seguridad">
+                            <i class="fas fa-download"></i> <span class="desktop-only">RESPALDO</span>
+                        </button>
+                        <button class="btn btn-small retiro-btn" onclick="UIService.showRetiroModal()"
+                            title="Registrar retiro de caja">
+                            <i class="fas fa-hand-holding-usd"></i> <span class="desktop-only">RETIRO</span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </header>
 
         <!-- LAYOUT DE 2 COLUMNAS -->
         <div class="dashboard">
-            <!-- COLUMNA IZQUIERDA: FORMULARIO NUEVA VENTA -->
-            <div class="dashboard-section venta-form-section">
-                <h2 class="section-title">NUEVA VENTA</h2>
-
-                <input type="date" id="fecha-venta" class="fecha-input" style="display: none;">
-
-                <div class="venta-header">
-                    <div class="venta-line-1">
-                        <div class="form-group">
-                            <label for="equipo">Equipo</label>
-                            <input type="text" id="equipo" placeholder="Número" maxlength="4" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="cliente">Grupo</label>
-                            <input type="text" id="cliente" placeholder="Nombre del grupo">
-                        </div>
-
-                        <div>
-                            <button class="btn btn-success" id="contado-btn">
-                                CONTADO
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="venta-line-2">
-                        <div class="form-group">
-                            <label for="buscar-producto">Buscar Producto</label>
-                            <div class="search-container">
-                                <input type="text" id="buscar-producto"
-                                    placeholder="Código, descripción o formato: 3 pernos de culata $3">
-                                <div id="search-dropdown" class="search-dropdown"></div>
-                            </div>
-                        </div>
-
-                        <div>
-                            <button class="btn btn-warning" id="pendiente-btn">
-                                PENDIENTE
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- COLUMNA DERECHA: PESTAÑAS (CARRITO, FACTURAS, GRUPOS, HISTORIAL) -->
+            <!-- COLUMNA IZQUIERDA: PESTAÑAS (CARRITO, FACTURAS, GRUPOS, HISTORIAL) -->
             <div class="dashboard-section">
                 <div class="tabs-header">
                     <button class="tab-btn active" data-tab="carrito"><i class="fas fa-shopping-cart"></i>
@@ -226,6 +198,50 @@
                                     </tbody>
                                 </table>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- COLUMNA DERECHA: FORMULARIO NUEVA VENTA -->
+            <div class="dashboard-section venta-form-section">
+                <h2 class="section-title">NUEVA VENTA</h2>
+
+                <input type="date" id="fecha-venta" class="fecha-input" style="display: none;">
+
+                <div class="venta-header">
+                    <div class="venta-line-1">
+                        <div class="form-group">
+                            <label for="equipo">Equipo</label>
+                            <input type="text" id="equipo" placeholder="Número" maxlength="4" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="cliente">Grupo</label>
+                            <input type="text" id="cliente" placeholder="Nombre del grupo">
+                        </div>
+
+                        <div>
+                            <button class="btn btn-success" id="contado-btn">
+                                CONTADO
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="venta-line-2">
+                        <div class="form-group">
+                            <label for="buscar-producto">Buscar Producto</label>
+                            <div class="search-container">
+                                <input type="text" id="buscar-producto"
+                                    placeholder="Código, descripción o formato: 3 pernos de culata $3">
+                                <div id="search-dropdown" class="search-dropdown"></div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <button class="btn btn-warning" id="pendiente-btn">
+                                PENDIENTE
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -1829,9 +1845,9 @@
                         
                         <div class="line"></div>
                         
-                        ${equipo.cliente !== equipo.numero ? `
+                        ${equipo.cliente && equipo.cliente.toLowerCase() !== 'cliente general' && equipo.cliente !== `Equipo ${equipo.numero}` && equipo.cliente !== equipo.numero ? `
                             <div class="medium-text">
-                                <strong>Grupo:</strong> ${equipo.cliente}
+                                <strong>Cliente:</strong> ${equipo.cliente}
                             </div>
                         ` : ''}
                         <div class="equipo-text" style="text-align: center;">
@@ -3436,6 +3452,16 @@
                 loadingOverlay.style.display = show ? 'flex' : 'none';
             },
 
+            // Función para intercambiar el layout
+            toggleDashboardLayout() {
+                const dashboard = document.querySelector('.dashboard');
+                dashboard.classList.toggle('reversed');
+
+                // Guardar preferencia (opcional)
+                const isReversed = dashboard.classList.contains('reversed');
+                localStorage.setItem('dashboardReversed', isReversed);
+            },
+
             // Toggle menú de acciones en historial
             toggleActionMenu(buttonElement) {
                 const dropdown = buttonElement.nextElementSibling;
@@ -3848,21 +3874,13 @@
                             <tr style="background-color: #f0fff4;">
                                 <td><strong>ABO-${movimiento.id.substring(0, 6)}</strong></td>
                                 <td>
-                                    <div class="cliente-equipo">${movimiento.equipoNumber || '-'}</div>
-                                    <div class="cliente-nombre">
-                                        Abono a EQUIPO ${movimiento.equipoNumber || 'X'}
-                                        ${movimiento.saldoAnterior !== undefined ? `
-                                            <div style="font-size: 0.85em; color: #555; margin-top: 4px;">
-                                                Saldo Anterior: <b>$${movimiento.saldoAnterior.toFixed(2)}</b> &rarr;
-                                                Abono: <b>$${movimiento.monto.toFixed(2)}</b> &rarr;
-                                                Nuevo: <b>$${movimiento.nuevoSaldo.toFixed(2)}</b>
-                                            </div>
-                                        ` : ''}
-                                    </div>
-                                    <div style="font-size: 0.75rem;">
-                                        <a href="#" onclick="event.preventDefault(); SalesService.viewInvoice('${movimiento.invoiceId || movimiento.invoiceNumber}');" style="color: #7f8c8d; text-decoration: underline;">
-                                            Fac. #${movimiento.invoiceNumber}
-                                        </a>
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <div class="cliente-equipo" style="margin-bottom: 0; font-size: 1.1em; min-width: 30px;">${movimiento.equipoNumber || '-'}</div>
+                                        <div class="cliente-nombre" style="font-size: 0.85em; margin-bottom: 0;">
+                                            Abono <a href="#" onclick="event.preventDefault(); SalesService.viewInvoice('${movimiento.invoiceId || movimiento.invoiceNumber}');" style="color: #7f8c8d; text-decoration: underline;">
+                                                #${movimiento.invoiceNumber}
+                                            </a>
+                                        </div>
                                     </div>
                                 </td>
                                 <td>
