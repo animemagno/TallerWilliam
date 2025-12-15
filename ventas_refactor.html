@@ -2452,8 +2452,9 @@
                 this.data.forEach(product => {
                     const codigo = (product.codigo || '').toLowerCase();
                     const descripcion = (product.descripcion || '').toLowerCase();
+                    const descripcionTaller = (product.descripcionTaller || '').toLowerCase();
 
-                    if (codigo.includes(searchTerm) || descripcion.includes(searchTerm)) {
+                    if (codigo.includes(searchTerm) || descripcion.includes(searchTerm) || descripcionTaller.includes(searchTerm)) {
                         results.push(product);
                     }
                 });
@@ -3587,6 +3588,7 @@
                         const isManual = product.id.startsWith('manual-');
                         item.innerHTML = `
                             <strong>${product.descripcion || 'Sin descripción'}</strong>
+                            ${product.descripcionTaller ? `<div style="font-size: 0.8rem; color: #2980b9; font-style: italic;">${product.descripcionTaller}</div>` : ''}
                             <div style="font-size: 0.7rem; margin-top: 2px;">
                                 ${isManual ? 'PRODUCTO MANUAL' : `Cód: ${product.codigo || 'N/A'} | Stock: ${product.cantidad || 0}`} | $${(product.precio || 0).toFixed(2)}
                             </div>

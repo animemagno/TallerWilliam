@@ -207,8 +207,7 @@
 
         .list-header {
             display: grid;
-            grid-template-columns: 1fr 1.5fr 1fr 0.8fr 0.6fr 0.8fr 0.8fr;
-            /* Eliminada col acciones */
+            grid-template-columns: 1fr 1.8fr 1.2fr 0.6fr 0.8fr 0.8fr;
             padding: 10px 12px;
             /* Reducido de 12px 15px */
             background-color: var(--dark-gray);
@@ -221,8 +220,7 @@
 
         .list-item {
             display: grid;
-            grid-template-columns: 1fr 1.5fr 1fr 0.8fr 0.6fr 0.8fr 0.8fr;
-            /* Eliminada col acciones */
+            grid-template-columns: 1fr 1.8fr 1.2fr 0.6fr 0.8fr 0.8fr;
             padding: 8px 12px;
             /* Reducido de 12px 15px */
             border-bottom: 1px solid var(--border-color);
@@ -815,7 +813,17 @@
             </div>
             <button class="btn btn-primary" id="add-product-btn">Agregar Producto</button>
             <button class="btn btn-success" id="order-btn">Ingresar Pedido</button>
-            <button class="btn btn-info" id="export-excel-btn">Exportar Excel</button>
+            <!-- Input oculto para importación directa -->
+            <input type="file" id="hidden-import-input" accept=".xlsx, .xls, .json" style="display:none"
+                onchange="handleImportFileSelect(this)">
+            <button class="btn btn-warning" id="import-excel-btn"
+                onclick="document.getElementById('hidden-import-input').click()">
+                <i class="fas fa-file-import"></i> Importar Excel
+            </button>
+            <button class="btn btn-info" id="export-excel-btn" onclick="exportToExcel()">Exportar Excel</button>
+            <button class="btn btn-danger" onclick="deleteAllInventory()" title="Eliminar todo el inventario">
+                <i class="fas fa-trash-alt"></i> Borrar Todo
+            </button>
             <button class="btn btn-info" id="smart-import-btn" style="background-color: #8e44ad; color: white;">
                 <i class="fas fa-brain"></i> Conciliación Inteligente
             </button>
@@ -827,7 +835,6 @@
                 <option value="description">Descripción (A-Z)</option>
                 <option value="description-desc">Descripción (Z-A)</option>
                 <option value="code">Código</option>
-                <option value="brand">Marca</option>
                 <option value="stock">Stock</option>
             </select>
         </div>
@@ -837,7 +844,7 @@
                 <div>Código</div>
                 <div>Descripción</div>
                 <div>Descripción Taller</div>
-                <div>Marca</div>
+
                 <div style="text-align: center;">Stock</div>
                 <div style="text-align: right;">Costo</div>
                 <div style="text-align: right;">P. Venta</div>
@@ -863,49 +870,46 @@
                         <input type="text" id="product-code" required>
                     </div>
                     <div class="form-group">
-                        <label for="product-brand">Marca</label>
-                        <input type="text" id="product-brand">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="product-description">Descripción</label>
-                    <input type="text" id="product-description" required>
-                </div>
-                <div class="form-group">
-                    <label for="product-workshop-description">Descripción Taller</label>
-                    <textarea id="product-workshop-description" rows="2"></textarea>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="product-quantity">Stock</label>
-                        <input type="number" id="product-quantity" min="0" required>
                     </div>
                     <div class="form-group">
-                        <label for="product-min-stock">Alerta Stock Mínimo</label>
-                        <input type="number" id="product-min-stock" min="0" value="10">
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="product-cost">Precio Unidad</label>
-                        <input type="number" id="product-cost" min="0" step="0.01">
+                        <label for="product-description">Descripción</label>
+                        <input type="text" id="product-description" required>
                     </div>
                     <div class="form-group">
-                        <label for="product-price">Precio Venta</label>
-                        <input type="number" id="product-price" min="0" step="0.01">
+                        <label for="product-workshop-description">Descripción Taller</label>
+                        <textarea id="product-workshop-description" rows="2"></textarea>
                     </div>
-                </div>
-                <div class="form-group">
-                    <label for="product-credit-fiscal">Crédito Fiscal</label>
-                    <select id="product-credit-fiscal">
-                        <option value="false">No</option>
-                        <option value="true">Sí</option>
-                    </select>
-                </div>
-                <div class="form-actions">
-                    <button type="button" class="btn btn-danger" id="cancel-btn">Cancelar</button>
-                    <button type="submit" class="btn btn-primary" id="save-btn">Guardar</button>
-                </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="product-quantity">Stock</label>
+                            <input type="number" id="product-quantity" min="0" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="product-min-stock">Alerta Stock Mínimo</label>
+                            <input type="number" id="product-min-stock" min="0" value="10">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="product-cost">Precio Unidad</label>
+                            <input type="number" id="product-cost" min="0" step="0.01">
+                        </div>
+                        <div class="form-group">
+                            <label for="product-price">Precio Venta</label>
+                            <input type="number" id="product-price" min="0" step="0.01">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="product-credit-fiscal">Crédito Fiscal</label>
+                        <select id="product-credit-fiscal">
+                            <option value="false">No</option>
+                            <option value="true">Sí</option>
+                        </select>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-danger" id="cancel-btn">Cancelar</button>
+                        <button type="submit" class="btn btn-primary" id="save-btn">Guardar</button>
+                    </div>
             </form>
         </div>
     </div>
@@ -1075,6 +1079,37 @@
         </div>
     </div>
 
+    <!-- Modal Importación Simple -->
+    <div class="modal" id="importModal">
+        <div class="modal-content" style="max-width: 500px;">
+            <h2 style="color: #2c3e50;"><i class="fas fa-file-excel"></i> Importar Inventario</h2>
+            <p style="color: #666; margin-bottom: 20px;">
+                Sube un archivo Excel con las columnas: <br>
+                <b>Codigo, Descripcion según inventario, Precio venta, Existencia, etc.</b>
+            </p>
+
+            <div class="file-input-container">
+                <input type="file" id="import-excel-input" accept=".xlsx, .xls, .json"
+                    style="width: 100%; border: 2px dashed #ddd; padding: 20px;">
+            </div>
+
+            <div class="form-group" style="margin-top: 15px;">
+                <label style="cursor: pointer;">
+                    <input type="checkbox" id="update-existing-check" checked>
+                    Actualizar productos existentes (mismo Código)
+                </label>
+            </div>
+
+            <div class="form-actions">
+                <button class="btn btn-secondary"
+                    onclick="document.getElementById('importModal').style.display='none'">Cancelar</button>
+                <button class="btn btn-success" onclick="processImport()">
+                    <i class="fas fa-upload"></i> Importar Ahora
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Configuración de Firebase
         const firebaseConfig = {
@@ -1094,7 +1129,7 @@
         const inventoryBody = document.getElementById('inventory-body');
         const productModal = document.getElementById('product-modal');
         const orderModal = document.getElementById('order-modal');
-        const importModal = document.getElementById('import-modal');
+        // const importModal = document.getElementById('import-modal'); // Eliminamos referencia vieja
         const productForm = document.getElementById('product-form');
         const modalTitle = document.getElementById('modal-title');
         const searchInput = document.getElementById('search-input');
@@ -1106,8 +1141,11 @@
         const cancelBtn = document.getElementById('cancel-btn');
         const cancelOrderBtn = document.getElementById('cancel-order-btn');
         const saveOrderBtn = document.getElementById('save-order-btn');
-        const cancelImportBtn = document.getElementById('cancel-import-btn');
-        const processImportBtn = document.getElementById('process-import-btn');
+        // Constantes del nuevo modal
+        const simpleImportModal = document.getElementById('importModal');
+        const simpleImportInput = document.getElementById('import-excel-input');
+        const updateExistingCheck = document.getElementById('update-existing-check');
+
         const processBulkOrderBtn = document.getElementById('process-bulk-order-btn');
         const floatingNotification = document.getElementById('floating-notification');
         const totalProductsSpan = document.getElementById('total-products');
@@ -1122,8 +1160,8 @@
         const currentProductInfo = document.getElementById('current-product-info');
         const productFoundInfo = document.getElementById('product-found-info');
         const bulkOrderFileInput = document.getElementById('bulk-order-file');
-        const importFileInput = document.getElementById('import-file');
-        const updateExistingCheckbox = document.getElementById('update-existing');
+        // const importFileInput = document.getElementById('import-file'); // Eliminamos referencia vieja
+        // const updateExistingCheckbox = document.getElementById('update-existing'); // Eliminamos referencia vieja
 
         // Variables globales
         let currentEditingId = null;
@@ -1141,15 +1179,17 @@
         document.addEventListener('DOMContentLoaded', loadInventory);
 
         // Event Listeners
-        addProductBtn.addEventListener('click', () => openModal());
-        orderBtn.addEventListener('click', () => openOrderModal());
-        exportExcelBtn.addEventListener('click', exportToExcel);
-        importExcelBtn.addEventListener('click', () => importModal.style.display = 'flex');
-        cancelBtn.addEventListener('click', () => closeModal());
-        cancelOrderBtn.addEventListener('click', () => closeOrderModal());
-        cancelImportBtn.addEventListener('click', () => importModal.style.display = 'none');
+        // Event Listeners (Protegidos)
+        if (addProductBtn) addProductBtn.addEventListener('click', () => openModal());
+        if (orderBtn) orderBtn.addEventListener('click', () => openOrderModal());
+        // Exportar e Importar ahora usan onclick en HTML para mayor robustez
+        // if(exportExcelBtn) exportExcelBtn.addEventListener('click', exportToExcel);
+
+        // Listeners de Modales
+        if (cancelBtn) cancelBtn.addEventListener('click', () => closeModal());
+        if (cancelOrderBtn) cancelOrderBtn.addEventListener('click', () => closeOrderModal());
         saveOrderBtn.addEventListener('click', saveOrder);
-        processImportBtn.addEventListener('click', processImport);
+        // processImportBtn.addEventListener('click', processImport); // Eliminado por obsoleto (usa onclick)
         processBulkOrderBtn.addEventListener('click', processBulkOrder);
         productForm.addEventListener('submit', saveProduct);
         searchInput.addEventListener('input', filterInventory);
@@ -1233,9 +1273,7 @@
                 case 'code':
                     sortedData.sort((a, b) => (a.codigo || '').localeCompare(b.codigo || ''));
                     break;
-                case 'brand':
-                    sortedData.sort((a, b) => (a.marca || '').localeCompare(b.marca || ''));
-                    break;
+
                 case 'stock':
                     sortedData.sort((a, b) => (b.cantidad || 0) - (a.cantidad || 0));
                     break;
@@ -1274,7 +1312,7 @@
                     <div style="font-weight: bold; color: var(--dark-gray);">${product.codigo || 'N/A'}</div>
                     <div style="font-weight: 500;">${product.descripcion}</div>
                     <div style="color: #666; font-size: 0.9em;">${product.descripcionTaller || '-'}</div>
-                    <div style="font-style: italic; color: #555;">${product.marca || '-'}</div>
+
                     <div style="text-align: center;">
                         <span style="font-weight: bold; font-size: 1.1em; ${isLowStock ? 'color: var(--danger-color);' : 'color: var(--dark-gray);'}">
                             ${product.cantidad}
@@ -1369,7 +1407,7 @@
                 return (
                     (product.codigo && product.codigo.toLowerCase().includes(searchTerm)) ||
                     (product.descripcion && product.descripcion.toLowerCase().includes(searchTerm)) ||
-                    (product.marca && product.marca.toLowerCase().includes(searchTerm)) ||
+
                     (product.descripcionTaller && product.descripcionTaller.toLowerCase().includes(searchTerm))
                 );
             });
@@ -1391,7 +1429,7 @@
                 const product = inventoryData.find(p => p.id === productId);
 
                 document.getElementById('product-code').value = product.codigo || '';
-                document.getElementById('product-brand').value = product.marca || '';
+
                 document.getElementById('product-description').value = product.descripcion || '';
                 document.getElementById('product-workshop-description').value = product.descripcionTaller || '';
                 document.getElementById('product-quantity').value = product.cantidad || 0;
@@ -1692,9 +1730,39 @@
 
         // Exportar a Excel
         function exportToExcel() {
+            if (inventoryData.length === 0) {
+                showFloatingNotification("No hay datos para exportar", "error");
+                return;
+            }
+
+            // Preparar datos para Excel (mapeo limpio)
+            const dataToExport = inventoryData.map(item => ({
+                'Código': item.codigo,
+                'Descripción': item.descripcion,
+                'Descripción Taller': item.descripcionTaller,
+                // 'Marca': item.marca, // Marca eliminada
+                'Stock': item.cantidad,
+                'Costo': item.costo,
+                'Precio Venta': item.precio,
+                'Crédito Fiscal': item.creditoFiscal ? 'Sí' : 'No'
+            }));
 
             // Crear libro de trabajo
             const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.json_to_sheet(dataToExport);
+
+            // Ajustar ancho de columnas (opcional pero util)
+            const wscols = [
+                { wch: 15 }, // Codigo
+                { wch: 40 }, // Descripcion
+                { wch: 40 }, // Descripcion Taller
+                { wch: 10 }, // Stock
+                { wch: 10 }, // Costo
+                { wch: 10 }, // Precio
+                { wch: 10 }  // CF
+            ];
+            ws['!cols'] = wscols;
+
             XLSX.utils.book_append_sheet(wb, ws, 'Inventario');
 
             // Descargar archivo
@@ -1702,99 +1770,449 @@
             showFloatingNotification("Archivo Excel descargado correctamente", "success");
         }
 
-        // Procesar importación desde Excel
+        // Procesar importación desde Excel (y JSON)
         function processImport() {
-            const file = importFileInput.files[0];
-            const updateExisting = updateExistingCheckbox.checked;
+            // Referencias del nuevo modal
+            const fileInput = document.getElementById('import-excel-input');
+            const updateCheck = document.getElementById('update-existing-check');
+
+            const file = fileInput.files[0];
+            const updateExisting = updateCheck ? updateCheck.checked : true;
 
             if (!file) {
-                showFloatingNotification("Selecciona un archivo Excel", "error");
+                showFloatingNotification("Selecciona un archivo", "error");
                 return;
             }
 
+            const fileName = file.name.toLowerCase();
+            const isJson = fileName.endsWith('.json');
+
+            // Mostrar spinner en boton
+            const btn = document.querySelector('#importModal .btn-success');
+            if (btn) {
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
+                btn.disabled = true;
+            }
+
             const reader = new FileReader();
+
             reader.onload = function (e) {
                 try {
-                    const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, { type: 'array' });
-                    const firstSheetName = workbook.SheetNames[0];
-                    const worksheet = workbook.Sheets[firstSheetName];
-                    const jsonData = XLSX.utils.sheet_to_json(worksheet);
+                    let jsonData = [];
 
-                    if (jsonData.length === 0) {
-                        showFloatingNotification("El archivo está vacío", "error");
+                    if (isJson) {
+                        // Procesar JSON
+                        const text = new TextDecoder("utf-8").decode(new Uint8Array(e.target.result));
+                        jsonData = JSON.parse(text);
+
+                        // Normalizar estructura si viene anidada
+                        if (!Array.isArray(jsonData) && jsonData.products) {
+                            jsonData = jsonData.products;
+                        } else if (!Array.isArray(jsonData)) {
+                            // Intenta convertir objeto a array si es un mapa {id: {...}, id2: {...}}
+                            jsonData = Object.values(jsonData);
+                        }
+                    } else {
+                        // Procesar Excel
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        const firstSheetName = workbook.SheetNames[0];
+                        const worksheet = workbook.Sheets[firstSheetName];
+                        jsonData = XLSX.utils.sheet_to_json(worksheet);
+                    }
+
+                    if (!jsonData || jsonData.length === 0) {
+                        showFloatingNotification("El archivo está vacío o formato inválido", "error");
+                        if (btn) { btn.innerHTML = '<i class="fas fa-upload"></i> Importar Ahora'; btn.disabled = false; }
                         return;
                     }
 
-                    // Procesar cada fila del archivo
-                    const importPromises = jsonData.map(row => {
-                        const code = row['Código'] || row['codigo'] || '';
-                        const description = row['Descripción'] || row['descripcion'] || '';
-                        const workshopDescription = row['Descripción Taller'] || row['descripcionTaller'] || '';
-                        const brand = row['Marca'] || row['marca'] || '';
-                        const stock = parseInt(row['Stock'] || row['stock'] || 0);
-                        const minStock = parseInt(row['Alerta Stock Mínimo'] || row['minStock'] || 10);
-                        const cost = parseFloat(row['Precio Unidad'] || row['costo'] || 0);
-                        const price = parseFloat(row['Precio Venta'] || row['precio'] || 0);
-                        const creditFiscal = (row['Crédito Fiscal'] === 'Sí' || row['creditoFiscal'] === true);
+                    // Procesamiento masivo (Batch)
+                    const db = firebase.firestore();
+                    const batchSize = 400;
+                    let batch = db.batch();
+                    let operationCount = 0;
+                    let processedCount = 0;
+                    const promises = [];
 
-                        if (!code || !description) {
-                            return Promise.resolve(); // Saltar filas sin código o descripción
+                    jsonData.forEach((row) => {
+                        let productData = {};
+
+                        if (isJson) {
+                            // Asumimos estructura correcta de Firestore
+                            productData = {
+                                codigo: row.codigo || '',
+                                descripcion: row.descripcion || '',
+                                descripcionTaller: row.descripcionTaller || '',
+                                marca: row.marca || 'General',
+                                cantidad: parseInt(row.cantidad || 0),
+                                minStock: parseInt(row.minStock || 5),
+                                costo: parseFloat(row.costo || 0),
+                                precio: parseFloat(row.precio || 0),
+                                creditoFiscal: row.creditoFiscal || false,
+                                ultimaActualizacion: new Date()
+                            };
+                        } else {
+                            // Mapeo Excel (Columnas Usuario)
+                            // "Codigo", "Descripcion según inventario", "Descripcion según factura", 
+                            // "Precio costo", "Precio de venta", "Existencia Diciembre"
+
+                            const code = row['Codigo'] || row['codigo'] || row['CODIGO'];
+                            if (!code) return; // Saltar filas inválidas
+
+                            productData = {
+                                codigo: String(code).trim(),
+                                descripcion: row['Descripcion según inventario'] || row['Descripcion'] || 'Sin descripción',
+                                descripcionTaller: row['Descripcion según factura'] || '',
+                                marca: row['Marca'] || 'General',
+                                cantidad: parseInt(row['Existencia Diciembre'] || row['Existencia'] || 0),
+                                minStock: 5,
+                                costo: parseFloat(row['Precio costo'] || 0),
+                                precio: parseFloat(row['Precio de venta'] || row['Precio'] || 0),
+                                creditoFiscal: false,
+                                ultimaActualizacion: new Date()
+                            };
                         }
 
-                        const productData = {
-                            codigo: code,
-                            descripcion: description,
-                            descripcionTaller: workshopDescription,
-                            marca: brand,
-                            cantidad: stock,
-                            minStock: minStock,
-                            costo: cost,
-                            precio: price,
-                            creditoFiscal: creditFiscal
-                        };
+                        if (!productData.codigo) return;
 
-                        // Buscar si ya existe un producto con el mismo código
-                        const existingProduct = inventoryData.find(p => p.codigo === code);
+                        // Buscar existencia en memoria para decidir update o set
+                        const existingProduct = inventoryData.find(p => p.codigo === productData.codigo);
+                        let docRef;
 
                         if (existingProduct && updateExisting) {
-                            // Actualizar producto existente
-                            return db.collection('INVENTARIO').doc(existingProduct.id).update(productData);
+                            docRef = db.collection('INVENTARIO').doc(existingProduct.id);
+                            batch.update(docRef, productData);
                         } else if (!existingProduct) {
-                            // Agregar nuevo producto
-                            return db.collection('INVENTARIO').add(productData);
+                            docRef = db.collection('INVENTARIO').doc();
+                            batch.set(docRef, productData);
+                        } else {
+                            return; // Ya existe y no queremos actualizar
                         }
 
-                        return Promise.resolve();
+                        operationCount++;
+                        processedCount++;
+
+                        if (operationCount >= batchSize) {
+                            promises.push(batch.commit());
+                            batch = db.batch();
+                            operationCount = 0;
+                        }
                     });
 
-                    Promise.all(importPromises)
+                    if (operationCount > 0) {
+                        promises.push(batch.commit());
+                    }
+
+                    Promise.all(promises)
                         .then(() => {
-                            showFloatingNotification("Importación completada correctamente", "success");
-                            importModal.style.display = 'none';
+                            showFloatingNotification(`Éxito: ${processedCount} productos procesados.`, "success");
+                            const modal = document.getElementById('importModal');
+                            if (modal) modal.style.display = 'none';
                             loadInventory();
                         })
-                        .catch((error) => {
-                            console.error("Error durante la importación: ", error);
-                            showFloatingNotification("Error durante la importación", "error");
+                        .catch((err) => {
+                            console.error(err);
+                            showFloatingNotification("Error al guardar en base de datos", "error");
+                        })
+                        .finally(() => {
+                            if (btn) { btn.innerHTML = '<i class="fas fa-upload"></i> Importar Ahora'; btn.disabled = false; }
                         });
+
                 } catch (error) {
                     console.error("Error al procesar archivo: ", error);
-                    showFloatingNotification("Error al procesar el archivo", "error");
+                    showFloatingNotification("Error crítico: " + error.message, "error");
+                    if (btn) { btn.innerHTML = '<i class="fas fa-upload"></i> Importar Ahora'; btn.disabled = false; }
                 }
             };
+
             reader.readAsArrayBuffer(file);
+        }
+
+        // Borrar todo el inventario
+        async function deleteAllInventory() {
+            if (!confirm("⚠️ PRECAUCIÓN EXTREMA\n\n¿Estás seguro de que deseas ELIMINAR TODO EL INVENTARIO?\nEsta acción vaciará la base de datos y no se puede deshacer.")) {
+                return;
+            }
+
+            const confirmation = prompt("Para confirmar, escribe 'BORRAR' (en mayúsculas):");
+            if (confirmation !== 'BORRAR') {
+                showFloatingNotification("Cancelado por seguridad", "info");
+                return;
+            }
+
+            const btn = document.querySelector('.btn-danger'); // Botón borrar
+            let originalText = "";
+            if (btn) {
+                originalText = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Borrando...';
+                btn.disabled = true;
+            }
+
+            try {
+                const db = firebase.firestore();
+                const snapshot = await db.collection("INVENTARIO").get();
+
+                if (snapshot.empty) {
+                    showFloatingNotification("El inventario ya está vacío", "info");
+                } else {
+                    const batchSize = 400;
+                    let batch = db.batch();
+                    let count = 0;
+
+                    for (const doc of snapshot.docs) {
+                        batch.delete(doc.ref);
+                        count++;
+                        if (count >= batchSize) {
+                            await batch.commit();
+                            batch = db.batch();
+                            count = 0;
+                        }
+                    }
+
+                    if (count > 0) await batch.commit();
+
+                    showFloatingNotification("Inventario eliminado completamente.", "success");
+                    loadInventory();
+                }
+            } catch (error) {
+                console.error(error);
+                showFloatingNotification("Error al eliminar: " + error.message, "error");
+            } finally {
+                if (btn) {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                }
+            }
         }
 
         // Mostrar notificación flotante
         function showFloatingNotification(message, type) {
-            floatingNotification.textContent = message;
-            floatingNotification.className = 'floating-notification ' + type;
-            floatingNotification.style.display = 'block';
+            const floatingNotification = document.getElementById('floating-notification');
+            if (floatingNotification) {
+                floatingNotification.textContent = message;
+                floatingNotification.className = 'floating-notification ' + type;
+                floatingNotification.style.display = 'block';
 
-            setTimeout(() => {
-                floatingNotification.style.display = 'none';
-            }, 3000);
+                setTimeout(() => {
+                    floatingNotification.style.display = 'none';
+                }, 3000);
+            } else {
+                alert(message);
+            }
+        }
+
+        // Manejador de selección de archivo para importación directa
+        async function handleImportFileSelect(input) {
+            if (!input.files || !input.files[0]) return;
+
+            const file = input.files[0];
+            const shouldUpdate = confirm("¿Deseas actualizar los productos existentes que tengan el mismo Código?\n\n[Aceptar] = Sí, actualizar precios/stocks.\n[Cancelar] = No, saltar existentes y solo agregar nuevos.");
+
+            // Reiniciar input para permitir re-seleccionar mismo archivo si falla
+            input.value = '';
+
+            const reader = new FileReader();
+
+            reader.onload = async function (e) {
+                try {
+                    const data = e.target.result;
+                    let products = [];
+                    let jsonData = []; // Declarar variable para alcance global en el try
+
+                    // Detectar tipo por extensión o contenido
+                    if (file.name.endsWith('.json')) {
+                        products = JSON.parse(data);
+                    } else {
+                        // Asumir Excel
+                        const workbook = XLSX.read(data, { type: 'binary' });
+                        const firstSheetName = workbook.SheetNames[0];
+                        const worksheet = workbook.Sheets[firstSheetName];
+                        // Leer como array de arrays para buscar el encabezado
+                        const rawData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+                        // Buscar la fila que contiene "Codigo" y otros campos clave (búsqueda estricta)
+                        let headerRowIndex = -1;
+                        for (let i = 0; i < Math.min(30, rawData.length); i++) {
+                            const row = rawData[i];
+                            // Ignorar nulos o filas con menos de 2 columnas
+                            if (!row || row.length < 2) continue;
+
+                            const rowStr = JSON.stringify(row).toLowerCase();
+
+                            // Criterio: Debe tener 'codigo' Y (alguna descripción O precio O costo O existencia)
+                            if (rowStr.includes('codigo') &&
+                                (rowStr.includes('descripci') || rowStr.includes('precio') || rowStr.includes('costo') || rowStr.includes('existencia'))) {
+                                headerRowIndex = i;
+                                break;
+                            }
+                        }
+
+                        if (headerRowIndex === -1) {
+                            // Fallback: Buscar solo 'codigo' si falla lo estricto
+                            for (let i = 0; i < Math.min(30, rawData.length); i++) {
+                                if (rawData[i] && rawData[i].length >= 2 && JSON.stringify(rawData[i]).toLowerCase().includes('codigo')) {
+                                    headerRowIndex = i;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (headerRowIndex === -1) {
+                            alert("No se encontró ninguna fila que parezca encabezado (buscando 'Codigo', 'Descripcion', etc).");
+                            return;
+                        }
+
+                        console.log("Encabezados encontrados en fila:", headerRowIndex + 1);
+
+                        // USAR rawData DIRECTAMENTE
+                        const headers = rawData[headerRowIndex];
+                        const rows = rawData.slice(headerRowIndex + 1);
+
+                        // DEBUG TEMPORAL: Mostrar headers encontrados
+                        // alert("Fila Header #" + (headerRowIndex + 1) + " detectada.\nColumnas: " + JSON.stringify(headers));
+
+                        // Identificar nombres exactos de columnas basándonos en palabras clave
+                        // Esto hace que funcione aunque haya espacios o tildes diferentes
+                        const colCodigo = headers.find(h => h && h.toLowerCase().includes('codigo')) || 'Codigo';
+                        // Mejorar detección para evitar confundir 'Descripcion Factura' con 'Descripcion Inventario'
+                        const colDescInv = headers.find(h => h && (h.toLowerCase().includes('inventario') || (h.toLowerCase().includes('descripci') && !h.toLowerCase().includes('factura') && !h.toLowerCase().includes('taller')))) || 'Descripcion según inventario';
+                        const colDescFact = headers.find(h => h && (h.toLowerCase().includes('factura') || h.toLowerCase().includes('taller'))) || 'Descripcion según factura';
+
+                        const colCosto = headers.find(h => h && (h.toLowerCase().includes('costo') || h.toLowerCase().includes('compra'))) || 'Precio costo';
+                        // Mejorar detección de precio para evitar 'Total Venta' u otras columnas similares
+                        const colPrecio = headers.find(h => h && ((h.toLowerCase().includes('precio') && h.toLowerCase().includes('venta')) || h.toLowerCase().includes('p.v.p') || h.toLowerCase().includes('publico') || h.toLowerCase().includes('unitario') || h.toLowerCase() === 'venta' || h.toLowerCase() === 'precio')) || 'Precio de venta';
+
+                        const colStock = headers.find(h => h && ((h.toLowerCase().includes('existencia') && !h.toLowerCase().includes('min')) || h.toLowerCase().includes('stock') || (h.toLowerCase().includes('cantidad') && !h.toLowerCase().includes('min')))) || 'Existencia Diciembre';
+
+                        // DEBUG AVANZADO: Diagnóstico de precio
+                        const colPrecioIndex = headers.indexOf(colPrecio);
+                        const sampleVal = (rows.length > 0 && colPrecioIndex !== -1) ? rows[0][colPrecioIndex] : 'N/A';
+
+                        // alert(`DEBUG PRECIO:\nColumna detectada: '${colPrecio}'\nValor en fila 1: '${sampleVal}'\n\nTodas las columnas: ${headers.join(' | ')}`);
+                        alert(`Diagnóstico de Importación:\n1. Columna Precio: '${colPrecio}'\n2. Valor muestra (Fila 1): '${sampleVal}'\n3. Total Columnas: ${headers.length}\n\nRevisa si el 'Valor muestra' es correcto (debería ser un número).`);
+
+                        console.log("Mapeo de columnas:", { colCodigo, colDescInv, colDescFact, colCosto, colPrecio, colStock });
+
+                        // Convertir manualmente a objetos JSON para evitar ambigüedades de SheetJS
+                        jsonData = rows.map(row => {
+                            let obj = {};
+                            headers.forEach((h, i) => {
+                                if (h) obj[h] = row[i];
+                            });
+                            return obj;
+                        });
+
+                        // Mapear columnas de Excel a nuestro modelo
+                        products = jsonData.map(row => {
+                            let codigo = row[colCodigo] || '';
+                            const desc1 = row[colDescInv] || '';
+                            const desc2 = row[colDescFact] || '';
+
+                            // Limpieza de valores numéricos (quitar signos $, comas, etc)
+                            const cleanNumber = (val) => {
+                                if (typeof val === 'number') return val;
+                                if (!val) return 0;
+                                return parseFloat(String(val).replace(/[$,]/g, '')) || 0;
+                            };
+
+                            const costo = cleanNumber(row[colCosto]);
+                            const precio = cleanNumber(row[colPrecio]);
+                            const stock = cleanNumber(row[colStock]);
+
+                            // Si no hay código pero SÍ hay descripción, generar código automático
+                            if (!codigo && (desc1 || desc2)) {
+                                codigo = "GEN-" + Math.floor(Math.random() * 100000);
+                            }
+
+                            if (!codigo) return null; // Ignorar filas completamente vacías (ni código ni descripción)
+
+                            return {
+                                codigo: String(codigo).trim(),
+                                descripcion: String(desc1).trim(),
+                                descripcionTaller: String(desc2).trim(),
+                                marca: '', // Eliminado visualmente
+                                cantidad: stock,
+                                costo: costo,
+                                precio: precio,
+                                fechaActualizacion: new Date().toISOString()
+                            };
+                        }).filter(p => p !== null);
+                    }
+
+                    if (products.length === 0) {
+                        if (jsonData && jsonData.length > 0) {
+                            const headers = Object.keys(jsonData[0]);
+                            console.log("Columnas encontradas:", headers);
+                            alert("No se encontraron productos válidos.\n\nIMPORTANTE: Verifica los nombres de tus columnas.\n\nColumnas detectadas en tu Excel:\n" + headers.join(" | ") + "\n\nColumnas esperadas (al menos 'Codigo'):\n- Codigo\n- Descripcion según inventario\n- Descripcion según factura");
+                        } else {
+                            alert("No se encontraron datos en la primera hoja del Excel.");
+                        }
+                        return;
+                    }
+
+                    // Confirmar cantidad
+                    if (!confirm(`Se encontraron ${products.length} productos válidos.\n¿Proceder con la importación a Firebase?`)) return;
+
+                    showFloatingNotification("Iniciando importación...", "info");
+
+                    // Proceso de guardado en lotes (Batch)
+                    const batchSize = 400; // Limite Firestore es 500
+                    let batch = db.batch();
+                    let count = 0;
+                    let totalProcessed = 0;
+                    let updatedCount = 0;
+                    let newCount = 0;
+
+                    // Obtener lista actual de IDs para saber si existe (optimización básica)
+                    // Para ser exactos, deberíamos leer. Pero asumiremos 'shouldUpdate' lógica.
+                    // Leyendo todo el inventario actual para comparar códigos rápidamente
+                    const currentCodes = new Set(inventoryData.map(p => p.codigo));
+
+                    for (const product of products) {
+                        const productRef = db.collection('INVENTARIO').doc(product.codigo); // Usar Codigo como ID
+
+                        // Si existe y NO actualizar
+                        if (currentCodes.has(product.codigo) && !shouldUpdate) {
+                            continue;
+                        }
+
+                        if (currentCodes.has(product.codigo)) updatedCount++;
+                        else newCount++;
+
+                        batch.set(productRef, product, { merge: true });
+                        count++;
+                        totalProcessed++;
+
+                        if (count >= batchSize) {
+                            await batch.commit();
+                            batch = db.batch();
+                            count = 0;
+                            showFloatingNotification(`Procesados ${totalProcessed} de ${products.length}...`, "info");
+                        }
+                    }
+
+                    if (count > 0) await batch.commit();
+
+                    alert(`Importación completada.\nNuevos: ${newCount}\nActualizados: ${updatedCount}`);
+                    showFloatingNotification("Importación exitosa", "success");
+                    loadInventory(); // Recargar tabla
+
+                } catch (error) {
+                    console.error("Error importando:", error);
+                    alert("Error al procesar archivo: " + error.message);
+                }
+            };
+
+            reader.onerror = function (ex) {
+                alert("Error leyendo archivo");
+            };
+
+            if (file.name.endsWith('.json')) {
+                reader.readAsText(file);
+            } else {
+                reader.readAsBinaryString(file);
+            }
         }
     </script>
 </body>
