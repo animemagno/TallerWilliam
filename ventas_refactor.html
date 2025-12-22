@@ -4878,7 +4878,7 @@
             async loadHistorial() {
                 try {
                     UIService.showLoading(true);
-                    const movimientos = await DataService.loadAllMovements(500);
+                    const movimientos = await DataService.loadAllMovements(5000);
                     UIService.updateHistorial(movimientos);
                 } catch (error) {
                     UIService.showStatus("Error al cargar historial: " + error.message, "error");
