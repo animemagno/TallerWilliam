@@ -909,7 +909,7 @@
 
             <div class="form-group">
                 <label for="placa">Placa:</label>
-                <input type="text" id="placa" placeholder="Ej: P123456">
+                <input type="text" id="placa" placeholder="Ej: M52795">
             </div>
 
             <div class="form-group">
@@ -997,8 +997,8 @@
             </div>
 
             <div class="dias-descanso">
-                <h3>Haz clic en los días del calendario para marcarlos como DESCANSO</h3>
-                <p>Los días marcados se mostrarán en gris con el texto "DESCANSO"</p>
+                <h3>Haz clic en los días del calendario para marcarlos como DÍA SIN INGRESOS ($0)</h3>
+                <p>Los días marcados se mostrarán en gris con el monto "$0"</p>
             </div>
 
             <div class="vista-previa-calendario">
@@ -1083,6 +1083,19 @@
             function formatearFecha(fechaISO) {
                 const [año, mes, dia] = fechaISO.split('-');
                 return `${dia}/${mes}/${año}`;
+            }
+
+            // Función para formatear placa agregando "M" al inicio si no la tiene
+            function formatearPlaca(placa) {
+                if (!placa || placa === 'No registrada') return 'No registrada';
+                
+                // Si la placa ya empieza con M, dejarla como está
+                if (placa.toUpperCase().startsWith('M')) {
+                    return placa.toUpperCase();
+                }
+                
+                // Si no empieza con M, agregarla
+                return 'M' + placa.toUpperCase();
             }
 
             // Establecer fecha actual en el formulario
@@ -1179,7 +1192,10 @@
                     const equiposSnapshot = await db.collection('equipos').get();
                     const equipos = [];
                     equiposSnapshot.forEach(doc => {
-                        equipos.push({ id: doc.id, ...doc.data() });
+                        const equipoData = doc.data();
+                        // Formatear la placa al cargar
+                        equipoData.placa = formatearPlaca(equipoData.placa);
+                        equipos.push({ id: doc.id, ...equipoData });
                     });
                     localStorage.setItem('equiposMototaxis', JSON.stringify(equipos));
 
@@ -1231,7 +1247,7 @@
             // Función para guardar un nuevo equipo
             async function guardarEquipo() {
                 const numero = parseInt(document.getElementById('numero-equipo').value) || 0;
-                const placa = document.getElementById('placa').value.trim();
+                let placa = document.getElementById('placa').value.trim();
                 const nombre = document.getElementById('nombre').value.trim();
                 const dui = document.getElementById('dui').value.trim();
 
@@ -1240,6 +1256,9 @@
                     alert('Por favor, ingrese un número de equipo válido.');
                     return;
                 }
+
+                // Formatear la placa (agregar M al inicio si no la tiene)
+                placa = formatearPlaca(placa);
 
                 // Obtener equipos actuales
                 const equipos = JSON.parse(localStorage.getItem('equiposMototaxis')) || [];
@@ -1401,6 +1420,9 @@
                         nombre: nombre,
                         dui: 'No registrado'
                     };
+
+                    // Formatear la placa
+                    nuevoEquipo.placa = formatearPlaca(nuevoEquipo.placa);
 
                     // Guardar equipo en Firebase
                     const id = Date.now().toString();
@@ -1836,9 +1858,9 @@
                                 <td class="${esDescanso ? 'dia-descanso-preview' : ''}" data-dia="${diaActual}">
                                     <div class="cuadro-dia-preview">
                                         <div class="dia-numero-preview">${diaActual}</div>
-                                        ${!esDescanso && totalDia > 0 ? `<div class="dia-monto-preview">$${totalDia.toFixed(2)}</div>` : ''}
+                                        ${esDescanso ? `<div class="dia-monto-preview">$0</div>` : 
+                                          totalDia > 0 ? `<div class="dia-monto-preview">$${totalDia.toFixed(2)}</div>` : ''}
                                         ${!esDescanso && comentarios ? `<div class="dia-comentario-preview">${comentarios}</div>` : ''}
-                                        ${esDescanso ? `<div class="texto-descanso-preview">DESCANSO</div>` : ''}
                                     </div>
                                 </td>
                             `;
@@ -1876,7 +1898,7 @@
                 let htmlPrint = `
                     <div class="calendario-mensual">
                         <div class="encabezado-recibo">
-                            <h1>RECIBO DE INGRESO EN CONCEPTO DE TRANSPORTE PÚBLICO ALTERNATIVO LOCAL</h1>
+                            <h1>RECIBO DE INGRESO EN CONCEPTO DE TRANSPORTE PÚBLICO ALTERNATIVO</h1>
                             <div class="info-mes">MES: ${nombresMeses[mes - 1]} AÑO: ${año}</div>
                         </div>
                 `;
@@ -1885,7 +1907,6 @@
                 if (equipoSeleccionado) {
                     htmlPrint += `
                         <div class="info-equipo">
-                            <div class="numero-equipo">EQUIPO: ${equipoSeleccionado.numero}</div>
                             <div>Nombre: ${equipoSeleccionado.nombre}</div>
                             <div>DUI: ${equipoSeleccionado.dui}</div>
                             <div>Placas: ${equipoSeleccionado.placa}</div>
@@ -1931,9 +1952,9 @@
                                 <td class="${esDescanso ? 'dia-descanso' : ''}">
                                     <div class="cuadro-dia">
                                         <div class="dia-numero">${diaActual}</div>
-                                        ${!esDescanso && totalDia > 0 ? `<div class="dia-monto">$${totalDia.toFixed(2)}</div>` : ''}
+                                        ${esDescanso ? `<div class="dia-monto">$0</div>` : 
+                                          totalDia > 0 ? `<div class="dia-monto">$${totalDia.toFixed(2)}</div>` : ''}
                                         ${!esDescanso && comentarios ? `<div class="dia-comentario">${comentarios}</div>` : ''}
-                                        ${esDescanso ? `<div class="texto-descanso">DESCANSO</div>` : ''}
                                     </div>
                                 </td>
                             `;
@@ -1963,5 +1984,4 @@
         });
     </script>
 </body>
-
 </html>
