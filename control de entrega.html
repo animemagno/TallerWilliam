@@ -452,156 +452,189 @@
             background-color: #5a6268;
         }
 
-        /* Estilos para impresión */
+        /* =========================================== */
+        /* NUEVOS ESTILOS PARA IMPRESIÓN - DISEÑO ACTUALIZADO */
+        /* =========================================== */
+        
         @media print {
             body * {
                 visibility: hidden;
             }
 
-            .calendario-print,
-            .calendario-print * {
+            .recibo-print,
+            .recibo-print * {
                 visibility: visible;
             }
 
-            .calendario-print {
+            .recibo-print {
                 position: absolute;
                 left: 0;
                 top: 0;
                 width: 100%;
                 height: 100%;
                 font-size: 12px;
+                padding: 0.5in;
             }
 
             .no-print {
                 display: none !important;
             }
 
-            /* Estilos para el calendario en tamaño carta */
-            .calendario-mensual {
+            /* Estilos para el recibo en tamaño carta */
+            .recibo-mensual {
                 width: 8.5in;
                 height: 11in;
-                padding: 0.5in;
                 margin: 0 auto;
-                page-break-after: always;
                 font-family: Arial, sans-serif;
-            }
-
-            .encabezado-recibo {
-                text-align: center;
-                margin-bottom: 10px;
-                border-bottom: 2px solid #000;
-                padding-bottom: 10px;
-            }
-
-            .encabezado-recibo h1 {
-                font-size: 18px;
-                margin-bottom: 5px;
-            }
-
-            .encabezado-recibo .info-mes {
-                font-size: 14px;
-                margin-bottom: 5px;
-            }
-
-            .info-equipo {
-                text-align: center;
-                margin-bottom: 15px;
-                font-size: 13px;
-            }
-
-            .info-equipo .numero-equipo {
-                font-weight: bold;
-                font-size: 16px;
-                margin-bottom: 5px;
-            }
-
-            .tabla-calendario {
-                width: 100%;
-                border-collapse: collapse;
-                margin-bottom: 20px;
-            }
-
-            .tabla-calendario th {
-                background-color: #f0f0f0;
-                border: 1px solid #000;
-                padding: 5px;
-                text-align: center;
-                font-size: 12px;
-            }
-
-            .tabla-calendario td {
-                border: 1px solid #000;
-                padding: 5px;
-                vertical-align: top;
-                height: 90px;
-                width: 14.28%;
-            }
-
-            .cuadro-dia {
-                height: 100%;
-                display: flex;
-                flex-direction: column;
-                text-align: center;
-                padding: 3px;
                 position: relative;
             }
 
-            .dia-numero {
+            /* ENCABEZADO CENTRADO */
+            .encabezado-recibo {
+                text-align: center;
+                margin-bottom: 25px;
+                padding-bottom: 10px;
+                border-bottom: 2px solid #000;
+            }
+
+            .encabezado-recibo h1 {
+                font-size: 22px;
+                margin-bottom: 8px;
                 font-weight: bold;
+                line-height: 1.2;
+            }
+
+            .encabezado-recibo .linea-1 {
+                font-size: 20px;
+                margin-bottom: 3px;
+            }
+
+            .encabezado-recibo .linea-2 {
+                font-size: 18px;
+                margin-bottom: 15px;
+            }
+
+            .encabezado-recibo .info-mes {
                 font-size: 16px;
-                text-align: left;
-                position: absolute;
-                top: 3px;
-                left: 5px;
-            }
-
-            .dia-monto {
-                font-size: 14px;
                 font-weight: bold;
-                margin-top: 20px;
+                margin-top: 10px;
             }
 
-            .dia-comentario {
-                font-size: 10px;
-                color: #666;
-                margin-top: auto;
-                padding-bottom: 5px;
-            }
-
-            .dia-descanso {
-                background-color: #f0f0f0;
-            }
-
-            .texto-descanso {
-                font-size: 14px;
-                font-weight: bold;
-                color: #666;
-                height: 100%;
+            /* CONTENEDOR PRINCIPAL CON DOS COLUMNAS */
+            .contenedor-principal {
                 display: flex;
-                align-items: center;
-                justify-content: center;
                 margin-top: 20px;
+                min-height: 500px;
             }
 
-            .pie-pagina {
-                margin-top: 30px;
-                padding-top: 10px;
+            /* COLUMNA IZQUIERDA - TABLA DE DÍAS */
+            .columna-tabla {
+                flex: 0 0 65%;
+                padding-right: 30px;
+            }
+
+            .tabla-dias {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 10px;
+            }
+
+            .tabla-dias th {
+                background-color: #f0f0f0;
+                border: 1px solid #000;
+                padding: 8px 5px;
+                text-align: center;
+                font-size: 13px;
+                font-weight: bold;
+            }
+
+            .tabla-dias td {
+                border: 1px solid #000;
+                padding: 6px 5px;
+                text-align: center;
+                font-size: 12px;
+                height: 24px;
+            }
+
+            .tabla-dias .col-dia {
+                width: 20%;
+                font-weight: bold;
+            }
+
+            .tabla-dias .col-monto {
+                width: 30%;
+            }
+
+            .tabla-dias .col-observacion {
+                width: 50%;
+                text-align: left;
+                padding-left: 8px;
+            }
+
+            .dia-descanso-tabla {
+                background-color: #f5f5f5;
+            }
+
+            .monto-descanso {
+                font-weight: bold;
+                color: #666;
+            }
+
+            /* COLUMNA DERECHA - DATOS DEL CONDUCTOR */
+            .columna-datos {
+                flex: 0 0 35%;
                 display: flex;
                 flex-direction: column;
-                align-items: flex-end;
+                padding-left: 20px;
             }
 
-            .total-general-print {
-                font-weight: bold;
-                font-size: 16px;
-                margin-bottom: 40px;
+            .datos-conductor {
+                margin-top: 0;
+                padding: 15px;
+                border: 1px solid #ddd;
+                border-radius: 5px;
+                background-color: #f9f9f9;
             }
 
-            .firma {
+            .dato-item {
+                margin-bottom: 12px;
                 font-size: 14px;
+            }
+
+            .dato-label {
+                font-weight: bold;
+                display: inline-block;
+                width: 80px;
+            }
+
+            .dato-valor {
+                font-weight: normal;
+            }
+
+            /* SECCIÓN DE TOTAL Y FIRMA (en columna derecha) */
+            .seccion-firma {
+                margin-top: auto;
+                padding-top: 40px;
+                text-align: left;
+            }
+
+            .total-recibo {
+                font-size: 18px;
+                font-weight: bold;
+                margin-bottom: 30px;
+                color: #000;
+            }
+
+            .firma-recibo {
+                font-size: 14px;
+                margin-top: 40px;
+            }
+
+            .linea-firma {
                 border-top: 1px solid #000;
+                width: 250px;
+                margin-top: 5px;
                 padding-top: 3px;
-                width: 200px;
                 text-align: center;
             }
         }
@@ -1010,8 +1043,8 @@
 
             <button class="btn btn-imprimir-calendario" id="imprimir-calendario">Imprimir Calendario</button>
 
-            <div class="calendario-print" id="calendario-print">
-                <!-- Aquí se generará el calendario para imprimir -->
+            <div class="recibo-print" id="recibo-print">
+                <!-- Aquí se generará el recibo para imprimir -->
             </div>
         </div>
     </div>
@@ -1065,7 +1098,7 @@
                         const hoy = new Date();
                         const mesActual = hoy.getFullYear() + '-' + String(hoy.getMonth() + 1).padStart(2, '0');
                         document.getElementById('filtro-mes-calendario').value = mesActual;
-                        generarCalendario();
+                        generarRecibo();
                     }
                 });
             });
@@ -1132,8 +1165,8 @@
             document.getElementById('filtro-equipo').addEventListener('change', cargarHistorialIngresos);
             document.getElementById('filtro-fecha').addEventListener('change', cargarHistorialIngresos);
             document.getElementById('filtro-equipo-depositos').addEventListener('change', cargarDepositosPorEquipo);
-            document.getElementById('filtro-mes-calendario').addEventListener('change', generarCalendario);
-            document.getElementById('filtro-equipo-calendario').addEventListener('change', generarCalendario);
+            document.getElementById('filtro-mes-calendario').addEventListener('change', generarRecibo);
+            document.getElementById('filtro-equipo-calendario').addEventListener('change', generarRecibo);
 
             // Event listeners para navegación con ENTER
             equipoRapidoInput.addEventListener('keypress', function (e) {
@@ -1754,16 +1787,16 @@
                 });
             }
 
-            // Función para generar el calendario mensual
-            function generarCalendario() {
+            // Función para generar el recibo mensual
+            function generarRecibo() {
                 const calendarioPreview = document.getElementById('calendario-preview');
-                const calendarioPrint = document.getElementById('calendario-print');
+                const reciboPrint = document.getElementById('recibo-print');
                 const filtroMes = document.getElementById('filtro-mes-calendario').value;
                 const filtroEquipo = document.getElementById('filtro-equipo-calendario').value;
 
                 if (!filtroMes) {
-                    calendarioPreview.innerHTML = '<div class="empty-message">Seleccione un mes para generar el calendario.</div>';
-                    calendarioPrint.innerHTML = '';
+                    calendarioPreview.innerHTML = '<div class="empty-message">Seleccione un mes para generar el recibo.</div>';
+                    reciboPrint.innerHTML = '';
                     return;
                 }
 
@@ -1811,15 +1844,34 @@
 
                 // Calcular total general (solo de días que no son descanso)
                 let totalGeneral = 0;
+                let tablaDiasHTML = '';
+                
+                // Generar filas de la tabla para cada día del mes
                 for (let dia = 1; dia <= diasEnMes; dia++) {
-                    if (!diasDescansoSeleccionados.includes(dia)) {
-                        const ingresosDia = ingresosPorDia[dia] || [];
-                        const totalDia = ingresosDia.reduce((sum, ingreso) => sum + ingreso.monto, 0);
+                    const ingresosDia = ingresosPorDia[dia] || [];
+                    const totalDia = ingresosDia.reduce((sum, ingreso) => sum + ingreso.monto, 0);
+                    const comentarios = ingresosDia.map(ingreso =>
+                        ingreso.observacion && ingreso.observacion !== 'Sin observación' ? ingreso.observacion : ''
+                    ).filter(c => c !== '').join(', ');
+
+                    const esDescanso = diasDescansoSeleccionados.includes(dia);
+                    
+                    if (!esDescanso) {
                         totalGeneral += totalDia;
                     }
+
+                    tablaDiasHTML += `
+                        <tr class="${esDescanso ? 'dia-descanso-tabla' : ''}">
+                            <td class="col-dia">${dia}</td>
+                            <td class="col-monto">
+                                ${esDescanso ? '<span class="monto-descanso">$0</span>' : `$${totalDia > 0 ? totalDia.toFixed(2) : '0.00'}`}
+                            </td>
+                            <td class="col-observacion">${comentarios}</td>
+                        </tr>
+                    `;
                 }
 
-                // Generar HTML del calendario para vista previa
+                // Generar vista previa del calendario (mantenida para compatibilidad)
                 let htmlPreview = `
                     <table class="tabla-calendario-preview">
                         <thead>
@@ -1838,20 +1890,15 @@
 
                 // Generar celdas del calendario para vista previa
                 let diaActual = 1;
-                for (let i = 0; i < 6; i++) { // Máximo 6 filas
+                for (let i = 0; i < 6; i++) {
                     htmlPreview += '<tr>';
 
-                    for (let j = 0; j < 7; j++) { // 7 días por semana
+                    for (let j = 0; j < 7; j++) {
                         if ((i === 0 && j < diaInicio) || diaActual > diasEnMes) {
-                            // Celda vacía
                             htmlPreview += '<td></td>';
                         } else {
                             const ingresosDia = ingresosPorDia[diaActual] || [];
                             const totalDia = ingresosDia.reduce((sum, ingreso) => sum + ingreso.monto, 0);
-                            const comentarios = ingresosDia.map(ingreso =>
-                                ingreso.observacion && ingreso.observacion !== 'Sin observación' ? ingreso.observacion : ''
-                            ).filter(c => c !== '').join(', ');
-
                             const esDescanso = diasDescansoSeleccionados.includes(diaActual);
 
                             htmlPreview += `
@@ -1860,7 +1907,6 @@
                                         <div class="dia-numero-preview">${diaActual}</div>
                                         ${esDescanso ? `<div class="dia-monto-preview">$0</div>` : 
                                           totalDia > 0 ? `<div class="dia-monto-preview">$${totalDia.toFixed(2)}</div>` : ''}
-                                        ${!esDescanso && comentarios ? `<div class="dia-comentario-preview">${comentarios}</div>` : ''}
                                     </div>
                                 </td>
                             `;
@@ -1869,8 +1915,6 @@
                     }
 
                     htmlPreview += '</tr>';
-
-                    // Si ya hemos completado todos los días, salir del bucle
                     if (diaActual > diasEnMes) break;
                 }
 
@@ -1890,96 +1934,84 @@
                         } else {
                             diasDescansoSeleccionados.push(dia);
                         }
-                        generarCalendario();
+                        generarRecibo();
                     });
                 });
 
-                // Generar HTML del calendario para impresión
+                // Generar HTML del recibo para impresión
                 let htmlPrint = `
-                    <div class="calendario-mensual">
+                    <div class="recibo-mensual">
+                        <!-- ENCABEZADO CENTRADO -->
                         <div class="encabezado-recibo">
-                            <h1>RECIBO DE INGRESO EN CONCEPTO DE TRANSPORTE PÚBLICO ALTERNATIVO</h1>
-                            <div class="info-mes">MES: ${nombresMeses[mes - 1]} AÑO: ${año}</div>
+                            <div class="linea-1">RECIBO DE INGRESO EN CONCEPTO DE</div>
+                            <div class="linea-2">TRANSPORTE PÚBLICO ALTERNATIVO LOCAL</div>
+                            <div class="info-mes">Mes: ${nombresMeses[mes - 1]}  Año: ${año}</div>
                         </div>
+
+                        <!-- CONTENEDOR PRINCIPAL CON DOS COLUMNAS -->
+                        <div class="contenedor-principal">
+                            <!-- COLUMNA IZQUIERDA - TABLA DE DÍAS -->
+                            <div class="columna-tabla">
+                                <table class="tabla-dias">
+                                    <thead>
+                                        <tr>
+                                            <th class="col-dia">DÍA</th>
+                                            <th class="col-monto">MONTO ($)</th>
+                                            <th class="col-observacion">OBSERVACIÓN</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${tablaDiasHTML}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- COLUMNA DERECHA - DATOS DEL CONDUCTOR -->
+                            <div class="columna-datos">
                 `;
 
                 // Agregar información del equipo si está seleccionado
                 if (equipoSeleccionado) {
                     htmlPrint += `
-                        <div class="info-equipo">
-                            <div>Nombre: ${equipoSeleccionado.nombre}</div>
-                            <div>DUI: ${equipoSeleccionado.dui}</div>
-                            <div>Placas: ${equipoSeleccionado.placa}</div>
-                        </div>
+                                <div class="datos-conductor">
+                                    <div class="dato-item">
+                                        <span class="dato-label">PLACA:</span>
+                                        <span class="dato-valor">${equipoSeleccionado.placa}</span>
+                                    </div>
+                                    <div class="dato-item">
+                                        <span class="dato-label">NOMBRE:</span>
+                                        <span class="dato-valor">${equipoSeleccionado.nombre}</span>
+                                    </div>
+                                    <div class="dato-item">
+                                        <span class="dato-label">DUI:</span>
+                                        <span class="dato-valor">${equipoSeleccionado.dui}</span>
+                                    </div>
+                                </div>
+                    `;
+                } else {
+                    htmlPrint += `
+                                <div class="datos-conductor">
+                                    <div class="dato-item">(Todos los equipos)</div>
+                                </div>
                     `;
                 }
 
+                // Agregar sección de TOTAL y FIRMA en la columna derecha
                 htmlPrint += `
-                        <table class="tabla-calendario">
-                            <thead>
-                                <tr>
-                                    <th>Domingo</th>
-                                    <th>Lunes</th>
-                                    <th>Martes</th>
-                                    <th>Miércoles</th>
-                                    <th>Jueves</th>
-                                    <th>Viernes</th>
-                                    <th>Sábado</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                `;
-
-                // Generar celdas del calendario para impresión
-                diaActual = 1;
-                for (let i = 0; i < 6; i++) { // Máximo 6 filas
-                    htmlPrint += '<tr>';
-
-                    for (let j = 0; j < 7; j++) { // 7 días por semana
-                        if ((i === 0 && j < diaInicio) || diaActual > diasEnMes) {
-                            // Celda vacía
-                            htmlPrint += '<td></td>';
-                        } else {
-                            const ingresosDia = ingresosPorDia[diaActual] || [];
-                            const totalDia = ingresosDia.reduce((sum, ingreso) => sum + ingreso.monto, 0);
-                            const comentarios = ingresosDia.map(ingreso =>
-                                ingreso.observacion && ingreso.observacion !== 'Sin observación' ? ingreso.observacion : ''
-                            ).filter(c => c !== '').join(', ');
-
-                            const esDescanso = diasDescansoSeleccionados.includes(diaActual);
-
-                            htmlPrint += `
-                                <td class="${esDescanso ? 'dia-descanso' : ''}">
-                                    <div class="cuadro-dia">
-                                        <div class="dia-numero">${diaActual}</div>
-                                        ${esDescanso ? `<div class="dia-monto">$0</div>` : 
-                                          totalDia > 0 ? `<div class="dia-monto">$${totalDia.toFixed(2)}</div>` : ''}
-                                        ${!esDescanso && comentarios ? `<div class="dia-comentario">${comentarios}</div>` : ''}
+                                <!-- SECCIÓN DE TOTAL Y FIRMA -->
+                                <div class="seccion-firma">
+                                    <div class="total-recibo">TOTAL: $${totalGeneral.toFixed(2)}</div>
+                                    <div class="firma-recibo">
+                                        FIRMA:
+                                        <div class="linea-firma"></div>
                                     </div>
-                                </td>
-                            `;
-                            diaActual++;
-                        }
-                    }
-
-                    htmlPrint += '</tr>';
-
-                    // Si ya hemos completado todos los días, salir del bucle
-                    if (diaActual > diasEnMes) break;
-                }
-
-                htmlPrint += `
-                            </tbody>
-                        </table>
-                        
-                        <div class="pie-pagina">
-                            <div class="total-general-print">TOTAL: $${totalGeneral.toFixed(2)}</div>
-                            <div class="firma">FIRMA</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 `;
 
-                calendarioPrint.innerHTML = htmlPrint;
+                reciboPrint.innerHTML = htmlPrint;
             }
         });
     </script>
