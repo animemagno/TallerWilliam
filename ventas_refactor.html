@@ -6834,61 +6834,7 @@
                     document.getElementById('bulk-abono-modal').style.display = 'none';
                 });
 
-                document.getElementById('process-bulk-abono-btn').addEventListener('click', async (e) => {
-                    if (e.target.disabled) return;
-                    e.target.disabled = true;
-
-                    const monto = parseFloat(document.getElementById('monto-bulk-abono').value) || 0;
-                    const grupoData = AppState.currentGrupoAbono;
-
-                    if (!grupoData) {
-                        UIService.showStatus("Error: No hay grupo seleccionado", "error");
-                        e.target.disabled = false;
-                        return;
-                    }
-
-                    if (monto <= 0) {
-                        UIService.showStatus("Ingrese un monto válido", "error");
-                        e.target.disabled = false;
-                        return;
-                    }
-
-                    if (monto > grupoData.total) {
-                        UIService.showStatus("El monto no puede ser mayor al saldo del grupo", "error");
-                        e.target.disabled = false;
-                        return;
-                    }
-
-                    try {
-                        UIService.showLoading(true);
-
-                        // Obtener todas las facturas del grupo
-                        const facturasIds = [];
-                        grupoData.equipos.forEach(equipoNum => {
-                            GrupoManager.equiposPendientes.forEach((equipo, key) => {
-                                if (equipo.numero === equipoNum && equipo.facturas) {
-                                    equipo.facturas.forEach(f => facturasIds.push(f.id));
-                                }
-                            });
-                        });
-
-                        if (facturasIds.length > 0) {
-                            await DataService.procesarAbonoMasivo(facturasIds, monto);
-                            UIService.showStatus(`Abono de $${monto.toFixed(2)} aplicado al grupo "${grupoData.nombre}"`, "success");
-                            document.getElementById('bulk-abono-modal').style.display = 'none';
-                            await GrupoManager.loadEquiposPendientes();
-                            await GrupoManager.actualizarTotalesGrupos();
-                            GrupoManager.updateUI();
-                        } else {
-                            UIService.showStatus("No se encontraron facturas para abonar", "error");
-                        }
-                    } catch (error) {
-                        UIService.showStatus("Error al procesar abono: " + error.message, "error");
-                    } finally {
-                        UIService.showLoading(false);
-                        e.target.disabled = false;
-                    }
-                });
+                // (Código duplicado eliminado para corregir error de abonos masivos)
 
                 // CORRECCIÓN 8: Cleanup al cerrar la página
                 window.addEventListener('beforeunload', () => {
