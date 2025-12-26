@@ -1589,24 +1589,28 @@
                 const ingresos = JSON.parse(localStorage.getItem('ingresosMototaxis')) || [];
                 const periodosSet = new Set();
                 
-                // Agregar período actual
-                if (periodoActual) {
-                    periodosSet.add(periodoActual.clave);
-                }
-                
                 // Agregar períodos de los ingresos
                 ingresos.forEach(ingreso => {
-                    if (ingreso.periodo) {
+                    if (ingreso.periodo && ingreso.periodo.trim() !== '') {
                         periodosSet.add(ingreso.periodo);
                     }
                 });
                 
+                // Agregar período actual si existe
+                if (periodoActual && periodoActual.clave) {
+                    periodosSet.add(periodoActual.clave);
+                }
+                
                 // Convertir a array y ordenar (más reciente primero)
                 const periodos = Array.from(periodosSet).sort((a, b) => {
-                    // Extraer fechas para ordenar
-                    const fechaA = a.split('_a_')[0];
-                    const fechaB = b.split('_a_')[0];
-                    return new Date(fechaB) - new Date(fechaA);
+                    try {
+                        // Extraer fechas para ordenar
+                        const fechaA = a.split('_a_')[0];
+                        const fechaB = b.split('_a_')[0];
+                        return new Date(fechaB) - new Date(fechaA);
+                    } catch (e) {
+                        return 0;
+                    }
                 });
                 
                 return periodos;
@@ -1619,19 +1623,38 @@
                 
                 let html = '';
                 
+                // Agregar botón para "Todos los períodos"
+                html += `
+                    <button class="periodo-btn ${!periodoFiltroDepositos ? 'active' : ''}" data-periodo="">
+                        Todos los períodos
+                    </button>
+                `;
+                
+                // Agregar botón para "Período Actual"
+                html += `
+                    <button class="periodo-btn ${periodoFiltroDepositos === 'actual' ? 'active' : ''}" data-periodo="actual">
+                        Período Actual
+                    </button>
+                `;
+                
+                // Agregar botones para períodos específicos
                 periodos.forEach(periodoKey => {
-                    const [inicioStr, finStr] = periodoKey.split('_a_');
-                    const inicio = new Date(inicioStr);
-                    const fin = new Date(finStr);
-                    
-                    const nombrePeriodo = `${formatoFechaLegibleCorta(inicio)} - ${formatoFechaLegibleCorta(fin)}`;
-                    const esActual = periodoActual && periodoKey === periodoActual.clave;
-                    
-                    html += `
-                        <button class="periodo-btn ${esActual ? 'active' : ''}" data-periodo="${periodoKey}">
-                            ${nombrePeriodo}${esActual ? ' (Actual)' : ''}
-                        </button>
-                    `;
+                    try {
+                        const [inicioStr, finStr] = periodoKey.split('_a_');
+                        const inicio = new Date(inicioStr);
+                        const fin = new Date(finStr);
+                        
+                        const nombrePeriodo = `${formatoFechaCorta(inicio)} - ${formatoFechaCorta(fin)}`;
+                        const esActual = periodoActual && periodoKey === periodoActual.clave;
+                        
+                        html += `
+                            <button class="periodo-btn ${periodoFiltroDepositos === periodoKey ? 'active' : ''}" data-periodo="${periodoKey}">
+                                ${nombrePeriodo}${esActual ? ' (Actual)' : ''}
+                            </button>
+                        `;
+                    } catch (e) {
+                        console.error('Error procesando período:', periodoKey, e);
+                    }
                 });
                 
                 periodosButtons.innerHTML = html;
@@ -1639,14 +1662,16 @@
                 // Agregar event listeners a los botones de período
                 document.querySelectorAll('.periodo-btn').forEach(btn => {
                     btn.addEventListener('click', function() {
+                        const periodoSeleccionado = this.getAttribute('data-periodo');
+                        
+                        // Establecer filtro de período
+                        periodoFiltroDepositos = periodoSeleccionado || '';
+                        document.getElementById('filtro-periodo-depositos').value = periodoFiltroDepositos;
+                        
                         // Remover clase active de todos los botones
                         document.querySelectorAll('.periodo-btn').forEach(b => b.classList.remove('active'));
                         // Agregar clase active al botón clickeado
                         this.classList.add('active');
-                        
-                        // Establecer filtro de período
-                        periodoFiltroDepositos = this.getAttribute('data-periodo');
-                        document.getElementById('filtro-periodo-depositos').value = periodoFiltroDepositos;
                         
                         // Recargar depósitos
                         cargarDepositosPorEquipo();
@@ -1655,7 +1680,7 @@
             }
 
             // Función para formatear fecha legible corta (solo día/mes)
-            function formatoFechaLegibleCorta(fecha) {
+            function formatoFechaCorta(fecha) {
                 if (typeof fecha === 'string') {
                     fecha = new Date(fecha);
                 }
@@ -2410,15 +2435,6 @@
                 return `${año}-${mes}-${dia}`;
             }
 
-            function formatoFechaCorta(fecha) {
-                if (typeof fecha === 'string') {
-                    fecha = new Date(fecha);
-                }
-                const dia = String(fecha.getDate()).padStart(2, '0');
-                const mes = String(fecha.getMonth() + 1).padStart(2, '0');
-                return `${dia}/${mes}`;
-            }
-
             // ===== FUNCIÓN DE DEPÓSITOS POR EQUIPO MEJORADA =====
             function cargarDepositosPorEquipo() {
                 const depositosListaEquipos = document.getElementById('depositos-lista-equipos');
@@ -2448,16 +2464,21 @@
                     let ingresosEquipo = ingresos.filter(ingreso => ingreso.equipo === equipo.numero);
 
                     // Aplicar filtro de período si está activo
-                    if (periodoFiltroDepositos) {
+                    if (periodoFiltroDepositos && periodoFiltroDepositos !== '') {
                         if (periodoFiltroDepositos === 'actual') {
                             // Filtrar por período actual
-                            ingresosEquipo = ingresosEquipo.filter(ingreso => 
-                                ingreso.periodo === periodoActual.clave
-                            );
-                        } else {
+                            if (periodoActual && periodoActual.inicioStr && periodoActual.finStr) {
+                                ingresosEquipo = ingresosEquipo.filter(ingreso => 
+                                    ingreso.fecha >= periodoActual.inicioStr && 
+                                    ingreso.fecha <= periodoActual.finStr
+                                );
+                            }
+                        } else if (periodoFiltroDepositos.includes('_a_')) {
                             // Filtrar por período específico
+                            const [inicioPeriodo, finPeriodo] = periodoFiltroDepositos.split('_a_');
                             ingresosEquipo = ingresosEquipo.filter(ingreso => 
-                                ingreso.periodo === periodoFiltroDepositos
+                                ingreso.fecha >= inicioPeriodo && 
+                                ingreso.fecha <= finPeriodo
                             );
                         }
                     }
@@ -2489,9 +2510,9 @@
 
                     // Obtener período mostrado
                     let periodoInfo = '';
-                    if (periodoFiltroDepositos === 'actual') {
+                    if (periodoFiltroDepositos === 'actual' && periodoActual) {
                         periodoInfo = `Período Actual: ${formatoFechaLegible(periodoActual.inicio)} - ${formatoFechaLegible(periodoActual.fin)}`;
-                    } else if (periodoFiltroDepositos) {
+                    } else if (periodoFiltroDepositos && periodoFiltroDepositos.includes('_a_')) {
                         const [inicioStr, finStr] = periodoFiltroDepositos.split('_a_');
                         periodoInfo = `Período: ${formatoFechaLegible(new Date(inicioStr))} - ${formatoFechaLegible(new Date(finStr))}`;
                     }
@@ -2513,7 +2534,10 @@
                 });
 
                 if (html === '') {
-                    html = '<div class="empty-message">No hay ingresos registrados para los equipos y período seleccionados.</div>';
+                    const mensaje = periodoFiltroDepositos ? 
+                        'No hay ingresos registrados para los equipos y período seleccionados.' :
+                        'No hay ingresos registrados para los equipos seleccionados.';
+                    html = `<div class="empty-message">${mensaje}</div>`;
                 }
 
                 depositosListaEquipos.innerHTML = html;
@@ -2546,6 +2570,7 @@
                     // Actualizar interfaces
                     cargarPanelRegistroRapido();
                     cargarDepositosPorEquipo(); // Recargar la vista actual
+                    cargarPeriodosDisponibles(); // Actualizar botones de períodos
                     
                     // Si este ingreso está en el calendario actual, actualizarlo
                     if (equipoSeleccionado && ingresoEliminado && 
@@ -2566,6 +2591,7 @@
                     // Actualizar interfaces
                     cargarPanelRegistroRapido();
                     cargarDepositosPorEquipo();
+                    cargarPeriodosDisponibles();
                     
                     if (equipoSeleccionado && ingresoEliminado && 
                         ingresoEliminado.equipo === equipoSeleccionado.numero) {
