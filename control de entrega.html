@@ -417,6 +417,7 @@
             bottom: 5px;
             right: 5px;
             -moz-appearance: textfield;
+            appearance: textfield;
         }
 
         .monto-input-simple::-webkit-outer-spin-button,
@@ -934,15 +935,17 @@
         /* VISTA PREVIA CALENDARIO */
         .vista-previa-calendario {
             margin-top: 20px;
-            border: 1px solid #ddd;
+            border: 1px solid #4a5568;
             border-radius: 5px;
             padding: 15px;
-            background-color: white;
+            background-color: #2d3748;
+            color: #e2e8f0;
         }
 
         .vista-previa-calendario h3 {
             margin-bottom: 15px;
             text-align: center;
+            color: #e2e8f0;
         }
 
         /* MODAL EDITAR EQUIPO */
@@ -1008,19 +1011,8 @@
         }
 
         .tabla-calendario-preview td.dia-descanso-preview {
-            background: #4a2c2c !important;
-            position: relative;
-        }
-
-        .tabla-calendario-preview td.dia-descanso-preview::after {
-            content: "DESCANSO";
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: #e53e3e;
-            font-weight: bold;
-            font-size: 0.7rem;
+            background: #2d3748 !important;
+            color: #a0aec0 !important;
         }
 
         .cuadro-dia-preview {
@@ -1043,175 +1035,197 @@
         }
 
         /* ===== ESTILOS DE IMPRESIÓN ===== */
+        @media screen {
+            #recibo-print {
+                display: none;
+            }
+        }
+
         @media print {
+
+            /* Ocultar todos los hijos directos del body excepto el recibo */
+            body>*:not(#recibo-print) {
+                display: none !important;
+            }
+
+            /* Configurar body */
+            body {
+                background: white !important;
+                margin: 0;
+                padding: 0;
+                height: auto;
+                width: 100%;
+                overflow: visible !important;
+            }
+
+            /* Mostrar y posicionar recibo */
+            #recibo-print {
+                display: block !important;
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: auto;
+                z-index: 9999;
+            }
+
+            /* Ajustes de impresión */
             * {
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
             }
 
-            body {
-                background: white !important;
-                margin: 0;
-                padding: 0;
-            }
-
-            .container,
-            header,
-            .tabs,
-            .tab-content>*:not(#recibo-print),
-            .no-print,
-            button,
-            #calendario-preview,
-            h2,
-            h3,
-            .filtros {
-                display: none !important;
-            }
-
-            #recibo-print {
-                display: block !important;
-                width: 100%;
-                max-width: 100%;
-                margin: 0;
-                padding: 10mm;
-            }
-
-            .recibo-mensual {
-                width: 100%;
-                font-family: 'Courier New', monospace;
-                font-size: 10pt;
-                color: black;
-            }
-
-            .encabezado-recibo {
-                text-align: center;
-                margin-bottom: 15px;
-                border-bottom: 2px solid black;
-                padding-bottom: 10px;
-            }
-
-            .encabezado-recibo .linea-1 {
-                font-size: 11pt;
-                font-weight: bold;
-                margin-bottom: 3px;
-            }
-
-            .encabezado-recibo .linea-2 {
-                font-size: 10pt;
-                font-weight: bold;
-                margin-bottom: 8px;
-            }
-
-            .encabezado-recibo .info-mes {
-                font-size: 10pt;
-                margin-top: 5px;
-            }
-
-            .contenedor-principal {
-                display: flex;
-                gap: 15px;
-                margin-top: 10px;
-            }
-
-            .columna-tabla {
-                flex: 2;
-            }
-
-            .columna-datos {
-                flex: 1;
-                display: flex;
-                flex-direction: column;
-                gap: 15px;
-            }
-
-            .tabla-dias {
-                width: 100%;
-                border-collapse: collapse;
-                font-size: 9pt;
-            }
-
-            .tabla-dias th {
-                background: #f0f0f0;
-                border: 1px solid black;
-                padding: 5px;
-                text-align: center;
-                font-weight: bold;
-            }
-
+            /* Estilos específicos para tabla de impresión */
+            .tabla-dias th,
             .tabla-dias td {
-                border: 1px solid black;
-                padding: 4px 6px;
-                text-align: center;
+                border: 1px solid black !important;
             }
 
-            .tabla-dias .col-dia {
-                width: 15%;
-            }
-
-            .tabla-dias .col-monto {
-                width: 25%;
-            }
-
-            .tabla-dias .col-observacion {
-                width: 60%;
-                text-align: left;
-            }
-
+            .monto-descanso,
             .dia-descanso-tabla {
-                background: #ffebee !important;
+                color: #000 !important;
+                background-color: white !important;
             }
+        }
 
-            .monto-descanso {
-                text-decoration: line-through;
-                color: #d32f2f;
-                font-weight: bold;
-            }
 
-            .datos-conductor {
-                border: 1px solid black;
-                padding: 10px;
-                font-size: 9pt;
-            }
 
-            .dato-item {
-                margin-bottom: 8px;
-                display: flex;
-                gap: 5px;
-            }
+        .recibo-mensual {
+            width: 100%;
+            font-family: 'Courier New', monospace;
+            font-size: 10pt;
+            color: black;
+        }
 
-            .dato-label {
-                font-weight: bold;
-                min-width: 60px;
-            }
+        .encabezado-recibo {
+            text-align: center;
+            margin-bottom: 15px;
+            border-bottom: 2px solid black;
+            padding-bottom: 10px;
+        }
 
-            .dato-valor {
-                flex: 1;
-            }
+        .encabezado-recibo .linea-1 {
+            font-size: 11pt;
+            font-weight: bold;
+            margin-bottom: 3px;
+        }
 
-            .seccion-firma {
-                margin-top: auto;
-            }
+        .encabezado-recibo .linea-2 {
+            font-size: 10pt;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
 
-            .total-recibo {
-                font-size: 11pt;
-                font-weight: bold;
-                text-align: right;
-                margin-bottom: 15px;
-                padding: 8px;
-                border: 2px solid black;
-                background: #f5f5f5;
-            }
+        .encabezado-recibo .info-mes {
+            font-size: 10pt;
+            margin-top: 5px;
+        }
 
-            .firma-recibo {
-                margin-top: 20px;
-                padding-top: 10px;
-            }
+        .contenedor-principal {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+        }
 
-            .linea-firma {
-                border-top: 1px solid black;
-                margin-top: 30px;
-                padding-top: 5px;
-            }
+        .columna-tabla {
+            flex: 2;
+        }
+
+        .columna-datos {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .tabla-dias {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 9pt;
+        }
+
+        .tabla-dias th {
+            background: #f0f0f0;
+            border: 1px solid black;
+            padding: 5px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .tabla-dias td {
+            border: 1px solid black;
+            padding: 4px 6px;
+            text-align: center;
+        }
+
+        .tabla-dias .col-dia {
+            width: 15%;
+        }
+
+        .tabla-dias .col-monto {
+            width: 25%;
+        }
+
+        .tabla-dias .col-observacion {
+            width: 60%;
+            text-align: left;
+        }
+
+        .dia-descanso-tabla {
+            background: #ffebee !important;
+        }
+
+        .monto-descanso {
+            text-decoration: line-through;
+            color: #d32f2f;
+            font-weight: bold;
+        }
+
+        .datos-conductor {
+            border: 1px solid black;
+            padding: 10px;
+            font-size: 9pt;
+        }
+
+        .dato-item {
+            margin-bottom: 8px;
+            display: flex;
+            gap: 5px;
+        }
+
+        .dato-label {
+            font-weight: bold;
+            min-width: 60px;
+        }
+
+        .dato-valor {
+            flex: 1;
+        }
+
+        .seccion-firma {
+            margin-top: auto;
+        }
+
+        .total-recibo {
+            font-size: 11pt;
+            font-weight: bold;
+            text-align: right;
+            margin-bottom: 15px;
+            padding: 8px;
+            border: 2px solid black;
+            background: #f5f5f5;
+        }
+
+        .firma-recibo {
+            margin-top: 20px;
+            padding-top: 10px;
+        }
+
+        .linea-firma {
+            border-top: 1px solid black;
+            margin-top: 30px;
+            padding-top: 5px;
+        }
         }
     </style>
 </head>
@@ -1372,12 +1386,13 @@
                 </div>
             </div>
 
-            <div class="vista-previa-calendario">
+            <div class="vista-previa-calendario" style="width: 100%; max-width: none;">
                 <h3>Vista Previa del Calendario</h3>
-                <div id="calendario-preview"></div>
+                <div id="calendario-preview" style="width: 100%;"></div>
             </div>
 
-            <button class="btn btn-warning mt-3" id="imprimir-calendario">Imprimir Calendario</button>
+            <button class="btn btn-warning mt-3" id="btn-imprimir-nuevo" onclick="prepararImpresion()">Imprimir
+                Calendario</button>
             <div class="recibo-print" id="recibo-print"></div>
         </div>
     </div>
@@ -1476,6 +1491,11 @@
         let periodoFiltroDepositos = null; // Nuevo: Para filtrar por período
 
         document.addEventListener('DOMContentLoaded', function () {
+            // FIX CRÍTICO IMPRESIÓN: Mover #recibo-print al body para que no se oculte
+            const reciboPrint = document.getElementById('recibo-print');
+            if (reciboPrint && reciboPrint.parentElement !== document.body) {
+                document.body.appendChild(reciboPrint);
+            }
             // Configurar pestañas
             const tabs = document.querySelectorAll('.tab');
             const tabContents = document.querySelectorAll('.tab-content');
@@ -1519,7 +1539,7 @@
             document.getElementById('guardar-modal').addEventListener('click', guardarEntregaModal);
             document.getElementById('guardar-equipo').addEventListener('click', guardarEquipo);
             document.getElementById('imprimir-todos-equipos').addEventListener('click', () => window.print());
-            document.getElementById('imprimir-calendario').addEventListener('click', () => window.print());
+            // Eliminado listener antiguo PRINT que causaba error
 
             // Modal editar equipo
             document.getElementById('cerrar-modal-editar').addEventListener('click', cerrarModalEditar);
@@ -1528,7 +1548,7 @@
 
             // Filtros
             document.getElementById('filtro-equipo-depositos').addEventListener('change', cargarDepositosPorEquipo);
-            document.getElementById('filtro-periodo-depositos').addEventListener('change', function() {
+            document.getElementById('filtro-periodo-depositos').addEventListener('change', function () {
                 periodoFiltroDepositos = this.value;
                 cargarDepositosPorEquipo();
             });
@@ -1588,19 +1608,19 @@
             function obtenerPeriodosDisponibles() {
                 const ingresos = JSON.parse(localStorage.getItem('ingresosMototaxis')) || [];
                 const periodosSet = new Set();
-                
+
                 // Agregar períodos de los ingresos
                 ingresos.forEach(ingreso => {
                     if (ingreso.periodo && ingreso.periodo.trim() !== '') {
                         periodosSet.add(ingreso.periodo);
                     }
                 });
-                
+
                 // Agregar período actual si existe
                 if (periodoActual && periodoActual.clave) {
                     periodosSet.add(periodoActual.clave);
                 }
-                
+
                 // Convertir a array y ordenar (más reciente primero)
                 const periodos = Array.from(periodosSet).sort((a, b) => {
                     try {
@@ -1612,7 +1632,7 @@
                         return 0;
                     }
                 });
-                
+
                 return periodos;
             }
 
@@ -1620,33 +1640,33 @@
             function cargarPeriodosDisponibles() {
                 const periodosButtons = document.getElementById('periodos-buttons');
                 const periodos = obtenerPeriodosDisponibles();
-                
+
                 let html = '';
-                
+
                 // Agregar botón para "Todos los períodos"
                 html += `
                     <button class="periodo-btn ${!periodoFiltroDepositos ? 'active' : ''}" data-periodo="">
                         Todos los períodos
                     </button>
                 `;
-                
+
                 // Agregar botón para "Período Actual"
                 html += `
                     <button class="periodo-btn ${periodoFiltroDepositos === 'actual' ? 'active' : ''}" data-periodo="actual">
                         Período Actual
                     </button>
                 `;
-                
+
                 // Agregar botones para períodos específicos
                 periodos.forEach(periodoKey => {
                     try {
                         const [inicioStr, finStr] = periodoKey.split('_a_');
                         const inicio = new Date(inicioStr);
                         const fin = new Date(finStr);
-                        
+
                         const nombrePeriodo = `${formatoFechaCorta(inicio)} - ${formatoFechaCorta(fin)}`;
                         const esActual = periodoActual && periodoKey === periodoActual.clave;
-                        
+
                         html += `
                             <button class="periodo-btn ${periodoFiltroDepositos === periodoKey ? 'active' : ''}" data-periodo="${periodoKey}">
                                 ${nombrePeriodo}${esActual ? ' (Actual)' : ''}
@@ -1656,23 +1676,23 @@
                         console.error('Error procesando período:', periodoKey, e);
                     }
                 });
-                
+
                 periodosButtons.innerHTML = html;
-                
+
                 // Agregar event listeners a los botones de período
                 document.querySelectorAll('.periodo-btn').forEach(btn => {
-                    btn.addEventListener('click', function() {
+                    btn.addEventListener('click', function () {
                         const periodoSeleccionado = this.getAttribute('data-periodo');
-                        
+
                         // Establecer filtro de período
                         periodoFiltroDepositos = periodoSeleccionado || '';
                         document.getElementById('filtro-periodo-depositos').value = periodoFiltroDepositos;
-                        
+
                         // Remover clase active de todos los botones
                         document.querySelectorAll('.periodo-btn').forEach(b => b.classList.remove('active'));
                         // Agregar clase active al botón clickeado
                         this.classList.add('active');
-                        
+
                         // Recargar depósitos
                         cargarDepositosPorEquipo();
                     });
@@ -1680,8 +1700,17 @@
             }
 
             // Función para formatear fecha legible corta (solo día/mes)
+            // Función para formatear fecha legible corta (solo día/mes)
             function formatoFechaCorta(fecha) {
+                // Manejo directo de strings YYYY-MM-DD para evitar problemas de zona horaria
+                if (typeof fecha === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(fecha.substring(0, 10))) {
+                    const parts = fecha.substring(0, 10).split('-');
+                    return `${parts[2]}/${parts[1]}`;
+                }
+
                 if (typeof fecha === 'string') {
+                    // Intento de parseo seguro agregando hora si falta
+                    if (fecha.length === 10) fecha += 'T00:00:00';
                     fecha = new Date(fecha);
                 }
                 const dia = String(fecha.getDate()).padStart(2, '0');
@@ -1691,7 +1720,14 @@
 
             // Función para formatear fecha legible completa
             function formatoFechaLegible(fecha) {
+                // Manejo directo de strings YYYY-MM-DD para evitar problemas de zona horaria
+                if (typeof fecha === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(fecha.substring(0, 10))) {
+                    const parts = fecha.substring(0, 10).split('-');
+                    return `${parts[2]}/${parts[1]}/${parts[0]}`;
+                }
+
                 if (typeof fecha === 'string') {
+                    if (fecha.length === 10) fecha += 'T00:00:00';
                     fecha = new Date(fecha);
                 }
                 const opciones = { day: '2-digit', month: '2-digit', year: 'numeric' };
@@ -1990,7 +2026,8 @@
                 if (!equipoSeleccionado) return;
 
                 diaSeleccionado = fecha;
-                const fechaObj = new Date(fecha);
+                // Agregar T00:00:00 para asegurar que se interprete como hora local y no UTC
+                const fechaObj = new Date(fecha + 'T00:00:00');
                 const montoPredeterminado = equipoSeleccionado.montoPredeterminado || 30;
 
                 const ingresos = JSON.parse(localStorage.getItem('ingresosMototaxis')) || [];
@@ -2019,12 +2056,16 @@
 
                 // Mostrar modal
                 document.getElementById('modal-registro').style.display = 'flex';
+
+                // Re-asegurar listener del botón guardar
+                document.getElementById('guardar-modal').onclick = guardarEntregaModal;
             }
 
             // Función para abrir modal de edición de entrega existente
             function abrirModalEditarEntrega(ingreso) {
                 diaSeleccionado = ingreso.fecha;
-                const fechaObj = new Date(ingreso.fecha);
+                // Agregar T00:00:00 para asegurar que se interprete como hora local y no UTC
+                const fechaObj = new Date(ingreso.fecha + 'T00:00:00');
 
                 document.getElementById('modal-titulo').textContent = 'Editar Entrega';
 
@@ -2038,6 +2079,9 @@
                 document.getElementById('modal-observacion').value = ingreso.observacion;
 
                 document.getElementById('modal-registro').style.display = 'flex';
+
+                // Re-asegurar listener del botón guardar
+                document.getElementById('guardar-modal').onclick = guardarEntregaModal;
             }
 
             // Función para cerrar modal
@@ -2061,6 +2105,12 @@
                     return;
                 }
 
+                // Validar que si el monto es 0, exista una observación
+                if (monto === 0 && (!observacion || observacion.trim() === '' || observacion === 'Sin observación')) {
+                    alert('Si el monto es $0, es obligatorio agregar una observación o justificación.');
+                    return;
+                }
+
                 // Confirmación doble
                 if (!confirm(`¿Confirmar registro de entrega?\n\nEquipo: ${equipoSeleccionado.numero}\nFecha: ${diaSeleccionado}\nMonto: $${monto}`)) {
                     return;
@@ -2068,8 +2118,16 @@
 
                 const montoPredeterminado = equipoSeleccionado.montoPredeterminado || 30;
 
+                // Buscar si existe un ingreso previo para mantener el ID y evitar duplicados
+                const ingresosLocal = JSON.parse(localStorage.getItem('ingresosMototaxis')) || [];
+                const ingresoPrevio = ingresosLocal.find(ing =>
+                    ing.equipo == equipoSeleccionado.numero && ing.fecha === diaSeleccionado
+                );
+
+                const idIngreso = ingresoPrevio ? ingresoPrevio.id : Date.now().toString();
+
                 const nuevoIngreso = {
-                    id: Date.now().toString(),
+                    id: idIngreso,
                     equipo: equipoSeleccionado.numero,
                     nombre: equipoSeleccionado.nombre,
                     fecha: diaSeleccionado,
@@ -2468,16 +2526,16 @@
                         if (periodoFiltroDepositos === 'actual') {
                             // Filtrar por período actual
                             if (periodoActual && periodoActual.inicioStr && periodoActual.finStr) {
-                                ingresosEquipo = ingresosEquipo.filter(ingreso => 
-                                    ingreso.fecha >= periodoActual.inicioStr && 
+                                ingresosEquipo = ingresosEquipo.filter(ingreso =>
+                                    ingreso.fecha >= periodoActual.inicioStr &&
                                     ingreso.fecha <= periodoActual.finStr
                                 );
                             }
                         } else if (periodoFiltroDepositos.includes('_a_')) {
                             // Filtrar por período específico
                             const [inicioPeriodo, finPeriodo] = periodoFiltroDepositos.split('_a_');
-                            ingresosEquipo = ingresosEquipo.filter(ingreso => 
-                                ingreso.fecha >= inicioPeriodo && 
+                            ingresosEquipo = ingresosEquipo.filter(ingreso =>
+                                ingreso.fecha >= inicioPeriodo &&
                                 ingreso.fecha <= finPeriodo
                             );
                         }
@@ -2534,7 +2592,7 @@
                 });
 
                 if (html === '') {
-                    const mensaje = periodoFiltroDepositos ? 
+                    const mensaje = periodoFiltroDepositos ?
                         'No hay ingresos registrados para los equipos y período seleccionados.' :
                         'No hay ingresos registrados para los equipos seleccionados.';
                     html = `<div class="empty-message">${mensaje}</div>`;
@@ -2571,9 +2629,9 @@
                     cargarPanelRegistroRapido();
                     cargarDepositosPorEquipo(); // Recargar la vista actual
                     cargarPeriodosDisponibles(); // Actualizar botones de períodos
-                    
+
                     // Si este ingreso está en el calendario actual, actualizarlo
-                    if (equipoSeleccionado && ingresoEliminado && 
+                    if (equipoSeleccionado && ingresoEliminado &&
                         ingresoEliminado.equipo === equipoSeleccionado.numero) {
                         generarCalendarioPeriodo();
                     }
@@ -2592,8 +2650,8 @@
                     cargarPanelRegistroRapido();
                     cargarDepositosPorEquipo();
                     cargarPeriodosDisponibles();
-                    
-                    if (equipoSeleccionado && ingresoEliminado && 
+
+                    if (equipoSeleccionado && ingresoEliminado &&
                         ingresoEliminado.equipo === equipoSeleccionado.numero) {
                         generarCalendarioPeriodo();
                     }
@@ -2628,20 +2686,51 @@
                 window.diasDescanso = {};
             }
 
-            // Función para toggle día de descanso
-            function toggleDescanso(clave, dia) {
+            // Función para toggle día de descanso (Global para acceso HTML)
+            window.toggleDescanso = function (clave, dia) {
                 if (!window.diasDescanso[clave]) {
                     window.diasDescanso[clave] = new Set();
                 }
 
-                if (window.diasDescanso[clave].has(dia)) {
-                    window.diasDescanso[clave].delete(dia);
+                // Lógica de Intercambio Semanal (Solo 1 descanso por semana)
+                // Obtenemos mes para calcular fecha real
+                const mesInput = document.getElementById('filtro-mes-calendario').value;
+                if (mesInput) {
+                    const [año, mes] = mesInput.split('-').map(Number);
+                    const fechaDia = new Date(año, mes - 1, dia);
+                    const diaSemana = fechaDia.getDay(); // 0 Dom - 6 Sab
+
+                    // Calcular rango de la semana (Domingo a Sábado)
+                    const inicioSemana = dia - diaSemana;
+                    const finSemana = dia + (6 - diaSemana);
+
+                    if (window.diasDescanso[clave].has(dia)) {
+                        // Si ya está marcado, lo desmarcamos (opcional, usuario pidió intercambiar, pero toggle es útil)
+                        window.diasDescanso[clave].delete(dia);
+                    } else {
+                        // Si vamos a marcar uno nuevo, desmarcamos cualquier otro en esta semana
+                        const descansosActuales = Array.from(window.diasDescanso[clave]);
+                        descansosActuales.forEach(d => {
+                            // Verificar si 'd' cae en la misma semana
+                            if (d >= inicioSemana && d <= finSemana) {
+                                window.diasDescanso[clave].delete(d);
+                            }
+                        });
+
+                        // Marcar el nuevo día
+                        window.diasDescanso[clave].add(dia);
+                    }
                 } else {
-                    window.diasDescanso[clave].add(dia);
+                    // Fallback simple si no hay fecha (no debería pasar)
+                    if (window.diasDescanso[clave].has(dia)) {
+                        window.diasDescanso[clave].delete(dia);
+                    } else {
+                        window.diasDescanso[clave].add(dia);
+                    }
                 }
 
                 generarRecibo();
-            }
+            };
 
             function generarRecibo() {
                 const mesSeleccionado = document.getElementById('filtro-mes-calendario').value;
@@ -2654,6 +2743,7 @@
                 }
 
                 const [año, mes] = mesSeleccionado.split('-').map(Number);
+                // Crear fechas usando UTC para evitar problemas de zona horaria en cálculo de día semana
                 const primerDia = new Date(año, mes - 1, 1);
                 const ultimoDia = new Date(año, mes, 0);
                 const diasEnMes = ultimoDia.getDate();
@@ -2661,7 +2751,7 @@
                 const equipos = JSON.parse(localStorage.getItem('equiposMototaxis')) || [];
                 const ingresos = JSON.parse(localStorage.getItem('ingresosMototaxis')) || [];
 
-                // Filtrar equipos si se seleccionó uno específico
+                // Filtrar equipos
                 let equiposFiltrados = equipos;
                 if (equipoFiltro) {
                     equiposFiltrados = equipos.filter(e => e.numero == equipoFiltro);
@@ -2674,81 +2764,92 @@
                 }
 
                 const claveDescanso = `${mesSeleccionado}_${equipoFiltro || 'todos'}`;
+
+                // Inicialización Automática de Descansos (Domingos)
                 if (!window.diasDescanso[claveDescanso]) {
                     window.diasDescanso[claveDescanso] = new Set();
-                }
-
-                // Generar vista previa interactiva
-                let htmlPreview = `
-                    <p style="margin-bottom: 10px; color: #e2e8f0;">
-                        <strong>Instrucciones:</strong> Haz click en cualquier día para marcarlo/desmarcarlo como día de descanso.
-                    </p>
-                    <table class="tabla-calendario-preview">
-                        <thead>
-                            <tr>
-                                <th>Dom</th><th>Lun</th><th>Mar</th><th>Mié</th><th>Jue</th><th>Vie</th><th>Sáb</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                `;
-
-                let diaSemana = primerDia.getDay();
-                let diaActual = 1;
-                let filaAbierta = false;
-
-                while (diaActual <= diasEnMes) {
-                    if (!filaAbierta) {
-                        htmlPreview += '<tr>';
-                        filaAbierta = true;
-                    }
-
-                    if (diaActual === 1) {
-                        for (let i = 0; i < diaSemana; i++) {
-                            htmlPreview += '<td></td>';
+                    // Marcar Domingos como descanso por defecto
+                    for (let d = 1; d <= diasEnMes; d++) {
+                        const fechaDia = new Date(año, mes - 1, d);
+                        if (fechaDia.getDay() === 0) { // 0 = Domingo
+                            window.diasDescanso[claveDescanso].add(d);
                         }
                     }
+                }
 
-                    const fechaStr = `${año}-${String(mes).padStart(2, '0')}-${String(diaActual).padStart(2, '0')}`;
+                // Generar vista previa con Diseño CSS Grid (Igual al principal)
+                let htmlPreview = `
+                    <p style="margin-bottom: 10px; color: #e2e8f0; text-align: center;">
+                        <strong>Vista Previa (Plantilla):</strong> Click en un día para marcar/desmarcar descanso ($0).
+                        <br>
+                        <span style="font-size: 0.85rem; color: #a0aec0;">Verde = Laboral ($30) | Gris = Descanso ($0)</span>
+                    </p>
+                    
+                    <div class="calendario-periodo" style="border: 1px solid #4a5568; margin-bottom: 20px; width: 100%;">
+                        <div class="dias-semana" style="display: grid; grid-template-columns: repeat(7, 1fr);">
+                            <div class="dia-semana">Dom</div>
+                            <div class="dia-semana">Lun</div>
+                            <div class="dia-semana">Mar</div>
+                            <div class="dia-semana">Mié</div>
+                            <div class="dia-semana">Jue</div>
+                            <div class="dia-semana">Vie</div>
+                            <div class="dia-semana">Sáb</div>
+                        </div>
+                        <div class="grid-dias-calendario">
+                `;
+
+                // Celdas vacías iniciales
+                const diaSemanaInicio = primerDia.getDay(); // 0 Domingo
+                for (let i = 0; i < diaSemanaInicio; i++) {
+                    htmlPreview += '<div class="dia-calendario fuera-periodo" style="background: #1a202c;"></div>';
+                }
+
+                // Días del mes
+                for (let diaActual = 1; diaActual <= diasEnMes; diaActual++) {
                     const esDescanso = window.diasDescanso[claveDescanso].has(diaActual);
 
-                    // Obtener ingresos del día
-                    let montoTotal = 0;
-                    if (equipoFiltro) {
-                        const ingreso = ingresos.find(i => i.fecha === fechaStr && i.equipo == equipoFiltro);
-                        montoTotal = ingreso ? ingreso.monto : 0;
+                    // Estilos según estado (Plantilla Ideal)
+                    // Registrado (Verde) si trabaja, Descanso (Gris oscuro/negro) si no
+                    // Usamos las clases del calendario principal para consistencia
+                    let claseDia = esDescanso ? 'descanso' : 'registrado';
+                    let estiloExtra = esDescanso ? 'background-color: #1a202c !important; color: #718096;' : 'cursor: pointer;';
+
+                    if (!esDescanso) {
+                        // Forzar estilo verde "registrado" manualmente si la clase no es suficiente o para diferenciar
+                        estiloExtra += 'background-color: #2f4f3f; border-left: 2px solid #48bb78;';
                     } else {
-                        const ingresosDia = ingresos.filter(i => i.fecha === fechaStr);
-                        montoTotal = ingresosDia.reduce((sum, i) => sum + i.monto, 0);
+                        estiloExtra += 'border: 1px solid #4a5568;';
                     }
+
+                    const montoMostrar = esDescanso ? 0 : 30;
 
                     htmlPreview += `
-                        <td class="${esDescanso ? 'dia-descanso-preview' : ''}" onclick="toggleDescanso('${claveDescanso}', ${diaActual})">
-                            <div class="cuadro-dia-preview">
-                                <div class="dia-numero-preview">${diaActual}</div>
-                                ${!esDescanso && montoTotal > 0 ? `<div class="dia-monto-preview">$${montoTotal}</div>` : ''}
+                        <div class="dia-calendario ${claseDia}" 
+                             style="${estiloExtra} min-height: 60px;"
+                             onclick="toggleDescanso('${claveDescanso}', ${diaActual})">
+                            
+                            <div class="numero-dia">${diaActual}</div>
+                            
+                            <div class="monto-preview-simple" style="
+                                position: absolute; 
+                                bottom: 5px; 
+                                right: 5px; 
+                                font-weight: bold; 
+                                color: ${esDescanso ? '#a0aec0' : '#48bb78'};
+                            ">
+                                $${montoMostrar}
                             </div>
-                        </td>
+                            
+                            ${esDescanso ? '<div style="font-size: 0.7rem; position: absolute; bottom: 5px; left: 5px; color: #a0aec0;">DESC</div>' : ''}
+                        </div>
                     `;
-
-                    diaSemana++;
-                    if (diaSemana === 7) {
-                        htmlPreview += '</tr>';
-                        filaAbierta = false;
-                        diaSemana = 0;
-                    }
-
-                    diaActual++;
                 }
 
-                if (filaAbierta) {
-                    while (diaSemana < 7) {
-                        htmlPreview += '<td></td>';
-                        diaSemana++;
-                    }
-                    htmlPreview += '</tr>';
-                }
+                htmlPreview += `
+                        </div>
+                    </div>
+                `;
 
-                htmlPreview += '</tbody></table>';
                 document.getElementById('calendario-preview').innerHTML = htmlPreview;
 
                 // Generar contenido de impresión
@@ -2768,18 +2869,19 @@
                     let filasTabla = '';
 
                     for (let dia = 1; dia <= diasEnMes; dia++) {
-                        const fechaStr = `${año}-${String(mes).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
-                        const ingreso = ingresos.find(i => i.fecha === fechaStr && i.equipo === equipo.numero);
+                        // Lógica SIMPLIFICADA: Días laborales = $30, Descanso = $0
+                        // Ignoramos montos reales de DB
                         const esDescanso = window.diasDescanso[claveDescanso] && window.diasDescanso[claveDescanso].has(dia);
 
                         let monto = 0;
-                        let observacion = '';
 
-                        if (!esDescanso && ingreso) {
-                            monto = ingreso.monto;
-                            observacion = ingreso.observacion || '';
-                            totalMes += monto;
+                        if (esDescanso) {
+                            monto = 0;
+                        } else {
+                            monto = 30; // Monto FIJO de $30
                         }
+
+                        totalMes += monto;
 
                         const claseDescanso = esDescanso ? 'dia-descanso-tabla' : '';
                         const claseMonto = esDescanso ? 'monto-descanso' : '';
@@ -2788,17 +2890,20 @@
                             <tr class="${claseDescanso}">
                                 <td class="col-dia">${dia}</td>
                                 <td class="col-monto ${claseMonto}">$${monto}</td>
-                                <td class="col-observacion">${esDescanso ? 'DESCANSO' : observacion}</td>
+                                <td class="col-observacion"></td> <!-- Observación siempre vacía -->
                             </tr>
                         `;
                     }
+
+                    // Formatear placa si es necesario (asegurar M)
+                    let placa = equipo.placa || 'N/A';
 
                     htmlPrint += `
                         <div class="recibo-mensual" style="page-break-after: always;">
                             <div class="encabezado-recibo">
                                 <div class="linea-1">RECIBO DE INGRESO EN CONCEPTO DE</div>
                                 <div class="linea-2">TRANSPORTE PÚBLICO ALTERNATIVO LOCAL</div>
-                                <div class="info-mes">Mes: ${nombreMes} ${año} | Equipo: ${equipo.numero}</div>
+                                <div class="info-mes">Mes: ${nombreMes} ${año}</div>
                             </div>
 
                             <div class="contenedor-principal">
@@ -2820,15 +2925,11 @@
                                 <div class="columna-datos">
                                     <div class="datos-conductor">
                                         <div class="dato-item">
-                                            <span class="dato-label">Equipo:</span>
-                                            <span class="dato-valor">${equipo.numero}</span>
-                                        </div>
-                                        <div class="dato-item">
                                             <span class="dato-label">Placa:</span>
-                                            <span class="dato-valor">${equipo.placa || 'N/A'}</span>
+                                            <span class="dato-valor">${placa}</span>
                                         </div>
                                         <div class="dato-item">
-                                            <span class="dato-label">Conductor:</span>
+                                            <span class="dato-label">Nombre:</span>
                                             <span class="dato-valor">${equipo.nombre || 'N/A'}</span>
                                         </div>
                                         <div class="dato-item">
@@ -2844,7 +2945,7 @@
                                         <div class="firma-recibo">
                                             <div style="text-align: center; margin-bottom: 5px;">Recibí conforme:</div>
                                             <div class="linea-firma" style="text-align: center;">
-                                                Firma del Conductor
+                                                Firma
                                             </div>
                                         </div>
                                     </div>
@@ -2856,6 +2957,110 @@
 
                 document.getElementById('recibo-print').innerHTML = htmlPrint;
             }
+
+            // ===== LÓGICA DE SELECCIÓN DE IMPRESIÓN =====
+
+            // Reemplazar listener cuando el documento esté listo
+            document.addEventListener('DOMContentLoaded', function () {
+                // setTimeout(() => {
+                const btnImprimir = document.getElementById('imprimir-calendario');
+                if (btnImprimir) {
+                    // Clonar para limpiar listeners previos
+                    const nuevoBtn = btnImprimir.cloneNode(true);
+                    btnImprimir.parentNode.replaceChild(nuevoBtn, btnImprimir);
+
+                    nuevoBtn.addEventListener('click', function () {
+                        const equipoFiltro = document.getElementById('filtro-equipo-calendario').value;
+                        if (!equipoFiltro) {
+                            iniciarSeleccionImpresion();
+                        } else {
+                            window.print();
+                        }
+                    });
+                }
+                // }, 1000); // Pequeño delay para asegurar carga
+            });
+
+            function iniciarSeleccionImpresion() {
+                const equipos = JSON.parse(localStorage.getItem('equiposMototaxis')) || [];
+                equipos.sort((a, b) => a.numero - b.numero);
+
+                const modalId = 'modal-seleccion-impresion';
+                let modal = document.getElementById(modalId);
+                if (modal) modal.remove();
+
+                const htmlEquipos = equipos.map(e => `
+                    <div style="margin-bottom: 8px;">
+                        <label style="display: flex; align-items: center; cursor: pointer; color: black;">
+                            <input type="checkbox" class="chk-impresion" value="${e.numero}" checked style="margin-right: 10px;">
+                            <span>Equipo ${e.numero} - ${e.nombre}</span>
+                        </label>
+                    </div>
+                `).join('');
+
+                const modalHtml = `
+                    <div class="modal-overlay" id="${modalId}" style="display: flex; z-index: 10000;">
+                        <div class="modal-contenido" style="max-width: 400px; background: white; color: black;">
+                            <div class="modal-header">
+                                <h3 style="color: black;">Seleccionar Equipos a Imprimir</h3>
+                                <button class="modal-cerrar" onclick="document.getElementById('${modalId}').remove()">&times;</button>
+                            </div>
+                            <div class="modal-body" style="max-height: 300px; overflow-y: auto;">
+                                <div style="margin-bottom: 10px;">
+                                    <button class="btn btn-secondary btn-sm" onclick="document.querySelectorAll('.chk-impresion').forEach(c => c.checked = true)">Todos</button>
+                                    <button class="btn btn-secondary btn-sm" onclick="document.querySelectorAll('.chk-impresion').forEach(c => c.checked = false)">Ninguno</button>
+                                </div>
+                                ${htmlEquipos}
+                            </div>
+                            <div class="modal-footer">
+                                <button class="btn btn-secondary" onclick="document.getElementById('${modalId}').remove()">Cancelar</button>
+                                <button class="btn btn-primary" id="btn-confirmar-impresion">Imprimir Seleccionados</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+                document.getElementById('btn-confirmar-impresion').addEventListener('click', function () {
+                    const seleccionados = Array.from(document.querySelectorAll('.chk-impresion:checked')).map(c => c.value);
+
+                    if (seleccionados.length === 0) {
+                        alert('Seleccione al menos un equipo.');
+                        return;
+                    }
+
+                    // Regenerar impresión con filtro
+                    const equiposFiltrados = equipos.filter(e => seleccionados.includes(e.numero.toString()));
+
+                    const mesSeleccionado = document.getElementById('filtro-mes-calendario').value;
+                    const [año, mes] = mesSeleccionado.split('-').map(Number);
+                    const diasEnMes = new Date(año, mes, 0).getDate();
+                    const ingresos = JSON.parse(localStorage.getItem('ingresosMototaxis')) || [];
+                    const claveDescanso = `${mesSeleccionado}_todos`;
+
+                    generarContenidoImpresion(equiposFiltrados, año, mes, diasEnMes, ingresos, claveDescanso);
+
+                    document.getElementById(modalId).remove();
+
+                    setTimeout(() => window.print(), 500);
+                });
+            }
+
+            // INYECCIÓN FINAL DE FUNCIÓN GLOBAL (Asegura funcionamiento)
+            window.prepararImpresion = function () {
+                const equipoFiltro = document.getElementById('filtro-equipo-calendario').value;
+                if (!equipoFiltro) {
+                    iniciarSeleccionImpresion();
+                } else {
+                    // Mover recibo al body si es necesario
+                    const recibo = document.getElementById('recibo-print');
+                    if (recibo && recibo.parentElement !== document.body) {
+                        document.body.appendChild(recibo);
+                    }
+                    window.print();
+                }
+            };
         });
     </script>
 </body>
