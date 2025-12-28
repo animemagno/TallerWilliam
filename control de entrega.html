@@ -1385,7 +1385,7 @@
                 </div>
             </div>
 
-            <div class="vista-previa-calendario" style="width: 100%; max-width: none;">
+            <div class="vista-previa-calendario" style="max-width: 400px; margin: 0 auto; font-size: 0.9rem;">
                 <h3>Vista Previa del Calendario</h3>
                 <div id="calendario-preview" style="width: 100%;"></div>
             </div>
@@ -1799,7 +1799,9 @@
                         const esPasado = new Date(d) < hoy;
 
                         if (!tieneIngreso && esPasado) {
-                            fechasPendientes.push(formatoFechaCorta(new Date(d)));
+                            // Mostrar solo el día (ej: 24, 25) en lugar de fecha completa
+                            const diaPendiente = fechaStr.split('-')[2];
+                            fechasPendientes.push(parseInt(diaPendiente));
                         }
                     }
 
