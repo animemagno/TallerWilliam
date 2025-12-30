@@ -2013,11 +2013,9 @@
                         if (e.target.classList.contains('monto-input-simple')) return;
 
                         const fecha = this.getAttribute('data-fecha');
-                        // Buscar input dentro del día para obtener monto sugerido
-                        const input = this.querySelector('.monto-input-simple');
-                        const monto = input ? (parseInt(input.value) || 0) : 0;
-
-                        abrirModalRegistro(fecha, monto);
+                        // Al hacer clic en el día (y no en el input), ignoramos el valor visual del input
+                        // y forzamos el uso del monto predeterminado actual del equipo (pasando null).
+                        abrirModalRegistro(fecha, null);
                     });
                 });
             }
