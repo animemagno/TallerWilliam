@@ -1535,7 +1535,7 @@
             document.getElementById('cerrar-calendario').addEventListener('click', cerrarCalendario);
             document.getElementById('cerrar-modal').addEventListener('click', cerrarModal);
             document.getElementById('cancelar-modal').addEventListener('click', cerrarModal);
-            document.getElementById('guardar-modal').addEventListener('click', guardarEntregaModal);
+
             document.getElementById('guardar-equipo').addEventListener('click', guardarEquipo);
             document.getElementById('imprimir-todos-equipos').addEventListener('click', () => window.print());
             // Eliminado listener antiguo PRINT que causaba error
@@ -2091,10 +2091,24 @@
                 diaSeleccionado = null;
             }
 
+            // Variable global para evitar doble guardado
+            let isSavingEntry = false;
+
             // Función para guardar entrega desde modal
             async function guardarEntregaModal() {
+                if (isSavingEntry) return;
+
+                const btnGuardar = document.getElementById('guardar-modal');
+                if (btnGuardar.disabled) return;
+
+                // Set lock
+                isSavingEntry = true;
+                btnGuardar.disabled = true;
+
                 if (!equipoSeleccionado || !diaSeleccionado) {
                     alert('Error: No hay equipo o día seleccionado');
+                    isSavingEntry = false;
+                    btnGuardar.disabled = false;
                     return;
                 }
 
@@ -2103,77 +2117,90 @@
 
                 if (monto < 0) {
                     alert('El monto no puede ser negativo');
+                    isSavingEntry = false;
+                    btnGuardar.disabled = false;
                     return;
                 }
 
                 // Validar que si el monto es 0, exista una observación
                 if (monto === 0 && (!observacion || observacion.trim() === '' || observacion === 'Sin observación')) {
                     alert('Si el monto es $0, es obligatorio agregar una observación o justificación.');
+                    isSavingEntry = false;
+                    btnGuardar.disabled = false;
                     return;
                 }
 
                 // Confirmación doble
                 if (!confirm(`¿Confirmar registro de entrega?\n\nEquipo: ${equipoSeleccionado.numero}\nFecha: ${diaSeleccionado}\nMonto: $${monto}`)) {
+                    isSavingEntry = false;
+                    btnGuardar.disabled = false;
                     return;
                 }
 
-                const montoPredeterminado = equipoSeleccionado.montoPredeterminado || 30;
+                btnGuardar.textContent = 'Guardando...';
 
-                // Buscar si existe un ingreso previo para mantener el ID y evitar duplicados
-                const ingresosLocal = JSON.parse(localStorage.getItem('ingresosMototaxis')) || [];
-                const ingresoPrevio = ingresosLocal.find(ing =>
-                    ing.equipo == equipoSeleccionado.numero && ing.fecha === diaSeleccionado
-                );
+                try {
+                    const montoPredeterminado = equipoSeleccionado.montoPredeterminado || 30;
 
-                const idIngreso = ingresoPrevio ? ingresoPrevio.id : Date.now().toString();
-
-                const nuevoIngreso = {
-                    id: idIngreso,
-                    equipo: equipoSeleccionado.numero,
-                    nombre: equipoSeleccionado.nombre,
-                    fecha: diaSeleccionado,
-                    monto: monto,
-                    montoPredeterminado: montoPredeterminado,
-                    observacion: observacion,
-                    periodo: periodoActual.inicioStr + '_a_' + periodoActual.finStr,
-                    fechaRegistro: formatoFechaSQL(new Date())
-                };
-
-                // Guardar en Firebase
-                const exito = await guardarEnFirebase('ingresos', nuevoIngreso, nuevoIngreso.id);
-
-                if (exito) {
-                    // Guardar localmente
-                    let ingresos = JSON.parse(localStorage.getItem('ingresosMototaxis')) || [];
-
-                    // Eliminar ingreso existente si lo hay
-                    ingresos = ingresos.filter(ing =>
-                        !(ing.equipo === equipoSeleccionado.numero && ing.fecha === diaSeleccionado)
+                    // Buscar si existe un ingreso previo para mantener el ID y evitar duplicados
+                    const ingresosLocal = JSON.parse(localStorage.getItem('ingresosMototaxis')) || [];
+                    const ingresoPrevio = ingresosLocal.find(ing =>
+                        ing.equipo == equipoSeleccionado.numero && ing.fecha === diaSeleccionado
                     );
 
-                    ingresos.push(nuevoIngreso);
-                    localStorage.setItem('ingresosMototaxis', JSON.stringify(ingresos));
+                    const idIngreso = ingresoPrevio ? ingresoPrevio.id : Date.now().toString();
 
-                    // Actualizar UI
-                    generarCalendarioPeriodo();
-                    cargarPanelRegistroRapido();
+                    const nuevoIngreso = {
+                        id: idIngreso,
+                        equipo: equipoSeleccionado.numero,
+                        nombre: equipoSeleccionado.nombre,
+                        fecha: diaSeleccionado,
+                        monto: monto,
+                        montoPredeterminado: montoPredeterminado,
+                        observacion: observacion,
+                        periodo: periodoActual.inicioStr + '_a_' + periodoActual.finStr,
+                        fechaRegistro: formatoFechaSQL(new Date())
+                    };
 
-                    cerrarModal();
-                    alert('Entrega registrada correctamente');
-                } else {
-                    alert('Error al guardar la entrega. Los datos se guardarán localmente.');
+                    // Guardar en Firebase
+                    const exito = await guardarEnFirebase('ingresos', nuevoIngreso, nuevoIngreso.id);
 
-                    // Guardar solo localmente
-                    let ingresos = JSON.parse(localStorage.getItem('ingresosMototaxis')) || [];
-                    ingresos = ingresos.filter(ing =>
-                        !(ing.equipo === equipoSeleccionado.numero && ing.fecha === diaSeleccionado)
-                    );
-                    ingresos.push(nuevoIngreso);
-                    localStorage.setItem('ingresosMototaxis', JSON.stringify(ingresos));
+                    if (exito) {
+                        // Guardar localmente
+                        let ingresos = JSON.parse(localStorage.getItem('ingresosMototaxis')) || [];
+                        ingresos = ingresos.filter(ing =>
+                            !(ing.equipo === equipoSeleccionado.numero && ing.fecha === diaSeleccionado)
+                        );
+                        ingresos.push(nuevoIngreso);
+                        localStorage.setItem('ingresosMototaxis', JSON.stringify(ingresos));
 
-                    generarCalendarioPeriodo();
-                    cargarPanelRegistroRapido();
-                    cerrarModal();
+                        generarCalendarioPeriodo();
+                        cargarPanelRegistroRapido();
+
+                        cerrarModal();
+                        alert('Entrega registrada correctamente');
+                    } else {
+                        alert('Error al guardar la entrega. Los datos se guardarán localmente.');
+
+                        // Guardar solo localmente
+                        let ingresos = JSON.parse(localStorage.getItem('ingresosMototaxis')) || [];
+                        ingresos = ingresos.filter(ing =>
+                            !(ing.equipo === equipoSeleccionado.numero && ing.fecha === diaSeleccionado)
+                        );
+                        ingresos.push(nuevoIngreso);
+                        localStorage.setItem('ingresosMototaxis', JSON.stringify(ingresos));
+
+                        generarCalendarioPeriodo();
+                        cargarPanelRegistroRapido();
+                        cerrarModal();
+                    }
+                } catch (e) {
+                    console.error(e);
+                    alert('Error inesperado al guardar.');
+                } finally {
+                    isSavingEntry = false;
+                    btnGuardar.disabled = false;
+                    btnGuardar.textContent = 'Guardar Entrega';
                 }
             }
 
