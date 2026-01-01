@@ -2697,7 +2697,7 @@
                     }
                 } catch (error) {
                     console.error("Error cargando ventas:", error);
-                    return [];
+                    throw error;
                 }
             },
 
@@ -2939,7 +2939,7 @@
                     }
                 } catch (error) {
                     console.error("Error cargando retiros:", error);
-                    return [];
+                    throw error;
                 }
             },
 
@@ -2999,7 +2999,7 @@
                     }
                 } catch (error) {
                     console.error("Error cargando ingresos:", error);
-                    return [];
+                    throw error;
                 }
             },
 
@@ -3047,7 +3047,7 @@
                     }).slice(0, limit);
                 } catch (error) {
                     console.error("Error loading all movements:", error);
-                    return [];
+                    throw error;
                 }
             },
 
@@ -3605,6 +3605,26 @@
                 dropdown.style.display = 'block';
             },
 
+            getGroupColor(groupName) {
+                // Lista de términos que identifican a ventas locales (fondo blanco)
+                const locales = ['CLIENTE GENERAL', 'LOCAL', 'TALLER', 'SIN GRUPO', 'NINGUNO', 'GENERAL'];
+                const nombreNormalizado = groupName ? groupName.toUpperCase().trim() : '';
+
+                if (!groupName || locales.includes(nombreNormalizado) || nombreNormalizado.includes('EQUIPO')) return '#ffffff';
+
+                let hash = 0;
+                for (let i = 0; i < groupName.length; i++) {
+                    hash = groupName.charCodeAt(i) + ((hash << 5) - hash);
+                }
+
+                // Generar color pastel con HSL
+                // Hue: hash % 360
+                // Saturation: 70% (fixed)
+                // Lightness: 93% (muy claro para asegurar legibilidad)
+                const h = Math.abs(hash % 360);
+                return `hsl(${h}, 70%, 93%)`;
+            },
+
             updateHistorial(movimientos) {
                 const historialBody = document.getElementById('historial-body');
                 AppState.historial = movimientos;
@@ -3881,7 +3901,7 @@
                                         <div class="cliente-nombre" style="font-size: 0.85em; margin-bottom: 0;">
                                             Abono <a href="#" onclick="event.preventDefault(); SalesService.viewInvoice('${movimiento.invoiceId || movimiento.invoiceNumber}');" style="color: #7f8c8d; text-decoration: underline;">
                                                 #${movimiento.invoiceNumber}
-                                            </a>
+                                            </a> - <strong>${movimiento.clientName || ''}</strong>
                                         </div>
                                     </div>
                                 </td>
@@ -3912,6 +3932,7 @@
                     } else {
                         // Es una VENTA
                         const venta = movimiento;
+                        const rowColor = this.getGroupColor(venta.clientName);
                         let estadoReal = venta.paymentType;
                         let tipoClass = 'pendiente-badge';
                         let tipoTexto = 'PENDIENTE';
@@ -3989,7 +4010,7 @@
                         }
 
                         historialHTML += `
-                            <tr>
+                            <tr style="background-color: ${rowColor};">
                                 <td>
                                     <a href="#" onclick="event.preventDefault(); SalesService.viewInvoice('${venta.id}');" style="color: #2c3e50; text-decoration: none; font-weight: bold;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">
                                         #${venta.invoiceNumber}
