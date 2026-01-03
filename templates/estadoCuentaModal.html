@@ -1,0 +1,25 @@
+<!-- ================================
+     MODAL DE ESTADO DE CUENTA
+     Insertar antes del cierre de </body>
+     ================================ -->
+<div id="estado-cuenta-modal">
+    <div class="estado-cuenta-content">
+        <div class="estado-cuenta-modal-header">
+            <h2>📊 Estado de Cuenta</h2>
+            <button class="btn-cerrar-modal" onclick="cerrarEstadoCuentaModal()">&times;</button>
+        </div>
+
+        <div id="estado-cuenta-contenido">
+            <!-- El contenido se genera dinámicamente -->
+        </div>
+
+        <div class="estado-cuenta-modal-footer">
+            <button class="btn-modal btn-modal-secondary" onclick="cerrarEstadoCuentaModal()">
+                ❌ Cerrar
+            </button>
+            <button class="btn-modal btn-modal-primary" id="btn-imprimir-estado-cuenta">
+                🖨️ Imprimir
+            </button>
+        </div>
+    </div>
+</div>

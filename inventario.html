@@ -789,6 +789,98 @@
         .step-indicator.done {
             color: var(--success-color);
         }
+
+        /* Estilos para Tabla de Entrada y Sugerencias */
+        .entry-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        .entry-table th {
+            background-color: var(--medium-gray);
+            padding: 8px;
+            text-align: left;
+            font-size: 0.85rem;
+            color: var(--dark-gray);
+        }
+
+        .entry-table td {
+            padding: 5px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .entry-input {
+            width: 100%;
+            padding: 5px;
+            border: 1px solid var(--border-color);
+            border-radius: 3px;
+        }
+
+        .entry-footer {
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: var(--light-gray);
+            padding: 15px;
+            border-radius: 5px;
+        }
+
+        .entry-totals {
+            text-align: right;
+            font-size: 1.1em;
+        }
+
+        .search-helper-btn {
+            background: none;
+            border: none;
+            color: var(--info-color);
+            cursor: pointer;
+        }
+
+        .suggestions-box {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: white;
+            border: 1px solid #ccc;
+            z-index: 1000;
+            width: 100%;
+            min-width: 250px;
+            max-height: 200px;
+            overflow-y: auto;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-radius: 0 0 5px 5px;
+        }
+
+        .suggestion-item {
+            padding: 8px 10px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+            font-size: 0.9rem;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .suggestion-item:hover,
+        .suggestion-item.active {
+            background-color: #e2e8f0;
+        }
+
+        .suggestion-code {
+            font-weight: bold;
+            color: var(--dark-gray);
+        }
+
+        .suggestion-desc {
+            color: #555;
+        }
+
+        .suggestion-price {
+            color: var(--success-color);
+            font-family: monospace;
+        }
     </style>
 </head>
 
@@ -807,25 +899,83 @@
 
         <div class="floating-notification" id="floating-notification"></div>
 
+        <!-- Modal Registrar Entrada (Factura) - MOVIDO AQUÍ PARA EVITAR CONFLICTOS -->
+        <div class="modal" id="entry-modal" style="display: none; z-index: 3000;">
+            <div class="modal-content" style="max-width: 900px;">
+                <h2>Registrar Entrada de Inventario</h2>
+
+                <div
+                    style="display: flex; justify-content: space-between; margin-bottom: 15px; background: #f8f9fa; padding: 10px; border-radius: 5px; border: 1px solid #ddd;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <input type="checkbox" id="entry-has-iva" onchange="calculateEntryTotals()"
+                            style="width: 20px; height: 20px;">
+                        <label for="entry-has-iva" style="font-weight: bold; cursor: pointer;">Precios incluyen IVA
+                            (+13%)</label>
+                    </div>
+                    <div>
+                        <!-- Botón JSON eliminado -->
+                    </div>
+                </div>
+
+                <div style="max-height: 400px; overflow-y: auto;">
+                    <table class="entry-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 15%">Código</th>
+                                <th style="width: 35%">Descripción</th>
+                                <th style="width: 10%">Cant.</th>
+                                <th style="width: 15%">P. Unitario</th>
+                                <th style="width: 15%">Total</th>
+                                <th style="width: 5%"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="entry-rows"></tbody>
+                    </table>
+                    <button class="btn btn-secondary" onclick="addEntryRow()"
+                        style="margin-top: 10px; width: 100%; border: 1px dashed #ccc;">
+                        <i class="fas fa-plus"></i> Agregar Fila
+                    </button>
+                </div>
+
+                <div class="entry-footer">
+                    <div class="form-group" style="width: 300px; margin-bottom: 0;">
+                        <label>Referencia / Factura #</label>
+                        <input type="text" id="entry-reference" placeholder="Ej: Factura F001-234">
+                    </div>
+                    <div class="entry-totals">
+                        <div>Subtotal: <strong id="entry-subtotal">$0.00</strong></div>
+                        <div>IVA (13%): <strong id="entry-iva">$0.00</strong></div>
+                        <div style="font-size: 1.3em; color: var(--dark-gray); margin-top: 5px;">Total Compra: <strong
+                                id="entry-total">$0.00</strong></div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-danger"
+                        onclick="document.getElementById('entry-modal').style.display='none'">Cancelar</button>
+                    <button type="button" class="btn btn-success" onclick="saveEntry()">Guardar Entrada</button>
+                </div>
+            </div>
+        </div>
+
         <div class="controls">
             <div class="search-box">
-                <input type="text" id="search-input" placeholder="Buscar producto...">
+                <input type="text" id="search-input" placeholder="Buscar por código, descripción..."
+                    onkeyup="filterInventory()">
             </div>
-            <button class="btn btn-primary" id="add-product-btn">Agregar Producto</button>
-            <button class="btn btn-success" id="order-btn">Ingresar Pedido</button>
-            <!-- Input oculto para importación directa -->
+            <!-- Botones eliminados por solicitud del usuario, excepto Borrar Todo -->
+            <button class="btn btn-success" onclick="openEntryModal()">
+                <i class="fas fa-file-invoice"></i> Registrar Entrada
+            </button>
+            <!-- Restaurado: Importación de Excel -->
             <input type="file" id="hidden-import-input" accept=".xlsx, .xls, .json" style="display:none"
-                onchange="handleImportFileSelect(this)">
+                onchange="importExcelNew(this)">
             <button class="btn btn-warning" id="import-excel-btn"
                 onclick="document.getElementById('hidden-import-input').click()">
                 <i class="fas fa-file-import"></i> Importar Excel
             </button>
-            <button class="btn btn-info" id="export-excel-btn" onclick="exportToExcel()">Exportar Excel</button>
             <button class="btn btn-danger" onclick="deleteAllInventory()" title="Eliminar todo el inventario">
                 <i class="fas fa-trash-alt"></i> Borrar Todo
-            </button>
-            <button class="btn btn-info" id="smart-import-btn" style="background-color: #8e44ad; color: white;">
-                <i class="fas fa-brain"></i> Conciliación Inteligente
             </button>
         </div>
 
@@ -963,6 +1113,9 @@
             </div>
         </div>
     </div>
+
+    <!-- Modal Registrar Entrada (Factura) -->
+
 
     <!-- Modal Smart Conciliation -->
     <div class="modal" id="smart-import-modal">
@@ -1109,6 +1262,9 @@
             </div>
         </div>
     </div>
+
+
+
 
     <script>
         // Configuración de Firebase
@@ -1865,7 +2021,7 @@
                                 descripcion: row['Descripcion según inventario'] || row['Descripcion'] || 'Sin descripción',
                                 descripcionTaller: row['Descripcion según factura'] || '',
                                 marca: row['Marca'] || 'General',
-                                cantidad: parseInt(row['Existencia Diciembre'] || row['Existencia'] || 0),
+                                cantidad: parseInt(row['Existencia Diciembre'] || row['Existencia'] || row['STOCK'] || row['Stock'] || row['Cantidad'] || row['stock'] || 0),
                                 minStock: 5,
                                 costo: parseFloat(row['Precio costo'] || 0),
                                 precio: parseFloat(row['Precio de venta'] || row['Precio'] || 0),
@@ -2003,7 +2159,7 @@
         }
 
         // Manejador de selección de archivo para importación directa
-        async function handleImportFileSelect(input) {
+        async function handleImportFileSelect_OLD_DISABLED(input) {
             if (!input.files || !input.files[0]) return;
 
             const file = input.files[0];
@@ -2213,6 +2369,409 @@
             } else {
                 reader.readAsBinaryString(file);
             }
+        }
+
+        // --- FUNCIONES DE ENTRADA Y AUTOCOMPLETADO ---
+
+        function openEntryModal() {
+            const modal = document.getElementById('entry-modal');
+            modal.style.display = 'flex';
+            modal.style.zIndex = "3000"; // Asegurar que quede encima de todo
+            document.getElementById('entry-rows').innerHTML = '';
+            document.getElementById('entry-reference').value = '';
+            document.getElementById('entry-has-iva').checked = true;
+            addEntryRow();
+            calculateEntryTotals();
+        }
+
+        function addEntryRow(data = null) {
+            const tbody = document.getElementById('entry-rows');
+            const row = document.createElement('tr');
+
+            const codigo = data ? (data.codigo || '') : '';
+            const desc = data ? (data.descripcion || '') : '';
+            const cant = data ? (data.cantidad || '') : '';
+            const precio = data ? (data.precio || '') : '';
+
+            row.dataset.productId = data ? (data.id || '') : '';
+
+            row.innerHTML = `
+                <td>
+                    <div style="position: relative;">
+                        <input type="text" class="entry-input entry-code" value="${codigo}" 
+                            placeholder="Cod" onkeyup="searchProduct(this, 'code')" autocomplete="off">
+                        <button class="search-helper-btn" onclick="openProductLookup(this)" style="position: absolute; right: 5px; top: 5px;">
+                            <i class="fas fa-search"></i>
+                        </button>
+                        <div class="suggestions-container"></div>
+                    </div>
+                </td>
+                <td>
+                     <div style="position: relative;">
+                        <input type="text" class="entry-input entry-desc" value="${desc}" 
+                            placeholder="Descripción" onkeyup="searchProduct(this, 'desc')" autocomplete="off">
+                        <div class="suggestions-container"></div>
+                    </div>
+                </td>
+                <td><input type="number" class="entry-input entry-qty" value="${cant}" min="1" placeholder="0" onchange="calculateEntryTotals()" onkeyup="calculateEntryTotals()"></td>
+                <td><input type="number" class="entry-input entry-price" value="${precio}" min="0" step="0.01" placeholder="0.00" onchange="calculateEntryTotals()" onkeyup="calculateEntryTotals()"></td>
+                <td style="text-align: right; font-weight: bold;" class="entry-row-total">$0.00</td>
+                <td style="text-align: center;">
+                    <button class="btn-danger" style="border:none; border-radius:3px; padding: 2px 6px; cursor:pointer;" onclick="this.closest('tr').remove(); calculateEntryTotals();"><i class="fas fa-times"></i></button>
+                </td>
+            `;
+            tbody.appendChild(row);
+
+            document.addEventListener('click', function (e) {
+                if (!e.target.closest('.suggestions-box') && !e.target.closest('.entry-input')) closeAllSuggestions();
+            });
+
+            if (!data) setTimeout(() => row.querySelector('.entry-code').focus(), 50);
+        }
+
+        function calculateEntryTotals() {
+            const rows = document.querySelectorAll('#entry-rows tr');
+            let subtotal = 0;
+            const includesIva = document.getElementById('entry-has-iva').checked;
+
+            rows.forEach(row => {
+                const qty = parseFloat(row.querySelector('.entry-qty').value) || 0;
+                const price = parseFloat(row.querySelector('.entry-price').value) || 0;
+                let rowTotal = qty * price;
+                row.querySelector('.entry-row-total').textContent = '$' + rowTotal.toFixed(2);
+                subtotal += rowTotal;
+            });
+
+            let finalSubtotal = 0, finalIVA = 0, finalTotal = 0;
+
+            if (includesIva) {
+                finalTotal = subtotal;
+                finalSubtotal = finalTotal / 1.13;
+                finalIVA = finalTotal - finalSubtotal;
+            } else {
+                finalSubtotal = subtotal;
+                finalIVA = finalSubtotal * 0.13;
+                finalTotal = finalSubtotal + finalIVA;
+            }
+
+            document.getElementById('entry-subtotal').textContent = '$' + finalSubtotal.toFixed(2);
+            document.getElementById('entry-iva').textContent = '$' + finalIVA.toFixed(2);
+            document.getElementById('entry-total').textContent = '$' + finalTotal.toFixed(2);
+        }
+
+        function searchProduct(input, type) {
+            const query = input.value.trim().toLowerCase();
+            const container = input.nextElementSibling.classList.contains('search-helper-btn') ? input.nextElementSibling.nextElementSibling : input.nextElementSibling;
+            container.innerHTML = '';
+            if (query.length < 2) return;
+
+            const matches = inventoryData.filter(p => {
+                const code = (p.codigo || '').toLowerCase();
+                const desc = (p.descripcion || '').toLowerCase();
+                const codeTaller = (p.descripcionTaller || '').toLowerCase();
+                if (type === 'code') return code.startsWith(query) || code.includes(query);
+                else return desc.includes(query) || codeTaller.includes(query);
+            }).slice(0, 8);
+
+            if (matches.length === 0) return;
+
+            const box = document.createElement('div');
+            box.className = 'suggestions-box';
+            matches.forEach(product => {
+                const item = document.createElement('div');
+                item.className = 'suggestion-item';
+                item.innerHTML = `<div><div class="suggestion-code">${product.codigo || 'S/C'}</div><div class="suggestion-desc">${product.descripcion}</div></div><div class="suggestion-price">$${(product.costo || 0).toFixed(2)}</div>`;
+                item.onclick = () => selectSuggestion(input, product);
+                box.appendChild(item);
+            });
+            container.appendChild(box);
+        }
+
+        function selectSuggestion(input, product) {
+            const row = input.closest('tr');
+            row.querySelector('.entry-code').value = product.codigo || '';
+            row.querySelector('.entry-desc').value = product.descripcion || '';
+            row.querySelector('.entry-price').value = product.costo || '';
+            row.dataset.productId = product.id;
+            closeAllSuggestions();
+            calculateEntryTotals();
+            row.querySelector('.entry-qty').focus();
+        }
+
+        function closeAllSuggestions() {
+            document.querySelectorAll('.suggestions-box').forEach(el => el.remove());
+        }
+
+        function openProductLookup(btn) {
+            const row = btn.closest('tr');
+            row.querySelector('.entry-desc').focus();
+            showFloatingNotification("Usa el buscador por descripción.", "info");
+        }
+
+        async function saveEntry() {
+            const rows = document.querySelectorAll('#entry-rows tr');
+            if (rows.length === 0) return;
+
+            // Validación: Verificar que todos tengan código/producto seleccionado
+            let allValid = true;
+            rows.forEach(row => {
+                if (!row.dataset.productId && !row.querySelector('.entry-code').value) allValid = false;
+            });
+
+            if (!confirm("¿Confirmar el registro de esta entrada de inventario?")) return;
+
+            const submitBtn = document.querySelector('#entry-modal .btn-success');
+            submitBtn.disabled = true;
+            submitBtn.textContent = "Guardando...";
+
+            try {
+                const batch = db.batch();
+                const timestamp = firebase.firestore.FieldValue.serverTimestamp();
+                const reference = document.getElementById('entry-reference').value || 'Sin Referencia';
+                // Usaremos colecciones para historia
+                const movementsCollection = db.collection('MOVIMIENTOS_INVENTARIO');
+                const inventoryCollection = db.collection('INVENTARIO');
+
+                let validItems = 0;
+                const hasIva = document.getElementById('entry-has-iva').checked;
+
+                for (const row of rows) {
+                    const code = row.querySelector('.entry-code').value.trim();
+                    const desc = row.querySelector('.entry-desc').value.trim();
+                    const qty = parseFloat(row.querySelector('.entry-qty').value);
+                    const price = parseFloat(row.querySelector('.entry-price').value);
+
+                    if (!qty || isNaN(price)) continue;
+
+                    // Buscar ID
+                    let productId = row.dataset.productId;
+
+                    // Intentar match por código si no hay ID
+                    if (!productId && code) {
+                        const found = inventoryData.find(p => p.codigo.toLowerCase() === code.toLowerCase());
+                        if (found) productId = found.id;
+                    }
+
+                    if (!productId) {
+                        alert(`El producto "${desc}" (${code}) no existe en el sistema. Debes crearlo primero.`);
+                        throw new Error("Producto no encontrado: " + code);
+                    }
+
+                    const costUnit = hasIva ? (price / 1.13) : price;
+
+                    // Actualizar Inventario
+                    const prodRef = inventoryCollection.doc(productId);
+                    batch.update(prodRef, {
+                        cantidad: firebase.firestore.FieldValue.increment(qty),
+                        costo: costUnit
+                    });
+
+                    // Registrar Movimiento
+                    const movRef = movementsCollection.doc();
+                    batch.set(movRef, {
+                        productId: productId,
+                        codigo: code,
+                        descripcion: desc,
+                        tipo: 'entrada',
+                        cantidad: qty,
+                        costo: costUnit,
+                        referencia: reference,
+                        fecha: timestamp,
+                        usuario: 'Sistema'
+                    });
+
+                    validItems++;
+                }
+
+                if (validItems === 0) {
+                    alert("No hay items válidos para guardar.");
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = "Guardar Entrada";
+                    return;
+                }
+
+                await batch.commit();
+
+                showFloatingNotification("Entrada registrada correctamente", "success");
+                document.getElementById('entry-modal').style.display = 'none';
+                loadInventory(); // Recargar datos del servidor
+
+            } catch (e) {
+                console.error(e);
+                alert("Error al guardar: " + e.message);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = "Guardar Entrada";
+            }
+        }
+
+        function loadEntryJSON(input) {
+            const file = input.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (Array.isArray(data)) {
+                        data.forEach(item => {
+                            addEntryRow({
+                                codigo: item.codigo || item.code || '',
+                                descripcion: item.descripcion || item.description || '',
+                                cantidad: item.cantidad || item.qty || 1,
+                                precio: item.precio || item.costo || item.cost || 0
+                            });
+                        });
+                        calculateEntryTotals();
+                    }
+                } catch (err) { alert("Error JSON: " + err.message); }
+            };
+            reader.readAsText(file);
+        }
+    </script>
+    <!-- Cargar lógica modularizada de inventario (incluye importación mejorada) -->
+    <script src="js/inventory/InventoryApp.js"></script>
+    <!-- Inyección Directa de Función de Importación (Bypass de errores de carga de archivo externo) -->
+    <script>
+        async function importExcelNew(input) {
+            if (!input.files || !input.files[0]) return;
+            const file = input.files[0];
+            const shouldUpdate = confirm("¿Deseas actualizar los productos existentes que tengan el mismo Código?\n\n[Aceptar] = Sí.\n[Cancelar] = No (saltar).");
+            input.value = '';
+
+            const reader = new FileReader();
+            reader.onload = async function (e) {
+                try {
+                    const data = e.target.result;
+                    const workbook = XLSX.read(data, { type: 'binary' });
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+
+                    // 1. Leer matriz bruta y buscar encabezados
+                    const rawMatrix = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                    if (!rawMatrix || rawMatrix.length === 0) {
+                        alert("Archivo vacío."); return;
+                    }
+
+                    let headerIdx = -1;
+                    let headers = [];
+                    // Buscar fila con 'codigo' y 'descripcion'
+                    for (let i = 0; i < rawMatrix.length; i++) {
+                        const rowStr = JSON.stringify(rawMatrix[i]).toLowerCase();
+                        if (rowStr.includes('codigo') || rowStr.includes('descripcion')) {
+                            headerIdx = i;
+                            headers = rawMatrix[i].map(h => String(h).trim());
+                            break;
+                        }
+                    }
+
+                    if (headerIdx === -1) {
+                        alert("No se detectaron columnas 'Codigo' / 'Descripcion'. Usando primera fila.");
+                        headerIdx = 0;
+                        headers = rawMatrix[0].map(h => String(h).trim());
+                    }
+
+                    // 2. Procesar filas de datos
+                    let products = [];
+                    const cleanNumber = (val) => {
+                        if (val === undefined || val === null || val === '') return 0;
+                        if (typeof val === 'number') return val;
+                        const s = String(val).replace(/,/g, '').replace(/$/g, '').trim();
+                        return parseFloat(s) || 0;
+                    };
+
+                    for (let i = headerIdx + 1; i < rawMatrix.length; i++) {
+                        const rowArr = rawMatrix[i];
+                        if (!rowArr || rowArr.length === 0) continue;
+
+                        // Crear objeto temporal mapa
+                        let rowObj = {};
+                        headers.forEach((h, idx) => { if (h) rowObj[h] = rowArr[idx]; });
+
+                        // Buscar CÓDIGO
+                        let codigo = rowObj['Codigo'] || rowObj['codigo'];
+                        if (!codigo) {
+                            const k = Object.keys(rowObj).find(key => key.toLowerCase().includes('cod'));
+                            if (k) codigo = rowObj[k];
+                        }
+
+                        // Generar código automático si sigue vacío -> ELIMINADO POR SOLICITUD USUARIO
+                        // Se permite código vacío.
+
+                        // Buscar CANTIDAD (Stock)
+                        // Prioridad 1: Por nombre
+                        let qtyVal = undefined;
+                        const qtyKey = Object.keys(rowObj).find(k => {
+                            const kl = k.toLowerCase();
+                            return kl.includes('31/12') || (kl.includes('inventario') && !kl.includes('descrip')) || kl.includes('existencia') || kl.includes('stock');
+                        });
+                        if (qtyKey) qtyVal = rowObj[qtyKey];
+
+                        // Prioridad 2: Fallback FORZOSO a Columna F (Indice 5) si no hay valor
+                        if (qtyVal === undefined && rowArr.length > 5) {
+                            qtyVal = rowArr[5];
+                        }
+
+                        // Costo y Precio
+                        let costoVal = rowObj['Precio costo'];
+                        if (!costoVal) {
+                            const k = Object.keys(rowObj).find(key => key.toLowerCase().includes('costo') || key.toLowerCase().includes('compra'));
+                            if (k) costoVal = rowObj[k];
+                        }
+
+                        let precioVal = rowObj['Precio de venta'];
+                        if (!precioVal) {
+                            const k = Object.keys(rowObj).find(key => key.toLowerCase().includes('precio') || key.toLowerCase().includes('venta'));
+                            if (k) precioVal = rowObj[k];
+                        }
+
+                        products.push({
+                            codigo: codigo ? String(codigo).trim() : "", // Código vacío permitido
+                            descripcion: rowObj['Descripcion'] || rowObj['Descripcion según inventario'] || '',
+                            descripcionTaller: rowObj['Descripcion según factura'] || '',
+                            cantidad: parseInt(cleanNumber(qtyVal)),
+                            costo: cleanNumber(costoVal),
+                            precio: cleanNumber(precioVal)
+                        });
+                    }
+
+                    if (products.length === 0) {
+                        alert("No se encontraron productos válidos."); return;
+                    }
+
+                    // Guardar en Firebase
+                    const batch = db.batch();
+                    let count = 0;
+
+                    // Obtener códigos actuales para verificar duplicados solo si hay código
+                    const currentCodes = new Set(inventoryData.filter(p => p.codigo).map(p => p.codigo));
+
+                    products.forEach(p => {
+                        // Si tiene código y ya existe, verificar flag de update
+                        if (p.codigo && currentCodes.has(p.codigo) && !shouldUpdate) return;
+
+                        let ref;
+                        if (p.codigo) {
+                            // Si tiene código, usarlo como ID del documento (comportamiento estándar)
+                            ref = db.collection('INVENTARIO').doc(p.codigo);
+                        } else {
+                            // Si NO tiene código, usar ID automático de Firebase
+                            ref = db.collection('INVENTARIO').doc();
+                        }
+
+                        batch.set(ref, p, { merge: true });
+                        count++;
+                    });
+
+                    if (count > 0) await batch.commit();
+                    showFloatingNotification(`Importación completada. (${count} importados)`, "success");
+                    loadInventory();
+
+                } catch (error) {
+                    console.error(error);
+                    alert("Error: " + error.message);
+                }
+            };
+            reader.readAsBinaryString(file);
         }
     </script>
 </body>

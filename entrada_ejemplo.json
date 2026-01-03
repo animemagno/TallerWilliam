@@ -1,0 +1,26 @@
+[
+  {
+    "codigo": "FRENOS-001",
+    "descripcion": "Pastillas de Freno Delanteras",
+    "cantidad": 10,
+    "costo": 25.50
+  },
+  {
+    "codigo": "ACEITE-SYN",
+    "descripcion": "Aceite Sintético 10W-40 (Galón)",
+    "cantidad": 24,
+    "costo": 32.00
+  },
+  {
+    "codigo": "FILTRO-COMB",
+    "descripcion": "Filtro de Combustible Universal",
+    "cantidad": 15,
+    "costo": 4.75
+  },
+  {
+    "codigo": "EJE-TRASERO",
+    "descripcion": "Eje Trasero Ford Ranger (Repuesto)",
+    "cantidad": 2,
+    "costo": 150.00
+  }
+]

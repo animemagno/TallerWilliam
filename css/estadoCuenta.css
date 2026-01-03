@@ -1,0 +1,261 @@
+/* ================================
+   MODAL DE ESTADO DE CUENTA
+   ================================ */
+
+#estado-cuenta-modal {
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    justify-content: center;
+    align-items: center;
+}
+
+.estado-cuenta-content {
+    background-color: #fff;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.estado-cuenta-modal-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 20px;
+    border-radius: 12px 12px 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.estado-cuenta-modal-header h2 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 600;
+}
+
+.btn-cerrar-modal {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    font-size: 28px;
+    cursor: pointer;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.btn-cerrar-modal:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: rotate(90deg);
+}
+
+#estado-cuenta-contenido {
+    padding: 24px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Header del estado de cuenta */
+.estado-cuenta-header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.estado-cuenta-header h3 {
+    margin: 0 0 10px 0;
+    color: #333;
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.equipo-titulo, .grupo-titulo {
+    font-size: 32px;
+    font-weight: 900;
+    color: #667eea;
+    margin: 10px 0;
+}
+
+.fecha-reporte {
+    color: #666;
+    font-size: 14px;
+}
+
+/* Divisor */
+.divider {
+    height: 2px;
+    background: linear-gradient(to right, transparent, #667eea, transparent);
+    margin: 16px 0;
+}
+
+/* Secciones */
+.facturas-section,
+.equipos-section,
+.abonos-section {
+    margin: 20px 0;
+}
+
+.facturas-section h4,
+.equipos-section h4,
+.abonos-section h4 {
+    color: #555;
+    font-size: 16px;
+    margin-bottom: 12px;
+    font-weight: 600;
+}
+
+/* Items de facturas/equipos/abonos */
+.factura-item,
+.equipo-item,
+.abono-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 12px;
+    margin: 6px 0;
+    background: #f8f9fa;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.factura-item:hover,
+.equipo-item:hover,
+.abono-item:hover {
+    background: #e9ecef;
+    transform: translateX(4px);
+}
+
+.factura-item span:first-child,
+.equipo-item span:first-child,
+.abono-item span:first-child {
+    color: #495057;
+    font-weight: 500;
+}
+
+.monto {
+    color: #667eea;
+    font-weight: 700;
+    font-size: 18px;
+}
+
+/* Sección de totales */
+.total-section {
+    margin: 20px 0;
+}
+
+.total-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    margin: 8px 0;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.total-item.destacado {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    font-size: 18px;
+    font-weight: 700;
+    padding: 16px;
+}
+
+.total-item.destacado .monto-grande {
+    font-size: 28px;
+    font-weight: 900;
+}
+
+/* Footer del modal */
+.estado-cuenta-modal-footer {
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 0 0 12px 12px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.btn-modal {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-modal-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.btn-modal-secondary:hover {
+    background: #5a6268;
+    transform: translateY(-2px);
+}
+
+.btn-modal-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.btn-modal-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .estado-cuenta-content {
+        width: 95%;
+        max-height: 95vh;
+    }
+
+    #estado-cuenta-contenido {
+        padding: 16px;
+    }
+
+    .equipo-titulo, .grupo-titulo {
+        font-size: 24px;
+    }
+
+    .monto {
+        font-size: 16px;
+    }
+
+    .total-item.destacado .monto-grande {
+        font-size: 22px;
+    }
+
+    .btn-modal {
+        padding: 10px 20px;
+        font-size: 14px;
+    }
+}

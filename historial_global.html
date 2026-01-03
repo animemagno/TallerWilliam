@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Historial Global Unificado - Diagnóstico</title>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            padding: 20px;
+            background: #f0f2f5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+        }
+
+        .stats-bar {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .stat-card {
+            background: #ecf0f1;
+            padding: 10px 20px;
+            border-radius: 5px;
+            flex: 1;
+            text-align: center;
+            border-left: 5px solid #bdc3c7;
+        }
+
+        .stat-card.blue {
+            border-color: #3498db;
+            background: #ebf5fb;
+        }
+
+        .stat-card.green {
+            border-color: #27ae60;
+            background: #eafaf1;
+        }
+
+        .stat-card.orange {
+            border-color: #e67e22;
+            background: #fdf2e9;
+        }
+
+        .stat-card strong {
+            display: block;
+            font-size: 1.5rem;
+        }
+
+        input {
+            padding: 10px;
+            width: 100%;
+            box-sizing: border-box;
+            margin-bottom: 10px;
+            font-size: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+
+        th,
+        td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+
+        th {
+            background: #2c3e50;
+            color: white;
+            cursor: pointer;
+        }
+
+        tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+
+        tr:hover {
+            background: #f1f1f1;
+        }
+
+        .badge {
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: white;
+        }
+
+        .bg-success {
+            background-color: #27ae60;
+        }
+
+        .bg-warning {
+            background-color: #f39c12;
+        }
+
+        .bg-danger {
+            background-color: #c0392b;
+        }
+
+        .source-badge {
+            font-size: 0.75rem;
+            padding: 2px 5px;
+            border-radius: 3px;
+            border: 1px solid #ccc;
+            display: inline-block;
+            margin-right: 5px;
+        }
+
+        .source-nuevo {
+            background: #e8f8f5;
+            color: #16a085;
+            border-color: #16a085;
+        }
+
+        .source-antiguo {
+            background: #fef9e7;
+            color: #f1c40f;
+            border-color: #f1c40f;
+        }
+
+        .source-pendiente {
+            background: #fdf2e9;
+            color: #d35400;
+            border-color: #d35400;
+        }
+
+        .source-equipos {
+            background: #ebf5fb;
+            color: #2980b9;
+            border-color: #2980b9;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 50px;
+            font-size: 1.2rem;
+            color: #666;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🔍 Historial Global de Diagnóstico</h1>
+        <div class="stats-bar">
+            <div class="stat-card blue"><strong>0</strong> VENTAS (Nuevas)</div>
+            <div class="stat-card orange"><strong>0</strong> ventas (Legacy)</div>
+            <div class="stat-card green"><strong>0</strong> Equipos/Grupos</div>
+            <div class="stat-card"><strong>0</strong> TOTAL</div>
+        </div>
+
+        <input type="text" id="buscador" placeholder="🔎 Buscar por Factura, Equipo o Cliente..." onkeyup="filtrar()">
+
+        <div id="loading" class="loading"><i class="fas fa-spinner fa-spin"></i> Cargando todas las colecciones...</div>
+
+        <table id="tabla-ventas" class="hidden">
+            <thead>
+                <tr>
+                    <th>Origen</th>
+                    <th>Factura</th>
+                    <th>Equipo</th>
+                    <th>Cliente</th>
+                    <th>Total</th>
+                    <th>Saldo</th>
+                    <th>Fecha</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+        </table>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDh074AarXaYCc-Htw-lsCeIc_95QQNSnY",
+            authDomain: "tallerwilliam-732b3.firebaseapp.com",
+            projectId: "tallerwilliam-732b3",
+            storageBucket: "tallerwilliam-732b3.firebasestorage.app",
+            messagingSenderId: "822262666247",
+            appId: "1:822262666247:web:6680487bbf1108006b86a2"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        let allData = [];
+
+        async function init() {
+            try {
+                const stats = document.querySelectorAll('.stat-card strong');
+                let countVentas = 0;
+                let countLegacy = 0;
+                let countEquipos = 0;
+
+                // 1. VENTAS
+                console.log('Leyendo VENTAS...');
+                const s1 = await db.collection('VENTAS').get();
+                s1.forEach(doc => {
+                    allData.push({ id: doc.id, ...doc.data(), _source: 'NUEVO' });
+                    countVentas++;
+                });
+
+                // 2. ventas (pendientes) - Método FacturasManager
+                console.log('Leyendo ventas (pendientes)...');
+                const s2 = await db.collection('ventas').where('paymentType', '==', 'pendiente').get();
+                s2.forEach(doc => {
+                    if (!allData.some(x => x.id === doc.id)) {
+                        allData.push({ id: doc.id, ...doc.data(), _source: 'PENDIENTE_OLD' });
+                        countLegacy++;
+                    }
+                });
+
+                // 3. ventas (bulk)
+                console.log('Leyendo ventas (bulk)...');
+                const s3 = await db.collection('ventas').get();
+                s3.forEach(doc => {
+                    if (!allData.some(x => x.id === doc.id)) {
+                        allData.push({ id: doc.id, ...doc.data(), _source: 'ANTIGUO' });
+                        countLegacy++;
+                    }
+                });
+
+                // 4. Equipos y Grupos
+                const procesar = async (colName) => {
+                    const snap = await db.collection(colName).get();
+                    snap.forEach(doc => {
+                        const d = doc.data();
+                        const fs = d.facturas || d.invoices || [];
+                        if (Array.isArray(fs)) {
+                            fs.forEach(f => {
+                                const fId = String(f.invoiceNumber || '');
+                                if (fId && !allData.some(x => String(x.invoiceNumber || '') === fId)) {
+                                    allData.push({
+                                        id: `eq_${fId}`,
+                                        ...f,
+                                        _source: 'EQUIPOS',
+                                        clientName: f.clientName || d.nombre || `Equipo ${d.numero || ''}`,
+                                        timestamp: f.timestamp || f.date || new Date(0)
+                                    });
+                                    countEquipos++;
+                                }
+                            });
+                        }
+                    });
+                };
+
+                await procesar('equipos');
+                await procesar('EQUIPOS');
+                await procesar('GRUPOS');
+
+                // Actualizar stats
+                stats[0].innerText = countVentas;
+                stats[1].innerText = countLegacy;
+                stats[2].innerText = countEquipos;
+                stats[3].innerText = allData.length;
+
+                // Ordenar
+                allData.sort((a, b) => parseDate(b) - parseDate(a));
+
+                render(allData);
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('tabla-ventas').classList.remove('hidden');
+
+            } catch (error) {
+                console.error(error);
+                document.getElementById('loading').innerHTML = `Error: ${error.message}`;
+            }
+        }
+
+        function parseDate(obj) {
+            if (obj.timestamp && obj.timestamp.toDate) return obj.timestamp.toDate();
+            if (obj.date) {
+                const parts = String(obj.date).split('-');
+                if (parts.length === 3) return new Date(parts[0], parts[1] - 1, parts[2]);
+                return new Date(obj.date);
+            }
+            if (obj.timestamp) return new Date(obj.timestamp);
+            return new Date(0);
+        }
+
+        function render(list) {
+            const tbody = document.getElementById('tbody');
+            let html = '';
+            list.slice(0, 500).forEach(item => { // Límite inicial 500
+                const fecha = parseDate(item).toLocaleDateString('es-ES');
+                const saldo = item.saldoPendiente !== undefined ? item.saldoPendiente : (item.paymentType === 'pendiente' ? item.total : 0);
+                const estado = item.status || (item.paymentType === 'pendiente' ? 'pendiente' : 'pagado');
+                const badgeClass = estado === 'pendiente' ? 'bg-warning' : (estado === 'cancelado' ? 'bg-danger' : 'bg-success');
+
+                let sourceClass = 'source-nuevo';
+                if (item._source === 'ANTIGUO') sourceClass = 'source-antiguo';
+                if (item._source === 'PENDIENTE_OLD') sourceClass = 'source-pendiente';
+                if (item._source === 'EQUIPOS') sourceClass = 'source-equipos';
+
+                html += `
+                    <tr>
+                        <td><span class="source-badge ${sourceClass}">${item._source}</span></td>
+                        <td><strong>${item.invoiceNumber || '---'}</strong></td>
+                        <td>${item.equipoNumber || '---'}</td>
+                        <td>${item.clientName || ''}</td>
+                        <td>$${Number(item.total || 0).toFixed(2)}</td>
+                        <td style="color:${saldo > 0 ? 'red' : 'green'}">$${Number(saldo || 0).toFixed(2)}</td>
+                        <td>${fecha}</td>
+                        <td><span class="badge ${badgeClass}">${estado.toUpperCase()}</span></td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = html;
+        }
+
+        function filtrar() {
+            const q = document.getElementById('buscador').value.toLowerCase();
+            const filtered = allData.filter(item =>
+                String(item.invoiceNumber || '').toLowerCase().includes(q) ||
+                String(item.equipoNumber || '').toLowerCase().includes(q) ||
+                String(item.clientName || '').toLowerCase().includes(q)
+            );
+            render(filtered);
+        }
+
+        init();
+    </script>
+</body>
+
+</html>
