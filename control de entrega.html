@@ -11,7 +11,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
 
     <style>
-        /* RESET Y BASE RESPONSIVE */
         * {
             box-sizing: border-box;
             margin: 0;
@@ -19,598 +18,121 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
-        html,
         body {
-            width: 100%;
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
-
-        body {
-            background-color: #1a202c;
-            color: #e2e8f0;
+            background-color: #f0f2f5;
+            color: #333;
             line-height: 1.4;
-            padding: 0;
-            margin: 0;
+            padding: 15px;
         }
 
-        /* CONTENEDOR PRINCIPAL - 100% ANCHO */
         .container {
-            width: 100%;
-            max-width: 100%;
+            max-width: 1000px;
             margin: 0 auto;
-            background-color: #1a202c;
-            border-radius: 0;
-            box-shadow: none;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
             overflow: hidden;
-            min-height: 100vh;
         }
 
-        /* HEADER */
         header {
-            background: linear-gradient(135deg, #48bb78, #38b2ac);
+            background: linear-gradient(135deg, #27ae60, #219653);
             color: white;
-            padding: 15px 20px;
+            padding: 12px;
             text-align: center;
-            width: 100%;
         }
 
         h1 {
-            font-size: 1.3rem;
-            margin-bottom: 5px;
+            font-size: 18px;
+            margin-bottom: 3px;
         }
 
-        /* TABS RESPONSIVE */
         .tabs {
             display: flex;
-            background-color: #2d3748;
-            border-bottom: 1px solid #4a5568;
-            width: 100%;
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
+            background-color: #f1f1f1;
+            border-bottom: 1px solid #ddd;
+            flex-wrap: wrap;
         }
 
         .tab {
-            flex: 0 0 auto;
-            padding: 12px 20px;
+            flex: 1;
+            padding: 10px;
             text-align: center;
             cursor: pointer;
             font-weight: 600;
             transition: all 0.3s ease;
-            font-size: 0.9rem;
-            white-space: nowrap;
-            min-width: 140px;
+            font-size: 13px;
+            min-width: 120px;
         }
 
         .tab.active {
-            background-color: #1a202c;
-            border-bottom: 3px solid #48bb78;
-            color: #48bb78;
+            background-color: white;
+            border-bottom: 3px solid #27ae60;
+            color: #27ae60;
         }
 
-        /* CONTENIDO DE TABS */
         .tab-content {
             display: none;
-            padding: 15px;
-            width: 100%;
+            padding: 12px;
         }
 
         .tab-content.active {
             display: block;
         }
 
-        /* PANEL DE REGISTRO RÁPIDO - RESPONSIVE */
-        .panel-registro-rapido {
-            width: 100%;
-        }
-
-        .info-periodo-actual {
-            background: linear-gradient(135deg, #2d3748, #4a5568);
-            color: #e2e8f0;
-            padding: 15px;
-            border-radius: 8px;
-            text-align: center;
-            margin-bottom: 20px;
-            width: 100%;
-        }
-
-        .info-periodo-actual h2 {
-            font-size: 1.1rem;
-            margin-bottom: 8px;
-        }
-
-        .info-periodo-actual .fechas-periodo {
-            font-size: 1rem;
-            font-weight: bold;
-            margin: 10px 0;
-        }
-
-        .info-periodo-actual .dias-restantes {
-            font-size: 0.9rem;
-            opacity: 0.9;
-        }
-
-        /* GRID DE EQUIPOS - RESPONSIVE */
-        .grid-equipos {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 15px;
-            width: 100%;
-        }
-
-        @media (max-width: 768px) {
-            .grid-equipos {
-                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-                gap: 10px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .grid-equipos {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .equipo-card-rapido {
-            background: #2d3748;
-            border: 2px solid #4a5568;
-            border-radius: 8px;
-            padding: 15px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            width: 100%;
-        }
-
-        .equipo-card-rapido:hover {
-            border-color: #48bb78;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(72, 187, 120, 0.3);
-        }
-
-        .equipo-header-rapido {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #4a5568;
-        }
-
-        .equipo-numero-rapido {
-            font-size: 1.1rem;
-            font-weight: bold;
-            color: #48bb78;
-        }
-
-        .equipo-estado {
-            font-size: 0.75rem;
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-weight: bold;
-        }
-
-        .estado-completo {
-            background-color: #d4edda;
-            color: #155724;
-        }
-
-        .estado-pendiente {
-            background-color: #fff3cd;
-            color: #856404;
-        }
-
-        .estado-sin-registros {
-            background-color: #f8d7da;
-            color: #721c24;
-        }
-
-        .equipo-info-rapido {
-            margin-bottom: 10px;
-        }
-
-        .equipo-nombre-rapido {
-            font-weight: bold;
-            font-size: 0.95rem;
-            margin-bottom: 5px;
-        }
-
-        .equipo-monto-actual {
-            color: #e74c3c;
-            font-weight: bold;
-            font-size: 1rem;
-        }
-
-        .equipo-progreso {
-            margin-top: 10px;
-        }
-
-        .barra-progreso {
-            height: 8px;
-            background-color: #4a5568;
-            border-radius: 4px;
-            overflow: hidden;
-            margin-bottom: 5px;
-            width: 100%;
-        }
-
-        .progreso-completado {
-            height: 100%;
-            background-color: #48bb78;
-            transition: width 0.3s ease;
-        }
-
-        .estadisticas-equipo {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.8rem;
-            color: #a0aec0;
-            width: 100%;
-        }
-
-        .total-equipo-periodo {
-            text-align: right;
-            font-weight: bold;
-            color: #e2e8f0;
-            margin-top: 5px;
-            font-size: 0.9rem;
-            width: 100%;
-        }
-
-        /* ===== NUEVO DISEÑO DE CALENDARIO ===== */
-        .calendario-periodo {
-            margin-top: 20px;
-            border: 1px solid #4a5568;
-            border-radius: 8px;
-            overflow: hidden;
-            width: 100%;
-            background: #2d3748;
-        }
-
-        .header-calendario-simple {
-            background-color: #2d3748;
-            color: #e2e8f0;
-            padding: 15px;
-            text-align: center;
-            width: 100%;
-        }
-
-        .header-calendario-simple h3 {
-            font-size: 1rem;
-            margin: 0;
-        }
-
-        .nombre-equipo-seleccionado {
-            font-weight: bold;
-            color: #48bb78;
-            background-color: #1a202c;
-            padding: 3px 8px;
-            border-radius: 4px;
-            margin-left: 5px;
-        }
-
-        /* ENCABEZADOS DE DÍAS DE LA SEMANA - DOMINGO PRIMERO */
-        .dias-semana {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            background-color: #4a5568;
-            color: #e2e8f0;
-            text-align: center;
-            font-weight: bold;
-            font-size: 0.85rem;
-            border-bottom: 1px solid #2d3748;
-        }
-
-        .dia-semana {
-            padding: 8px 5px;
-            border-right: 1px solid #2c3e50;
-        }
-
-        .dia-semana:last-child {
-            border-right: none;
-        }
-
-        /* GRID DE DÍAS DEL CALENDARIO - RESPONSIVE */
-        .grid-dias-calendario {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 1px;
-            background-color: #4a5568;
-            width: 100%;
-        }
-
-        @media (max-width: 768px) {
-            .grid-dias-calendario {
-                grid-template-columns: repeat(7, 1fr);
-            }
-        }
-
-        @media (max-width: 480px) {
-            .grid-dias-calendario {
-                grid-template-columns: repeat(7, 1fr);
-            }
-
-            .dia-calendario {
-                min-height: 70px !important;
-                padding: 5px !important;
-            }
-
-            .numero-dia {
-                font-size: 0.9rem !important;
-            }
-
-            .monto-input-simple {
-                width: 35px !important;
-                height: 25px !important;
-                font-size: 0.9rem !important;
-            }
-        }
-
-        /* ESTILOS DE DÍAS SEGÚN TIPO - DISEÑO SIMPLIFICADO */
-        .dia-calendario {
-            background-color: #2d3748;
-            padding: 8px 5px;
-            min-height: 80px;
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-start;
-        }
-
-        /* DÍA CON ENTREGA REGISTRADA - VERDE (incluye sábados y domingos) */
-        .dia-calendario.registrado {
-            background-color: #2f4f3f;
-            border-left: 2px solid #48bb78;
-        }
-
-        /* HOY - AZUL CLARO */
-        .dia-calendario.hoy {
-            background-color: #2c4a6e;
-            border: 2px solid #38b2ac;
-        }
-
-        /* DÍA FUTURO - BLANCO */
-        .dia-calendario.futuro {
-            background-color: #2d3748;
-        }
-
-        /* DÍA PASADO SIN ENTREGA - ROJO */
-        .dia-calendario.pasado-sin-entregas {
-            background-color: #4a2c2c;
-            border-left: 2px solid #e53e3e;
-        }
-
-        /* FIN DE SEMANA - GRIS CLARO (solo si no tiene entrega) */
-        .dia-calendario.descanso {
-            background-color: #1a202c;
-            color: #718096;
-        }
-
-        /* Fin de semana CON ENTREGA debe ser verde, no gris */
-        .dia-calendario.registrado.descanso {
-            background-color: #2f4f3f !important;
-            color: #48bb78 !important;
-        }
-
-        /* ELEMENTOS INTERNOS DEL DÍA */
-        .numero-dia {
-            font-size: 0.95rem;
-            font-weight: bold;
-            color: #e2e8f0;
-            position: absolute;
-            top: 5px;
-            left: 5px;
-        }
-
-        /* INPUT DE MONTO SIMPLE - 2 DÍGITOS, SIN SPINNER */
-        .monto-input-simple {
-            width: 40px;
-            height: 30px;
-            border: 1px solid #4a5568;
-            border-radius: 3px;
-            font-size: 0.95rem;
-            text-align: center;
-            font-weight: bold;
-            color: #e2e8f0;
-            background: #1a202c;
-            position: absolute;
-            bottom: 5px;
-            right: 5px;
-            -moz-appearance: textfield;
-            appearance: textfield;
-        }
-
-        .monto-input-simple::-webkit-outer-spin-button,
-        .monto-input-simple::-webkit-inner-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
-
-        .monto-input-simple:focus {
-            outline: none;
-            border-color: #48bb78;
-            box-shadow: 0 0 0 2px rgba(72, 187, 120, 0.2);
-        }
-
-        /* Input readonly (días ya registrados) */
-        .monto-input-simple[readonly] {
-            background-color: #2f4f3f;
-            border-color: #48bb78;
-            color: #48bb78;
-            cursor: default;
-        }
-
-        /* Observación pequeña */
-        .observacion-dia {
-            font-size: 0.7rem;
-            color: #a0aec0;
-            position: absolute;
-            bottom: 5px;
-            left: 5px;
-            max-width: 60%;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        /* BOTÓN VOLVER */
-        .btn-volver-equipos {
-            margin-top: 15px;
-            width: 100%;
-            text-align: center;
-        }
-
-        /* MODAL RESPONSIVE */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(0, 0, 0, 0.5);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            padding: 20px;
-        }
-
-        .modal-contenido {
-            background-color: #2d3748;
-            border-radius: 8px;
-            width: 100%;
-            max-width: 500px;
-            max-height: 90vh;
-            overflow-y: auto;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-        }
-
-        .modal-header {
-            background: linear-gradient(135deg, #48bb78, #38b2ac);
-            color: white;
-            padding: 15px;
-            border-radius: 8px 8px 0 0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .modal-header h3 {
-            margin: 0;
-            font-size: 1rem;
-        }
-
-        .modal-cerrar {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 1.5rem;
-            cursor: pointer;
-            padding: 0;
-            width: 30px;
-            height: 30px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-        }
-
-        .modal-cerrar:hover {
-            background-color: rgba(255, 255, 255, 0.2);
-        }
-
-        .modal-body {
-            padding: 20px;
-        }
-
-        .info-registro {
-            background-color: #1a202c;
-            padding: 15px;
-            border-radius: 6px;
-            margin-bottom: 20px;
-        }
-
-        .info-registro p {
-            margin: 5px 0;
-        }
-
-        /* FORMULARIOS RESPONSIVE */
         .form-group {
-            margin-bottom: 15px;
-            width: 100%;
+            margin-bottom: 12px;
         }
 
-        .form-group label {
+        label {
             display: block;
-            margin-bottom: 5px;
+            margin-bottom: 4px;
             font-weight: 600;
-            color: #e2e8f0;
-            font-size: 0.9rem;
-            width: 100%;
+            color: #2d3748;
+            font-size: 13px;
         }
 
-        .form-group input,
-        .form-group select,
-        .form-group textarea {
-            padding: 10px;
-            border: 1px solid #4a5568;
+        input,
+        select,
+        textarea {
+            padding: 6px;
+            border: 1px solid #ddd;
             border-radius: 4px;
-            font-size: 0.95rem;
+            font-size: 13px;
             width: 100%;
-            max-width: 100%;
-            background-color: #1a202c;
-            color: #e2e8f0;
         }
 
-        .form-group textarea {
+        textarea {
             resize: vertical;
-            min-height: 80px;
-            width: 100%;
+            min-height: 60px;
         }
 
-        /* BOTONES RESPONSIVE */
         .btn {
-            padding: 10px 16px;
+            padding: 6px 10px;
             border: none;
             border-radius: 4px;
             cursor: pointer;
             font-weight: 600;
             transition: all 0.3s ease;
-            font-size: 0.9rem;
-            text-align: center;
-            display: inline-block;
-        }
-
-        .btn-sm {
-            padding: 6px 12px;
-            font-size: 0.8rem;
+            margin-right: 6px;
+            font-size: 13px;
         }
 
         .btn-primary {
-            background-color: #48bb78;
+            background-color: #27ae60;
             color: white;
         }
 
         .btn-primary:hover {
-            background-color: #38a169;
-        }
-
-        .btn-secondary {
-            background-color: #6c757d;
-            color: white;
-        }
-
-        .btn-secondary:hover {
-            background-color: #5a6268;
+            background-color: #219653;
         }
 
         .btn-success {
-            background-color: #38b2ac;
+            background-color: #3498db;
             color: white;
         }
 
         .btn-success:hover {
-            background-color: #319795;
+            background-color: #2980b9;
         }
 
         .btn-warning {
@@ -631,94 +153,131 @@
             background-color: #138496;
         }
 
-        .btn-danger {
-            background-color: #dc3545;
+        .btn-secondary {
+            background-color: #6c757d;
             color: white;
         }
 
-        .btn-danger:hover {
-            background-color: #c82333;
+        .btn-secondary:hover {
+            background-color: #5a6268;
         }
 
-        /* MODAL FOOTER */
-        .modal-footer {
-            padding: 15px 20px;
-            background-color: #1a202c;
-            border-radius: 0 0 8px 8px;
+        .fila-compacta {
             display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-            flex-wrap: wrap;
-            width: 100%;
+            gap: 8px;
+            align-items: center;
         }
 
-        /* GESTIÓN DE EQUIPOS - RESPONSIVE */
-        .formulario-equipo {
-            background-color: #2d3748;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            width: 100%;
+        .monto-input {
+            width: 120px;
+            flex-shrink: 0;
         }
 
-        .form-inline {
-            display: flex;
-            gap: 15px;
-            align-items: flex-end;
-            margin-bottom: 15px;
-            flex-wrap: wrap;
-            width: 100%;
+        .fecha-input {
+            width: 120px;
+            flex-shrink: 0;
         }
 
-        .form-inline .form-group {
-            margin-bottom: 0;
+        .equipo-select,
+        .cliente-select {
             flex: 1;
-            min-width: 200px;
+            min-width: 150px;
         }
 
-        @media (max-width: 768px) {
-            .form-inline .form-group {
-                min-width: 100%;
-            }
+        .resumen-equipos,
+        .resumen-clientes {
+            margin-top: 15px;
+            border-top: 1px solid #ddd;
+            padding: 12px;
         }
 
-        /* LISTA DE EQUIPOS RESPONSIVE */
+        .resumen-equipos h2,
+        .resumen-clientes h2 {
+            color: #2d3748;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+
+        .lista-equipos,
+        .lista-clientes {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .equipo-card,
+        .cliente-card {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 10px;
+            font-size: 12px;
+        }
+
+        .equipo-header,
+        .cliente-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .equipo-numero,
+        .cliente-nombre {
+            font-weight: bold;
+            color: #27ae60;
+            font-size: 14px;
+        }
+
+        .equipo-total,
+        .cliente-total {
+            font-weight: bold;
+            color: #e74c3c;
+        }
+
+        .equipo-info,
+        .cliente-info {
+            color: #6c757d;
+            margin-bottom: 3px;
+        }
+
+        .ingresos-list {
+            margin-top: 15px;
+            border-top: 1px solid #ddd;
+            padding: 12px;
+        }
+
+        .ingresos-list h2 {
+            color: #2d3748;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+
         .lista-ingresos {
-            max-height: 500px;
+            max-height: 400px;
             overflow-y: auto;
-            width: 100%;
         }
 
         .ingreso-item {
             display: flex;
             align-items: center;
-            gap: 10px;
-            padding: 10px;
-            border-bottom: 1px solid #4a5568;
-            font-size: 0.9rem;
-            flex-wrap: wrap;
-            width: 100%;
+            gap: 8px;
+            padding: 6px 8px;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 13px;
         }
 
-        @media (max-width: 768px) {
-            .ingreso-item {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 5px;
-            }
-
-            .ingreso-equipo,
-            .ingreso-cliente,
-            .ingreso-monto {
-                width: 100% !important;
-                text-align: left !important;
-            }
+        .ingreso-item:hover {
+            background-color: #f8f9fa;
         }
 
         .ingreso-fecha {
             width: 80px;
             color: #666;
-            font-size: 0.8rem;
+            font-size: 11px;
             flex-shrink: 0;
         }
 
@@ -730,14 +289,14 @@
         }
 
         .ingreso-cliente {
-            width: 150px;
+            width: 100px;
             font-weight: bold;
             color: #3498db;
             flex-shrink: 0;
         }
 
         .ingreso-monto {
-            width: 100px;
+            width: 80px;
             font-weight: bold;
             color: #e74c3c;
             text-align: right;
@@ -751,7 +310,7 @@
             text-overflow: ellipsis;
             white-space: nowrap;
             color: #6c757d;
-            font-size: 0.85rem;
+            font-size: 12px;
         }
 
         .delete-btn {
@@ -759,8 +318,8 @@
             border: none;
             color: #dc3545;
             cursor: pointer;
-            font-size: 0.85rem;
-            padding: 5px;
+            font-size: 12px;
+            padding: 2px;
             flex-shrink: 0;
         }
 
@@ -769,8 +328,8 @@
             border: none;
             color: #3498db;
             cursor: pointer;
-            font-size: 0.85rem;
-            padding: 5px;
+            font-size: 12px;
+            padding: 2px;
             flex-shrink: 0;
             margin-right: 5px;
         }
@@ -779,452 +338,504 @@
             text-align: center;
             color: #6c757d;
             font-style: italic;
-            padding: 20px;
-            font-size: 0.95rem;
-            width: 100%;
+            padding: 12px;
+            font-size: 13px;
         }
 
         .total-general {
             background: #e8f5e8;
-            padding: 15px;
+            padding: 10px;
             border-radius: 5px;
-            margin-top: 15px;
+            margin-top: 10px;
             text-align: center;
             font-weight: bold;
             color: #27ae60;
-            width: 100%;
         }
 
-        /* FILTROS RESPONSIVE */
-        .filtros {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-            width: 100%;
+        .fecha-hoy-btn {
+            margin-left: 8px;
+            padding: 4px 8px;
+            font-size: 11px;
         }
 
-        .filtro-group {
-            flex: 1;
-            min-width: 200px;
-        }
-
-        @media (max-width: 768px) {
-            .filtro-group {
-                min-width: 100%;
-            }
-        }
-
-        /* DEPÓSITOS POR EQUIPO - MEJORADO */
-        .depositos-lista {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-            gap: 15px;
+        /* Estilos para la vista de depósitos por equipo */
+        .depositos-equipo,
+        .depositos-cliente {
             margin-top: 15px;
         }
 
-        .deposito-equipo-card {
-            background: #2d3748;
-            border: 1px solid #4a5568;
-            border-radius: 8px;
-            padding: 15px;
-            color: #e2e8f0;
+        .depositos-equipo h2,
+        .depositos-cliente h2 {
+            color: #2d3748;
+            margin-bottom: 8px;
+            font-size: 16px;
         }
 
-        .deposito-equipo-header {
+        .depositos-lista {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        @media (min-width: 768px) {
+            .depositos-lista {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .deposito-equipo-card,
+        .deposito-cliente-card {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 12px;
+            font-size: 13px;
+        }
+
+        .deposito-equipo-header,
+        .deposito-cliente-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 10px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #4a5568;
+            margin-bottom: 8px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #dee2e6;
         }
 
-        .deposito-equipo-numero {
+        .deposito-equipo-numero,
+        .deposito-cliente-nombre {
             font-weight: bold;
-            color: #48bb78;
-            font-size: 1.1rem;
+            color: #27ae60;
+            font-size: 16px;
         }
 
-        .deposito-equipo-total {
+        .deposito-equipo-total,
+        .deposito-cliente-total {
             font-weight: bold;
             color: #e74c3c;
-            font-size: 1.1rem;
+            font-size: 14px;
         }
 
         .deposito-item {
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            padding: 8px 0;
-            border-bottom: 1px dashed #4a5568;
+            padding: 4px 0;
+            border-bottom: 1px dashed #dee2e6;
         }
 
         .deposito-fecha {
-            color: #a0aec0;
-            font-size: 0.9rem;
-            flex: 1;
+            color: #666;
         }
 
         .deposito-monto {
             font-weight: bold;
-            color: #e2e8f0;
-            margin-right: 10px;
-        }
-
-        .deposito-acciones {
-            display: flex;
-            gap: 5px;
-        }
-
-        .deposito-eliminar-btn {
-            background: none;
-            border: none;
-            color: #e53e3e;
-            cursor: pointer;
-            font-size: 0.85rem;
-            padding: 2px 6px;
-            border-radius: 3px;
-            transition: background-color 0.2s;
-        }
-
-        .deposito-eliminar-btn:hover {
-            background-color: rgba(229, 62, 62, 0.1);
+            color: #2d3748;
         }
 
         .deposito-total {
-            margin-top: 10px;
-            padding-top: 10px;
-            border-top: 2px solid #48bb78;
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 2px solid #27ae60;
             font-weight: bold;
             text-align: right;
-            color: #48bb78;
-            font-size: 1rem;
+            color: #27ae60;
         }
 
-        /* Botones de período */
-        .periodos-buttons {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-
-        .periodo-btn {
-            padding: 8px 15px;
-            background-color: #2d3748;
-            border: 1px solid #4a5568;
-            color: #e2e8f0;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 0.9rem;
-            transition: all 0.2s;
-        }
-
-        .periodo-btn:hover {
-            background-color: #374151;
-            border-color: #48bb78;
-        }
-
-        .periodo-btn.active {
-            background-color: #48bb78;
-            border-color: #48bb78;
+        .imprimir-btn {
+            margin-top: 10px;
+            background-color: #6c757d;
             color: white;
         }
 
-        /* VISTA PREVIA CALENDARIO */
+        .imprimir-btn:hover {
+            background-color: #5a6268;
+        }
+
+        /* Estilos para impresión */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+
+            .calendario-print,
+            .calendario-print * {
+                visibility: visible;
+            }
+
+            .calendario-print {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                font-size: 12px;
+            }
+
+            .no-print {
+                display: none !important;
+            }
+
+            /* Estilos para el calendario en tamaño carta */
+            .calendario-mensual {
+                width: 8.5in;
+                height: 11in;
+                padding: 0.5in;
+                margin: 0 auto;
+                page-break-after: always;
+                font-family: Arial, sans-serif;
+            }
+
+            .encabezado-recibo {
+                text-align: center;
+                margin-bottom: 10px;
+                border-bottom: 2px solid #000;
+                padding-bottom: 10px;
+            }
+
+            .encabezado-recibo h1 {
+                font-size: 18px;
+                margin-bottom: 5px;
+            }
+
+            .encabezado-recibo .info-mes {
+                font-size: 14px;
+                margin-bottom: 5px;
+            }
+
+            .info-equipo {
+                text-align: center;
+                margin-bottom: 15px;
+                font-size: 13px;
+            }
+
+            .info-equipo .numero-equipo {
+                font-weight: bold;
+                font-size: 16px;
+                margin-bottom: 5px;
+            }
+
+            .tabla-calendario {
+                width: 100%;
+                border-collapse: collapse;
+                margin-bottom: 20px;
+            }
+
+            .tabla-calendario th {
+                background-color: #f0f0f0;
+                border: 1px solid #000;
+                padding: 5px;
+                text-align: center;
+                font-size: 12px;
+            }
+
+            .tabla-calendario td {
+                border: 1px solid #000;
+                padding: 5px;
+                vertical-align: top;
+                height: 90px;
+                width: 14.28%;
+            }
+
+            .cuadro-dia {
+                height: 100%;
+                display: flex;
+                flex-direction: column;
+                text-align: center;
+                padding: 3px;
+                position: relative;
+            }
+
+            .dia-numero {
+                font-weight: bold;
+                font-size: 16px;
+                text-align: left;
+                position: absolute;
+                top: 3px;
+                left: 5px;
+            }
+
+            .dia-monto {
+                font-size: 14px;
+                font-weight: bold;
+                margin-top: 20px;
+            }
+
+            .dia-comentario {
+                font-size: 10px;
+                color: #666;
+                margin-top: auto;
+                padding-bottom: 5px;
+            }
+
+            .dia-descanso {
+                background-color: #f0f0f0;
+            }
+
+            .texto-descanso {
+                font-size: 14px;
+                font-weight: bold;
+                color: #666;
+                height: 100%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin-top: 20px;
+            }
+
+            .pie-pagina {
+                margin-top: 30px;
+                padding-top: 10px;
+                display: flex;
+                flex-direction: column;
+                align-items: flex-end;
+            }
+
+            .total-general-print {
+                font-weight: bold;
+                font-size: 16px;
+                margin-bottom: 40px;
+            }
+
+            .firma {
+                font-size: 14px;
+                border-top: 1px solid #000;
+                padding-top: 3px;
+                width: 200px;
+                text-align: center;
+            }
+        }
+
+        .filtros {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .filtro-group {
+            flex: 1;
+            min-width: 150px;
+        }
+
+        /* NUEVOS ESTILOS PARA EL FORMULARIO SIMPLIFICADO */
+        .formulario-rapido {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: end;
+            margin-bottom: 15px;
+        }
+
+        .campo-rapido {
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .campo-rapido.pequeno {
+            max-width: 100px;
+        }
+
+        .campo-rapido.medio {
+            max-width: 200px;
+        }
+
+        .campo-rapido.grande {
+            flex: 2;
+        }
+
+        .campo-rapido.observacion {
+            min-width: 100%;
+        }
+
+        .resumen-equipos-saldos {
+            margin-top: 15px;
+            border-top: 1px solid #ddd;
+            padding: 12px;
+        }
+
+        .resumen-equipos-saldos h2 {
+            color: #2d3748;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+
+        .lista-equipos-saldos {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .equipo-saldo-card {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 10px;
+            font-size: 12px;
+        }
+
+        .equipo-saldo-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .equipo-saldo-numero {
+            font-weight: bold;
+            color: #27ae60;
+            font-size: 14px;
+        }
+
+        .equipo-saldo-total {
+            font-weight: bold;
+            color: #e74c3c;
+        }
+
+        .equipo-saldo-info {
+            color: #6c757d;
+            margin-bottom: 3px;
+        }
+
+        .equipo-saldo-fecha {
+            font-size: 11px;
+            color: #3498db;
+            font-weight: bold;
+        }
+
+        /* Estilos para el botón de imprimir calendario */
+        .btn-imprimir-calendario {
+            margin-top: 10px;
+            background-color: #9b59b6;
+            color: white;
+        }
+
+        .btn-imprimir-calendario:hover {
+            background-color: #8e44ad;
+        }
+
+        /* Estilos para selección de días de descanso */
+        .dias-descanso {
+            margin-top: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+        }
+
+        .dias-descanso h3 {
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .lista-dias-descanso {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .dia-descanso-check {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .dia-descanso-check label {
+            margin-bottom: 0;
+            font-weight: normal;
+        }
+
+        /* Estilos para vista previa del calendario */
         .vista-previa-calendario {
             margin-top: 20px;
-            border: 1px solid #4a5568;
+            border: 1px solid #ddd;
             border-radius: 5px;
             padding: 15px;
-            background-color: #2d3748;
-            color: #e2e8f0;
+            background-color: white;
         }
 
         .vista-previa-calendario h3 {
             margin-bottom: 15px;
             text-align: center;
-            color: #e2e8f0;
         }
 
-        /* MODAL EDITAR EQUIPO */
-        .modal-editar-equipo {
-            max-width: 600px;
-        }
-
-        .modal-editar-equipo .form-group {
-            margin-bottom: 15px;
-        }
-
-        /* UTILIDADES */
-        .no-print {
-            display: block;
-        }
-
-        .text-center {
-            text-align: center;
-        }
-
-        .mb-3 {
-            margin-bottom: 15px;
-        }
-
-        .mt-3 {
-            margin-top: 15px;
-        }
-
-        .w-100 {
-            width: 100%;
-        }
-
-        /* ===== ESTILOS PARA VISTA PREVIA DEL CALENDARIO ===== */
         .tabla-calendario-preview {
             width: 100%;
             border-collapse: collapse;
-            margin: 20px 0;
-            background: #2d3748;
         }
 
         .tabla-calendario-preview th {
-            background: #4a5568;
-            color: #e2e8f0;
-            padding: 10px;
+            background-color: #f0f0f0;
+            border: 1px solid #ddd;
+            padding: 8px;
             text-align: center;
-            font-weight: bold;
-            border: 1px solid #1a202c;
+            font-size: 12px;
         }
 
         .tabla-calendario-preview td {
-            background: #2d3748;
-            border: 1px solid #4a5568;
-            padding: 15px 10px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s;
-            min-height: 80px;
+            border: 1px solid #ddd;
+            padding: 8px;
             vertical-align: top;
+            height: 90px;
+            width: 14.28%;
+            cursor: pointer;
+            transition: background-color 0.2s;
         }
 
         .tabla-calendario-preview td:hover {
-            background: #374151;
+            background-color: #f9f9f9;
         }
 
-        .tabla-calendario-preview td.dia-descanso-preview {
-            background: #2d3748 !important;
-            color: #a0aec0 !important;
+        .dia-descanso-preview {
+            background-color: #f0f0f0;
         }
 
         .cuadro-dia-preview {
+            height: 100%;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            gap: 5px;
+            text-align: center;
+            padding: 3px;
+            position: relative;
         }
 
         .dia-numero-preview {
             font-weight: bold;
-            font-size: 1.1rem;
-            color: #e2e8f0;
+            font-size: 16px;
+            text-align: left;
+            position: absolute;
+            top: 3px;
+            left: 5px;
         }
 
         .dia-monto-preview {
-            font-size: 0.9rem;
-            color: #48bb78;
-            font-weight: 600;
-        }
-
-        /* ===== ESTILOS DE IMPRESIÓN ===== */
-        @media screen {
-            #recibo-print {
-                display: none;
-            }
-        }
-
-        @media print {
-
-            /* Ocultar todos los hijos directos del body excepto el recibo */
-            body>*:not(#recibo-print) {
-                display: none !important;
-            }
-
-            /* Configurar body */
-            body {
-                background: white !important;
-                margin: 0;
-                padding: 0;
-                height: auto;
-                width: 100%;
-                overflow: visible !important;
-            }
-
-            /* Mostrar y posicionar recibo */
-            #recibo-print {
-                display: block !important;
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: auto;
-                z-index: 9999;
-            }
-
-            /* Ajustes de impresión */
-            * {
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-            }
-
-            /* Estilos específicos para tabla de impresión */
-            .tabla-dias th,
-            .tabla-dias td {
-                border: 1px solid black !important;
-            }
-
-            .monto-descanso,
-            .dia-descanso-tabla {
-                color: #000 !important;
-                background-color: white !important;
-            }
-        }
-
-
-
-        .recibo-mensual {
-            width: 100%;
-            font-family: 'Courier New', monospace;
-            font-size: 10pt;
-            color: black;
-        }
-
-        .encabezado-recibo {
-            text-align: center;
-            margin-bottom: 15px;
-            border-bottom: 2px solid black;
-            padding-bottom: 10px;
-        }
-
-        .encabezado-recibo .linea-1 {
-            font-size: 11pt;
+            font-size: 14px;
             font-weight: bold;
-            margin-bottom: 3px;
-        }
-
-        .encabezado-recibo .linea-2 {
-            font-size: 10pt;
-            font-weight: bold;
-            margin-bottom: 8px;
-        }
-
-        .encabezado-recibo .info-mes {
-            font-size: 10pt;
-            margin-top: 5px;
-        }
-
-        .contenedor-principal {
-            display: flex;
-            gap: 15px;
-            margin-top: 10px;
-        }
-
-        .columna-tabla {
-            flex: 2;
-        }
-
-        .columna-datos {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .tabla-dias {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 9pt;
-        }
-
-        .tabla-dias th {
-            background: #f0f0f0;
-            border: 1px solid black;
-            padding: 5px;
-            text-align: center;
-            font-weight: bold;
-        }
-
-        .tabla-dias td {
-            border: 1px solid black;
-            padding: 4px 6px;
-            text-align: center;
-        }
-
-        .tabla-dias .col-dia {
-            width: 15%;
-        }
-
-        .tabla-dias .col-monto {
-            width: 25%;
-        }
-
-        .tabla-dias .col-observacion {
-            width: 60%;
-            text-align: left;
-        }
-
-        .dia-descanso-tabla {
-            background: #ffebee !important;
-        }
-
-        .monto-descanso {
-            text-decoration: line-through;
-            color: #d32f2f;
-            font-weight: bold;
-        }
-
-        .datos-conductor {
-            border: 1px solid black;
-            padding: 10px;
-            font-size: 9pt;
-        }
-
-        .dato-item {
-            margin-bottom: 8px;
-            display: flex;
-            gap: 5px;
-        }
-
-        .dato-label {
-            font-weight: bold;
-            min-width: 60px;
-        }
-
-        .dato-valor {
-            flex: 1;
-        }
-
-        .seccion-firma {
-            margin-top: auto;
-        }
-
-        .total-recibo {
-            font-size: 11pt;
-            font-weight: bold;
-            text-align: right;
-            margin-bottom: 15px;
-            padding: 8px;
-            border: 2px solid black;
-            background: #f5f5f5;
-        }
-
-        .firma-recibo {
             margin-top: 20px;
-            padding-top: 10px;
         }
 
-        .linea-firma {
-            border-top: 1px solid black;
-            margin-top: 30px;
-            padding-top: 5px;
+        .dia-comentario-preview {
+            font-size: 10px;
+            color: #666;
+            margin-top: auto;
+            padding-bottom: 5px;
+        }
+
+        .texto-descanso-preview {
+            font-size: 14px;
+            font-weight: bold;
+            color: #666;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .dia-seleccionado {
+            background-color: #e3f2fd;
         }
     </style>
 </head>
@@ -1236,109 +847,120 @@
         </header>
 
         <div class="tabs">
-            <div class="tab active" data-tab="registro-rapido">Registro Rápido</div>
+            <div class="tab active" data-tab="ingresos">Registrar Ingreso</div>
             <div class="tab" data-tab="equipos">Gestionar Equipos</div>
+            <div class="tab" data-tab="historial">Historial de Ingresos</div>
             <div class="tab" data-tab="depositos-equipos">Depósitos por Equipo</div>
             <div class="tab" data-tab="calendario">Calendario Mensual</div>
         </div>
 
-        <!-- Pestaña de Registro Rápido -->
-        <div class="tab-content active" id="registro-rapido">
-            <div class="panel-registro-rapido">
-                <div class="info-periodo-actual" style="display: none !important;">
-                    <h2>Período de Corte Actual</h2>
-                    <div class="fechas-periodo" id="fechas-periodo-actual">
-                        Cargando período...
-                    </div>
-                    <div class="dias-restantes" id="dias-restantes-periodo">
-                        Calculando días restantes...
-                    </div>
+        <!-- Pestaña de Ingresos -->
+        <div class="tab-content active" id="ingresos">
+            <div class="form-group">
+                <label for="fecha">Fecha:</label>
+                <div class="fila-compacta">
+                    <input type="date" id="fecha" class="fecha-input">
+                    <button class="btn btn-warning fecha-hoy-btn" id="fecha-hoy">Hoy</button>
+                </div>
+            </div>
+
+            <div class="formulario-rapido">
+                <div class="campo-rapido pequeno">
+                    <label for="equipo-rapido">Equipo:</label>
+                    <input type="number" id="equipo-rapido" placeholder="Número" min="1">
                 </div>
 
-                <h2 class="mb-3">Selecciona un Equipo para Registrar Entregas</h2>
-                <div class="grid-equipos" id="grid-equipos-rapido">
-                    <!-- Los equipos se cargarán aquí dinámicamente -->
+                <div class="campo-rapido medio">
+                    <label for="nombre-rapido">Nombre:</label>
+                    <input type="text" id="nombre-rapido" placeholder="Nombre del conductor" readonly>
                 </div>
 
-                <div class="calendario-periodo" id="calendario-periodo-container"
-                    style="display: none; max-width: 900px; margin: 0 auto;">
-                    <div class="header-calendario-simple"
-                        style="display: flex; justify-content: space-between; align-items: center;">
-                        <button class="btn btn-secondary btn-sm" id="cerrar-calendario" style="margin: 0;">
-                            ← Volver
-                        </button>
-                        <h3 style="margin: 0; flex: 1; text-align: center;">Calendario del Período:
-                            <span class="nombre-equipo-seleccionado" id="nombre-equipo-calendario"></span>
-                        </h3>
-                        <div style="width: 80px;"></div> <!-- Spacer for alignment -->
-                    </div>
+                <div class="campo-rapido pequeno">
+                    <label for="monto-rapido">Monto ($):</label>
+                    <input type="number" id="monto-rapido" placeholder="0.00" min="0" step="0.01">
+                </div>
 
-                    <!-- DÍAS DE LA SEMANA - DOMINGO PRIMERO -->
-                    <div class="dias-semana">
-                        <div class="dia-semana">DOM</div>
-                        <div class="dia-semana">LUN</div>
-                        <div class="dia-semana">MAR</div>
-                        <div class="dia-semana">MIÉ</div>
-                        <div class="dia-semana">JUE</div>
-                        <div class="dia-semana">VIE</div>
-                        <div class="dia-semana">SÁB</div>
-                    </div>
+                <div class="campo-rapido">
+                    <button class="btn btn-primary" id="guardar-rapido" style="margin-top: 20px;">Registrar</button>
+                </div>
+            </div>
 
-                    <div class="grid-dias-calendario" id="grid-dias-calendario">
-                        <!-- Los días del período se generarán aquí -->
-                    </div>
+            <div class="campo-rapido observacion">
+                <label for="observacion-rapida">Observación (opcional):</label>
+                <textarea id="observacion-rapida" placeholder="Observación o comentario..."></textarea>
+            </div>
+
+            <div class="resumen-equipos-saldos">
+                <h2>Resumen de Equipos con Saldo</h2>
+                <div class="lista-equipos-saldos" id="resumen-equipos-saldos">
+                    <!-- Aquí se mostrará el resumen de equipos con saldo -->
                 </div>
             </div>
         </div>
 
         <!-- Pestaña de Equipos -->
         <div class="tab-content" id="equipos">
-            <h2 class="mb-3">Registrar Nuevo Equipo</h2>
+            <h2>Registrar Nuevo Equipo</h2>
 
-            <div class="formulario-equipo">
-                <div class="form-inline">
-                    <div class="form-group">
-                        <label for="numero-equipo">Número de Equipo:</label>
-                        <input type="number" id="numero-equipo" placeholder="Ej: 1, 2, 3..." min="1">
-                    </div>
-                    <div class="form-group">
-                        <label for="placa">Placa:</label>
-                        <input type="text" id="placa" placeholder="Ej: M52795">
-                    </div>
-                    <div class="form-group">
-                        <label for="nombre">Nombre del Conductor:</label>
-                        <input type="text" id="nombre" placeholder="Nombre completo">
-                    </div>
-                </div>
+            <div class="form-group">
+                <label for="numero-equipo">Número de Equipo:</label>
+                <input type="number" id="numero-equipo" placeholder="Ej: 1, 2, 3..." min="1">
+            </div>
 
-                <div class="form-inline">
-                    <div class="form-group">
-                        <label for="dui">DUI:</label>
-                        <input type="text" id="dui" placeholder="Ej: 12345678-9">
-                    </div>
-                    <div class="form-group">
-                        <label for="monto-predeterminado-equipo">Monto Predeterminado ($):</label>
-                        <input type="number" id="monto-predeterminado-equipo" min="0" step="1" placeholder="30"
-                            value="30">
-                    </div>
-                    <div class="form-group">
-                        <button class="btn btn-success w-100" id="guardar-equipo">Guardar Equipo</button>
-                    </div>
-                </div>
+            <div class="form-group">
+                <label for="placa">Placa:</label>
+                <input type="text" id="placa" placeholder="Ej: P123456">
+            </div>
+
+            <div class="form-group">
+                <label for="nombre">Nombre del Conductor:</label>
+                <input type="text" id="nombre" placeholder="Nombre completo">
+            </div>
+
+            <div class="form-group">
+                <label for="dui">DUI:</label>
+                <input type="text" id="dui" placeholder="Ej: 12345678-9">
+            </div>
+
+            <div>
+                <button class="btn btn-success" id="guardar-equipo">Guardar Equipo</button>
             </div>
 
             <div class="ingresos-list">
-                <h2 class="mb-3">Equipos Registrados</h2>
+                <h2>Equipos Registrados</h2>
                 <div class="lista-ingresos" id="lista-equipos">
-                    <!-- Los equipos se cargarán aquí -->
+                    <!-- Aquí se mostrarán los equipos -->
                 </div>
+            </div>
+        </div>
+
+        <!-- Pestaña de Historial -->
+        <div class="tab-content" id="historial">
+            <h2>Historial de Ingresos</h2>
+
+            <div class="filtros">
+                <div class="filtro-group">
+                    <label for="filtro-equipo">Filtrar por Equipo:</label>
+                    <select id="filtro-equipo">
+                        <option value="">Todos los equipos</option>
+                    </select>
+                </div>
+
+                <div class="filtro-group">
+                    <label for="filtro-fecha">Filtrar por Fecha:</label>
+                    <input type="month" id="filtro-fecha">
+                </div>
+            </div>
+
+            <div class="lista-ingresos" id="historial-ingresos">
+                <!-- Aquí se mostrará el historial -->
             </div>
         </div>
 
         <!-- Pestaña de Depósitos por Equipo -->
         <div class="tab-content" id="depositos-equipos">
-            <h2 class="mb-3">Depósitos por Equipo</h2>
-            <button class="btn btn-info no-print mb-3" id="imprimir-todos-equipos">Imprimir Todos</button>
+            <h2>Depósitos por Equipo</h2>
+            <button class="btn btn-info no-print" id="imprimir-todos-equipos">Imprimir Todos</button>
 
             <div class="filtros">
                 <div class="filtro-group">
@@ -1347,36 +969,25 @@
                         <option value="">Todos los equipos</option>
                     </select>
                 </div>
-                <div class="filtro-group">
-                    <label for="filtro-periodo-depositos">Filtrar por Período:</label>
-                    <select id="filtro-periodo-depositos">
-                        <option value="">Todos los períodos</option>
-                        <option value="actual">Período Actual</option>
-                    </select>
-                </div>
-            </div>
-
-            <!-- Botones de períodos disponibles -->
-            <div class="periodos-buttons" id="periodos-buttons">
-                <!-- Los botones de períodos se generarán aquí dinámicamente -->
             </div>
 
             <div class="depositos-equipo">
                 <div class="depositos-lista" id="depositos-lista-equipos">
-                    <!-- Depósitos se cargarán aquí -->
+                    <!-- Aquí se mostrarán los depósitos por equipo -->
                 </div>
             </div>
         </div>
 
         <!-- Pestaña de Calendario Mensual -->
         <div class="tab-content" id="calendario">
-            <h2 class="mb-3">Calendario Mensual para Imprimir</h2>
+            <h2>Calendario Mensual para Imprimir</h2>
 
             <div class="filtros">
                 <div class="filtro-group">
                     <label for="filtro-mes-calendario">Seleccionar Mes:</label>
                     <input type="month" id="filtro-mes-calendario">
                 </div>
+
                 <div class="filtro-group">
                     <label for="filtro-equipo-calendario">Filtrar por Equipo:</label>
                     <select id="filtro-equipo-calendario">
@@ -1385,84 +996,22 @@
                 </div>
             </div>
 
-            <div class="vista-previa-calendario" style="max-width: 400px; margin: 0 auto; font-size: 0.9rem;">
+            <div class="dias-descanso">
+                <h3>Haz clic en los días del calendario para marcarlos como DESCANSO</h3>
+                <p>Los días marcados se mostrarán en gris con el texto "DESCANSO"</p>
+            </div>
+
+            <div class="vista-previa-calendario">
                 <h3>Vista Previa del Calendario</h3>
-                <div id="calendario-preview" style="width: 100%;"></div>
-            </div>
-
-            <button class="btn btn-warning mt-3" id="btn-imprimir-nuevo" onclick="prepararImpresion()">Imprimir
-                Calendario</button>
-            <div class="recibo-print" id="recibo-print"></div>
-        </div>
-    </div>
-
-    <!-- Modal para registro de entrega -->
-    <div class="modal-overlay" id="modal-registro" style="display: none;">
-        <div class="modal-contenido">
-            <div class="modal-header">
-                <h3 id="modal-titulo">Registrar Entrega</h3>
-                <button class="modal-cerrar" id="cerrar-modal">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="info-registro" id="info-registro">
-                    <!-- Información del día seleccionado -->
-                </div>
-
-                <div class="form-group">
-                    <label for="modal-monto">Monto de la Entrega ($):</label>
-                    <input type="number" id="modal-monto" min="0" step="1" placeholder="0" value="30">
-                </div>
-
-                <div class="form-group">
-                    <label for="modal-observacion">Observación (opcional):</label>
-                    <textarea id="modal-observacion" placeholder="Observación o comentario..."></textarea>
+                <div id="calendario-preview">
+                    <!-- Aquí se generará la vista previa del calendario -->
                 </div>
             </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" id="cancelar-modal">Cancelar</button>
-                <button class="btn btn-primary" id="guardar-modal">Guardar Entrega</button>
-            </div>
-        </div>
-    </div>
 
-    <!-- Modal para editar equipo -->
-    <div class="modal-overlay" id="modal-editar-equipo" style="display: none;">
-        <div class="modal-contenido modal-editar-equipo">
-            <div class="modal-header">
-                <h3 id="modal-titulo-editar">Editar Equipo</h3>
-                <button class="modal-cerrar" id="cerrar-modal-editar">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="form-group">
-                    <label for="editar-numero-equipo">Número de Equipo:</label>
-                    <input type="number" id="editar-numero-equipo" min="1" disabled>
-                </div>
+            <button class="btn btn-imprimir-calendario" id="imprimir-calendario">Imprimir Calendario</button>
 
-                <div class="form-group">
-                    <label for="editar-placa">Placa:</label>
-                    <input type="text" id="editar-placa" placeholder="Ej: M52795">
-                </div>
-
-                <div class="form-group">
-                    <label for="editar-nombre">Nombre del Conductor:</label>
-                    <input type="text" id="editar-nombre" placeholder="Nombre completo">
-                </div>
-
-                <div class="form-group">
-                    <label for="editar-dui">DUI:</label>
-                    <input type="text" id="editar-dui" placeholder="Ej: 12345678-9">
-                </div>
-
-                <div class="form-group">
-                    <label for="editar-monto-predeterminado">Monto Predeterminado Diario ($):</label>
-                    <input type="number" id="editar-monto-predeterminado" min="0" step="1" placeholder="30" value="30">
-                    <small style="color: #6c757d; font-size: 0.85rem;">Monto sugerido para nuevas entregas. Se puede
-                        cambiar al registrar.</small>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" id="cancelar-modal-editar">Cancelar</button>
-                <button class="btn btn-primary" id="guardar-cambios-equipo">Guardar Cambios</button>
+            <div class="calendario-print" id="calendario-print">
+                <!-- Aquí se generará el calendario para imprimir -->
             </div>
         </div>
     </div>
@@ -1482,19 +1031,10 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // Variables globales
-        let equipoSeleccionado = null;
-        let diaSeleccionado = null;
-        let periodoActual = null;
-        let equipoAEditar = null;
-        let periodoFiltroDepositos = null; // Nuevo: Para filtrar por período
+        // Variable global para almacenar los días de descanso seleccionados
+        let diasDescansoSeleccionados = [];
 
         document.addEventListener('DOMContentLoaded', function () {
-            // FIX CRÍTICO IMPRESIÓN: Mover #recibo-print al body para que no se oculte
-            const reciboPrint = document.getElementById('recibo-print');
-            if (reciboPrint && reciboPrint.parentElement !== document.body) {
-                document.body.appendChild(reciboPrint);
-            }
             // Configurar pestañas
             const tabs = document.querySelectorAll('.tab');
             const tabContents = document.querySelectorAll('.tab-content');
@@ -1511,970 +1051,139 @@
                     this.classList.add('active');
                     document.getElementById(tabId).classList.add('active');
 
-                    // Actualizar según la pestaña seleccionada
-                    if (tabId === 'registro-rapido') {
-                        cargarPanelRegistroRapido();
+                    // Actualizar selectores si es necesario
+                    if (tabId === 'ingresos') {
+                        actualizarResumenEquiposSaldos();
                     } else if (tabId === 'depositos-equipos') {
                         cargarDepositosPorEquipo();
                         actualizarFiltroEquipos('filtro-equipo-depositos');
-                        cargarPeriodosDisponibles();
+                    } else if (tabId === 'historial') {
+                        actualizarFiltroEquipos('filtro-equipo');
+                        cargarHistorialIngresos();
                     } else if (tabId === 'calendario') {
                         actualizarFiltroEquipos('filtro-equipo-calendario');
                         const hoy = new Date();
                         const mesActual = hoy.getFullYear() + '-' + String(hoy.getMonth() + 1).padStart(2, '0');
                         document.getElementById('filtro-mes-calendario').value = mesActual;
-                        generarRecibo();
+                        generarCalendario();
                     }
                 });
             });
+
+            // Función para obtener fecha actual en formato YYYY-MM-DD
+            function obtenerFechaHoy() {
+                const fechaActual = new Date();
+                const año = fechaActual.getFullYear();
+                const mes = String(fechaActual.getMonth() + 1).padStart(2, '0');
+                const dia = String(fechaActual.getDate()).padStart(2, '0');
+                return `${año}-${mes}-${dia}`;
+            }
+
+            // Función para formatear fecha de YYYY-MM-DD a dd/mm/aaaa
+            function formatearFecha(fechaISO) {
+                const [año, mes, dia] = fechaISO.split('-');
+                return `${dia}/${mes}/${año}`;
+            }
+
+            // Establecer fecha actual en el formulario
+            const fechaInput = document.getElementById('fecha');
+            fechaInput.value = obtenerFechaHoy();
+
+            // Botón para establecer fecha de hoy
+            document.getElementById('fecha-hoy').addEventListener('click', function () {
+                fechaInput.value = obtenerFechaHoy();
+            });
+
+            // Elementos del DOM
+            const guardarRapidoBtn = document.getElementById('guardar-rapido');
+            const guardarEquipoBtn = document.getElementById('guardar-equipo');
+            const imprimirTodosEquiposBtn = document.getElementById('imprimir-todos-equipos');
+            const imprimirCalendarioBtn = document.getElementById('imprimir-calendario');
+
+            // Elementos del formulario rápido
+            const equipoRapidoInput = document.getElementById('equipo-rapido');
+            const nombreRapidoInput = document.getElementById('nombre-rapido');
+            const montoRapidoInput = document.getElementById('monto-rapido');
+            const observacionRapidaInput = document.getElementById('observacion-rapida');
 
             // Inicializar la aplicación
             inicializarApp();
 
-            // Event Listeners
-            document.getElementById('cerrar-calendario').addEventListener('click', cerrarCalendario);
-            document.getElementById('cerrar-modal').addEventListener('click', cerrarModal);
-            document.getElementById('cancelar-modal').addEventListener('click', cerrarModal);
-
-            document.getElementById('guardar-equipo').addEventListener('click', guardarEquipo);
-            document.getElementById('imprimir-todos-equipos').addEventListener('click', () => window.print());
-            // Eliminado listener antiguo PRINT que causaba error
-
-            // Modal editar equipo
-            document.getElementById('cerrar-modal-editar').addEventListener('click', cerrarModalEditar);
-            document.getElementById('cancelar-modal-editar').addEventListener('click', cerrarModalEditar);
-            document.getElementById('guardar-cambios-equipo').addEventListener('click', guardarCambiosEquipo);
+            // Event listeners
+            guardarRapidoBtn.addEventListener('click', guardarIngresoRapido);
+            guardarEquipoBtn.addEventListener('click', guardarEquipo);
+            imprimirTodosEquiposBtn.addEventListener('click', () => window.print());
+            imprimirCalendarioBtn.addEventListener('click', () => window.print());
 
             // Filtros
+            document.getElementById('filtro-equipo').addEventListener('change', cargarHistorialIngresos);
+            document.getElementById('filtro-fecha').addEventListener('change', cargarHistorialIngresos);
             document.getElementById('filtro-equipo-depositos').addEventListener('change', cargarDepositosPorEquipo);
-            document.getElementById('filtro-periodo-depositos').addEventListener('change', function () {
-                periodoFiltroDepositos = this.value;
-                cargarDepositosPorEquipo();
+            document.getElementById('filtro-mes-calendario').addEventListener('change', generarCalendario);
+            document.getElementById('filtro-equipo-calendario').addEventListener('change', generarCalendario);
+
+            // Event listeners para navegación con ENTER
+            equipoRapidoInput.addEventListener('keypress', function (e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    nombreRapidoInput.focus();
+                }
             });
-            document.getElementById('filtro-mes-calendario').addEventListener('change', generarRecibo);
-            document.getElementById('filtro-equipo-calendario').addEventListener('change', generarRecibo);
 
-            // ===== FUNCIONES PRINCIPALES =====
+            nombreRapidoInput.addEventListener('keypress', function (e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    montoRapidoInput.focus();
+                }
+            });
 
+            montoRapidoInput.addEventListener('keypress', function (e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    guardarIngresoRapido();
+                }
+            });
+
+            // Event listener para autocompletar nombre cuando se ingresa número de equipo
+            equipoRapidoInput.addEventListener('change', function () {
+                const numeroEquipo = parseInt(this.value);
+                if (numeroEquipo > 0) {
+                    const equipos = JSON.parse(localStorage.getItem('equiposMototaxis')) || [];
+                    const equipo = equipos.find(e => e.numero === numeroEquipo);
+                    if (equipo) {
+                        nombreRapidoInput.value = equipo.nombre;
+                    } else {
+                        nombreRapidoInput.value = '';
+                    }
+                }
+            });
+
+            // Enfocar en el campo de equipo al cargar la página
+            equipoRapidoInput.focus();
+
+            // Función para inicializar la aplicación
             async function inicializarApp() {
+                // Cargar datos desde Firebase
                 await cargarDatosFirebase();
-                calcularPeriodoActual();
-                cargarPanelRegistroRapido();
+
+                // Cargar datos iniciales
+                actualizarResumenEquiposSaldos();
                 cargarListaEquipos();
+                cargarHistorialIngresos();
             }
 
-            // Función para calcular el período actual (15 al 14)
-            function calcularPeriodoActual() {
-                const hoy = new Date();
-                const año = hoy.getFullYear();
-                const mes = hoy.getMonth() + 1;
-                const dia = hoy.getDate();
-
-                let inicioPeriodo, finPeriodo;
-
-                if (dia >= 15) {
-                    // Período actual: 15 del mes actual al 14 del mes siguiente
-                    inicioPeriodo = new Date(año, mes - 1, 15);
-                    finPeriodo = new Date(año, mes, 14);
-                } else {
-                    // Período actual: 15 del mes anterior al 14 del mes actual
-                    inicioPeriodo = new Date(año, mes - 2, 15);
-                    finPeriodo = new Date(año, mes - 1, 14);
-                }
-
-                periodoActual = {
-                    inicio: inicioPeriodo,
-                    fin: finPeriodo,
-                    inicioStr: formatoFechaSQL(inicioPeriodo),
-                    finStr: formatoFechaSQL(finPeriodo),
-                    clave: `${formatoFechaSQL(inicioPeriodo)}_a_${formatoFechaSQL(finPeriodo)}`
-                };
-
-                // Actualizar UI
-                const fechaInicio = formatoFechaLegible(inicioPeriodo);
-                const fechaFin = formatoFechaLegible(finPeriodo);
-                document.getElementById('fechas-periodo-actual').textContent =
-                    `${fechaInicio} al ${fechaFin}`;
-
-                // Calcular días restantes
-                const msPorDia = 1000 * 60 * 60 * 24;
-                const diasRestantes = Math.ceil((finPeriodo - hoy) / msPorDia);
-                document.getElementById('dias-restantes-periodo').textContent =
-                    `${diasRestantes} días restantes para el cierre del período`;
-            }
-
-            // Función para obtener todos los períodos únicos de los ingresos
-            function obtenerPeriodosDisponibles() {
-                const ingresos = JSON.parse(localStorage.getItem('ingresosMototaxis')) || [];
-                const periodosSet = new Set();
-
-                // Agregar períodos de los ingresos
-                ingresos.forEach(ingreso => {
-                    if (ingreso.periodo && ingreso.periodo.trim() !== '') {
-                        periodosSet.add(ingreso.periodo);
-                    }
-                });
-
-                // Agregar período actual si existe
-                if (periodoActual && periodoActual.clave) {
-                    periodosSet.add(periodoActual.clave);
-                }
-
-                // Convertir a array y ordenar (más reciente primero)
-                const periodos = Array.from(periodosSet).sort((a, b) => {
-                    try {
-                        // Extraer fechas para ordenar
-                        const fechaA = a.split('_a_')[0];
-                        const fechaB = b.split('_a_')[0];
-                        return new Date(fechaB) - new Date(fechaA);
-                    } catch (e) {
-                        return 0;
-                    }
-                });
-
-                return periodos;
-            }
-
-            // Función para cargar botones de períodos disponibles
-            function cargarPeriodosDisponibles() {
-                const periodosButtons = document.getElementById('periodos-buttons');
-                const periodos = obtenerPeriodosDisponibles();
-
-                let html = '';
-
-                // Agregar botón para "Todos los períodos"
-                html += `
-                    <button class="periodo-btn ${!periodoFiltroDepositos ? 'active' : ''}" data-periodo="">
-                        Todos los períodos
-                    </button>
-                `;
-
-                // Agregar botón para "Período Actual"
-                html += `
-                    <button class="periodo-btn ${periodoFiltroDepositos === 'actual' ? 'active' : ''}" data-periodo="actual">
-                        Período Actual
-                    </button>
-                `;
-
-                // Agregar botones para períodos específicos
-                periodos.forEach(periodoKey => {
-                    try {
-                        const [inicioStr, finStr] = periodoKey.split('_a_');
-                        const inicio = new Date(inicioStr);
-                        const fin = new Date(finStr);
-
-                        const nombrePeriodo = `${formatoFechaCorta(inicio)} - ${formatoFechaCorta(fin)}`;
-                        const esActual = periodoActual && periodoKey === periodoActual.clave;
-
-                        html += `
-                            <button class="periodo-btn ${periodoFiltroDepositos === periodoKey ? 'active' : ''}" data-periodo="${periodoKey}">
-                                ${nombrePeriodo}${esActual ? ' (Actual)' : ''}
-                            </button>
-                        `;
-                    } catch (e) {
-                        console.error('Error procesando período:', periodoKey, e);
-                    }
-                });
-
-                periodosButtons.innerHTML = html;
-
-                // Agregar event listeners a los botones de período
-                document.querySelectorAll('.periodo-btn').forEach(btn => {
-                    btn.addEventListener('click', function () {
-                        const periodoSeleccionado = this.getAttribute('data-periodo');
-
-                        // Establecer filtro de período
-                        periodoFiltroDepositos = periodoSeleccionado || '';
-                        document.getElementById('filtro-periodo-depositos').value = periodoFiltroDepositos;
-
-                        // Remover clase active de todos los botones
-                        document.querySelectorAll('.periodo-btn').forEach(b => b.classList.remove('active'));
-                        // Agregar clase active al botón clickeado
-                        this.classList.add('active');
-
-                        // Recargar depósitos
-                        cargarDepositosPorEquipo();
-                    });
-                });
-            }
-
-            // Función para formatear fecha legible corta (solo día/mes)
-            // Función para formatear fecha legible corta (solo día/mes)
-            function formatoFechaCorta(fecha) {
-                // Manejo directo de strings YYYY-MM-DD para evitar problemas de zona horaria
-                if (typeof fecha === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(fecha.substring(0, 10))) {
-                    const parts = fecha.substring(0, 10).split('-');
-                    return `${parts[2]}/${parts[1]}`;
-                }
-
-                if (typeof fecha === 'string') {
-                    // Intento de parseo seguro agregando hora si falta
-                    if (fecha.length === 10) fecha += 'T00:00:00';
-                    fecha = new Date(fecha);
-                }
-                const dia = String(fecha.getDate()).padStart(2, '0');
-                const mes = String(fecha.getMonth() + 1).padStart(2, '0');
-                return `${dia}/${mes}`;
-            }
-
-            // Función para formatear fecha legible completa
-            function formatoFechaLegible(fecha) {
-                // Manejo directo de strings YYYY-MM-DD para evitar problemas de zona horaria
-                if (typeof fecha === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(fecha.substring(0, 10))) {
-                    const parts = fecha.substring(0, 10).split('-');
-                    return `${parts[2]}/${parts[1]}/${parts[0]}`;
-                }
-
-                if (typeof fecha === 'string') {
-                    if (fecha.length === 10) fecha += 'T00:00:00';
-                    fecha = new Date(fecha);
-                }
-                const opciones = { day: '2-digit', month: '2-digit', year: 'numeric' };
-                return fecha.toLocaleDateString('es-ES', opciones);
-            }
-
-            // Función para cargar el panel de registro rápido
-            async function cargarPanelRegistroRapido() {
-                const gridEquipos = document.getElementById('grid-equipos-rapido');
-                const equipos = JSON.parse(localStorage.getItem('equiposMototaxis')) || [];
-                const ingresos = JSON.parse(localStorage.getItem('ingresosMototaxis')) || [];
-
-                if (equipos.length === 0) {
-                    gridEquipos.innerHTML = `
-                        <div style="grid-column: 1 / -1; text-align: center; padding: 40px;">
-                            <p style="color: #7f8c8d; font-style: italic;">
-                                No hay equipos registrados. Ve a la pestaña "Gestionar Equipos" para registrar el primero.
-                            </p>
-                        </div>
-                    `;
-                    return;
-                }
-
-                // Ordenar equipos por número
-                equipos.sort((a, b) => a.numero - b.numero);
-
-                let html = '';
-
-                equipos.forEach(equipo => {
-                    // Obtener ingresos del equipo en el período actual
-                    const ingresosEquipo = ingresos.filter(ingreso =>
-                        ingreso.equipo === equipo.numero &&
-                        ingreso.fecha >= periodoActual.inicioStr &&
-                        ingreso.fecha <= periodoActual.finStr
-                    );
-
-                    // Calcular estadísticas
-                    const diasPeriodo = calcularDiasEnPeriodo();
-                    const ingresosRegistrados = ingresosEquipo.length;
-                    const porcentajeCompletado = Math.round((ingresosRegistrados / diasPeriodo) * 100);
-
-                    // Obtener monto predeterminado del equipo (o $30 por defecto)
-                    const montoPredeterminado = equipo.montoPredeterminado || 30;
-
-                    // Calcular total registrado
-                    const totalRegistrado = ingresosEquipo.reduce((sum, ingreso) => sum + ingreso.monto, 0);
-
-                    // Determinar estado
-                    let estadoClase, estadoTexto;
-                    if (ingresosRegistrados === 0) {
-                        estadoClase = 'estado-sin-registros';
-                        estadoTexto = 'Sin registros';
-                    } else if (ingresosRegistrados >= diasPeriodo) {
-                        estadoClase = 'estado-completo';
-                        estadoTexto = 'Completo';
-                    } else {
-                        estadoClase = 'estado-pendiente';
-                        estadoTexto = 'Pendiente';
-                    }
-
-                    // Calcular fechas pendientes
-                    const fechasPendientes = [];
-                    const hoy = new Date();
-                    const inicioDate = new Date(periodoActual.inicio);
-                    const finDate = new Date(periodoActual.fin);
-
-                    for (let d = new Date(inicioDate); d <= finDate; d.setDate(d.getDate() + 1)) {
-                        const fechaStr = formatoFechaSQL(new Date(d));
-                        const tieneIngreso = ingresosEquipo.some(ing => ing.fecha === fechaStr);
-                        const esPasado = new Date(d) < hoy;
-
-                        if (!tieneIngreso && esPasado) {
-                            // Mostrar solo el día (ej: 24, 25) en lugar de fecha completa
-                            const diaPendiente = fechaStr.split('-')[2];
-                            fechasPendientes.push(parseInt(diaPendiente));
-                        }
-                    }
-
-                    html += `
-                        <div class="equipo-card-rapido" data-equipo="${equipo.numero}">
-                            <div class="equipo-header-rapido">
-                                <div class="equipo-numero-rapido">Equipo ${equipo.numero}</div>
-                            </div>
-                            <div class="equipo-info-rapido">
-                                ${fechasPendientes.length > 0 ? `
-                                    <div style="margin-bottom: 10px;">
-                                        <strong style="color: #e53e3e;">Fechas pendientes:</strong>
-                                        <div style="margin-top: 5px; font-size: 0.85rem; color: #a0aec0;">
-                                            ${fechasPendientes.join(', ')}
-                                        </div>
-                                    </div>
-                                ` : `
-                                    <div style="margin-bottom: 10px; color: #48bb78;">
-                                        ✓ Todas las fechas registradas
-                                    </div>
-                                `}
-                            </div>
-                            <div class="equipo-progreso">
-                                <div class="barra-progreso">
-                                    <div class="progreso-completado" style="width: ${porcentajeCompletado}%"></div>
-                                </div>
-                                <div class="estadisticas-equipo">
-                                    <span>${ingresosRegistrados}/${diasPeriodo} días</span>
-                                    <span>${porcentajeCompletado}%</span>
-                                </div>
-                            </div>
-                            <div class="total-equipo-periodo">
-                                Total: $${totalRegistrado}
-                            </div>
-                        </div>
-                    `;
-                });
-
-                gridEquipos.innerHTML = html;
-
-                // Agregar event listeners a las tarjetas de equipo
-                document.querySelectorAll('.equipo-card-rapido').forEach(card => {
-                    card.addEventListener('click', function () {
-                        const numeroEquipo = parseInt(this.getAttribute('data-equipo'));
-                        abrirCalendarioEquipo(numeroEquipo);
-                    });
-                });
-            }
-
-            // Función para abrir calendario de un equipo
-            function abrirCalendarioEquipo(numeroEquipo) {
-                const equipos = JSON.parse(localStorage.getItem('equiposMototaxis')) || [];
-                equipoSeleccionado = equipos.find(e => e.numero === numeroEquipo);
-
-                if (!equipoSeleccionado) {
-                    alert('Equipo no encontrado');
-                    return;
-                }
-
-                // Actualizar UI
-                document.getElementById('nombre-equipo-calendario').textContent =
-                    `Equipo ${equipoSeleccionado.numero} - ${equipoSeleccionado.nombre}`;
-
-                // Mostrar calendario y ocultar grid de equipos
-                document.getElementById('grid-equipos-rapido').style.display = 'none';
-                document.getElementById('calendario-periodo-container').style.display = 'block';
-
-                // Generar calendario
-                generarCalendarioPeriodo();
-            }
-
-            // Función para cerrar calendario y volver a equipos
-            function cerrarCalendario() {
-                document.getElementById('grid-equipos-rapido').style.display = 'grid';
-                document.getElementById('calendario-periodo-container').style.display = 'none';
-                equipoSeleccionado = null;
-                diaSeleccionado = null;
-            }
-
-            // Función para generar el calendario del período con DOMINGO como primer día
-            function generarCalendarioPeriodo() {
-                if (!equipoSeleccionado || !periodoActual) return;
-
-                const gridDias = document.getElementById('grid-dias-calendario');
-                const ingresos = JSON.parse(localStorage.getItem('ingresosMototaxis')) || [];
-                const hoy = new Date();
-                hoy.setHours(0, 0, 0, 0);
-
-                // Obtener monto predeterminado del equipo
-                const montoPredeterminado = equipoSeleccionado.montoPredeterminado || 30;
-
-                // Crear array de días del período
-                const diasPeriodo = [];
-                const fechaActual = new Date(periodoActual.inicio);
-                const fechaFin = new Date(periodoActual.fin);
-
-                while (fechaActual <= fechaFin) {
-                    diasPeriodo.push(new Date(fechaActual));
-                    fechaActual.setDate(fechaActual.getDate() + 1);
-                }
-
-                // Determinar día de inicio (domingo = 0)
-                const primerDia = new Date(diasPeriodo[0]);
-                const diaInicio = primerDia.getDay(); // 0 = Domingo, 1 = Lunes, ..., 6 = Sábado
-
-                // Generar celdas vacías para alinear el primer día en la columna correcta
-                let html = '';
-
-                // Agregar celdas vacías antes del primer día para alinear con DOMINGO
-                for (let i = 0; i < diaInicio; i++) {
-                    html += '<div class="dia-calendario fuera-periodo"></div>';
-                }
-
-                // Generar días del período
-                diasPeriodo.forEach(fecha => {
-                    const fechaStr = formatoFechaSQL(fecha);
-                    const ingreso = ingresos.find(ing =>
-                        ing.equipo === equipoSeleccionado.numero && ing.fecha === fechaStr
-                    );
-
-                    // Determinar el tipo de día
-                    let claseDia = '';
-                    const fechaSinHora = new Date(fecha);
-                    fechaSinHora.setHours(0, 0, 0, 0);
-
-                    if (ingreso) {
-                        // Día con entrega registrada - VERDE (incluye sábados y domingos)
-                        claseDia = 'registrado';
-                    } else if (fechaSinHora.getTime() === hoy.getTime()) {
-                        // Hoy - AZUL
-                        claseDia = 'hoy';
-                    } else if (fechaSinHora > hoy) {
-                        // Día futuro - BLANCO
-                        claseDia = 'futuro';
-                    } else {
-                        // Día pasado sin entrega - ROJO
-                        claseDia = 'pasado-sin-entregas';
-                    }
-
-                    // Verificar si es fin de semana
-                    const diaSemana = fecha.getDay();
-                    if ((diaSemana === 0 || diaSemana === 6) && !ingreso) {
-                        // Solo agregar clase descanso si NO tiene entrega
-                        claseDia += ' descanso';
-                    }
-
-                    // Monto para mostrar (ingreso real o predeterminado)
-                    const montoMostrar = ingreso ? ingreso.monto : montoPredeterminado;
-
-                    html += `
-                        <div class="dia-calendario ${claseDia}" data-fecha="${fechaStr}">
-                            <div class="numero-dia">${fecha.getDate()}</div>
-                            <input type="number" 
-                                   class="monto-input-simple" 
-                                   value="${montoMostrar}" 
-                                   data-fecha="${fechaStr}"
-                                   min="0" 
-                                   max="99"
-                                   ${ingreso ? 'readonly' : ''}>
-                            ${ingreso && ingreso.observacion !== 'Sin observación' ?
-                            `<div class="observacion-dia" title="${ingreso.observacion}">${ingreso.observacion}</div>` :
-                            ''}
-                        </div>
-                    `;
-                });
-
-                gridDias.innerHTML = html;
-
-                // Agregar event listeners a los inputs de monto
-                document.querySelectorAll('.monto-input-simple:not([readonly])').forEach(input => {
-                    input.addEventListener('change', function () {
-                        const fecha = this.getAttribute('data-fecha');
-                        let monto = parseInt(this.value) || 0;
-
-                        // Validar rango (0-99)
-                        if (monto < 0) monto = 0;
-                        if (monto > 99) monto = 99;
-
-                        this.value = monto;
-
-                        // Abrir modal para confirmar/agregar observación
-                        abrirModalRegistro(fecha, monto);
-                    });
-
-                    input.addEventListener('click', function (e) {
-                        e.stopPropagation();
-                        this.select();
-                    });
-                });
-
-                // Agregar event listeners a los días ya registrados (para ver/editar)
-                document.querySelectorAll('.dia-calendario.registrado').forEach(dia => {
-                    dia.addEventListener('click', function () {
-                        const fecha = this.getAttribute('data-fecha');
-                        const ingreso = ingresos.find(ing =>
-                            ing.equipo === equipoSeleccionado.numero && ing.fecha === fecha
-                        );
-
-                        if (ingreso) {
-                            abrirModalEditarEntrega(ingreso);
-                        }
-                    });
-                });
-
-                // NUEVO: Agregar event listeners a días vacíos (pasados y hoy) para registrar
-                document.querySelectorAll('.dia-calendario:not(.registrado):not(.futuro)').forEach(dia => {
-                    dia.addEventListener('click', function (e) {
-                        // Evitar conflicto si se hace clic en el input
-                        if (e.target.classList.contains('monto-input-simple')) return;
-
-                        const fecha = this.getAttribute('data-fecha');
-                        // Al hacer clic en el día (y no en el input), ignoramos el valor visual del input
-                        // y forzamos el uso del monto predeterminado actual del equipo (pasando null).
-                        abrirModalRegistro(fecha, null);
-                    });
-                });
-            }
-
-            // Función para abrir modal de registro
-            function abrirModalRegistro(fecha, montoPrecargado = null) {
-                if (!equipoSeleccionado) return;
-
-                diaSeleccionado = fecha;
-                // Agregar T00:00:00 para asegurar que se interprete como hora local y no UTC
-                const fechaObj = new Date(fecha + 'T00:00:00');
-                const montoPredeterminado = equipoSeleccionado.montoPredeterminado || 30;
-
-                const ingresos = JSON.parse(localStorage.getItem('ingresosMototaxis')) || [];
-                const ingresoExistente = ingresos.find(ing =>
-                    ing.equipo === equipoSeleccionado.numero && ing.fecha === fecha
-                );
-
-                // Actualizar información del modal
-                document.getElementById('modal-titulo').textContent =
-                    ingresoExistente ? 'Editar Entrega' : 'Registrar Entrega';
-
-                document.getElementById('info-registro').innerHTML = `
-                    <p><strong>Fecha:</strong> ${formatoFechaLegible(fechaObj)}</p>
-                    <p><strong>Equipo:</strong> ${equipoSeleccionado.numero} - ${equipoSeleccionado.nombre}</p>
-                    <p><strong>Monto predeterminado:</strong> $${montoPredeterminado}</p>
-                `;
-
-                // Configurar campos
-                if (ingresoExistente) {
-                    document.getElementById('modal-monto').value = ingresoExistente.monto;
-                    document.getElementById('modal-observacion').value = ingresoExistente.observacion;
-                } else {
-                    document.getElementById('modal-monto').value = montoPrecargado || montoPredeterminado;
-                    document.getElementById('modal-observacion').value = '';
-                }
-
-                // Mostrar modal
-                document.getElementById('modal-registro').style.display = 'flex';
-
-                // Re-asegurar listener del botón guardar
-                document.getElementById('guardar-modal').onclick = guardarEntregaModal;
-            }
-
-            // Función para abrir modal de edición de entrega existente
-            function abrirModalEditarEntrega(ingreso) {
-                diaSeleccionado = ingreso.fecha;
-                // Agregar T00:00:00 para asegurar que se interprete como hora local y no UTC
-                const fechaObj = new Date(ingreso.fecha + 'T00:00:00');
-
-                document.getElementById('modal-titulo').textContent = 'Editar Entrega';
-
-                document.getElementById('info-registro').innerHTML = `
-                    <p><strong>Fecha:</strong> ${formatoFechaLegible(fechaObj)}</p>
-                    <p><strong>Equipo:</strong> ${ingreso.equipo} - ${ingreso.nombre}</p>
-                    <p><strong>Registro existente</strong></p>
-                `;
-
-                document.getElementById('modal-monto').value = ingreso.monto;
-                document.getElementById('modal-observacion').value = ingreso.observacion;
-
-                document.getElementById('modal-registro').style.display = 'flex';
-
-                // Re-asegurar listener del botón guardar
-                document.getElementById('guardar-modal').onclick = guardarEntregaModal;
-            }
-
-            // Función para cerrar modal
-            function cerrarModal() {
-                document.getElementById('modal-registro').style.display = 'none';
-                diaSeleccionado = null;
-            }
-
-            // Variable global para evitar doble guardado
-            let isSavingEntry = false;
-
-            // Función para guardar entrega desde modal
-            async function guardarEntregaModal() {
-                if (isSavingEntry) return;
-
-                const btnGuardar = document.getElementById('guardar-modal');
-                if (btnGuardar.disabled) return;
-
-                // Set lock
-                isSavingEntry = true;
-                btnGuardar.disabled = true;
-
-                if (!equipoSeleccionado || !diaSeleccionado) {
-                    alert('Error: No hay equipo o día seleccionado');
-                    isSavingEntry = false;
-                    btnGuardar.disabled = false;
-                    return;
-                }
-
-                const monto = parseInt(document.getElementById('modal-monto').value) || 0;
-                const observacion = document.getElementById('modal-observacion').value.trim() || 'Sin observación';
-
-                if (monto < 0) {
-                    alert('El monto no puede ser negativo');
-                    isSavingEntry = false;
-                    btnGuardar.disabled = false;
-                    return;
-                }
-
-                // Validar que si el monto es 0, exista una observación
-                if (monto === 0 && (!observacion || observacion.trim() === '' || observacion === 'Sin observación')) {
-                    alert('Si el monto es $0, es obligatorio agregar una observación o justificación.');
-                    isSavingEntry = false;
-                    btnGuardar.disabled = false;
-                    return;
-                }
-
-                // Confirmación doble
-                if (!confirm(`¿Confirmar registro de entrega?\n\nEquipo: ${equipoSeleccionado.numero}\nFecha: ${diaSeleccionado}\nMonto: $${monto}`)) {
-                    isSavingEntry = false;
-                    btnGuardar.disabled = false;
-                    return;
-                }
-
-                btnGuardar.textContent = 'Guardando...';
-
-                try {
-                    const montoPredeterminado = equipoSeleccionado.montoPredeterminado || 30;
-
-                    // Buscar si existe un ingreso previo para mantener el ID y evitar duplicados
-                    const ingresosLocal = JSON.parse(localStorage.getItem('ingresosMototaxis')) || [];
-                    const ingresoPrevio = ingresosLocal.find(ing =>
-                        ing.equipo == equipoSeleccionado.numero && ing.fecha === diaSeleccionado
-                    );
-
-                    const idIngreso = ingresoPrevio ? ingresoPrevio.id : Date.now().toString();
-
-                    const nuevoIngreso = {
-                        id: idIngreso,
-                        equipo: equipoSeleccionado.numero,
-                        nombre: equipoSeleccionado.nombre,
-                        fecha: diaSeleccionado,
-                        monto: monto,
-                        montoPredeterminado: montoPredeterminado,
-                        observacion: observacion,
-                        periodo: periodoActual.inicioStr + '_a_' + periodoActual.finStr,
-                        fechaRegistro: formatoFechaSQL(new Date())
-                    };
-
-                    // Guardar en Firebase
-                    const exito = await guardarEnFirebase('ingresos', nuevoIngreso, nuevoIngreso.id);
-
-                    if (exito) {
-                        // Guardar localmente
-                        let ingresos = JSON.parse(localStorage.getItem('ingresosMototaxis')) || [];
-                        ingresos = ingresos.filter(ing =>
-                            !(ing.equipo === equipoSeleccionado.numero && ing.fecha === diaSeleccionado)
-                        );
-                        ingresos.push(nuevoIngreso);
-                        localStorage.setItem('ingresosMototaxis', JSON.stringify(ingresos));
-
-                        generarCalendarioPeriodo();
-                        cargarPanelRegistroRapido();
-
-                        cerrarModal();
-                        alert('Entrega registrada correctamente');
-                    } else {
-                        alert('Error al guardar la entrega. Los datos se guardarán localmente.');
-
-                        // Guardar solo localmente
-                        let ingresos = JSON.parse(localStorage.getItem('ingresosMototaxis')) || [];
-                        ingresos = ingresos.filter(ing =>
-                            !(ing.equipo === equipoSeleccionado.numero && ing.fecha === diaSeleccionado)
-                        );
-                        ingresos.push(nuevoIngreso);
-                        localStorage.setItem('ingresosMototaxis', JSON.stringify(ingresos));
-
-                        generarCalendarioPeriodo();
-                        cargarPanelRegistroRapido();
-                        cerrarModal();
-                    }
-                } catch (e) {
-                    console.error(e);
-                    alert('Error inesperado al guardar.');
-                } finally {
-                    isSavingEntry = false;
-                    btnGuardar.disabled = false;
-                    btnGuardar.textContent = 'Guardar Entrega';
-                }
-            }
-
-            // ===== FUNCIONES DE GESTIÓN DE EQUIPOS =====
-
-            async function guardarEquipo() {
-                const numero = parseInt(document.getElementById('numero-equipo').value) || 0;
-                let placa = document.getElementById('placa').value.trim();
-                const nombre = document.getElementById('nombre').value.trim();
-                const dui = document.getElementById('dui').value.trim();
-                const montoPredeterminado = parseInt(document.getElementById('monto-predeterminado-equipo').value) || 30;
-
-                if (numero <= 0) {
-                    alert('Por favor, ingrese un número de equipo válido.');
-                    return;
-                }
-
-                // Confirmación doble
-                if (!confirm(`¿Confirmar registro de nuevo equipo?\n\nNúmero: ${numero}\nNombre: ${nombre}\nPlaca: ${placa}`)) {
-                    return;
-                }
-
-                // Formatear placa
-                if (placa && !placa.toUpperCase().startsWith('M')) {
-                    placa = 'M' + placa.toUpperCase();
-                }
-
-                const equipos = JSON.parse(localStorage.getItem('equiposMototaxis')) || [];
-
-                if (equipos.some(equipo => equipo.numero === numero)) {
-                    alert('Ya existe un equipo con ese número.');
-                    return;
-                }
-
-                const nuevoEquipo = {
-                    numero: numero,
-                    placa: placa || 'No registrada',
-                    nombre: nombre || 'No registrado',
-                    dui: dui || 'No registrado',
-                    montoPredeterminado: montoPredeterminado,
-                    fechaRegistro: formatoFechaSQL(new Date())
-                };
-
-                const id = Date.now().toString();
-                const exito = await guardarEnFirebase('equipos', nuevoEquipo, id.toString());
-
-                if (exito) {
-                    nuevoEquipo.id = id;
-                    equipos.push(nuevoEquipo);
-                    localStorage.setItem('equiposMototaxis', JSON.stringify(equipos));
-                    cargarListaEquipos();
-                    cargarPanelRegistroRapido();
-
-                    // Limpiar formulario
-                    document.getElementById('numero-equipo').value = '';
-                    document.getElementById('placa').value = '';
-                    document.getElementById('nombre').value = '';
-                    document.getElementById('dui').value = '';
-                    document.getElementById('monto-predeterminado-equipo').value = '30';
-
-                    alert('Equipo registrado correctamente.');
-                } else {
-                    alert('Error al guardar el equipo. Los datos se guardarán localmente.');
-                    nuevoEquipo.id = id;
-                    equipos.push(nuevoEquipo);
-                    localStorage.setItem('equiposMototaxis', JSON.stringify(equipos));
-                    cargarListaEquipos();
-                    cargarPanelRegistroRapido();
-                }
-            }
-
-            function cargarListaEquipos() {
-                const listaEquipos = document.getElementById('lista-equipos');
-                const equipos = JSON.parse(localStorage.getItem('equiposMototaxis')) || [];
-
-                if (equipos.length === 0) {
-                    listaEquipos.innerHTML = '<div class="empty-message">No hay equipos registrados.</div>';
-                    return;
-                }
-
-                let html = '';
-                equipos.sort((a, b) => a.numero - b.numero).forEach(equipo => {
-                    html += `
-                        <div class="ingreso-item">
-                            <div class="ingreso-equipo">Equipo ${equipo.numero}</div>
-                            <div class="ingreso-cliente">${equipo.nombre}</div>
-                            <div class="ingreso-info">
-                                Placa: ${equipo.placa} | DUI: ${equipo.dui} | 
-                                Monto predeterminado: $${(equipo.montoPredeterminado || 30)}
-                            </div>
-                            <button class="edit-btn" data-id="${equipo.id}" data-numero="${equipo.numero}">Modificar</button>
-                            <button class="delete-btn" data-id="${equipo.id}">Eliminar</button>
-                        </div>
-                    `;
-                });
-
-                listaEquipos.innerHTML = html;
-
-                // Event listeners para botones de modificar
-                document.querySelectorAll('#lista-equipos .edit-btn').forEach(btn => {
-                    btn.addEventListener('click', function () {
-                        const id = this.getAttribute('data-id');
-                        const numero = this.getAttribute('data-numero');
-                        abrirModalEditarEquipo(id, numero);
-                    });
-                });
-
-                // Event listeners para botones de eliminar
-                document.querySelectorAll('#lista-equipos .delete-btn').forEach(btn => {
-                    btn.addEventListener('click', function () {
-                        const id = this.getAttribute('data-id');
-                        eliminarEquipo(id);
-                    });
-                });
-            }
-
-            // Función para abrir modal de edición de equipo
-            function abrirModalEditarEquipo(id, numero) {
-                const equipos = JSON.parse(localStorage.getItem('equiposMototaxis')) || [];
-                equipoAEditar = equipos.find(e => e.id === id);
-
-                if (!equipoAEditar) {
-                    alert('Equipo no encontrado');
-                    return;
-                }
-
-                // Llenar formulario con datos actuales
-                document.getElementById('editar-numero-equipo').value = equipoAEditar.numero;
-                document.getElementById('editar-placa').value = equipoAEditar.placa;
-                document.getElementById('editar-nombre').value = equipoAEditar.nombre;
-                document.getElementById('editar-dui').value = equipoAEditar.dui;
-                document.getElementById('editar-monto-predeterminado').value = equipoAEditar.montoPredeterminado || 30;
-
-                // Mostrar modal
-                document.getElementById('modal-editar-equipo').style.display = 'flex';
-            }
-
-            // Función para cerrar modal de edición de equipo
-            function cerrarModalEditar() {
-                document.getElementById('modal-editar-equipo').style.display = 'none';
-                equipoAEditar = null;
-            }
-
-            // Función para guardar cambios en equipo
-            async function guardarCambiosEquipo() {
-                if (!equipoAEditar) return;
-
-                const placa = document.getElementById('editar-placa').value.trim();
-                const nombre = document.getElementById('editar-nombre').value.trim();
-                const dui = document.getElementById('editar-dui').value.trim();
-                const montoPredeterminado = parseInt(document.getElementById('editar-monto-predeterminado').value) || 30;
-
-                // Formatear placa
-                let placaFormateada = placa;
-                if (placaFormateada && !placaFormateada.toUpperCase().startsWith('M')) {
-                    placaFormateada = 'M' + placaFormateada.toUpperCase();
-                }
-
-                const equipoActualizado = {
-                    ...equipoAEditar,
-                    placa: placaFormateada || 'No registrada',
-                    nombre: nombre || 'No registrado',
-                    dui: dui || 'No registrado',
-                    montoPredeterminado: montoPredeterminado,
-                    fechaActualizacion: formatoFechaSQL(new Date())
-                };
-
-                // Guardar en Firebase
-                const exito = await guardarEnFirebase('equipos', equipoActualizado, equipoAEditar.id);
-
-                if (exito) {
-                    // Actualizar localmente
-                    let equipos = JSON.parse(localStorage.getItem('equiposMototaxis')) || [];
-                    equipos = equipos.map(e => e.id === equipoAEditar.id ? equipoActualizado : e);
-                    localStorage.setItem('equiposMototaxis', JSON.stringify(equipos));
-
-                    // Actualizar UI
-                    cargarListaEquipos();
-                    cargarPanelRegistroRapido();
-
-                    // Si este equipo está seleccionado en el calendario, actualizarlo
-                    if (equipoSeleccionado && equipoSeleccionado.numero === equipoAEditar.numero) {
-                        equipoSeleccionado = equipoActualizado;
-                        generarCalendarioPeriodo();
-                    }
-
-                    cerrarModalEditar();
-                    alert('Equipo actualizado correctamente.');
-                } else {
-                    alert('Error al actualizar el equipo. Los cambios se guardarán localmente.');
-
-                    // Actualizar solo localmente
-                    let equipos = JSON.parse(localStorage.getItem('equiposMototaxis')) || [];
-                    equipos = equipos.map(e => e.id === equipoAEditar.id ? equipoActualizado : e);
-                    localStorage.setItem('equiposMototaxis', JSON.stringify(equipos));
-
-                    cargarListaEquipos();
-                    cargarPanelRegistroRapido();
-                    cerrarModalEditar();
-                }
-            }
-
-            async function eliminarEquipo(id) {
-                if (!confirm('¿Está seguro de eliminar este equipo? También se eliminarán todos sus ingresos registrados.')) {
-                    return;
-                }
-
-                // Obtener el equipo para saber su número
-                const equipos = JSON.parse(localStorage.getItem('equiposMototaxis')) || [];
-                const equipo = equipos.find(e => e.id === id);
-
-                if (!equipo) return;
-
-                // Eliminar equipo de Firebase
-                const exitoEquipo = await eliminarDeFirebase('equipos', id);
-
-                // Eliminar ingresos de este equipo de Firebase
-                const ingresos = JSON.parse(localStorage.getItem('ingresosMototaxis')) || [];
-                const ingresosEquipo = ingresos.filter(ing => ing.equipo === equipo.numero);
-
-                for (const ingreso of ingresosEquipo) {
-                    await eliminarDeFirebase('ingresos', ingreso.id);
-                }
-
-                if (exitoEquipo) {
-                    // Actualizar datos locales
-                    let equiposActualizados = equipos.filter(e => e.id !== id);
-                    localStorage.setItem('equiposMototaxis', JSON.stringify(equiposActualizados));
-
-                    let ingresosActualizados = ingresos.filter(ing => ing.equipo !== equipo.numero);
-                    localStorage.setItem('ingresosMototaxis', JSON.stringify(ingresosActualizados));
-
-                    // Actualizar UI
-                    cargarListaEquipos();
-                    cargarPanelRegistroRapido();
-
-                    alert('Equipo eliminado correctamente.');
-                } else {
-                    alert('Error al eliminar el equipo. Se eliminará solo localmente.');
-
-                    // Eliminar solo localmente
-                    let equiposActualizados = equipos.filter(e => e.id !== id);
-                    localStorage.setItem('equiposMototaxis', JSON.stringify(equiposActualizados));
-
-                    let ingresosActualizados = ingresos.filter(ing => ing.equipo !== equipo.numero);
-                    localStorage.setItem('ingresosMototaxis', JSON.stringify(ingresosActualizados));
-
-                    cargarListaEquipos();
-                    cargarPanelRegistroRapido();
-                }
-            }
-
-            // ===== FUNCIONES AUXILIARES =====
-
-            function calcularDiasEnPeriodo() {
-                if (!periodoActual) return 0;
-
-                const msPorDia = 1000 * 60 * 60 * 24;
-                const diferenciaMs = periodoActual.fin - periodoActual.inicio;
-                return Math.floor(diferenciaMs / msPorDia) + 1;
-            }
-
-            // ===== FUNCIONES EXISTENTES (mantenidas para compatibilidad) =====
-
+            // Función para cargar datos desde Firebase
             async function cargarDatosFirebase() {
                 try {
                     // Cargar equipos
                     const equiposSnapshot = await db.collection('equipos').get();
                     const equipos = [];
                     equiposSnapshot.forEach(doc => {
-                        const equipoData = doc.data();
-                        equipos.push({ id: doc.id, ...equipoData });
+                        equipos.push({ id: doc.id, ...doc.data() });
                     });
                     localStorage.setItem('equiposMototaxis', JSON.stringify(equipos));
 
-                    // Cargar ingresos (entregas)
+                    // Cargar ingresos
                     const ingresosSnapshot = await db.collection('ingresos').get();
                     const ingresos = [];
                     ingresosSnapshot.forEach(doc => {
@@ -2483,6 +1192,7 @@
                     localStorage.setItem('ingresosMototaxis', JSON.stringify(ingresos));
                 } catch (error) {
                     console.error("Error cargando datos desde Firebase:", error);
+                    // Si no hay datos en Firebase, usar datos locales
                     if (!localStorage.getItem('equiposMototaxis')) {
                         localStorage.setItem('equiposMototaxis', JSON.stringify([]));
                     }
@@ -2492,9 +1202,14 @@
                 }
             }
 
-            async function guardarEnFirebase(coleccion, datos, id) {
+            // Función para guardar datos en Firebase
+            async function guardarEnFirebase(coleccion, datos, id = null) {
                 try {
-                    await db.collection(coleccion).doc(id.toString()).set(datos);
+                    if (id) {
+                        await db.collection(coleccion).doc(id.toString()).set(datos);
+                    } else {
+                        await db.collection(coleccion).add(datos);
+                    }
                     return true;
                 } catch (error) {
                     console.error("Error guardando en Firebase:", error);
@@ -2502,6 +1217,7 @@
                 }
             }
 
+            // Función para eliminar datos de Firebase
             async function eliminarDeFirebase(coleccion, id) {
                 try {
                     await db.collection(coleccion).doc(id.toString()).delete();
@@ -2512,14 +1228,421 @@
                 }
             }
 
-            function formatoFechaSQL(fecha) {
-                const año = fecha.getFullYear();
-                const mes = String(fecha.getMonth() + 1).padStart(2, '0');
-                const dia = String(fecha.getDate()).padStart(2, '0');
-                return `${año}-${mes}-${dia}`;
+            // Función para guardar un nuevo equipo
+            async function guardarEquipo() {
+                const numero = parseInt(document.getElementById('numero-equipo').value) || 0;
+                const placa = document.getElementById('placa').value.trim();
+                const nombre = document.getElementById('nombre').value.trim();
+                const dui = document.getElementById('dui').value.trim();
+
+                // Validaciones mínimas - solo el número es obligatorio
+                if (numero <= 0) {
+                    alert('Por favor, ingrese un número de equipo válido.');
+                    return;
+                }
+
+                // Obtener equipos actuales
+                const equipos = JSON.parse(localStorage.getItem('equiposMototaxis')) || [];
+
+                // Verificar si ya existe el número de equipo
+                if (equipos.some(equipo => equipo.numero === numero)) {
+                    alert('Ya existe un equipo con ese número.');
+                    return;
+                }
+
+                // Crear nuevo equipo
+                const nuevoEquipo = {
+                    numero: numero,
+                    placa: placa || 'No registrada',
+                    nombre: nombre || 'No registrado',
+                    dui: dui || 'No registrado'
+                };
+
+                // Guardar equipo en Firebase
+                const id = Date.now().toString();
+                const exito = await guardarEnFirebase('equipos', nuevoEquipo, id);
+
+                if (exito) {
+                    // Guardar equipo localmente
+                    nuevoEquipo.id = id;
+                    equipos.push(nuevoEquipo);
+                    localStorage.setItem('equiposMototaxis', JSON.stringify(equipos));
+
+                    // Actualizar interfaces
+                    cargarListaEquipos();
+
+                    // Limpiar formulario
+                    document.getElementById('numero-equipo').value = '';
+                    document.getElementById('placa').value = '';
+                    document.getElementById('nombre').value = '';
+                    document.getElementById('dui').value = '';
+
+                    alert('Equipo registrado correctamente.');
+                } else {
+                    alert('Error al guardar el equipo. Los datos se guardarán localmente.');
+
+                    // Guardar solo localmente si falla Firebase
+                    nuevoEquipo.id = id;
+                    equipos.push(nuevoEquipo);
+                    localStorage.setItem('equiposMototaxis', JSON.stringify(equipos));
+
+                    // Actualizar interfaces
+                    cargarListaEquipos();
+
+                    // Limpiar formulario
+                    document.getElementById('numero-equipo').value = '';
+                    document.getElementById('placa').value = '';
+                    document.getElementById('nombre').value = '';
+                    document.getElementById('dui').value = '';
+                }
             }
 
-            // ===== FUNCIÓN DE DEPÓSITOS POR EQUIPO MEJORADA =====
+            // Función para cargar la lista de equipos
+            function cargarListaEquipos() {
+                const listaEquipos = document.getElementById('lista-equipos');
+                const equipos = JSON.parse(localStorage.getItem('equiposMototaxis')) || [];
+
+                if (equipos.length === 0) {
+                    listaEquipos.innerHTML = '<div class="empty-message">No hay equipos registrados.</div>';
+                    return;
+                }
+
+                let html = '';
+                equipos.forEach(equipo => {
+                    html += `
+                        <div class="ingreso-item">
+                            <div class="ingreso-equipo">Equipo ${equipo.numero}</div>
+                            <div class="ingreso-cliente">${equipo.nombre}</div>
+                            <div class="ingreso-info">Placa: ${equipo.placa} | DUI: ${equipo.dui}</div>
+                            <button class="delete-btn" data-id="${equipo.id}">Eliminar</button>
+                        </div>
+                    `;
+                });
+
+                listaEquipos.innerHTML = html;
+
+                // Agregar event listeners a los botones de eliminar
+                document.querySelectorAll('#lista-equipos .delete-btn').forEach(btn => {
+                    btn.addEventListener('click', function () {
+                        const id = this.getAttribute('data-id');
+                        eliminarEquipo(id);
+                    });
+                });
+            }
+
+            // Función para eliminar un equipo
+            async function eliminarEquipo(id) {
+                if (!confirm('¿Está seguro de eliminar este equipo?')) {
+                    return;
+                }
+
+                // Eliminar de Firebase
+                const exito = await eliminarDeFirebase('equipos', id);
+
+                if (exito) {
+                    // Eliminar localmente
+                    let equipos = JSON.parse(localStorage.getItem('equiposMototaxis')) || [];
+                    equipos = equipos.filter(equipo => equipo.id !== id);
+                    localStorage.setItem('equiposMototaxis', JSON.stringify(equipos));
+
+                    // Actualizar interfaz
+                    cargarListaEquipos();
+
+                    alert('Equipo eliminado correctamente.');
+                } else {
+                    alert('Error al eliminar el equipo. Se eliminará solo localmente.');
+
+                    // Eliminar solo localmente si falla Firebase
+                    let equipos = JSON.parse(localStorage.getItem('equiposMototaxis')) || [];
+                    equipos = equipos.filter(equipo => equipo.id !== id);
+                    localStorage.setItem('equiposMototaxis', JSON.stringify(equipos));
+
+                    // Actualizar interfaz
+                    cargarListaEquipos();
+                }
+            }
+
+            // Función para guardar un ingreso rápido
+            async function guardarIngresoRapido() {
+                const fecha = document.getElementById('fecha').value;
+                const numeroEquipo = parseInt(equipoRapidoInput.value) || 0;
+                const nombre = nombreRapidoInput.value.trim();
+                const monto = parseFloat(montoRapidoInput.value) || 0;
+                const observacion = observacionRapidaInput.value.trim();
+
+                // Validaciones
+                if (numeroEquipo <= 0) {
+                    alert('Por favor, ingrese un número de equipo válido.');
+                    equipoRapidoInput.focus();
+                    return;
+                }
+
+                if (nombre === '') {
+                    alert('Por favor, ingrese el nombre del conductor.');
+                    nombreRapidoInput.focus();
+                    return;
+                }
+
+                if (monto <= 0) {
+                    alert('Por favor, ingrese un monto válido.');
+                    montoRapidoInput.focus();
+                    return;
+                }
+
+                // Verificar si el equipo existe
+                const equipos = JSON.parse(localStorage.getItem('equiposMototaxis')) || [];
+                let equipo = equipos.find(e => e.numero === numeroEquipo);
+
+                // Si no existe, crear uno nuevo
+                if (!equipo) {
+                    const nuevoEquipo = {
+                        numero: numeroEquipo,
+                        placa: 'No registrada',
+                        nombre: nombre,
+                        dui: 'No registrado'
+                    };
+
+                    // Guardar equipo en Firebase
+                    const id = Date.now().toString();
+                    const exito = await guardarEnFirebase('equipos', nuevoEquipo, id);
+
+                    if (exito) {
+                        nuevoEquipo.id = id;
+                        equipos.push(nuevoEquipo);
+                        localStorage.setItem('equiposMototaxis', JSON.stringify(equipos));
+                        equipo = nuevoEquipo;
+                    } else {
+                        alert('Error al guardar el equipo. Los datos se guardarán localmente.');
+                        nuevoEquipo.id = id;
+                        equipos.push(nuevoEquipo);
+                        localStorage.setItem('equiposMototaxis', JSON.stringify(equipos));
+                        equipo = nuevoEquipo;
+                    }
+                }
+
+                // Crear nuevo ingreso
+                const nuevoIngreso = {
+                    fecha: fecha,
+                    equipo: numeroEquipo,
+                    nombre: equipo.nombre,
+                    monto: monto,
+                    observacion: observacion || 'Sin observación'
+                };
+
+                // Guardar ingreso en Firebase
+                const idIngreso = Date.now().toString();
+                const exitoIngreso = await guardarEnFirebase('ingresos', nuevoIngreso, idIngreso);
+
+                if (exitoIngreso) {
+                    // Guardar ingreso localmente
+                    nuevoIngreso.id = idIngreso;
+                    const ingresos = JSON.parse(localStorage.getItem('ingresosMototaxis')) || [];
+                    ingresos.push(nuevoIngreso);
+                    localStorage.setItem('ingresosMototaxis', JSON.stringify(ingresos));
+
+                    // Limpiar formulario
+                    equipoRapidoInput.value = '';
+                    nombreRapidoInput.value = '';
+                    montoRapidoInput.value = '';
+                    observacionRapidaInput.value = '';
+
+                    // Actualizar resumen
+                    actualizarResumenEquiposSaldos();
+
+                    // Enfocar en el campo de equipo
+                    equipoRapidoInput.focus();
+
+                    alert('Ingreso registrado correctamente.');
+                } else {
+                    alert('Error al guardar el ingreso. Los datos se guardarán localmente.');
+
+                    // Guardar solo localmente si falla Firebase
+                    nuevoIngreso.id = idIngreso;
+                    const ingresos = JSON.parse(localStorage.getItem('ingresosMototaxis')) || [];
+                    ingresos.push(nuevoIngreso);
+                    localStorage.setItem('ingresosMototaxis', JSON.stringify(ingresos));
+
+                    // Limpiar formulario
+                    equipoRapidoInput.value = '';
+                    nombreRapidoInput.value = '';
+                    montoRapidoInput.value = '';
+                    observacionRapidaInput.value = '';
+
+                    // Actualizar resumen
+                    actualizarResumenEquiposSaldos();
+
+                    // Enfocar en el campo de equipo
+                    equipoRapidoInput.focus();
+                }
+            }
+
+            // Función para actualizar el resumen de equipos con saldo
+            function actualizarResumenEquiposSaldos() {
+                const resumenEquiposSaldos = document.getElementById('resumen-equipos-saldos');
+                const equipos = JSON.parse(localStorage.getItem('equiposMototaxis')) || [];
+                const ingresos = JSON.parse(localStorage.getItem('ingresosMototaxis')) || [];
+
+                if (equipos.length === 0) {
+                    resumenEquiposSaldos.innerHTML = '<div class="empty-message">No hay equipos registrados.</div>';
+                    return;
+                }
+
+                // Calcular total por equipo
+                const totalesPorEquipo = {};
+                const ultimaFechaPorEquipo = {};
+
+                ingresos.forEach(ingreso => {
+                    const equipo = ingreso.equipo;
+                    if (!totalesPorEquipo[equipo]) {
+                        totalesPorEquipo[equipo] = 0;
+                    }
+                    totalesPorEquipo[equipo] += ingreso.monto;
+
+                    // Guardar la última fecha de ingreso
+                    if (!ultimaFechaPorEquipo[equipo] || ingreso.fecha > ultimaFechaPorEquipo[equipo]) {
+                        ultimaFechaPorEquipo[equipo] = ingreso.fecha;
+                    }
+                });
+
+                // Ordenar equipos por número
+                equipos.sort((a, b) => a.numero - b.numero);
+
+                let html = '';
+                equipos.forEach(equipo => {
+                    const total = totalesPorEquipo[equipo.numero] || 0;
+                    const ultimaFecha = ultimaFechaPorEquipo[equipo.numero] || 'Sin registros';
+
+                    html += `
+                        <div class="equipo-saldo-card">
+                            <div class="equipo-saldo-header">
+                                <div class="equipo-saldo-numero">Equipo ${equipo.numero}</div>
+                                <div class="equipo-saldo-total">$${total.toFixed(2)}</div>
+                            </div>
+                            <div class="equipo-saldo-info">${equipo.nombre}</div>
+                            <div class="equipo-saldo-fecha">Último: ${formatearFecha(ultimaFecha)}</div>
+                        </div>
+                    `;
+                });
+
+                resumenEquiposSaldos.innerHTML = html;
+            }
+
+            // Función para cargar el historial de ingresos
+            function cargarHistorialIngresos() {
+                const historialIngresos = document.getElementById('historial-ingresos');
+                const ingresos = JSON.parse(localStorage.getItem('ingresosMototaxis')) || [];
+
+                if (ingresos.length === 0) {
+                    historialIngresos.innerHTML = '<div class="empty-message">No hay ingresos registrados.</div>';
+                    return;
+                }
+
+                // Aplicar filtros
+                let ingresosFiltrados = [...ingresos];
+                const filtroEquipo = document.getElementById('filtro-equipo').value;
+                const filtroFecha = document.getElementById('filtro-fecha').value;
+
+                if (filtroEquipo) {
+                    ingresosFiltrados = ingresosFiltrados.filter(ingreso => ingreso.equipo == filtroEquipo);
+                }
+
+                if (filtroFecha) {
+                    ingresosFiltrados = ingresosFiltrados.filter(ingreso => ingreso.fecha.startsWith(filtroFecha));
+                }
+
+                // Ordenar por fecha (más reciente primero)
+                ingresosFiltrados.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+
+                if (ingresosFiltrados.length === 0) {
+                    historialIngresos.innerHTML = '<div class="empty-message">No hay ingresos que coincidan con los filtros.</div>';
+                    return;
+                }
+
+                let html = '';
+                let totalGeneral = 0;
+
+                ingresosFiltrados.forEach(ingreso => {
+                    totalGeneral += ingreso.monto;
+
+                    html += `
+                        <div class="ingreso-item">
+                            <div class="ingreso-fecha">${formatearFecha(ingreso.fecha)}</div>
+                            <div class="ingreso-equipo">Equipo ${ingreso.equipo}</div>
+                            <div class="ingreso-cliente">${ingreso.nombre}</div>
+                            <div class="ingreso-monto">$${ingreso.monto.toFixed(2)}</div>
+                            <div class="ingreso-info">${ingreso.observacion}</div>
+                            <button class="edit-btn" data-id="${ingreso.id}">Editar</button>
+                            <button class="delete-btn" data-id="${ingreso.id}">Eliminar</button>
+                        </div>
+                    `;
+                });
+
+                // Agregar total general
+                html += `
+                    <div class="total-general">
+                        Total General: $${totalGeneral.toFixed(2)}
+                    </div>
+                `;
+
+                historialIngresos.innerHTML = html;
+
+                // Agregar event listeners a los botones de eliminar y editar
+                document.querySelectorAll('#historial-ingresos .delete-btn').forEach(btn => {
+                    btn.addEventListener('click', function () {
+                        const id = this.getAttribute('data-id');
+                        eliminarIngreso(id);
+                    });
+                });
+
+                document.querySelectorAll('#historial-ingresos .edit-btn').forEach(btn => {
+                    btn.addEventListener('click', function () {
+                        const id = this.getAttribute('data-id');
+                        editarIngreso(id);
+                    });
+                });
+            }
+
+            // Función para eliminar un ingreso
+            async function eliminarIngreso(id) {
+                if (!confirm('¿Está seguro de eliminar este ingreso?')) {
+                    return;
+                }
+
+                // Eliminar de Firebase
+                const exito = await eliminarDeFirebase('ingresos', id);
+
+                if (exito) {
+                    // Eliminar localmente
+                    let ingresos = JSON.parse(localStorage.getItem('ingresosMototaxis')) || [];
+                    ingresos = ingresos.filter(ingreso => ingreso.id !== id);
+                    localStorage.setItem('ingresosMototaxis', JSON.stringify(ingresos));
+
+                    // Actualizar interfaces
+                    cargarHistorialIngresos();
+                    actualizarResumenEquiposSaldos();
+
+                    alert('Ingreso eliminado correctamente.');
+                } else {
+                    alert('Error al eliminar el ingreso. Se eliminará solo localmente.');
+
+                    // Eliminar solo localmente si falla Firebase
+                    let ingresos = JSON.parse(localStorage.getItem('ingresosMototaxis')) || [];
+                    ingresos = ingresos.filter(ingreso => ingreso.id !== id);
+                    localStorage.setItem('ingresosMototaxis', JSON.stringify(ingresos));
+
+                    // Actualizar interfaces
+                    cargarHistorialIngresos();
+                    actualizarResumenEquiposSaldos();
+                }
+            }
+
+            // Función para editar un ingreso (placeholder)
+            function editarIngreso(id) {
+                alert('Funcionalidad de edición en desarrollo.');
+                // Aquí se implementaría la lógica para editar un ingreso
+            }
+
+            // Función para cargar depósitos por equipo
             function cargarDepositosPorEquipo() {
                 const depositosListaEquipos = document.getElementById('depositos-lista-equipos');
                 const equipos = JSON.parse(localStorage.getItem('equiposMototaxis')) || [];
@@ -2545,30 +1668,10 @@
 
                 equiposFiltrados.forEach(equipo => {
                     // Filtrar ingresos por equipo
-                    let ingresosEquipo = ingresos.filter(ingreso => ingreso.equipo === equipo.numero);
-
-                    // Aplicar filtro de período si está activo
-                    if (periodoFiltroDepositos && periodoFiltroDepositos !== '') {
-                        if (periodoFiltroDepositos === 'actual') {
-                            // Filtrar por período actual
-                            if (periodoActual && periodoActual.inicioStr && periodoActual.finStr) {
-                                ingresosEquipo = ingresosEquipo.filter(ingreso =>
-                                    ingreso.fecha >= periodoActual.inicioStr &&
-                                    ingreso.fecha <= periodoActual.finStr
-                                );
-                            }
-                        } else if (periodoFiltroDepositos.includes('_a_')) {
-                            // Filtrar por período específico
-                            const [inicioPeriodo, finPeriodo] = periodoFiltroDepositos.split('_a_');
-                            ingresosEquipo = ingresosEquipo.filter(ingreso =>
-                                ingreso.fecha >= inicioPeriodo &&
-                                ingreso.fecha <= finPeriodo
-                            );
-                        }
-                    }
+                    const ingresosEquipo = ingresos.filter(ingreso => ingreso.equipo === equipo.numero);
 
                     if (ingresosEquipo.length === 0) {
-                        return; // No mostrar equipos sin ingresos en el período filtrado
+                        return; // No mostrar equipos sin ingresos
                     }
 
                     // Calcular total del equipo
@@ -2581,109 +1684,33 @@
                     ingresosEquipo.forEach(ingreso => {
                         ingresosHtml += `
                             <div class="deposito-item">
-                                <div class="deposito-fecha">${formatoFechaLegible(ingreso.fecha)}</div>
-                                <div class="deposito-monto">$${ingreso.monto}</div>
-                                <div class="deposito-acciones">
-                                    <button class="deposito-eliminar-btn" data-id="${ingreso.id}" title="Eliminar este depósito">
-                                        ✕
-                                    </button>
-                                </div>
+                                <div class="deposito-fecha">${formatearFecha(ingreso.fecha)}</div>
+                                <div class="deposito-monto">$${ingreso.monto.toFixed(2)}</div>
                             </div>
                         `;
                     });
-
-                    // Obtener período mostrado
-                    let periodoInfo = '';
-                    if (periodoFiltroDepositos === 'actual' && periodoActual) {
-                        periodoInfo = `Período Actual: ${formatoFechaLegible(periodoActual.inicio)} - ${formatoFechaLegible(periodoActual.fin)}`;
-                    } else if (periodoFiltroDepositos && periodoFiltroDepositos.includes('_a_')) {
-                        const [inicioStr, finStr] = periodoFiltroDepositos.split('_a_');
-                        periodoInfo = `Período: ${formatoFechaLegible(new Date(inicioStr))} - ${formatoFechaLegible(new Date(finStr))}`;
-                    }
 
                     html += `
                         <div class="deposito-equipo-card">
                             <div class="deposito-equipo-header">
                                 <div class="deposito-equipo-numero">Equipo ${equipo.numero}</div>
-                                <div class="deposito-equipo-total">$${totalEquipo}</div>
+                                <div class="deposito-equipo-total">$${totalEquipo.toFixed(2)}</div>
                             </div>
-                            <div class="deposito-equipo-info">
-                                ${equipo.nombre} - ${equipo.placa}
-                                ${periodoInfo ? `<div style="margin-top: 5px; font-size: 0.85rem; color: #a0aec0;">${periodoInfo}</div>` : ''}
-                            </div>
+                            <div class="deposito-equipo-info">${equipo.nombre} - ${equipo.placa}</div>
                             ${ingresosHtml}
-                            <div class="deposito-total">Total: $${totalEquipo}</div>
+                            <div class="deposito-total">Total: $${totalEquipo.toFixed(2)}</div>
                         </div>
                     `;
                 });
 
                 if (html === '') {
-                    const mensaje = periodoFiltroDepositos ?
-                        'No hay ingresos registrados para los equipos y período seleccionados.' :
-                        'No hay ingresos registrados para los equipos seleccionados.';
-                    html = `<div class="empty-message">${mensaje}</div>`;
+                    html = '<div class="empty-message">No hay ingresos registrados para los equipos seleccionados.</div>';
                 }
 
                 depositosListaEquipos.innerHTML = html;
-
-                // Agregar event listeners a los botones de eliminar
-                document.querySelectorAll('.deposito-eliminar-btn').forEach(btn => {
-                    btn.addEventListener('click', function () {
-                        const id = this.getAttribute('data-id');
-                        eliminarIngresoDeposito(id);
-                    });
-                });
             }
 
-            // Función para eliminar un ingreso desde la vista de depósitos
-            async function eliminarIngresoDeposito(id) {
-                if (!confirm('¿Está seguro de eliminar este ingreso?')) {
-                    return;
-                }
-
-                // Eliminar de Firebase
-                const exito = await eliminarDeFirebase('ingresos', id);
-
-                if (exito) {
-                    // Eliminar localmente
-                    let ingresos = JSON.parse(localStorage.getItem('ingresosMototaxis')) || [];
-                    const ingresoEliminado = ingresos.find(ing => ing.id === id);
-                    ingresos = ingresos.filter(ingreso => ingreso.id !== id);
-                    localStorage.setItem('ingresosMototaxis', JSON.stringify(ingresos));
-
-                    // Actualizar interfaces
-                    cargarPanelRegistroRapido();
-                    cargarDepositosPorEquipo(); // Recargar la vista actual
-                    cargarPeriodosDisponibles(); // Actualizar botones de períodos
-
-                    // Si este ingreso está en el calendario actual, actualizarlo
-                    if (equipoSeleccionado && ingresoEliminado &&
-                        ingresoEliminado.equipo === equipoSeleccionado.numero) {
-                        generarCalendarioPeriodo();
-                    }
-
-                    alert('Ingreso eliminado correctamente.');
-                } else {
-                    alert('Error al eliminar el ingreso. Se eliminará solo localmente.');
-
-                    // Eliminar solo localmente
-                    let ingresos = JSON.parse(localStorage.getItem('ingresosMototaxis')) || [];
-                    const ingresoEliminado = ingresos.find(ing => ing.id === id);
-                    ingresos = ingresos.filter(ingreso => ingreso.id !== id);
-                    localStorage.setItem('ingresosMototaxis', JSON.stringify(ingresos));
-
-                    // Actualizar interfaces
-                    cargarPanelRegistroRapido();
-                    cargarDepositosPorEquipo();
-                    cargarPeriodosDisponibles();
-
-                    if (equipoSeleccionado && ingresoEliminado &&
-                        ingresoEliminado.equipo === equipoSeleccionado.numero) {
-                        generarCalendarioPeriodo();
-                    }
-                }
-            }
-
+            // Función para actualizar los filtros de equipos
             function actualizarFiltroEquipos(idFiltro) {
                 const filtro = document.getElementById(idFiltro);
                 const equipos = JSON.parse(localStorage.getItem('equiposMototaxis')) || [];
@@ -2705,388 +1732,234 @@
                 });
             }
 
-            // ===== FUNCIÓN DE CALENDARIO MENSUAL PARA IMPRIMIR =====
+            // Función para generar el calendario mensual
+            function generarCalendario() {
+                const calendarioPreview = document.getElementById('calendario-preview');
+                const calendarioPrint = document.getElementById('calendario-print');
+                const filtroMes = document.getElementById('filtro-mes-calendario').value;
+                const filtroEquipo = document.getElementById('filtro-equipo-calendario').value;
 
-            // Estado global para días de descanso
-            if (!window.diasDescanso) {
-                window.diasDescanso = {};
-            }
-
-            // Función para toggle día de descanso (Global para acceso HTML)
-            window.toggleDescanso = function (clave, dia) {
-                if (!window.diasDescanso[clave]) {
-                    window.diasDescanso[clave] = new Set();
-                }
-
-                // Lógica de Intercambio Semanal (Solo 1 descanso por semana)
-                // Obtenemos mes para calcular fecha real
-                const mesInput = document.getElementById('filtro-mes-calendario').value;
-                if (mesInput) {
-                    const [año, mes] = mesInput.split('-').map(Number);
-                    const fechaDia = new Date(año, mes - 1, dia);
-                    const diaSemana = fechaDia.getDay(); // 0 Dom - 6 Sab
-
-                    // Calcular rango de la semana (Domingo a Sábado)
-                    const inicioSemana = dia - diaSemana;
-                    const finSemana = dia + (6 - diaSemana);
-
-                    if (window.diasDescanso[clave].has(dia)) {
-                        // Si ya está marcado, lo desmarcamos (opcional, usuario pidió intercambiar, pero toggle es útil)
-                        window.diasDescanso[clave].delete(dia);
-                    } else {
-                        // Si vamos a marcar uno nuevo, desmarcamos cualquier otro en esta semana
-                        const descansosActuales = Array.from(window.diasDescanso[clave]);
-                        descansosActuales.forEach(d => {
-                            // Verificar si 'd' cae en la misma semana
-                            if (d >= inicioSemana && d <= finSemana) {
-                                window.diasDescanso[clave].delete(d);
-                            }
-                        });
-
-                        // Marcar el nuevo día
-                        window.diasDescanso[clave].add(dia);
-                    }
-                } else {
-                    // Fallback simple si no hay fecha (no debería pasar)
-                    if (window.diasDescanso[clave].has(dia)) {
-                        window.diasDescanso[clave].delete(dia);
-                    } else {
-                        window.diasDescanso[clave].add(dia);
-                    }
-                }
-
-                generarRecibo();
-            };
-
-            function generarRecibo() {
-                const mesSeleccionado = document.getElementById('filtro-mes-calendario').value;
-                const equipoFiltro = document.getElementById('filtro-equipo-calendario').value;
-
-                if (!mesSeleccionado) {
-                    document.getElementById('calendario-preview').innerHTML = '<p style="color: #a0aec0;">Selecciona un mes para generar el recibo.</p>';
-                    document.getElementById('recibo-print').innerHTML = '';
+                if (!filtroMes) {
+                    calendarioPreview.innerHTML = '<div class="empty-message">Seleccione un mes para generar el calendario.</div>';
+                    calendarioPrint.innerHTML = '';
                     return;
                 }
 
-                const [año, mes] = mesSeleccionado.split('-').map(Number);
-                // Crear fechas usando UTC para evitar problemas de zona horaria en cálculo de día semana
+                const [año, mes] = filtroMes.split('-').map(Number);
+                const ingresos = JSON.parse(localStorage.getItem('ingresosMototaxis')) || [];
+                const equipos = JSON.parse(localStorage.getItem('equiposMototaxis')) || [];
+
+                // Obtener información del equipo seleccionado
+                let equipoSeleccionado = null;
+                if (filtroEquipo) {
+                    equipoSeleccionado = equipos.find(e => e.numero == filtroEquipo);
+                }
+
+                // Filtrar ingresos por mes y equipo si es necesario
+                let ingresosFiltrados = ingresos.filter(ingreso => {
+                    const [ingresoAño, ingresoMes] = ingreso.fecha.split('-').map(Number);
+                    return ingresoAño === año && ingresoMes === mes;
+                });
+
+                if (filtroEquipo) {
+                    ingresosFiltrados = ingresosFiltrados.filter(ingreso => ingreso.equipo == filtroEquipo);
+                }
+
+                // Crear objeto para agrupar ingresos por día
+                const ingresosPorDia = {};
+                ingresosFiltrados.forEach(ingreso => {
+                    const dia = parseInt(ingreso.fecha.split('-')[2]);
+                    if (!ingresosPorDia[dia]) {
+                        ingresosPorDia[dia] = [];
+                    }
+                    ingresosPorDia[dia].push(ingreso);
+                });
+
+                // Obtener el primer día del mes y el número de días
                 const primerDia = new Date(año, mes - 1, 1);
                 const ultimoDia = new Date(año, mes, 0);
                 const diasEnMes = ultimoDia.getDate();
+                const diaInicio = primerDia.getDay(); // 0 = Domingo, 1 = Lunes, ..., 6 = Sábado
 
-                const equipos = JSON.parse(localStorage.getItem('equiposMototaxis')) || [];
-                const ingresos = JSON.parse(localStorage.getItem('ingresosMototaxis')) || [];
+                // Nombres de los meses
+                const nombresMeses = [
+                    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+                    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+                ];
 
-                // Filtrar equipos
-                let equiposFiltrados = equipos;
-                if (equipoFiltro) {
-                    equiposFiltrados = equipos.filter(e => e.numero == equipoFiltro);
-                }
-
-                if (equiposFiltrados.length === 0) {
-                    document.getElementById('calendario-preview').innerHTML = '<p style="color: #a0aec0;">No hay equipos registrados.</p>';
-                    document.getElementById('recibo-print').innerHTML = '';
-                    return;
-                }
-
-                const claveDescanso = `${mesSeleccionado}_${equipoFiltro || 'todos'}`;
-
-                // Inicialización Automática de Descansos (Domingos)
-                if (!window.diasDescanso[claveDescanso]) {
-                    window.diasDescanso[claveDescanso] = new Set();
-                    // Marcar Domingos como descanso por defecto
-                    for (let d = 1; d <= diasEnMes; d++) {
-                        const fechaDia = new Date(año, mes - 1, d);
-                        if (fechaDia.getDay() === 0) { // 0 = Domingo
-                            window.diasDescanso[claveDescanso].add(d);
-                        }
+                // Calcular total general (solo de días que no son descanso)
+                let totalGeneral = 0;
+                for (let dia = 1; dia <= diasEnMes; dia++) {
+                    if (!diasDescansoSeleccionados.includes(dia)) {
+                        const ingresosDia = ingresosPorDia[dia] || [];
+                        const totalDia = ingresosDia.reduce((sum, ingreso) => sum + ingreso.monto, 0);
+                        totalGeneral += totalDia;
                     }
                 }
 
-                // Generar vista previa con Diseño CSS Grid (Igual al principal)
+                // Generar HTML del calendario para vista previa
                 let htmlPreview = `
-                    <p style="margin-bottom: 10px; color: #e2e8f0; text-align: center;">
-                        <strong>Vista Previa (Plantilla):</strong> Click en un día para marcar/desmarcar descanso ($0).
-                        <br>
-                        <span style="font-size: 0.85rem; color: #a0aec0;">Verde = Laboral ($30) | Gris = Descanso ($0)</span>
-                    </p>
-                    
-                    <div class="calendario-periodo" style="border: 1px solid #4a5568; margin-bottom: 20px; width: 100%;">
-                        <div class="dias-semana" style="display: grid; grid-template-columns: repeat(7, 1fr);">
-                            <div class="dia-semana">Dom</div>
-                            <div class="dia-semana">Lun</div>
-                            <div class="dia-semana">Mar</div>
-                            <div class="dia-semana">Mié</div>
-                            <div class="dia-semana">Jue</div>
-                            <div class="dia-semana">Vie</div>
-                            <div class="dia-semana">Sáb</div>
-                        </div>
-                        <div class="grid-dias-calendario">
+                    <table class="tabla-calendario-preview">
+                        <thead>
+                            <tr>
+                                <th>Domingo</th>
+                                <th>Lunes</th>
+                                <th>Martes</th>
+                                <th>Miércoles</th>
+                                <th>Jueves</th>
+                                <th>Viernes</th>
+                                <th>Sábado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
                 `;
 
-                // Celdas vacías iniciales
-                const diaSemanaInicio = primerDia.getDay(); // 0 Domingo
-                for (let i = 0; i < diaSemanaInicio; i++) {
-                    htmlPreview += '<div class="dia-calendario fuera-periodo" style="background: #1a202c;"></div>';
-                }
+                // Generar celdas del calendario para vista previa
+                let diaActual = 1;
+                for (let i = 0; i < 6; i++) { // Máximo 6 filas
+                    htmlPreview += '<tr>';
 
-                // Días del mes
-                for (let diaActual = 1; diaActual <= diasEnMes; diaActual++) {
-                    const esDescanso = window.diasDescanso[claveDescanso].has(diaActual);
+                    for (let j = 0; j < 7; j++) { // 7 días por semana
+                        if ((i === 0 && j < diaInicio) || diaActual > diasEnMes) {
+                            // Celda vacía
+                            htmlPreview += '<td></td>';
+                        } else {
+                            const ingresosDia = ingresosPorDia[diaActual] || [];
+                            const totalDia = ingresosDia.reduce((sum, ingreso) => sum + ingreso.monto, 0);
+                            const comentarios = ingresosDia.map(ingreso =>
+                                ingreso.observacion && ingreso.observacion !== 'Sin observación' ? ingreso.observacion : ''
+                            ).filter(c => c !== '').join(', ');
 
-                    // Estilos según estado (Plantilla Ideal)
-                    // Registrado (Verde) si trabaja, Descanso (Gris oscuro/negro) si no
-                    // Usamos las clases del calendario principal para consistencia
-                    let claseDia = esDescanso ? 'descanso' : 'registrado';
-                    let estiloExtra = esDescanso ? 'background-color: #1a202c !important; color: #718096;' : 'cursor: pointer;';
+                            const esDescanso = diasDescansoSeleccionados.includes(diaActual);
 
-                    if (!esDescanso) {
-                        // Forzar estilo verde "registrado" manualmente si la clase no es suficiente o para diferenciar
-                        estiloExtra += 'background-color: #2f4f3f; border-left: 2px solid #48bb78;';
-                    } else {
-                        estiloExtra += 'border: 1px solid #4a5568;';
+                            htmlPreview += `
+                                <td class="${esDescanso ? 'dia-descanso-preview' : ''}" data-dia="${diaActual}">
+                                    <div class="cuadro-dia-preview">
+                                        <div class="dia-numero-preview">${diaActual}</div>
+                                        ${!esDescanso && totalDia > 0 ? `<div class="dia-monto-preview">$${totalDia.toFixed(2)}</div>` : ''}
+                                        ${!esDescanso && comentarios ? `<div class="dia-comentario-preview">${comentarios}</div>` : ''}
+                                        ${esDescanso ? `<div class="texto-descanso-preview">DESCANSO</div>` : ''}
+                                    </div>
+                                </td>
+                            `;
+                            diaActual++;
+                        }
                     }
 
-                    const montoMostrar = esDescanso ? 0 : 30;
+                    htmlPreview += '</tr>';
 
-                    htmlPreview += `
-                        <div class="dia-calendario ${claseDia}" 
-                             style="${estiloExtra} min-height: 60px;"
-                             onclick="toggleDescanso('${claveDescanso}', ${diaActual})">
-                            
-                            <div class="numero-dia">${diaActual}</div>
-                            
-                            <div class="monto-preview-simple" style="
-                                position: absolute; 
-                                bottom: 5px; 
-                                right: 5px; 
-                                font-weight: bold; 
-                                color: ${esDescanso ? '#a0aec0' : '#48bb78'};
-                            ">
-                                $${montoMostrar}
-                            </div>
-                            
-                            ${esDescanso ? '<div style="font-size: 0.7rem; position: absolute; bottom: 5px; left: 5px; color: #a0aec0;">DESC</div>' : ''}
-                        </div>
-                    `;
+                    // Si ya hemos completado todos los días, salir del bucle
+                    if (diaActual > diasEnMes) break;
                 }
 
                 htmlPreview += `
-                        </div>
-                    </div>
+                        </tbody>
+                    </table>
                 `;
 
-                document.getElementById('calendario-preview').innerHTML = htmlPreview;
+                calendarioPreview.innerHTML = htmlPreview;
 
-                // Generar contenido de impresión
-                generarContenidoImpresion(equiposFiltrados, año, mes, diasEnMes, ingresos, claveDescanso);
-            }
-
-            // Función para generar contenido de impresión
-            function generarContenidoImpresion(equipos, año, mes, diasEnMes, ingresos, claveDescanso) {
-                const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-                    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-                const nombreMes = meses[mes - 1];
-
-                let htmlPrint = '';
-
-                equipos.forEach(equipo => {
-                    let totalMes = 0;
-                    let filasTabla = '';
-
-                    for (let dia = 1; dia <= diasEnMes; dia++) {
-                        // Lógica SIMPLIFICADA: Días laborales = $30, Descanso = $0
-                        // Ignoramos montos reales de DB
-                        const esDescanso = window.diasDescanso[claveDescanso] && window.diasDescanso[claveDescanso].has(dia);
-
-                        let monto = 0;
-
-                        if (esDescanso) {
-                            monto = 0;
+                // Agregar event listeners a las celdas del calendario
+                document.querySelectorAll('.tabla-calendario-preview td[data-dia]').forEach(celda => {
+                    celda.addEventListener('click', function () {
+                        const dia = parseInt(this.getAttribute('data-dia'));
+                        if (diasDescansoSeleccionados.includes(dia)) {
+                            diasDescansoSeleccionados = diasDescansoSeleccionados.filter(d => d !== dia);
                         } else {
-                            monto = 30; // Monto FIJO de $30
+                            diasDescansoSeleccionados.push(dia);
                         }
+                        generarCalendario();
+                    });
+                });
 
-                        totalMes += monto;
+                // Generar HTML del calendario para impresión
+                let htmlPrint = `
+                    <div class="calendario-mensual">
+                        <div class="encabezado-recibo">
+                            <h1>RECIBO DE INGRESO EN CONCEPTO DE TRANSPORTE PÚBLICO ALTERNATIVO LOCAL</h1>
+                            <div class="info-mes">MES: ${nombresMeses[mes - 1]} AÑO: ${año}</div>
+                        </div>
+                `;
 
-                        const claseDescanso = esDescanso ? 'dia-descanso-tabla' : '';
-                        const claseMonto = esDescanso ? 'monto-descanso' : '';
-
-                        filasTabla += `
-                            <tr class="${claseDescanso}">
-                                <td class="col-dia">${dia}</td>
-                                <td class="col-monto ${claseMonto}">$${monto}</td>
-                                <td class="col-observacion"></td> <!-- Observación siempre vacía -->
-                            </tr>
-                        `;
-                    }
-
-                    // Formatear placa si es necesario (asegurar M)
-                    let placa = equipo.placa || 'N/A';
-
+                // Agregar información del equipo si está seleccionado
+                if (equipoSeleccionado) {
                     htmlPrint += `
-                        <div class="recibo-mensual" style="page-break-after: always;">
-                            <div class="encabezado-recibo">
-                                <div class="linea-1">RECIBO DE INGRESO EN CONCEPTO DE</div>
-                                <div class="linea-2">TRANSPORTE PÚBLICO ALTERNATIVO LOCAL</div>
-                                <div class="info-mes">Mes: ${nombreMes} ${año}</div>
-                            </div>
-
-                            <div class="contenedor-principal">
-                                <div class="columna-tabla">
-                                    <table class="tabla-dias">
-                                        <thead>
-                                            <tr>
-                                                <th class="col-dia">Día</th>
-                                                <th class="col-monto">Monto</th>
-                                                <th class="col-observacion">Observación</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            ${filasTabla}
-                                        </tbody>
-                                    </table>
-                                </div>
-
-                                <div class="columna-datos">
-                                    <div class="datos-conductor">
-                                        <div class="dato-item">
-                                            <span class="dato-label">Placa:</span>
-                                            <span class="dato-valor">${placa}</span>
-                                        </div>
-                                        <div class="dato-item">
-                                            <span class="dato-label">Nombre:</span>
-                                            <span class="dato-valor">${equipo.nombre || 'N/A'}</span>
-                                        </div>
-                                        <div class="dato-item">
-                                            <span class="dato-label">DUI:</span>
-                                            <span class="dato-valor">${equipo.dui || 'N/A'}</span>
-                                        </div>
-                                    </div>
-
-                                    <div class="seccion-firma">
-                                        <div class="total-recibo">
-                                            TOTAL: $${totalMes}
-                                        </div>
-                                        <div class="firma-recibo">
-                                            <div style="text-align: center; margin-bottom: 5px;">Recibí conforme:</div>
-                                            <div class="linea-firma" style="text-align: center;">
-                                                Firma
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                        <div class="info-equipo">
+                            <div class="numero-equipo">EQUIPO: ${equipoSeleccionado.numero}</div>
+                            <div>Nombre: ${equipoSeleccionado.nombre}</div>
+                            <div>DUI: ${equipoSeleccionado.dui}</div>
+                            <div>Placas: ${equipoSeleccionado.placa}</div>
                         </div>
                     `;
-                });
-
-                document.getElementById('recibo-print').innerHTML = htmlPrint;
-            }
-
-            // ===== LÓGICA DE SELECCIÓN DE IMPRESIÓN =====
-
-            // Reemplazar listener cuando el documento esté listo
-            document.addEventListener('DOMContentLoaded', function () {
-                // setTimeout(() => {
-                const btnImprimir = document.getElementById('imprimir-calendario');
-                if (btnImprimir) {
-                    // Clonar para limpiar listeners previos
-                    const nuevoBtn = btnImprimir.cloneNode(true);
-                    btnImprimir.parentNode.replaceChild(nuevoBtn, btnImprimir);
-
-                    nuevoBtn.addEventListener('click', function () {
-                        const equipoFiltro = document.getElementById('filtro-equipo-calendario').value;
-                        if (!equipoFiltro) {
-                            iniciarSeleccionImpresion();
-                        } else {
-                            window.print();
-                        }
-                    });
                 }
-                // }, 1000); // Pequeño delay para asegurar carga
-            });
 
-            function iniciarSeleccionImpresion() {
-                const equipos = JSON.parse(localStorage.getItem('equiposMototaxis')) || [];
-                equipos.sort((a, b) => a.numero - b.numero);
+                htmlPrint += `
+                        <table class="tabla-calendario">
+                            <thead>
+                                <tr>
+                                    <th>Domingo</th>
+                                    <th>Lunes</th>
+                                    <th>Martes</th>
+                                    <th>Miércoles</th>
+                                    <th>Jueves</th>
+                                    <th>Viernes</th>
+                                    <th>Sábado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
 
-                const modalId = 'modal-seleccion-impresion';
-                let modal = document.getElementById(modalId);
-                if (modal) modal.remove();
+                // Generar celdas del calendario para impresión
+                diaActual = 1;
+                for (let i = 0; i < 6; i++) { // Máximo 6 filas
+                    htmlPrint += '<tr>';
 
-                const htmlEquipos = equipos.map(e => `
-                    <div style="margin-bottom: 8px;">
-                        <label style="display: flex; align-items: center; cursor: pointer; color: black;">
-                            <input type="checkbox" class="chk-impresion" value="${e.numero}" checked style="margin-right: 10px;">
-                            <span>Equipo ${e.numero} - ${e.nombre}</span>
-                        </label>
-                    </div>
-                `).join('');
+                    for (let j = 0; j < 7; j++) { // 7 días por semana
+                        if ((i === 0 && j < diaInicio) || diaActual > diasEnMes) {
+                            // Celda vacía
+                            htmlPrint += '<td></td>';
+                        } else {
+                            const ingresosDia = ingresosPorDia[diaActual] || [];
+                            const totalDia = ingresosDia.reduce((sum, ingreso) => sum + ingreso.monto, 0);
+                            const comentarios = ingresosDia.map(ingreso =>
+                                ingreso.observacion && ingreso.observacion !== 'Sin observación' ? ingreso.observacion : ''
+                            ).filter(c => c !== '').join(', ');
 
-                const modalHtml = `
-                    <div class="modal-overlay" id="${modalId}" style="display: flex; z-index: 10000;">
-                        <div class="modal-contenido" style="max-width: 400px; background: white; color: black;">
-                            <div class="modal-header">
-                                <h3 style="color: black;">Seleccionar Equipos a Imprimir</h3>
-                                <button class="modal-cerrar" onclick="document.getElementById('${modalId}').remove()">&times;</button>
-                            </div>
-                            <div class="modal-body" style="max-height: 300px; overflow-y: auto;">
-                                <div style="margin-bottom: 10px;">
-                                    <button class="btn btn-secondary btn-sm" onclick="document.querySelectorAll('.chk-impresion').forEach(c => c.checked = true)">Todos</button>
-                                    <button class="btn btn-secondary btn-sm" onclick="document.querySelectorAll('.chk-impresion').forEach(c => c.checked = false)">Ninguno</button>
-                                </div>
-                                ${htmlEquipos}
-                            </div>
-                            <div class="modal-footer">
-                                <button class="btn btn-secondary" onclick="document.getElementById('${modalId}').remove()">Cancelar</button>
-                                <button class="btn btn-primary" id="btn-confirmar-impresion">Imprimir Seleccionados</button>
-                            </div>
+                            const esDescanso = diasDescansoSeleccionados.includes(diaActual);
+
+                            htmlPrint += `
+                                <td class="${esDescanso ? 'dia-descanso' : ''}">
+                                    <div class="cuadro-dia">
+                                        <div class="dia-numero">${diaActual}</div>
+                                        ${!esDescanso && totalDia > 0 ? `<div class="dia-monto">$${totalDia.toFixed(2)}</div>` : ''}
+                                        ${!esDescanso && comentarios ? `<div class="dia-comentario">${comentarios}</div>` : ''}
+                                        ${esDescanso ? `<div class="texto-descanso">DESCANSO</div>` : ''}
+                                    </div>
+                                </td>
+                            `;
+                            diaActual++;
+                        }
+                    }
+
+                    htmlPrint += '</tr>';
+
+                    // Si ya hemos completado todos los días, salir del bucle
+                    if (diaActual > diasEnMes) break;
+                }
+
+                htmlPrint += `
+                            </tbody>
+                        </table>
+                        
+                        <div class="pie-pagina">
+                            <div class="total-general-print">TOTAL: $${totalGeneral.toFixed(2)}</div>
+                            <div class="firma">FIRMA</div>
                         </div>
                     </div>
                 `;
 
-                document.body.insertAdjacentHTML('beforeend', modalHtml);
-
-                document.getElementById('btn-confirmar-impresion').addEventListener('click', function () {
-                    const seleccionados = Array.from(document.querySelectorAll('.chk-impresion:checked')).map(c => c.value);
-
-                    if (seleccionados.length === 0) {
-                        alert('Seleccione al menos un equipo.');
-                        return;
-                    }
-
-                    // Regenerar impresión con filtro
-                    const equiposFiltrados = equipos.filter(e => seleccionados.includes(e.numero.toString()));
-
-                    const mesSeleccionado = document.getElementById('filtro-mes-calendario').value;
-                    const [año, mes] = mesSeleccionado.split('-').map(Number);
-                    const diasEnMes = new Date(año, mes, 0).getDate();
-                    const ingresos = JSON.parse(localStorage.getItem('ingresosMototaxis')) || [];
-                    const claveDescanso = `${mesSeleccionado}_todos`;
-
-                    generarContenidoImpresion(equiposFiltrados, año, mes, diasEnMes, ingresos, claveDescanso);
-
-                    document.getElementById(modalId).remove();
-
-                    setTimeout(() => window.print(), 500);
-                });
+                calendarioPrint.innerHTML = htmlPrint;
             }
-
-            // INYECCIÓN FINAL DE FUNCIÓN GLOBAL (Asegura funcionamiento)
-            window.prepararImpresion = function () {
-                const equipoFiltro = document.getElementById('filtro-equipo-calendario').value;
-                if (!equipoFiltro) {
-                    iniciarSeleccionImpresion();
-                } else {
-                    // Mover recibo al body si es necesario
-                    const recibo = document.getElementById('recibo-print');
-                    if (recibo && recibo.parentElement !== document.body) {
-                        document.body.appendChild(recibo);
-                    }
-                    window.print();
-                }
-            };
         });
     </script>
 </body>
