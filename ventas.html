@@ -359,16 +359,20 @@
                     </div>
                 </div>
 
-                <div class="confirmacion-buttons">
-                    <button class="btn btn-success" id="confirmar-con-abono-btn">
-                        <i class="fas fa-money-bill-wave"></i> REGISTRAR ABONO
+                <div class="confirmacion-buttons" style="display: flex; flex-direction: column; gap: 10px;">
+                    <button class="btn btn-success" id="confirmar-con-abono-btn"
+                        style="padding: 15px; font-size: 1.1rem; font-weight: bold; background-color: #27ae60;">
+                        <i class="fas fa-money-bill-wave"></i> PENDIENTE CON ABONO
                     </button>
-                    <button class="btn btn-warning" id="continuar-sin-abono-btn">
-                        <i class="fas fa-forward"></i> CONTINUAR SIN ABONO
+                    <button class="btn btn-warning" id="continuar-sin-abono-btn"
+                        style="padding: 15px; font-size: 1.1rem; font-weight: bold; background-color: #f39c12; color: white;">
+                        <i class="fas fa-forward"></i> PENDIENTE SIN ABONO
                     </button>
                 </div>
 
-                <button class="btn btn-danger" id="cancelar-confirmacion-btn" style="margin-top: 10px; width: 100%;">
+                <button class="btn btn-danger" id="cancelar-confirmacion-btn"
+                    onclick="document.getElementById('confirmacion-abono-modal').style.display='none'; delete AppState.datosVentaPendiente;"
+                    style="margin-top: 15px; width: 100%; padding: 12px; font-weight: bold;">
                     <i class="fas fa-times"></i> CANCELAR
                 </button>
             </div>
