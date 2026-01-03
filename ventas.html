@@ -1577,29 +1577,85 @@
 
                 const modal = document.getElementById('bulk-abono-modal');
                 const info = document.getElementById('bulk-abono-info');
+                const montoInput = document.getElementById('monto-bulk-abono');
 
+                // 1. Calcular totales y generar lista detallada de equipos
+                let listaEquiposHTML = '<div style="margin: 15px 0; border: 1px solid #dfe6e9; border-radius: 6px; background: white; overflow: hidden;">';
+                listaEquiposHTML += '<div style="background: #ecf0f1; padding: 8px 12px; font-weight: bold; color: #7f8c8d; font-size: 0.9em; display: flex; justify-content: space-between;"><span>EQUIPO</span><span>SALDO</span></div>';
+                listaEquiposHTML += '<div style="max-height: 200px; overflow-y: auto;">';
+
+                let totalReal = 0;
+
+                grupo.equipos.forEach(equipoNum => {
+                    let equipoData = null;
+                    // Buscar en equiposPendientes (usamos Map entries o iteración para encontrar el dato correcto)
+                    this.equiposPendientes.forEach(eq => {
+                        if (eq.numero === equipoNum) equipoData = eq;
+                    });
+
+                    if (equipoData && equipoData.total > 0) {
+                        totalReal += equipoData.total;
+                        listaEquiposHTML += `
+                            <div style="padding: 8px 12px; border-bottom: 1px solid #f1f2f6; display: flex; justify-content: space-between; align-items: center;">
+                                <span style="font-weight: 500; color: #2c3e50;">Equipo ${equipoNum}</span>
+                                <span style="font-weight: bold; color: #e74c3c;">$${equipoData.total.toFixed(2)}</span>
+                            </div>
+                        `;
+                    }
+                });
+
+                listaEquiposHTML += '</div>'; // cerrar scroll container
+                listaEquiposHTML += `
+                    <div style="background: #2c3e50; color: white; padding: 10px 12px; display: flex; justify-content: space-between; font-weight: bold; font-size: 1.1em;">
+                        <span>TOTAL PENDIENTE</span>
+                        <span>$${totalReal.toFixed(2)}</span>
+                    </div>
+                </div>`; // cerrar main div
+
+                // 2. Insertar contenido en el modal
                 info.innerHTML = `
-                    <strong>Abonar a Grupo:</strong> ${grupo.nombre}<br>
-                    <strong>Total Pendiente del Grupo:</strong> $${grupo.total.toFixed(2)}<br>
-                    Ingrese el monto total a abonar. Se distribuirá entre las facturas más antiguas del grupo.
+                    <h3 style="margin: 0 0 10px 0; color: #2c3e50; text-align: center;">${grupo.nombre}</h3>
+                    ${listaEquiposHTML}
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: #d5f5e3; padding: 12px; border-radius: 6px; border: 1px solid #abebc6; margin-top: 15px;">
+                        <span style="color: #27ae60; font-weight: bold;">SALDO RESTANTE:</span>
+                        <span id="saldo-restante-display" style="font-size: 1.4em; font-weight: bold; color: #27ae60;">$${totalReal.toFixed(2)}</span>
+                    </div>
                 `;
 
-                document.getElementById('monto-bulk-abono').value = '';
-                modal.style.display = 'block';
+                // 3. Resetear input y configurar cálculo dinámico
+                montoInput.value = '';
+                montoInput.oninput = function () {
+                    const val = parseFloat(this.value) || 0;
+                    const restante = totalReal - val;
+                    const el = document.getElementById('saldo-restante-display');
 
+                    if (restante < 0) {
+                        el.textContent = '$0.00 (Excede)';
+                        el.style.color = '#c0392b';
+                    } else {
+                        el.textContent = '$' + restante.toFixed(2);
+                        el.style.color = '#27ae60';
+                    }
+                };
+
+                modal.style.display = 'block';
+                setTimeout(() => montoInput.focus(), 100);
+
+                // 4. Configurar botón de proceso
                 const processBtn = document.getElementById('process-bulk-abono-btn');
                 processBtn.onclick = async () => {
                     if (processBtn.disabled) return;
                     processBtn.disabled = true;
 
-                    const monto = parseFloat(document.getElementById('monto-bulk-abono').value);
+                    const monto = parseFloat(montoInput.value);
                     if (!monto || monto <= 0) {
                         UIService.showStatus("Ingrese un monto válido", "error");
                         processBtn.disabled = false;
                         return;
                     }
 
-                    if (monto > grupo.total) {
+                    if (monto > totalReal + 0.1) { // Tolerancia de 10 centavos por redondeos
                         UIService.showStatus("El monto no puede ser mayor al total del grupo", "error");
                         processBtn.disabled = false;
                         return;
