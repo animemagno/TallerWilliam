@@ -602,6 +602,48 @@
             </div>
         </div>
 
+        <div id="abono-grupo-modal" class="modal-overlay">
+            <div class="modal-content" style="max-width: 450px;">
+                <h3
+                    style="text-align: center; margin-bottom: 20px; color: #2c3e50; font-weight: 800; border-bottom: 2px solid #eee; padding-bottom: 15px;">
+                    ABONO MASIVO</h3>
+
+                <h4 id="abono-grupo-nombre"
+                    style="text-align: center; color: #7f8c8d; margin-bottom: 20px; font-size: 1.2rem;"></h4>
+
+                <div id="abono-grupo-lista" style="background: white; margin-bottom: 20px;">
+                    <!-- Lista de equipos inyectada dinámicamente -->
+                </div>
+
+                <div class="form-group"
+                    style="background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #e9ecef;">
+                    <label for="monto-abono-grupo"
+                        style="font-weight: bold; display: block; margin-bottom: 8px; color: #2c3e50;">ABONO:</label>
+                    <input type="number" id="monto-abono-grupo" placeholder="0.00"
+                        style="width: 100%; padding: 12px; font-size: 1.5rem; text-align: center; border: 2px solid #3498db; border-radius: 6px; font-weight: bold; color: #3498db; outline: none;">
+                </div>
+
+                <div
+                    style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px; padding: 15px; background: #ecf0f1; border-radius: 6px;">
+                    <span style="color: #7f8c8d; font-weight: bold;">NUEVO SALDO:</span>
+                    <span id="nuevo-saldo-grupo"
+                        style="font-size: 1.3rem; color: #2c3e50; font-weight: bold;">$0.00</span>
+                </div>
+
+                <div style="display: flex; gap: 15px; margin-top: 25px;">
+                    <button class="btn btn-success" id="btn-procesar-abono-grupo"
+                        style="flex: 1; padding: 15px; font-weight: bold; font-size: 1.1rem;">
+                        PROCESAR
+                    </button>
+                    <button class="btn btn-danger"
+                        onclick="document.getElementById('abono-grupo-modal').style.display='none'"
+                        style="flex: 1; padding: 15px; font-weight: bold; font-size: 1.1rem;">
+                        CANCELAR
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <div id="retiro-modal" class="modal-overlay">
             <div class="modal-content">
                 <h3 style="margin-bottom: 15px; text-align: center; color: #9b59b6;">Registrar Retiro de Caja
@@ -1575,107 +1617,98 @@
                 const grupo = this.grupos.get(grupoId);
                 if (!grupo) return;
 
-                const modal = document.getElementById('bulk-abono-modal');
-                const info = document.getElementById('bulk-abono-info');
-                const montoInput = document.getElementById('monto-bulk-abono');
+                // Referencias al NUEVO modal dedicado para GRUPOS
+                const modal = document.getElementById('abono-grupo-modal');
+                const nombreEl = document.getElementById('abono-grupo-nombre');
+                const listaEl = document.getElementById('abono-grupo-lista');
+                const montoInput = document.getElementById('monto-abono-grupo');
+                const saldoEl = document.getElementById('nuevo-saldo-grupo');
+                const btnProcesar = document.getElementById('btn-procesar-abono-grupo');
 
-                // 1. Calcular totales y generar lista detallada de equipos
-                let listaEquiposHTML = '<div style="margin: 15px 0; border: 1px solid #dfe6e9; border-radius: 6px; background: white; overflow: hidden;">';
-                listaEquiposHTML += '<div style="background: #ecf0f1; padding: 8px 12px; font-weight: bold; color: #7f8c8d; font-size: 0.9em; display: flex; justify-content: space-between;"><span>EQUIPO</span><span>SALDO</span></div>';
-                listaEquiposHTML += '<div style="max-height: 200px; overflow-y: auto;">';
+                nombreEl.textContent = grupo.nombre;
 
-                let totalReal = 0;
+                // Calcular total y generar HTML detallado
+                let htmlLista = '';
+                let totalGrupo = 0;
 
                 grupo.equipos.forEach(equipoNum => {
                     let equipoData = null;
-                    // Buscar en equiposPendientes (usamos Map entries o iteración para encontrar el dato correcto)
                     this.equiposPendientes.forEach(eq => {
                         if (eq.numero === equipoNum) equipoData = eq;
                     });
 
                     if (equipoData && equipoData.total > 0) {
-                        totalReal += equipoData.total;
-                        listaEquiposHTML += `
-                            <div style="padding: 8px 12px; border-bottom: 1px solid #f1f2f6; display: flex; justify-content: space-between; align-items: center;">
-                                <span style="font-weight: 500; color: #2c3e50;">Equipo ${equipoNum}</span>
-                                <span style="font-weight: bold; color: #e74c3c;">$${equipoData.total.toFixed(2)}</span>
+                        totalGrupo += equipoData.total;
+                        htmlLista += `
+                            <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed #ccc; padding: 6px 0; font-family: monospace; font-size: 1.1rem; color: #333;">
+                                <span style="font-weight: bold;">EQUIPO ${equipoNum}</span>
+                                <span>$${equipoData.total.toFixed(2)}</span>
                             </div>
                         `;
                     }
                 });
 
-                listaEquiposHTML += '</div>'; // cerrar scroll container
-                listaEquiposHTML += `
-                    <div style="background: #2c3e50; color: white; padding: 10px 12px; display: flex; justify-content: space-between; font-weight: bold; font-size: 1.1em;">
-                        <span>TOTAL PENDIENTE</span>
-                        <span>$${totalReal.toFixed(2)}</span>
-                    </div>
-                </div>`; // cerrar main div
-
-                // 2. Insertar contenido en el modal
-                info.innerHTML = `
-                    <h3 style="margin: 0 0 10px 0; color: #2c3e50; text-align: center;">${grupo.nombre}</h3>
-                    ${listaEquiposHTML}
-                    
-                    <div style="display: flex; justify-content: space-between; align-items: center; background: #d5f5e3; padding: 12px; border-radius: 6px; border: 1px solid #abebc6; margin-top: 15px;">
-                        <span style="color: #27ae60; font-weight: bold;">SALDO RESTANTE:</span>
-                        <span id="saldo-restante-display" style="font-size: 1.4em; font-weight: bold; color: #27ae60;">$${totalReal.toFixed(2)}</span>
+                htmlLista += `
+                    <div style="display: flex; justify-content: space-between; margin-top: 10px; border-top: 2px solid #333; padding-top: 5px; font-weight: bold; font-size: 1.3rem; color: #000;">
+                        <span>TOTAL</span>
+                        <span>$${totalGrupo.toFixed(2)}</span>
                     </div>
                 `;
 
-                // 3. Resetear input y configurar cálculo dinámico
-                montoInput.value = '';
-                montoInput.oninput = function () {
-                    const val = parseFloat(this.value) || 0;
-                    const restante = totalReal - val;
-                    const el = document.getElementById('saldo-restante-display');
+                listaEl.innerHTML = htmlLista;
+                saldoEl.textContent = '$' + totalGrupo.toFixed(2);
 
-                    if (restante < 0) {
-                        el.textContent = '$0.00 (Excede)';
-                        el.style.color = '#c0392b';
+                // Configurar Input
+                montoInput.value = '';
+                montoInput.oninput = () => {
+                    const monto = parseFloat(montoInput.value) || 0;
+                    const restante = Math.max(0, totalGrupo - monto);
+                    saldoEl.textContent = '$' + restante.toFixed(2);
+
+                    if (restante === 0 && monto >= totalGrupo) {
+                        saldoEl.style.color = '#27ae60';
                     } else {
-                        el.textContent = '$' + restante.toFixed(2);
-                        el.style.color = '#27ae60';
+                        saldoEl.style.color = '#2c3e50';
                     }
                 };
 
+                // Mostrar Modal
                 modal.style.display = 'block';
                 setTimeout(() => montoInput.focus(), 100);
 
-                // 4. Configurar botón de proceso
-                const processBtn = document.getElementById('process-bulk-abono-btn');
-                processBtn.onclick = async () => {
-                    if (processBtn.disabled) return;
-                    processBtn.disabled = true;
-
+                // Configurar Botón Procesar
+                btnProcesar.onclick = async () => {
                     const monto = parseFloat(montoInput.value);
                     if (!monto || monto <= 0) {
                         UIService.showStatus("Ingrese un monto válido", "error");
-                        processBtn.disabled = false;
                         return;
                     }
 
-                    if (monto > totalReal + 0.1) { // Tolerancia de 10 centavos por redondeos
-                        UIService.showStatus("El monto no puede ser mayor al total del grupo", "error");
-                        processBtn.disabled = false;
+                    if (monto > totalGrupo + 0.10) {
+                        UIService.showStatus("El abono excede el saldo pendiente", "error");
                         return;
                     }
 
                     try {
                         UIService.showLoading(true);
+                        btnProcesar.disabled = true;
+
                         await SalesService.processGroupAbono(grupoId, monto);
 
-                        UIService.showStatus(`Abono de $${monto.toFixed(2)} aplicado al grupo correctamente`, "success");
+                        UIService.showStatus("Abono aplicado correctamente", "success");
                         modal.style.display = 'none';
 
                     } catch (error) {
+                        console.error(error);
                         UIService.showStatus("Error: " + error.message, "error");
                     } finally {
                         UIService.showLoading(false);
-                        processBtn.disabled = false;
+                        btnProcesar.disabled = false;
                     }
                 };
             },
+
+
 
             showGroupPaymentModalSelector() {
                 // Mostrar un modal simple con un select de grupos
