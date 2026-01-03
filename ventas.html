@@ -1366,7 +1366,7 @@
                             <div class="grupo-equipos-grid">
                                 ${equiposHTML}
                             </div>
-                            <div class="grupo-total">
+                            <div class="grupo-total" style="cursor: pointer;" onclick="GrupoManager.showGroupPaymentModal('${grupo.id}')" title="Clic para abonar al grupo">
                                 Total: $${grupo.total.toFixed(2)}
                             </div>
                         </div>
