@@ -1,6 +1,6 @@
 
 document.addEventListener('DOMContentLoaded', function () {
-    console.log("FIX_SEARCH: Iniciando script de reparación UI y Búsqueda...");
+    console.log("FIX_SEARCH: Iniciando script de reparación UI, Búsqueda y Límites...");
 
     // 1. Restaurar Listeners de Búsqueda
     function restoreSearchListeners() {
@@ -44,6 +44,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 }
             });
+            console.log("FIX_SEARCH: Búsqueda flexible activada.");
         }
 
         document.querySelectorAll('.filter-btn').forEach(btn => {
@@ -67,6 +68,39 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    // 3. Extend Data Limits (2000 -> 5000)
+    // Se ejecuta inmediatamente para interceptar llamadas tempranas
+    function extendDataLimits() {
+        if (window.DataService) {
+            // Override loadSales
+            const originalLoadSales = DataService.loadSales;
+            DataService.loadSales = async function (limit = 5000) { // Default cambiado a 5000
+                console.log(`FIX_SEARCH: loadSales llamado con limit=${limit}`);
+                return originalLoadSales.call(this, limit);
+            };
+
+            // Override loadRetiros
+            const originalLoadRetiros = DataService.loadRetiros;
+            DataService.loadRetiros = async function (limit = 5000) {
+                console.log(`FIX_SEARCH: loadRetiros llamado con limit=${limit}`);
+                return originalLoadRetiros.call(this, limit);
+            };
+
+            // Override loadIngresos
+            const originalLoadIngresos = DataService.loadIngresos;
+            DataService.loadIngresos = async function (limit = 5000) {
+                console.log(`FIX_SEARCH: loadIngresos llamado con limit=${limit}`);
+                return originalLoadIngresos.call(this, limit);
+            };
+
+            console.log("FIX_SEARCH: Límites de datos extendidos a 5000.");
+        } else {
+            // Si DataService aun no existe, reintentar en breve
+            setTimeout(extendDataLimits, 100);
+        }
+    }
+
     restoreSearchListeners();
     applyCSSFixes();
+    extendDataLimits();
 });
