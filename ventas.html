@@ -4462,7 +4462,7 @@
                     UIService.showStatus("Factura actualizada correctamente", "success");
 
                     const ventaActualizada = { ...ventaActual, ...saleData };
-                    this.printTicket(ventaActualizada);
+                    PrintingService.printTicket(ventaActualizada);
 
                     this.cancelEdit();
 
