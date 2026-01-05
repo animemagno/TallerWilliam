@@ -28,7 +28,11 @@
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <div style="display: flex; align-items: center; gap: 15px;">
                         <h1 style="margin: 0; font-size: 1.5rem;">Taller Willian</h1>
-
+                        <button onclick="window.location.href='ventas.html'" class="btn btn-secondary btn-small"
+                            title="Volver a versión anterior"
+                            style="padding: 4px 10px; font-size: 0.8rem; background-color: #95a5a6; border: none;">
+                            <i class="fas fa-history"></i> Antigua
+                        </button>
                         <button onclick="UIService.toggleDashboardLayout()" class="btn btn-info btn-small"
                             title="Intercambiar izquierda/derecha"
                             style="padding: 4px 10px; font-size: 0.8rem; border: none;">
@@ -359,20 +363,16 @@
                     </div>
                 </div>
 
-                <div class="confirmacion-buttons" style="display: flex; flex-direction: column; gap: 10px;">
-                    <button class="btn btn-success" id="confirmar-con-abono-btn"
-                        style="padding: 15px; font-size: 1.1rem; font-weight: bold; background-color: #27ae60;">
-                        <i class="fas fa-money-bill-wave"></i> PENDIENTE CON ABONO
+                <div class="confirmacion-buttons">
+                    <button class="btn btn-success" id="confirmar-con-abono-btn">
+                        <i class="fas fa-money-bill-wave"></i> CON ABONO
                     </button>
-                    <button class="btn btn-warning" id="continuar-sin-abono-btn"
-                        style="padding: 15px; font-size: 1.1rem; font-weight: bold; background-color: #f39c12; color: white;">
-                        <i class="fas fa-forward"></i> PENDIENTE SIN ABONO
+                    <button class="btn btn-warning" id="continuar-sin-abono-btn">
+                        <i class="fas fa-forward"></i> SIN ABONO
                     </button>
                 </div>
 
-                <button class="btn btn-danger" id="cancelar-confirmacion-btn"
-                    onclick="document.getElementById('confirmacion-abono-modal').style.display='none'; delete AppState.datosVentaPendiente;"
-                    style="margin-top: 15px; width: 100%; padding: 12px; font-weight: bold;">
+                <button class="btn btn-danger" id="cancelar-confirmacion-btn" style="margin-top: 10px; width: 100%;">
                     <i class="fas fa-times"></i> CANCELAR
                 </button>
             </div>
@@ -602,48 +602,6 @@
             </div>
         </div>
 
-        <div id="abono-grupo-modal" class="modal-overlay">
-            <div class="modal-content" style="max-width: 450px;">
-                <h3
-                    style="text-align: center; margin-bottom: 20px; color: #2c3e50; font-weight: 800; border-bottom: 2px solid #eee; padding-bottom: 15px;">
-                    ABONO MASIVO</h3>
-
-                <h4 id="abono-grupo-nombre"
-                    style="text-align: center; color: #7f8c8d; margin-bottom: 20px; font-size: 1.2rem;"></h4>
-
-                <div id="abono-grupo-lista" style="background: white; margin-bottom: 20px;">
-                    <!-- Lista de equipos inyectada dinámicamente -->
-                </div>
-
-                <div class="form-group"
-                    style="background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #e9ecef;">
-                    <label for="monto-abono-grupo"
-                        style="font-weight: bold; display: block; margin-bottom: 8px; color: #2c3e50;">ABONO:</label>
-                    <input type="number" id="monto-abono-grupo" placeholder="0.00"
-                        style="width: 100%; padding: 12px; font-size: 1.5rem; text-align: center; border: 2px solid #3498db; border-radius: 6px; font-weight: bold; color: #3498db; outline: none;">
-                </div>
-
-                <div
-                    style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px; padding: 15px; background: #ecf0f1; border-radius: 6px;">
-                    <span style="color: #7f8c8d; font-weight: bold;">NUEVO SALDO:</span>
-                    <span id="nuevo-saldo-grupo"
-                        style="font-size: 1.3rem; color: #2c3e50; font-weight: bold;">$0.00</span>
-                </div>
-
-                <div style="display: flex; gap: 15px; margin-top: 25px;">
-                    <button class="btn btn-success" id="btn-procesar-abono-grupo"
-                        style="flex: 1; padding: 15px; font-weight: bold; font-size: 1.1rem;">
-                        PROCESAR
-                    </button>
-                    <button class="btn btn-danger"
-                        onclick="document.getElementById('abono-grupo-modal').style.display='none'"
-                        style="flex: 1; padding: 15px; font-weight: bold; font-size: 1.1rem;">
-                        CANCELAR
-                    </button>
-                </div>
-            </div>
-        </div>
-
         <div id="retiro-modal" class="modal-overlay">
             <div class="modal-content">
                 <h3 style="margin-bottom: 15px; text-align: center; color: #9b59b6;">Registrar Retiro de Caja
@@ -681,6 +639,8 @@
         </div>
     </div>
 
+    <script src="js/PrintingService.js"></script>
+    <script src="js/HistorialService.js"></script>
     <script>
         // Definir firebase globalmente
         const firebase = window.firebase;
@@ -1408,7 +1368,7 @@
                             <div class="grupo-equipos-grid">
                                 ${equiposHTML}
                             </div>
-                            <div class="grupo-total" style="cursor: pointer;" onclick="GrupoManager.showGroupPaymentModal('${grupo.id}')" title="Clic para abonar al grupo">
+                            <div class="grupo-total">
                                 Total: $${grupo.total.toFixed(2)}
                             </div>
                         </div>
@@ -1617,98 +1577,51 @@
                 const grupo = this.grupos.get(grupoId);
                 if (!grupo) return;
 
-                // Referencias al NUEVO modal dedicado para GRUPOS
-                const modal = document.getElementById('abono-grupo-modal');
-                const nombreEl = document.getElementById('abono-grupo-nombre');
-                const listaEl = document.getElementById('abono-grupo-lista');
-                const montoInput = document.getElementById('monto-abono-grupo');
-                const saldoEl = document.getElementById('nuevo-saldo-grupo');
-                const btnProcesar = document.getElementById('btn-procesar-abono-grupo');
+                const modal = document.getElementById('bulk-abono-modal');
+                const info = document.getElementById('bulk-abono-info');
 
-                nombreEl.textContent = grupo.nombre;
-
-                // Calcular total y generar HTML detallado
-                let htmlLista = '';
-                let totalGrupo = 0;
-
-                grupo.equipos.forEach(equipoNum => {
-                    let equipoData = null;
-                    this.equiposPendientes.forEach(eq => {
-                        if (eq.numero === equipoNum) equipoData = eq;
-                    });
-
-                    if (equipoData && equipoData.total > 0) {
-                        totalGrupo += equipoData.total;
-                        htmlLista += `
-                            <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed #ccc; padding: 6px 0; font-family: monospace; font-size: 1.1rem; color: #333;">
-                                <span style="font-weight: bold;">EQUIPO ${equipoNum}</span>
-                                <span>$${equipoData.total.toFixed(2)}</span>
-                            </div>
-                        `;
-                    }
-                });
-
-                htmlLista += `
-                    <div style="display: flex; justify-content: space-between; margin-top: 10px; border-top: 2px solid #333; padding-top: 5px; font-weight: bold; font-size: 1.3rem; color: #000;">
-                        <span>TOTAL</span>
-                        <span>$${totalGrupo.toFixed(2)}</span>
-                    </div>
+                info.innerHTML = `
+                    <strong>Abonar a Grupo:</strong> ${grupo.nombre}<br>
+                    <strong>Total Pendiente del Grupo:</strong> $${grupo.total.toFixed(2)}<br>
+                    Ingrese el monto total a abonar. Se distribuirá entre las facturas más antiguas del grupo.
                 `;
 
-                listaEl.innerHTML = htmlLista;
-                saldoEl.textContent = '$' + totalGrupo.toFixed(2);
-
-                // Configurar Input
-                montoInput.value = '';
-                montoInput.oninput = () => {
-                    const monto = parseFloat(montoInput.value) || 0;
-                    const restante = Math.max(0, totalGrupo - monto);
-                    saldoEl.textContent = '$' + restante.toFixed(2);
-
-                    if (restante === 0 && monto >= totalGrupo) {
-                        saldoEl.style.color = '#27ae60';
-                    } else {
-                        saldoEl.style.color = '#2c3e50';
-                    }
-                };
-
-                // Mostrar Modal
+                document.getElementById('monto-bulk-abono').value = '';
                 modal.style.display = 'block';
-                setTimeout(() => montoInput.focus(), 100);
 
-                // Configurar Botón Procesar
-                btnProcesar.onclick = async () => {
-                    const monto = parseFloat(montoInput.value);
+                const processBtn = document.getElementById('process-bulk-abono-btn');
+                processBtn.onclick = async () => {
+                    if (processBtn.disabled) return;
+                    processBtn.disabled = true;
+
+                    const monto = parseFloat(document.getElementById('monto-bulk-abono').value);
                     if (!monto || monto <= 0) {
                         UIService.showStatus("Ingrese un monto válido", "error");
+                        processBtn.disabled = false;
                         return;
                     }
 
-                    if (monto > totalGrupo + 0.10) {
-                        UIService.showStatus("El abono excede el saldo pendiente", "error");
+                    if (monto > grupo.total) {
+                        UIService.showStatus("El monto no puede ser mayor al total del grupo", "error");
+                        processBtn.disabled = false;
                         return;
                     }
 
                     try {
                         UIService.showLoading(true);
-                        btnProcesar.disabled = true;
-
                         await SalesService.processGroupAbono(grupoId, monto);
 
-                        UIService.showStatus("Abono aplicado correctamente", "success");
+                        UIService.showStatus(`Abono de $${monto.toFixed(2)} aplicado al grupo correctamente`, "success");
                         modal.style.display = 'none';
 
                     } catch (error) {
-                        console.error(error);
                         UIService.showStatus("Error: " + error.message, "error");
                     } finally {
                         UIService.showLoading(false);
-                        btnProcesar.disabled = false;
+                        processBtn.disabled = false;
                     }
                 };
             },
-
-
 
             showGroupPaymentModalSelector() {
                 // Mostrar un modal simple con un select de grupos
@@ -2541,9 +2454,8 @@
                 this.data.forEach(product => {
                     const codigo = (product.codigo || '').toLowerCase();
                     const descripcion = (product.descripcion || '').toLowerCase();
-                    const descripcionTaller = (product.descripcionTaller || '').toLowerCase();
 
-                    if (codigo.includes(searchTerm) || descripcion.includes(searchTerm) || descripcionTaller.includes(searchTerm)) {
+                    if (codigo.includes(searchTerm) || descripcion.includes(searchTerm)) {
                         results.push(product);
                     }
                 });
@@ -2587,14 +2499,7 @@
             datosVentaPendiente: null,
             selectedInvoicesForPayment: new Set(),
             // CORRECCIÓN 6: Lock para concurrencia
-            operationLock: false,
-            // Optimización Historial
-            dailyMovementsCache: {
-                ventas: [],
-                retiros: [],
-                ingresos: []
-            },
-            historyUnsubscribe: null
+            operationLock: false
         };
 
         // CORRECCIÓN 6: Manejo de concurrencia
@@ -2775,7 +2680,7 @@
                 }, "Eliminar venta");
             },
 
-            async loadSales(limit = 2000) {
+            async loadSales(limit = 10000) {
                 try {
                     if (AppState.firebaseInitialized) {
                         const snapshot = await ErrorHandler.withTimeout(
@@ -2793,7 +2698,7 @@
                     }
                 } catch (error) {
                     console.error("Error cargando ventas:", error);
-                    throw error;
+                    return [];
                 }
             },
 
@@ -3017,7 +2922,7 @@
                 }, "Guardar retiro");
             },
 
-            async loadRetiros(limit = 2000) {
+            async loadRetiros(limit = 10000) {
                 try {
                     if (AppState.firebaseInitialized) {
                         const snapshot = await ErrorHandler.withTimeout(
@@ -3035,7 +2940,7 @@
                     }
                 } catch (error) {
                     console.error("Error cargando retiros:", error);
-                    throw error;
+                    return [];
                 }
             },
 
@@ -3077,7 +2982,7 @@
                 }, "Guardar ingreso");
             },
 
-            async loadIngresos(limit = 2000) {
+            async loadIngresos(limit = 10000) {
                 try {
                     if (AppState.firebaseInitialized) {
                         const snapshot = await ErrorHandler.withTimeout(
@@ -3095,7 +3000,7 @@
                     }
                 } catch (error) {
                     console.error("Error cargando ingresos:", error);
-                    throw error;
+                    return [];
                 }
             },
 
@@ -3122,7 +3027,7 @@
                 }
             },
 
-            async loadAllMovements(limit = 2000) {
+            async loadAllMovements(limit = 10000) {
                 try {
                     const [ventas, retiros, ingresos] = await Promise.all([
                         this.loadSales(limit),
@@ -3143,7 +3048,7 @@
                     }).slice(0, limit);
                 } catch (error) {
                     console.error("Error loading all movements:", error);
-                    throw error;
+                    return [];
                 }
             },
 
@@ -3241,45 +3146,6 @@
                     console.error("Error cargando movimientos por fecha:", error);
                     return [];
                 }
-            },
-
-            subscribeToDailyMovements(onUpdate) {
-                if (!AppState.firebaseInitialized) return () => { };
-
-                const today = DateUtils.getCurrentDateStringElSalvador();
-
-                // Suscribirse a Ventas
-                const unsubVentas = AppState.db.collection("VENTAS")
-                    .where("date", "==", today)
-                    .onSnapshot(snap => {
-                        const items = snap.docs.map(doc => ({ id: doc.id, ...doc.data(), tipo: 'venta' }));
-                        onUpdate('ventas', items);
-                    }, err => console.error("Error listening ventas:", err));
-
-                // Suscribirse a Retiros
-                const unsubRetiros = AppState.db.collection("RETIROS")
-                    .where("date", "==", today)
-                    .onSnapshot(snap => {
-                        const items = snap.docs.map(doc => ({ id: doc.id, ...doc.data(), tipo: 'retiro' }));
-                        onUpdate('retiros', items);
-                    }, err => console.error("Error listening retiros:", err));
-
-                // Suscribirse a Ingresos
-                const unsubIngresos = AppState.db.collection("INGRESOS")
-                    .where("date", "==", today)
-                    .onSnapshot(snap => {
-                        const items = snap.docs.map(doc => {
-                            const data = doc.data();
-                            return { id: doc.id, ...data, tipo: data.categoria === 'abono' ? 'abono' : 'ingreso' };
-                        });
-                        onUpdate('ingresos', items);
-                    }, err => console.error("Error listening ingresos:", err));
-
-                return () => {
-                    unsubVentas();
-                    unsubRetiros();
-                    unsubIngresos();
-                };
             },
 
             async processGroupAbono(grupoId, montoTotal) {
@@ -3723,7 +3589,6 @@
                         const isManual = product.id.startsWith('manual-');
                         item.innerHTML = `
                             <strong>${product.descripcion || 'Sin descripción'}</strong>
-                            ${product.descripcionTaller ? `<div style="font-size: 0.8rem; color: #2980b9; font-style: italic;">${product.descripcionTaller}</div>` : ''}
                             <div style="font-size: 0.7rem; margin-top: 2px;">
                                 ${isManual ? 'PRODUCTO MANUAL' : `Cód: ${product.codigo || 'N/A'} | Stock: ${product.cantidad || 0}`} | $${(product.precio || 0).toFixed(2)}
                             </div>
@@ -3740,28 +3605,7 @@
                 dropdown.style.display = 'block';
             },
 
-            getGroupColor(groupName) {
-                // Lista de términos que identifican a ventas locales (fondo blanco)
-                const locales = ['CLIENTE GENERAL', 'LOCAL', 'TALLER', 'SIN GRUPO', 'NINGUNO', 'GENERAL'];
-                const nombreNormalizado = groupName ? groupName.toUpperCase().trim() : '';
-
-                if (!groupName || locales.includes(nombreNormalizado) || nombreNormalizado.includes('EQUIPO')) return '#ffffff';
-
-                let hash = 0;
-                for (let i = 0; i < groupName.length; i++) {
-                    hash = groupName.charCodeAt(i) + ((hash << 5) - hash);
-                }
-
-                // Generar color pastel con HSL
-                // Hue: hash % 360
-                // Saturation: 70% (fixed)
-                // Lightness: 93% (muy claro para asegurar legibilidad)
-                const h = Math.abs(hash % 360);
-                return `hsl(${h}, 70%, 93%)`;
-            },
-
             updateHistorial(movimientos) {
-                const historialBody = document.getElementById('historial-body');
                 AppState.historial = movimientos;
                 AppState.filteredHistorial = movimientos;
 
@@ -3770,26 +3614,11 @@
                 if (dailySummary) {
                     dailySummary.style.display = 'none';
                 }
-                this.applyCurrentFilter();
+                HistorialService.applyCurrentFilter();
             },
 
             applyCurrentFilter() {
-                let filtered = AppState.historial;
-
-                switch (AppState.currentFilter) {
-                    case 'hoy':
-                        const today = DateUtils.getCurrentDateStringElSalvador();
-                        filtered = filtered.filter(mov => {
-                            return mov.date === today;
-                        });
-                        break;
-                    case 'todo':
-                        // Mostrar todo sin filtrar
-                        break;
-                }
-
-                AppState.filteredHistorial = filtered;
-                this.renderHistorial();
+                HistorialService.applyCurrentFilter();
             },
 
             async filterHistoryByDate() {
@@ -3812,7 +3641,7 @@
                     }
 
                     AppState.filteredHistorial = movimientos;
-                    this.renderHistorial();
+                    HistorialService.renderHistorial();
                 } catch (error) {
                     console.error("Error filterHistoryByDate:", error);
                     this.showStatus("Error al filtrar historial: " + error.message, "error");
@@ -3821,433 +3650,10 @@
                 }
             },
 
-            renderProductSummary(movimientos) {
-                const summaryContent = document.getElementById('daily-summary-content');
-                const cashSummary = document.getElementById('daily-cash-summary');
-                const productsMap = new Map();
 
-                let totalVentas = 0;
-                let totalAbonos = 0;
-                let totalRetiros = 0;
-                let totalIngresos = 0;
 
-                movimientos.forEach(mov => {
-                    if (mov.tipo === 'venta') {
-                        // Sumar productos
-                        if (mov.products) {
-                            mov.products.forEach(prod => {
-                                const current = productsMap.get(prod.descripcion) || { cantidad: 0, total: 0 };
-                                productsMap.set(prod.descripcion, {
-                                    cantidad: current.cantidad + prod.cantidad,
-                                    total: current.total + (prod.precio * prod.cantidad)
-                                });
-                            });
-                        }
-                        // Sumar al total de ventas (contado + crédito)
-                        // Para flujo de caja real, sumamos lo que entró hoy
-                        if (mov.paymentType === 'contado') {
-                            totalVentas += mov.total;
-                        }
-                    } else if (mov.tipo === 'abono') {
-                        totalAbonos += mov.monto;
-                    } else if (mov.tipo === 'retiro') {
-                        totalRetiros += Math.abs(mov.monto);
-                    } else if (mov.tipo === 'ingreso') {
-                        totalIngresos += mov.monto;
-                    }
-                });
 
-                // Renderizar productos en tabla compacta
-                if (productsMap.size === 0) {
-                    summaryContent.innerHTML = '<div style="color: #7f8c8d; font-style: italic;">No hubo ventas de productos este día.</div>';
-                } else {
-                    // Ordenar por cantidad vendida
-                    const sortedProducts = Array.from(productsMap.entries()).sort((a, b) => b[1].cantidad - a[1].cantidad);
 
-                    // Determinar número de columnas basado en cantidad de productos
-                    const numProducts = sortedProducts.length;
-                    const numColumns = numProducts <= 12 ? 4 : 6;
-
-                    let html = `
-                        <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
-                            <thead>
-                                <tr style="background-color: #34495e; color: white;">
-                                    <th style="padding: 6px 8px; text-align: left; border: 1px solid #ddd;">Cant.</th>
-                                    <th style="padding: 6px 8px; text-align: left; border: 1px solid #ddd;">Producto</th>
-                                    <th style="padding: 6px 8px; text-align: right; border: 1px solid #ddd;">Total</th>
-                    `;
-
-                    // Repetir encabezados según número de columnas
-                    for (let i = 1; i < numColumns; i++) {
-                        html += `
-                                    <th style="padding: 6px 8px; text-align: left; border: 1px solid #ddd;">Cant.</th>
-                                    <th style="padding: 6px 8px; text-align: left; border: 1px solid #ddd;">Producto</th>
-                                    <th style="padding: 6px 8px; text-align: right; border: 1px solid #ddd;">Total</th>
-                        `;
-                    }
-
-                    html += `
-                                </tr>
-                            </thead>
-                            <tbody>
-                    `;
-
-                    // Dividir productos en filas
-                    const productsPerRow = numColumns;
-                    for (let i = 0; i < sortedProducts.length; i += productsPerRow) {
-                        html += '<tr>';
-
-                        for (let j = 0; j < productsPerRow; j++) {
-                            const index = i + j;
-                            if (index < sortedProducts.length) {
-                                const [nombre, data] = sortedProducts[index];
-                                html += `
-                                    <td style="padding: 5px 6px; border: 1px solid #ddd; text-align: center; font-weight: bold; color: #27ae60; background-color: #f9f9f9;">x${data.cantidad}</td>
-                                    <td style="padding: 5px 6px; border: 1px solid #ddd; font-weight: 500; color: #2c3e50;">${nombre}</td>
-                                    <td style="padding: 5px 6px; border: 1px solid #ddd; text-align: right; font-weight: bold; color: #2980b9;">$${data.total.toFixed(2)}</td>
-                                `;
-                            } else {
-                                // Celdas vacías para completar la fila
-                                html += `
-                                    <td style="padding: 5px 6px; border: 1px solid #ddd; background-color: #f5f5f5;"></td>
-                                    <td style="padding: 5px 6px; border: 1px solid #ddd; background-color: #f5f5f5;"></td>
-                                    <td style="padding: 5px 6px; border: 1px solid #ddd; background-color: #f5f5f5;"></td>
-                                `;
-                            }
-                        }
-
-                        html += '</tr>';
-                    }
-
-                    html += `
-                            </tbody>
-                        </table>
-                    `;
-
-                    summaryContent.innerHTML = html;
-                }
-
-                // Renderizar resumen de caja
-                const saldoFinal = totalVentas + totalAbonos + totalIngresos - totalRetiros;
-                cashSummary.innerHTML = `
-                    <div style="color: #27ae60;">Ventas Contado: $${totalVentas.toFixed(2)}</div>
-                    <div style="color: #2980b9;">Abonos Recibidos: $${totalAbonos.toFixed(2)}</div>
-                    <div style="color: #16a085;">Ingresos: +$${totalIngresos.toFixed(2)}</div>
-                    <div style="color: #c0392b;">Retiros: -$${totalRetiros.toFixed(2)}</div>
-                    <div style="color: #2c3e50; border-left: 2px solid #bdc3c7; padding-left: 15px;">Flujo Neto: $${saldoFinal.toFixed(2)}</div>
-                `;
-            },
-
-            renderHistorial() {
-                const historialBody = document.getElementById('historial-body');
-                const movimientos = AppState.filteredHistorial;
-
-                if (movimientos.length === 0) {
-                    historialBody.innerHTML = `
-                        <tr>
-                            <td colspan="6" class="empty-cart">No hay movimientos que coincidan con el filtro</td>
-                        </tr>
-                    `;
-                    return;
-                }
-
-                let historialHTML = '';
-
-                movimientos.forEach(movimiento => {
-                    const fecha = movimiento.timestamp ? new Date(movimiento.timestamp.toDate ? movimiento.timestamp.toDate() : movimiento.timestamp).toLocaleDateString('es-ES') : 'N/A';
-
-                    if (movimiento.tipo === 'retiro') {
-                        historialHTML += `
-                            <tr style="background-color: #fff5f5;">
-                                <td><strong>RET-${movimiento.id.substring(0, 6)}</strong></td>
-                                <td>
-                                    <div class="cliente-equipo">-</div>
-                                    <div class="cliente-nombre">${movimiento.concepto || 'Sin concepto'}</div>
-                                </td>
-                                <td>
-                                    <div class="saldo-pendiente-rojo">-$${Math.abs(movimiento.monto).toFixed(2)}</div>
-                                </td>
-                                <td><span class="retiro-badge">RETIRO</span></td>
-                                <td>${fecha}</td>
-                                <td>
-                                    <div class="historial-actions-container">
-                                        <button class="icon-btn btn-view" onclick="SalesService.viewRetiro('${movimiento.id}')" title="Ver retiro">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
-                                        <div class="action-menu-wrapper">
-                                            <button class="menu-toggle-btn" onclick="UIService.toggleActionMenu(this)" title="Más acciones">
-                                                <i class="fas fa-ellipsis-v"></i>
-                                            </button>
-                                            <div class="action-dropdown">
-                                                <div class="action-dropdown-item" onclick="SalesService.editRetiro('${movimiento.id}')">
-                                                    <i class="fas fa-edit"></i> Editar
-                                                </div>
-                                                <div class="action-dropdown-item delete-item" onclick="SalesService.deleteRetiro('${movimiento.id}')">
-                                                    <i class="fas fa-trash"></i> Eliminar
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </td>
-                            </tr>
-                        `;
-                    } else if (movimiento.tipo === 'ingreso') {
-                        historialHTML += `
-                            <tr style="background-color: #f0fff4;">
-                                <td><strong>ING-${movimiento.id.substring(0, 6)}</strong></td>
-                                <td>
-                                    <div class="cliente-equipo">-</div>
-                                    <div class="cliente-nombre">${movimiento.concepto || 'Sin concepto'}</div>
-                                </td>
-                                <td>
-                                    <div class="saldo-pendiente-negro" style="color: #27ae60;">+$${Math.abs(movimiento.monto).toFixed(2)}</div>
-                                </td>
-                                <td><span class="ingreso-badge">INGRESO</span></td>
-                                <td>${fecha}</td>
-                                <td>
-                                    <div class="historial-actions-container">
-                                        <button class="icon-btn btn-view" onclick="SalesService.viewIngreso('${movimiento.id}')" title="Ver ingreso">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
-                                        <div class="action-menu-wrapper">
-                                            <button class="menu-toggle-btn" onclick="UIService.toggleActionMenu(this)" title="Más acciones">
-                                                <i class="fas fa-ellipsis-v"></i>
-                                            </button>
-                                            <div class="action-dropdown">
-                                                <div class="action-dropdown-item" onclick="SalesService.editIngreso('${movimiento.id}')">
-                                                    <i class="fas fa-edit"></i> Editar
-                                                </div>
-                                                <div class="action-dropdown-item delete-item" onclick="SalesService.deleteIngreso('${movimiento.id}')">
-                                                    <i class="fas fa-trash"></i> Eliminar
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </td>
-                            </tr>
-                        `;
-                    } else if (movimiento.tipo === 'abono') {
-                        historialHTML += `
-                            <tr style="background-color: #f0fff4;">
-                                <td><strong>ABO-${movimiento.id.substring(0, 6)}</strong></td>
-                                <td>
-                                    <div style="display: flex; align-items: center; gap: 10px;">
-                                        <div class="cliente-equipo" style="margin-bottom: 0; font-size: 1.1em; min-width: 30px;">${movimiento.equipoNumber || '-'}</div>
-                                        <div class="cliente-nombre" style="font-size: 0.85em; margin-bottom: 0;">
-                                            Abono <a href="#" onclick="event.preventDefault(); SalesService.viewInvoice('${movimiento.invoiceId || movimiento.invoiceNumber}');" style="color: #7f8c8d; text-decoration: underline;">
-                                                #${movimiento.invoiceNumber}
-                                            </a> - <strong>${movimiento.clientName || ''}</strong>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div class="saldo-pendiente-negro">+$${movimiento.monto.toFixed(2)}</div>
-                                </td>
-                                <td><span class="contado-badge" style="background-color: #27ae60;">ABONO</span></td>
-                                <td>${fecha}</td>
-                                <td>
-                                    <div class="historial-actions-container">
-                                        <button class="icon-btn btn-view" onclick="SalesService.viewInvoice('${movimiento.invoiceNumber}')" title="Ver factura">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
-                                        <div class="action-menu-wrapper">
-                                            <button class="menu-toggle-btn" onclick="UIService.toggleActionMenu(this)" title="Más acciones">
-                                                <i class="fas fa-ellipsis-v"></i>
-                                            </button>
-                                            <div class="action-dropdown">
-                                                <div class="action-dropdown-item delete-item" onclick="SalesService.deleteAbono('${movimiento.id}', '${movimiento.invoiceId || ''}')">
-                                                    <i class="fas fa-trash"></i> Eliminar abono
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </td>
-                            </tr>
-                        `;
-                    } else {
-                        // Es una VENTA
-                        const venta = movimiento;
-                        const rowColor = this.getGroupColor(venta.clientName);
-                        let estadoReal = venta.paymentType;
-                        let tipoClass = 'pendiente-badge';
-                        let tipoTexto = 'PENDIENTE';
-                        let saldoPendiente = venta.saldoPendiente !== undefined ? venta.saldoPendiente : venta.total;
-
-                        if (venta.paymentType === 'contado') {
-                            tipoClass = 'contado-badge';
-                            tipoTexto = 'CONTADO';
-                        } else if (venta.paymentType === 'pendiente') {
-                            if (saldoPendiente <= 0) {
-                                estadoReal = 'contado';
-                                tipoClass = 'contado-badge';
-                                tipoTexto = 'PAGADO';
-                            }
-                        }
-
-                        let montoMostrar = venta.total || 0;
-                        let claseMonto = 'saldo-pendiente-negro';
-
-                        if (estadoReal === 'pendiente') {
-                            montoMostrar = saldoPendiente;
-                            if (venta.saldoPendiente < venta.total) {
-                                claseMonto = 'saldo-pendiente-rojo';
-                            }
-                        }
-
-                        let botonesHTML = '';
-                        if (estadoReal === 'contado' || estadoReal === 'pagado') {
-                            botonesHTML = `
-                                <button class="icon-btn btn-view" onclick="SalesService.viewInvoice('${venta.id}')" title="Ver factura">
-                                    <i class="fas fa-eye"></i>
-                                </button>
-                                <div class="action-menu-wrapper">
-                                    <button class="menu-toggle-btn" onclick="UIService.toggleActionMenu(this)" title="Más acciones">
-                                        <i class="fas fa-ellipsis-v"></i>
-                                    </button>
-                                    <div class="action-dropdown">
-                                        <div class="action-dropdown-item" onclick="SalesService.reprintInvoice('${venta.id}')">
-                                            <i class="fas fa-print"></i> Reimprimir
-                                        </div>
-                                        <div class="action-dropdown-item delete-item" onclick="SalesService.deleteInvoice('${venta.id}')">
-                                            <i class="fas fa-trash"></i> Eliminar
-                                        </div>
-                                    </div>
-                                </div>
-                            `;
-                        } else {
-                            botonesHTML = `
-                                <button class="icon-btn btn-view" onclick="SalesService.viewInvoice('${venta.id}')" title="Ver factura">
-                                    <i class="fas fa-eye"></i>
-                                </button>
-                                <div class="action-menu-wrapper">
-                                    <button class="menu-toggle-btn" onclick="UIService.toggleActionMenu(this)" title="Más acciones">
-                                        <i class="fas fa-ellipsis-v"></i>
-                                    </button>
-                                    <div class="action-dropdown">
-                                        <div class="action-dropdown-item" onclick="SalesService.reprintInvoice('${venta.id}')">
-                                            <i class="fas fa-print"></i> Reimprimir
-                                        </div>
-                                        <div class="action-dropdown-item" onclick="SalesService.editInvoice('${venta.id}')">
-                                            <i class="fas fa-edit"></i> Editar
-                                        </div>
-                                        <div class="action-dropdown-item" onclick="SalesService.registrarAbono('${venta.id}')">
-                                            <i class="fas fa-money-bill-wave"></i> Abonar
-                                        </div>
-                                        <div class="action-dropdown-item" onclick="SalesService.cancelInvoice('${venta.id}')">
-                                            <i class="fas fa-ban"></i> Cancelar
-                                        </div>
-                                        <div class="action-dropdown-item delete-item" onclick="SalesService.deleteInvoice('${venta.id}')">
-                                            <i class="fas fa-trash"></i> Eliminar
-                                        </div>
-                                    </div>
-                                </div>
-                            `;
-                        }
-
-                        historialHTML += `
-                            <tr style="background-color: ${rowColor};">
-                                <td>
-                                    <a href="#" onclick="event.preventDefault(); SalesService.viewInvoice('${venta.id}');" style="color: #2c3e50; text-decoration: none; font-weight: bold;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">
-                                        #${venta.invoiceNumber}
-                                    </a>
-                                </td>
-                                <td>
-                                    <div class="cliente-equipo">${venta.equipoNumber || '-'}</div>
-                                    <div class="cliente-nombre">${venta.clientName || 'Cliente General'}</div>
-                                </td>
-                                <td>
-                                    <div class="${claseMonto}">$${montoMostrar.toFixed(2)}</div>
-                                    ${venta.total !== montoMostrar ? `<div style="font-size: 0.7rem; color: #999;">Total: $${venta.total.toFixed(2)}</div>` : ''}
-                                </td>
-                                <td><span class="${tipoClass}">${tipoTexto}</span></td>
-                                <td>${fecha}</td>
-                                <td>
-                                    <div class="action-buttons historial-actions-container">
-                                        ${botonesHTML}
-                                    </div>
-                                </td>
-                            </tr>
-                        `;
-                    }
-                });
-
-                historialBody.innerHTML = historialHTML;
-            },
-
-            generarResumenProductos(movimientos) {
-                // Filtrar solo ventas
-                const ventas = movimientos.filter(m => !m.tipo || m.tipo === 'venta');
-                if (ventas.length === 0) return '';
-
-                const productosMap = {};
-
-                ventas.forEach(venta => {
-                    if (venta.products && Array.isArray(venta.products)) {
-                        venta.products.forEach(p => {
-                            if (p.codigo && p.codigo.toLowerCase() === 'manual') return;
-
-                            const key = p.codigo || p.descripcion;
-                            if (!productosMap[key]) {
-                                productosMap[key] = {
-                                    codigo: p.codigo,
-                                    descripcion: p.descripcion,
-                                    cantidad: 0,
-                                    totalVenta: 0
-                                };
-                            }
-                            productosMap[key].cantidad += (parseFloat(p.cantidad) || 0);
-                            // Usar precio * cantidad de la venta para exactitud
-                            productosMap[key].totalVenta += (parseFloat(p.precio) * parseFloat(p.cantidad));
-                        });
-                    }
-                });
-
-                const productos = Object.values(productosMap).sort((a, b) => b.totalVenta - a.totalVenta);
-
-                if (productos.length === 0) return '';
-
-                const totalGeneral = productos.reduce((sum, p) => sum + p.totalVenta, 0);
-                const totalCantidad = productos.reduce((sum, p) => sum + p.cantidad, 0);
-
-                let html = `
-                            <div style="background-color: #f8f9fa; padding: 15px; border-top: 2px solid #ddd; margin-top: 20px;">
-                                <h4 style="margin-bottom: 10px; color: #2c3e50; text-align: center;">RESUMEN DE PRODUCTOS VENDIDOS</h4>
-                                <table class="table table-sm table-bordered" style="width: 100%; font-size: 0.9em; background: white;">
-                                    <thead class="thead-light">
-                                        <tr>
-                                            <th>Cód.</th>
-                                            <th>Descripción</th>
-                                            <th class="text-center">Cant.</th>
-                                            <th class="text-right">Total</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                        `;
-
-                productos.forEach(p => {
-                    html += `
-                                <tr>
-                                    <td>${p.codigo || '-'}</td>
-                                    <td>${p.descripcion}</td>
-                                    <td class="text-center"><strong>${p.cantidad}</strong></td>
-                                    <td class="text-right">$${p.totalVenta.toFixed(2)}</td>
-                                </tr>
-                            `;
-                });
-
-                html += `
-                                    <tr style="background-color: #e8f4fd; font-weight: bold;">
-                                        <td colspan="2" class="text-right">TOTALES:</td>
-                                        <td class="text-center">${totalCantidad}</td>
-                                        <td class="text-right">$${totalGeneral.toFixed(2)}</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                        `;
-
-                return html;
-            },
 
             async searchProductInHistory() {
                 const productName = document.getElementById('product-search-input').value.trim();
@@ -4785,13 +4191,13 @@
 
                     await DataService.saveSale(saleData);
 
-                    this.printTicket(saleData);
+                    PrintingService.printTicket(saleData);
 
                     UIService.showStatus(`Venta CONTADO procesada - Factura #${saleData.invoiceNumber}`, "success");
 
                     this.limpiarFormularioVenta();
                     await ProductCache.refresh();
-                    // await this.loadHistorial(); // Optimización: Listener
+                    await this.loadHistorial();
 
                 } catch (error) {
                     UIService.showStatus("Error al procesar venta contado: " + error.message, "error");
@@ -4845,13 +4251,13 @@
 
                     await DataService.saveSale(saleData);
 
-                    this.printTicket(saleData);
+                    PrintingService.printTicket(saleData);
 
                     UIService.showStatus(`Venta PENDIENTE procesada - Factura #${saleData.invoiceNumber}`, "success");
 
                     this.limpiarFormularioVenta();
                     await ProductCache.refresh();
-                    // await this.loadHistorial(); // Optimización: Listener
+                    await this.loadHistorial();
 
                 } catch (error) {
                     UIService.showStatus("Error al procesar venta pendiente: " + error.message, "error");
@@ -4913,11 +4319,11 @@
                     await DataService.saveSale(saleData);
 
                     // Imprimir ticket de la venta
-                    this.printTicket(saleData);
+                    PrintingService.printTicket(saleData);
 
                     // Imprimir ticket del abono si es necesario
                     if (montoAbono > 0) {
-                        this.printAbonoTicket(saleData, abonoData, saldoPendiente);
+                        PrintingService.printAbonoTicket(saleData, abonoData, saldoPendiente);
                     }
 
                     if (saldoPendiente <= 0) {
@@ -4928,7 +4334,7 @@
 
                     this.limpiarFormularioVenta();
                     await ProductCache.refresh();
-                    // await this.loadHistorial(); // Optimización: Listener
+                    await this.loadHistorial();
 
                 } catch (error) {
                     UIService.showStatus("Error al procesar venta con abono: " + error.message, "error");
@@ -5024,7 +4430,7 @@
 
                     this.cancelEdit();
 
-                    // await this.loadHistorial(); // Optimización: Listener
+                    await this.loadHistorial();
 
                 } catch (error) {
                     UIService.showStatus("Error al actualizar la factura: " + error.message, "error");
@@ -5033,58 +4439,13 @@
 
             async loadHistorial() {
                 try {
-                    // Si estamos filtrando por algo que no es 'hoy', usamos la carga normal
-                    if (AppState.currentFilter !== 'hoy') {
-                        UIService.showLoading(true);
-                        const movimientos = await DataService.loadAllMovements(5000);
-                        UIService.updateHistorial(movimientos);
-                        return;
-                    }
-
-                    // Si el filtro es 'hoy', nos aseguramos que el listener esté activo
-                    if (!AppState.historyUnsubscribe) {
-                        this.setupHistoryListener();
-                    } else {
-                        // Si ya está activo, refrescamos desde cache por si acaso
-                        this.refreshFromCache();
-                    }
+                    UIService.showLoading(true);
+                    const movimientos = await DataService.loadAllMovements(10000);
+                    UIService.updateHistorial(movimientos);
                 } catch (error) {
                     UIService.showStatus("Error al cargar historial: " + error.message, "error");
                 } finally {
                     UIService.showLoading(false);
-                }
-            },
-
-            setupHistoryListener() {
-                if (AppState.historyUnsubscribe) {
-                    AppState.historyUnsubscribe();
-                }
-
-                // Subscribirse a cambios en tiempo real
-                AppState.historyUnsubscribe = DataService.subscribeToDailyMovements((tipo, items) => {
-                    AppState.dailyMovementsCache[tipo] = items;
-                    this.refreshFromCache();
-                });
-            },
-
-            refreshFromCache() {
-                const allMovements = [
-                    ...AppState.dailyMovementsCache.ventas,
-                    ...AppState.dailyMovementsCache.retiros,
-                    ...AppState.dailyMovementsCache.ingresos
-                ];
-
-                // Ordenar por fecha descendente
-                allMovements.sort((a, b) => {
-                    const dateA = a.timestamp?.toDate ? a.timestamp.toDate() : (a.timestamp || new Date());
-                    const dateB = b.timestamp?.toDate ? b.timestamp.toDate() : (b.timestamp || new Date());
-                    return dateB - dateA;
-                });
-
-                // Solo actualizar UI si seguimos viendo 'hoy'
-                if (AppState.currentFilter === 'hoy') {
-                    UIService.updateHistorial(allMovements);
-                    UIService.renderProductSummary(allMovements);
                 }
             },
 
@@ -5230,21 +4591,28 @@
             async viewRetiro(retiroId) {
                 let retiro;
                 try {
+                    // Intentar buscar en DB primero si está conectado
                     if (AppState.firebaseInitialized) {
                         const doc = await AppState.db.collection("RETIROS").doc(retiroId).get();
                         if (doc.exists) {
                             retiro = { id: doc.id, ...doc.data() };
                         }
-                    } else {
+                    }
+
+                    // Si no se halló en DB o no hay conexión, buscar en historial local
+                    if (!retiro) {
                         retiro = AppState.historial.find(r => r.id === retiroId && r.tipo === 'retiro');
                     }
                 } catch (error) {
+                    console.error("Error buscando retiro:", error);
                     retiro = AppState.historial.find(r => r.id === retiroId && r.tipo === 'retiro');
                 }
 
-                if (!retiro) return;
+                if (!retiro) {
+                    UIService.showStatus("No se encontró el retiro", "error");
+                    return;
+                }
 
-                const fecha = retiro.timestamp ? new Date(retiro.timestamp.toDate ? retiro.timestamp.toDate() : retiro.timestamp).toLocaleString('es-ES') : 'N/A';
                 const categoriaText = {
                     'compra': 'Compra de materiales',
                     'gastos': 'Gastos operativos',
@@ -5252,16 +4620,41 @@
                     'otros': 'Otros'
                 }[retiro.categoria] || retiro.categoria;
 
-                const modalContent = `
-                    <h3 style="margin-bottom: 15px; text-align: center;">Retiro de Fondos</h3>
-                    <div class="invoice-details">
-                        <strong>Concepto:</strong> ${retiro.concepto || 'Sin concepto'}<br>
-                        <strong>Categoría:</strong> ${categoriaText}<br>
-                        <strong>Fecha:</strong> ${fecha}<br>
-                        <strong>Monto:</strong> $${(retiro.monto || 0).toFixed(2)}
-                    </div>
-                `;
+                const fecha = retiro.timestamp ? new Date(retiro.timestamp.toDate ? retiro.timestamp.toDate() : retiro.timestamp).toLocaleString('es-ES') : 'N/A';
 
+                const modalContent = `
+                            <div class="invoice-detail-view" style="font-family: 'Segoe UI', sans-serif;">
+                                <div style="text-align: center; margin-bottom: 20px;">
+                                    <h3 style="color: #c0392b; font-weight: bold; margin: 0;">
+                                        <i class="fas fa-hand-holding-usd"></i> DETALLE DE RETIRO
+                                    </h3>
+                                    <div style="color: #7f8c8d; font-size: 0.9em; margin-top: 5px;">${fecha}</div>
+                                </div>
+                                
+                                <div style="background: #fff5f5; padding: 20px; border-radius: 8px; border: 1px solid #feb2b2;">
+                                    <div style="margin-bottom: 15px;">
+                                        <div style="color: #7f8c8d; font-size: 0.8em; font-weight: bold; text-transform: uppercase;">Concepto</div>
+                                        <div style="font-size: 1.1em; color: #2d3748; font-weight: 500;">${retiro.concepto}</div>
+                                    </div>
+                                    
+                                    <div style="margin-bottom: 15px;">
+                                        <div style="color: #7f8c8d; font-size: 0.8em; font-weight: bold; text-transform: uppercase;">Categoría</div>
+                                        <div style="font-size: 1.1em; color: #2d3748;">${categoriaText}</div>
+                                    </div>
+
+                                    <div style="border-top: 1px dashed #fc8181; padding-top: 15px; margin-top: 15px; display: flex; justify-content: space-between; align-items: center;">
+                                        <div style="color: #c53030; font-weight: bold;">TOTAL RETIRADO</div>
+                                        <div style="font-size: 1.8em; font-weight: bold; color: #c53030;">$${parseFloat(retiro.monto).toFixed(2)}</div>
+                                    </div>
+                                </div>
+
+                                <div style="margin-top: 25px;">
+                                    <button onclick="ModalService.closeInvoiceModal()" style="width: 100%; padding: 12px; background-color: #718096; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: background 0.2s;">
+                                        CERRAR
+                                    </button>
+                                </div>
+                            </div>
+                        `;
                 UIService.showInvoiceModal(modalContent);
             },
 
@@ -5339,7 +4732,7 @@
                     UIService.showLoading(true);
                     await DataService.deleteSale(invoiceId);
                     UIService.showStatus("Factura eliminada correctamente", "success");
-                    // await this.loadHistorial(); // Optimización: Listener
+                    await this.loadHistorial();
                 } catch (error) {
                     UIService.showStatus("Error al eliminar factura: " + error.message, "error");
                 } finally {
@@ -5355,7 +4748,7 @@
                     if (AppState.firebaseInitialized) {
                         await AppState.db.collection("RETIROS").doc(retiroId).delete();
                         UIService.showStatus("Retiro eliminado correctamente", "success");
-                        // await this.loadHistorial(); // Optimización: Listener
+                        await this.loadHistorial();
                     } else {
                         throw new Error("No hay conexión a la base de datos");
                     }
@@ -5366,57 +4759,7 @@
                 }
             },
 
-            async viewRetiro(retiroId) {
-                const retiro = AppState.historial.find(r => r.id === retiroId && r.tipo === 'retiro');
-                if (!retiro) {
-                    UIService.showStatus("No se encontró el retiro", "error");
-                    return;
-                }
 
-                const categoriaText = {
-                    'compra': 'Compra de materiales',
-                    'gastos': 'Gastos operativos',
-                    'herramientas': 'Herramientas',
-                    'otros': 'Otros'
-                }[retiro.categoria] || retiro.categoria;
-
-                const fecha = retiro.timestamp ? new Date(retiro.timestamp.toDate ? retiro.timestamp.toDate() : retiro.timestamp).toLocaleString('es-ES') : 'N/A';
-
-                const modalContent = `
-                            <div class="invoice-detail-view" style="font-family: 'Segoe UI', sans-serif;">
-                                <div style="text-align: center; margin-bottom: 20px;">
-                                    <h3 style="color: #c0392b; font-weight: bold; margin: 0;">
-                                        <i class="fas fa-hand-holding-usd"></i> DETALLE DE RETIRO
-                                    </h3>
-                                    <div style="color: #7f8c8d; font-size: 0.9em; margin-top: 5px;">${fecha}</div>
-                                </div>
-                                
-                                <div style="background: #fff5f5; padding: 20px; border-radius: 8px; border: 1px solid #feb2b2;">
-                                    <div style="margin-bottom: 15px;">
-                                        <div style="color: #7f8c8d; font-size: 0.8em; font-weight: bold; text-transform: uppercase;">Concepto</div>
-                                        <div style="font-size: 1.1em; color: #2d3748; font-weight: 500;">${retiro.concepto}</div>
-                                    </div>
-                                    
-                                    <div style="margin-bottom: 15px;">
-                                        <div style="color: #7f8c8d; font-size: 0.8em; font-weight: bold; text-transform: uppercase;">Categoría</div>
-                                        <div style="font-size: 1.1em; color: #2d3748;">${categoriaText}</div>
-                                    </div>
-
-                                    <div style="border-top: 1px dashed #fc8181; padding-top: 15px; margin-top: 15px; display: flex; justify-content: space-between; align-items: center;">
-                                        <div style="color: #c53030; font-weight: bold;">TOTAL RETIRADO</div>
-                                        <div style="font-size: 1.8em; font-weight: bold; color: #c53030;">$${retiro.monto.toFixed(2)}</div>
-                                    </div>
-                                </div>
-
-                                <div style="margin-top: 25px;">
-                                    <button onclick="ModalService.closeInvoiceModal()" style="width: 100%; padding: 12px; background-color: #718096; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: background 0.2s;">
-                                        CERRAR
-                                    </button>
-                                </div>
-                            </div>
-                        `;
-                UIService.showInvoiceModal(modalContent);
-            },
 
             async viewIngreso(ingresoId) {
                 const ingreso = AppState.historial.find(i => i.id === ingresoId && i.tipo === 'ingreso');
@@ -5477,7 +4820,7 @@
                     if (AppState.firebaseInitialized) {
                         await AppState.db.collection("INGRESOS").doc(ingresoId).delete();
                         UIService.showStatus("Ingreso eliminado correctamente", "success");
-                        // await this.loadHistorial(); // Optimización: Listener
+                        await this.loadHistorial();
                     } else {
                         throw new Error("No hay conexión a la base de datos");
                     }
@@ -5589,7 +4932,7 @@
                     UIService.showLoading(true);
                     await DataService.cancelInvoice(invoiceId);
                     UIService.showStatus("Factura cancelada correctamente", "success");
-                    // await this.loadHistorial(); // Optimización: Listener
+                    await this.loadHistorial();
                 } catch (error) {
                     UIService.showStatus("Error al cancelar factura: " + error.message, "error");
                 } finally {
@@ -5676,14 +5019,14 @@
 
                     await DataService.addAbono(venta.id, abonoData);
 
-                    this.printAbonoTicket(venta, abonoData, saldoPendiente - monto);
+                    PrintingService.printAbonoTicket(venta, abonoData, saldoPendiente - monto);
 
                     UIService.showStatus(`Abono de $${monto.toFixed(2)} registrado correctamente`, "success");
 
                     ModalService.closeAbonoModal();
 
                     // Recargar historial completo para mostrar el nuevo abono
-                    // await this.loadHistorial(); // Optimización: Listener
+                    await this.loadHistorial();
 
                 } catch (error) {
                     UIService.showStatus("Error al procesar abono: " + error.message, "error");
@@ -5699,7 +5042,7 @@
                     UIService.showLoading(true);
                     await DataService.deleteAbono(abonoId, invoiceId);
                     UIService.showStatus("Abono eliminado correctamente", "success");
-                    // await this.loadHistorial(); // Optimización: Listener
+                    await this.loadHistorial();
                 } catch (error) {
                     UIService.showStatus("Error al eliminar abono: " + error.message, "error");
                 } finally {
@@ -5745,13 +5088,13 @@
 
                     await DataService.saveRetiro(retiroData);
 
-                    this.printRetiroTicket(retiroData);
+                    PrintingService.printRetiroTicket(retiroData);
 
                     UIService.showStatus(`Retiro de $${monto.toFixed(2)} registrado correctamente`, "success");
 
                     ModalService.closeRetiroModal();
 
-                    // await this.loadHistorial(); // Optimización: Listener
+                    await this.loadHistorial();
 
                 } catch (error) {
                     UIService.showStatus("Error al procesar retiro: " + error.message, "error");
@@ -5800,7 +5143,7 @@
 
                     UIService.closeIngresoModal();
 
-                    // await this.loadHistorial(); // Optimización: Listener
+                    await this.loadHistorial();
 
                 } catch (error) {
                     UIService.showStatus("Error al procesar ingreso: " + error.message, "error");
@@ -5815,7 +5158,7 @@
                     const facturasAfectadas = await DataService.processGroupAbono(grupoId, montoTotal);
 
                     // Recargar datos
-                    // await this.loadHistorial(); // Optimización: Listener
+                    await this.loadHistorial();
 
                     return facturasAfectadas;
                 } catch (error) {
@@ -5832,7 +5175,7 @@
                     const facturasAfectadas = await DataService.processMultiAbono(facturasIds, montoTotal);
 
                     // Recargar datos
-                    // await this.loadHistorial(); // Optimización: Listener
+                    await this.loadHistorial();
 
                     return facturasAfectadas;
                 } catch (error) {
@@ -5851,799 +5194,8 @@
                     return;
                 }
 
-                this.printHistorialReport(movimientos, 'HISTORIAL ACTUAL');
+                PrintingService.printCurrentHistorial();
             },
-
-            printHistorialReport(movimientos, titulo) {
-                const printWindow = window.open('', '_blank');
-
-                let totalContado = 0;
-                let totalPendiente = 0;
-                let totalAbonos = 0;
-                let totalRetiros = 0;
-                let totalIngresos = 0;
-                let ventasContado = 0;
-                let ventasPendiente = 0;
-                let ventasConAbonos = 0;
-                let cantidadRetiros = 0;
-                let cantidadIngresos = 0;
-                let cantidadAbonos = 0;
-
-                movimientos.forEach(movimiento => {
-                    if (movimiento.tipo === 'retiro') {
-                        totalRetiros += movimiento.monto || 0;
-                        cantidadRetiros++;
-                    } else if (movimiento.tipo === 'ingreso') {
-                        totalIngresos += movimiento.monto || 0;
-                        cantidadIngresos++;
-                    } else if (movimiento.tipo === 'abono') {
-                        totalAbonos += movimiento.monto || 0;
-                        cantidadAbonos++;
-                    } else if (movimiento.tipo === 'venta') {
-                        if (movimiento.paymentType === 'contado') {
-                            totalContado += movimiento.total || 0;
-                            ventasContado++;
-                        } else {
-                            totalPendiente += movimiento.total || 0;
-                            ventasPendiente++;
-
-                            if (movimiento.abonos && movimiento.abonos.length > 0) {
-                                ventasConAbonos++;
-                                movimiento.abonos.forEach(abono => {
-                                    totalAbonos += abono.monto;
-                                });
-                            }
-                        }
-                    }
-                });
-
-                const fechaActual = DateUtils.getCurrentTimestampElSalvador().toLocaleDateString('es-ES');
-
-                let reportHTML = `
-                    <!DOCTYPE html>
-                    <html>
-                    <head>
-                        <title>${titulo}</title>
-                        <style>
-                            body { 
-                                font-family: 'Arial', sans-serif; 
-                                font-size: 12px; 
-                                margin: 0;
-                                padding: 15px;
-                                color: #000;
-                            }
-                            .header { 
-                                text-align: center; 
-                                margin-bottom: 20px;
-                                border-bottom: 2px solid #333;
-                                padding-bottom: 10px;
-                            }
-                            .header h1 {
-                                font-size: 24px;
-                                margin: 10px 0;
-                                color: #2c3e50;
-                            }
-                            .header h2 {
-                                font-size: 18px;
-                                margin: 8px 0;
-                                color: #34495e;
-                            }
-                            .header h3 {
-                                font-size: 14px;
-                                margin: 5px 0;
-                                color: #7f8c8d;
-                            }
-                            .table-container {
-                                width: 100%;
-                                margin-bottom: 20px;
-                            }
-                            .ventas-table {
-                                width: 100%;
-                                border-collapse: collapse;
-                                margin: 15px 0;
-                                font-size: 11px;
-                            }
-                            .ventas-table th {
-                                background: #2c3e50;
-                                color: white;
-                                padding: 10px 8px;
-                                text-align: left;
-                                font-weight: bold;
-                                border: 1px solid #34495e;
-                            }
-                            .ventas-table td {
-                                padding: 8px;
-                                border: 1px solid #ddd;
-                                vertical-align: top;
-                            }
-                            .ventas-table tr:nth-child(even) {
-                                background: #f8f9fa;
-                            }
-                            .producto-item {
-                                padding: 2px 0;
-                                font-size: 10px;
-                            }
-                            .contado-badge {
-                                background: #27ae60;
-                                color: white;
-                                padding: 3px 6px;
-                                border-radius: 3px;
-                                font-size: 9px;
-                                font-weight: bold;
-                            }
-                            .pendiente-badge {
-                                background: #f39c12;
-                                color: white;
-                                padding: 3px 6px;
-                                border-radius: 3px;
-                                font-size: 9px;
-                                font-weight: bold;
-                            }
-                            .retiro-badge {
-                                background: #e74c3c;
-                                color: white;
-                                padding: 3px 6px;
-                                border-radius: 3px;
-                                font-size: 9px;
-                                font-weight: bold;
-                            }
-                            .ingreso-badge {
-                                background: #27ae60;
-                                color: white;
-                                padding: 3px 6px;
-                                border-radius: 3px;
-                                font-size: 9px;
-                                font-weight: bold;
-                            }
-                            .abono-badge {
-                                background: #2ecc71;
-                                color: white;
-                                padding: 3px 6px;
-                                border-radius: 3px;
-                                font-size: 9px;
-                                font-weight: bold;
-                            }
-                            .resumen-section {
-                                margin-top: 25px;
-                                padding: 15px;
-                                background: #e8f4fd;
-                                border-radius: 8px;
-                                border: 1px solid #b8daff;
-                            }
-                            .resumen-grid {
-                                display: grid;
-                                grid-template-columns: 1fr 1fr 1fr 1fr;
-                                gap: 15px;
-                                margin-top: 10px;
-                            }
-                            .resumen-item {
-                                text-align: center;
-                                padding: 10px;
-                                background: white;
-                                border-radius: 6px;
-                                border: 1px solid #dee2e6;
-                            }
-                            .resumen-valor {
-                                font-size: 18px;
-                                font-weight: bold;
-                                color: #2c3e50;
-                                margin-top: 5px;
-                            }
-                            .page-break {
-                                page-break-before: always;
-                            }
-                            @page {
-                                size: A4 portrait;
-                                margin: 1.5cm 1cm;
-                            }
-                            .footer {
-                                text-align: center;
-                                margin-top: 20px;
-                                padding-top: 10px;
-                                border-top: 1px solid #ddd;
-                                font-size: 10px;
-                                color: #7f8c8d;
-                            }
-                            .movimiento-card {
-                                margin-bottom: 15px;
-                                border: 1px solid #ddd;
-                                border-radius: 6px;
-                                overflow: hidden;
-                                page-break-inside: avoid;
-                            }
-                            .movimiento-header {
-                                background: #f8f9fa;
-                                padding: 10px 12px;
-                                border-bottom: 1px solid #ddd;
-                                display: flex;
-                                justify-content: space-between;
-                                align-items: center;
-                            }
-                            .productos-table {
-                                width: 100%;
-                                border-collapse: collapse;
-                                font-size: 10px;
-                            }
-                            .productos-table th {
-                                background: #ecf0f1;
-                                padding: 6px 8px;
-                                text-align: left;
-                                font-weight: bold;
-                                border-bottom: 2px solid #bdc3c7;
-                            }
-                            .productos-table td {
-                                padding: 5px 8px;
-                                border-bottom: 1px solid #ecf0f1;
-                            }
-                            .productos-table tr:last-child td {
-                                border-bottom: none;
-                            }
-                        </style>
-                    </head>
-                    <body>
-                        <div class="header">
-                            <h1>TALLER WILIAN</h1>
-                            <h2>HISTORIAL DE MOVIMIENTOS ${fechaActual}</h2>
-                        </div>
-                `;
-
-                movimientos.forEach((movimiento) => {
-                    const fecha = movimiento.timestamp ? new Date(movimiento.timestamp.toDate ? movimiento.timestamp.toDate() : movimiento.timestamp).toLocaleString('es-ES') : 'N/A';
-
-                    if (movimiento.tipo === 'retiro') {
-                        const tipoBadge = 'retiro-badge';
-                        const tipoText = 'RETIRO';
-                        const color = '#e74c3c';
-
-                        reportHTML += `
-                            <div class="movimiento-card" style="border-left: 4px solid ${color};">
-                                <div class="movimiento-header" style="background: white;">
-                                    <div>
-                                        <strong>${tipoText}</strong> - ${movimiento.concepto || 'Sin concepto'}
-                                        <br><span style="font-size: 9px; color: #666;">${fecha}</span>
-                                    </div>
-                                    <div style="text-align: right;">
-                                        <div style="font-size: 14px; font-weight: bold; color: ${color};">
-                                            -$${movimiento.monto.toFixed(2)}
-                                        </div>
-                                        <span class="${tipoBadge}">${tipoText}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        `;
-                    } else if (movimiento.tipo === 'ingreso') {
-                        const tipoBadge = 'ingreso-badge';
-                        const tipoText = 'INGRESO';
-                        const color = '#27ae60';
-
-                        reportHTML += `
-                            <div class="movimiento-card" style="border-left: 4px solid ${color};">
-                                <div class="movimiento-header" style="background: white;">
-                                    <div>
-                                        <strong>${tipoText}</strong> - ${movimiento.concepto || 'Sin concepto'}
-                                        <br><span style="font-size: 9px; color: #666;">${fecha}</span>
-                                    </div>
-                                    <div style="text-align: right;">
-                                        <div style="font-size: 14px; font-weight: bold; color: ${color};">
-                                            +$${movimiento.monto.toFixed(2)}
-                                        </div>
-                                        <span class="${tipoBadge}">${tipoText}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        `;
-                    } else if (movimiento.tipo === 'abono') {
-                        const tipoBadge = 'abono-badge';
-                        const tipoText = 'ABONO';
-                        const color = '#2ecc71';
-
-                        reportHTML += `
-                            <div class="movimiento-card" style="border-left: 4px solid ${color};">
-                                <div class="movimiento-header" style="background: white;">
-                                    <div>
-                                        <strong>${tipoText}</strong> - ${movimiento.concepto || 'Abono a cuenta'}
-                                        <br><span style="font-size: 9px; color: #666;">${fecha}</span>
-                                        <br><span style="font-size: 10px;">Cliente: ${movimiento.clientName || 'General'} (Eq: ${movimiento.equipoNumber || '-'})</span>
-                                    </div>
-                                    <div style="text-align: right;">
-                                        <div style="font-size: 14px; font-weight: bold; color: ${color};">
-                                            +$${(movimiento.monto || 0).toFixed(2)}
-                                        </div>
-                                        <span class="${tipoBadge}">${tipoText}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        `;
-                    } else if (movimiento.tipo === 'venta') {
-                        const venta = movimiento;
-                        const tipoBadge = venta.paymentType === 'contado' ? 'contado-badge' : 'pendiente-badge';
-                        const tipoText = venta.paymentType === 'contado' ? 'CONTADO' : 'PENDIENTE';
-
-                        let productosRows = '';
-                        if (venta.products && venta.products.length > 0) {
-                            venta.products.forEach(producto => {
-                                productosRows += `
-                                    <tr>
-                                        <td width="10%" style="text-align: center;">${producto.cantidad}</td>
-                                        <td width="50%">${producto.descripcion}</td>
-                                        <td width="20%" style="text-align: right;">$${producto.precio.toFixed(2)}</td>
-                                        <td width="20%" style="text-align: right;">$${(producto.precio * producto.cantidad).toFixed(2)}</td>
-                                    </tr>
-                                `;
-                            });
-                        } else {
-                            productosRows = '<tr><td colspan="4" style="text-align: center; color: #999;">Sin productos registrados</td></tr>';
-                        }
-
-                        reportHTML += `
-                            <div class="movimiento-card">
-                                <div class="movimiento-header">
-                                    <div>
-                                        <strong>Factura #${venta.invoiceNumber || 'N/A'}</strong> - Equipo: ${venta.equipoNumber || 'N/A'}
-                                        <br><span style="font-size: 9px; color: #666;">${fecha} - ${venta.clientName || 'Cliente'}</span>
-                                    </div>
-                                    <div style="text-align: right;">
-                                        <div style="font-size: 14px; font-weight: bold;">$${(venta.total || 0).toFixed(2)}</div>
-                                        <span class="${tipoBadge}">${tipoText}</span>
-                                    </div>
-                                </div>
-                                <div style="padding: 5px 10px;">
-                                    <table class="productos-table">
-                                        <thead>
-                                            <tr>
-                                                <th width="10%" style="text-align: center;">Cant.</th>
-                                                <th width="50%">Descripción</th>
-                                                <th width="20%">Precio</th>
-                                                <th width="20%" style="text-align: right;">Total</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            ${productosRows}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        `;
-                    }
-                });
-
-                let abonosHTML = '';
-                const ventasConAbonosList = movimientos.filter(mov =>
-                    mov.tipo === 'venta' && mov.abonos && mov.abonos.length > 0
-                );
-
-                if (ventasConAbonosList.length > 0) {
-                    abonosHTML += `
-                        <div class="page-break"></div>
-                        <div class="header">
-                            <h2>HISTORIAL DE ABONOS ${fechaActual}</h2>
-                        </div>
-                        <div class="table-container">
-                            <table class="ventas-table">
-                                <thead>
-                                    <tr>
-                                        <th width="15%">Fecha</th>
-                                        <th width="10%">Equipo</th>
-                                        <th width="15%">Total</th>
-                                        <th width="15%">Abono</th>
-                                        <th width="15%">Saldo</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                    `;
-
-                    ventasConAbonosList.forEach(venta => {
-                        const saldoPendiente = venta.saldoPendiente !== undefined ? venta.saldoPendiente : venta.total;
-                        const totalAbonado = venta.abonos.reduce((sum, abono) => sum + abono.monto, 0);
-
-                        abonosHTML += `
-                            <tr>
-                                <td>${new Date(venta.timestamp.toDate ? venta.timestamp.toDate() : venta.timestamp).toLocaleDateString('es-ES')}</td>
-                                <td>${venta.equipoNumber || 'N/A'}</td>
-                                <td>$${venta.total.toFixed(2)}</td>
-                                <td>$${totalAbonado.toFixed(2)}</td>
-                                <td>$${saldoPendiente.toFixed(2)}</td>
-                            </tr>
-                        `;
-                    });
-
-                    abonosHTML += `</tbody></table></div>`;
-                }
-
-                reportHTML += abonosHTML;
-
-                const flujoNeto = totalContado + totalAbonos + totalIngresos - totalRetiros;
-                reportHTML += `
-                    <div class="resumen-section">
-                        <h3 style="margin: 0 0 15px 0; text-align: center; color: #2c3e50;">RESUMEN</h3>
-                        <div class="resumen-grid">
-                            <div class="resumen-item">
-                                <div>VENTAS AL CONTADO</div>
-                                <div class="resumen-valor">$${totalContado.toFixed(2)}</div>
-                                <div style="font-size: 10px; color: #666;">${ventasContado} ventas</div>
-                            </div>
-                            <div class="resumen-item">
-                                <div>TOTAL ABONOS</div>
-                                <div class="resumen-valor" style="color: #2ecc71;">$${totalAbonos.toFixed(2)}</div>
-                                <div style="font-size: 10px; color: #666;">${cantidadAbonos + ventasConAbonos} transacciones</div>
-                            </div>
-                            <div class="resumen-item">
-                                <div>INGRESOS</div>
-                                <div class="resumen-valor" style="color: #27ae60;">+$${totalIngresos.toFixed(2)}</div>
-                                <div style="font-size: 10px; color: #666;">${cantidadIngresos} ingresos</div>
-                            </div>
-                            <div class="resumen-item">
-                                <div>RETIROS</div>
-                                <div class="resumen-valor" style="color: #e74c3c;">-$${totalRetiros.toFixed(2)}</div>
-                                <div style="font-size: 10px; color: #666;">${cantidadRetiros} retiros</div>
-                            </div>
-                        </div>
-                        <div style="margin-top: 20px; padding: 15px; background: #2c3e50; color: white; border-radius: 6px; text-align: center;">
-                            <div style="font-size: 14px; margin-bottom: 5px;">FLUJO NETO DE CAJA</div>
-                            <div style="font-size: 24px; font-weight: bold;">${flujoNeto >= 0 ? '+' : ''}$${flujoNeto.toFixed(2)}</div>
-                            <div style="font-size: 11px; margin-top: 5px; opacity: 0.8;">Ventas + Abonos + Ingresos - Retiros</div>
-                        </div>
-                    </div>
-                    
-                    <div class="footer">
-                        <div>Documento generado automáticamente por el Sistema de Ventas Taller Wilian</div>
-                        <div>Fecha de impresión: ${DateUtils.getCurrentTimestampElSalvador().toLocaleString('es-ES')}</div>
-                    </div>
-                `;
-
-                reportHTML += `</body></html>`;
-
-                printWindow.document.open();
-                printWindow.document.write(reportHTML);
-                printWindow.document.close();
-
-                printWindow.focus();
-
-                printWindow.onload = function () {
-                    setTimeout(() => {
-                        printWindow.print();
-                        UIService.showStatus("Historial enviado a impresión", "success");
-                    }, 500);
-                };
-
-                if (printWindow.document.readyState === 'complete') {
-                    printWindow.onload();
-                }
-            },
-
-            printTicket(saleData) {
-                const printWindow = window.open('', '_blank', 'width=300,height=600');
-                const fecha = saleData.timestamp ? new Date(saleData.timestamp.toDate ? saleData.timestamp.toDate() : saleData.timestamp) : DateUtils.getCurrentTimestampElSalvador();
-                const fechaFormateada = fecha.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' });
-
-                const saldoPendiente = saleData.saldoPendiente !== undefined ? saleData.saldoPendiente : saleData.total;
-                const tieneAbonos = saleData.abonos && saleData.abonos.length > 0;
-                const tipoPago = saleData.paymentType === 'pendiente' ? 'PENDIENTE' : 'CONTADO';
-
-                let abonosHTML = '';
-                if (tieneAbonos) {
-                    saleData.abonos.forEach(abono => {
-                        const fechaAbono = abono.fecha ? new Date(abono.fecha.toDate ? abono.fecha.toDate() : abono.fecha).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' }) : 'N/A';
-                        abonosHTML += `
-                            <div style="display: flex; justify-content: space-between; font-size: 20px; margin: 2px 0;">
-                                <div>ABONO: $${abono.monto.toFixed(2)} (${fechaAbono})</div>
-                            </div>
-                        `;
-                    });
-                }
-
-                let productosHTML = '';
-                if (saleData.products && saleData.products.length > 0) {
-                    saleData.products.forEach(producto => {
-                        const descripcion = producto.descripcion.length > 25 ? producto.descripcion.substring(0, 25) + '...' : producto.descripcion;
-                        productosHTML += `
-                            <div style="margin: 4px 0;">
-                                <div style="font-size: 16px;">• ${descripcion}</div>
-                                <div style="display: flex; justify-content: space-between; font-size: 18px;">
-                                    <div>x${producto.cantidad}</div>
-                                    <div>$${(producto.precio * producto.cantidad).toFixed(2)}</div>
-                                </div>
-                            </div>
-                            <div style="border-bottom: 1px dotted #000; margin: 2px 0;"></div>
-                        `;
-                    });
-                }
-
-                const contenido = `
-                    <!DOCTYPE html>
-                    <html>
-                    <head>
-                        <meta charset="UTF-8">
-                        <title>Ticket #${saleData.invoiceNumber}</title>
-                        <style>
-                            body { 
-                                font-family: 'Courier New', monospace; 
-                                font-size: 22px; 
-                                margin: 0; 
-                                padding: 6px;
-                                width: 58mm;
-                                font-weight: bold;
-                            }
-                            .header { text-align: center; margin-bottom: 12px; }
-                            .line { border-bottom: 2px dashed #000; margin: 4px 0; }
-                            .total { font-weight: bold; text-align: center; margin-top: 12px; font-size: 24px; }
-                            .footer { text-align: center; margin-top: 12px; font-size: 18px; font-weight: bold; }
-                            .small-text { font-size: 18px; }
-                            .medium-text { font-size: 20px; }
-                            .large-text { font-size: 26px; }
-                            .equipo-text { font-size: 32px; font-weight: 900; margin: 5px 0; }
-                            .thank-you { text-align: center; margin-top: 15px; font-weight: bold; font-size: 20px; }
-                            .saldo-info {
-                                background: #f0f0f0;
-                                padding: 8px;
-                                margin: 8px 0;
-                                border-radius: 4px;
-                                font-size: 18px;
-                            }
-                        </style>
-                    </head>
-                    <body>
-                        <div class="header">
-                            <h3 style="margin: 2px 0; font-size: 26px;">TALLER WILLIAN</h3>
-                            <div class="small-text">Factura: ${saleData.invoiceNumber}</div>
-                            <div class="small-text">${fechaFormateada}, ${tipoPago}</div>
-                        </div>
-                        
-                        <div class="line"></div>
-                        
-                        ${saleData.clientName !== saleData.equipoNumber ? `
-                            <div class="medium-text">
-                                <strong>Grupo:</strong> ${saleData.clientName}
-                            </div>
-                        ` : ''}
-                        <div class="equipo-text" style="text-align: center;">
-                            ${saleData.equipoNumber}
-                        </div>
-                        
-                        <div class="line"></div>
-                        
-                        <div style="margin: 8px 0;">
-                            ${productosHTML}
-                        </div>
-                        
-                        <div class="line"></div>
-                        
-                        <div class="total large-text">
-                            TOTAL: $${saleData.total.toFixed(2)}
-                        </div>
-
-                        ${abonosHTML}
-
-                        ${tieneAbonos && saldoPendiente > 0 ? `
-                            <div class="saldo-info">
-                                <div>SALDO PENDIENTE:</div>
-                                <div class="large-text">$${saldoPendiente.toFixed(2)}</div>
-                            </div>
-                        ` : ''}
-                        
-                        <div class="thank-you">
-                            GRACIAS POR PREFERIRNOS
-                        </div>
-                    </body>
-                    </html>
-                        `;
-
-                printWindow.document.open();
-                printWindow.document.write(contenido);
-                printWindow.document.close();
-                printWindow.focus();
-
-                printWindow.onload = function () {
-                    setTimeout(() => {
-                        printWindow.print();
-                        printWindow.onafterprint = function () {
-                            printWindow.close(); // Cerrar solo después de imprimir
-                        };
-                    }, 500);
-                };
-
-                // Fallback
-                if (printWindow.document.readyState === 'complete') {
-                    printWindow.onload();
-                }
-            },
-
-            printAbonoTicket(venta, abonoData, nuevoSaldo) {
-                const printWindow = window.open('', '_blank', 'width=300,height=600');
-                const fechaAbono = abonoData.fecha ? new Date(abonoData.fecha.toDate ? abonoData.fecha.toDate() : abonoData.fecha) : DateUtils.getCurrentTimestampElSalvador();
-                const fechaFormateada = fechaAbono.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' });
-
-                printWindow.document.write(`
-                    <!DOCTYPE html>
-                    <html>
-                    <head>
-                        <meta charset="UTF-8">
-                        <title>Abono #${venta.invoiceNumber}</title>
-                        <style>
-                            body { 
-                                font-family: 'Courier New', monospace; 
-                                font-size: 22px; 
-                                margin: 0; 
-                                padding: 6px;
-                                width: 58mm;
-                                font-weight: bold;
-                            }
-                            .header { text-align: center; margin-bottom: 12px; }
-                            .line { border-bottom: 2px dashed #000; margin: 4px 0; }
-                            .abono-detail { 
-                                margin: 8px 0;
-                                font-size: 20px;
-                            }
-                            .total { font-weight: bold; text-align: center; margin-top: 12px; font-size: 24px; }
-                            .footer { text-align: center; margin-top: 12px; font-size: 18px; font-weight: bold; }
-                            .small-text { font-size: 18px; }
-                            .medium-text { font-size: 20px; }
-                            .large-text { font-size: 26px; }
-                            .equipo-text { font-size: 32px; font-weight: 900; margin: 5px 0; }
-                            .thank-you { text-align: center; margin-top: 15px; font-weight: bold; font-size: 20px; }
-                            .saldo-info {
-                                background: #f0f0f0;
-                                padding: 8px;
-                                margin: 8px 0;
-                                border-radius: 4px;
-                                font-size: 18px;
-                            }
-                        </style>
-                    </head>
-                    <body>
-                        <div class="header">
-                            <h3 style="margin: 2px 0; font-size: 26px;">TALLER WILLIAN</h3>
-                            <div class="small-text">COMPROBANTE DE ABONO</div>
-                            <div class="small-text">${fechaFormateada}</div>
-                        </div>
-                        
-                        <div class="line"></div>
-                        
-                        <div class="medium-text">
-                            <strong>Factura:</strong> ${venta.invoiceNumber}<br>
-                            ${venta.clientName !== venta.equipoNumber ? `<strong>Grupo:</strong> ${venta.clientName}` : ''}
-                        </div>
-                        <div class="equipo-text" style="text-align: center;">
-                            ${venta.equipoNumber}
-                        </div>
-                        
-                        <div class="line"></div>
-                        
-                        <div class="abono-detail">
-                            <div style="text-align: center; font-size: 24px; margin: 10px 0;">
-                                MONTO DEL ABONO
-                            </div>
-                            <div style="text-align: center; font-size: 28px; font-weight: bold;">
-                                $${abonoData.monto.toFixed(2)}
-                            </div>
-                        </div>
-
-                        <div class="saldo-info">
-                            <div>SALDO ANTERIOR: $${(venta.saldoPendiente || venta.total).toFixed(2)}</div>
-                            <div>NUEVO SALDO: $${nuevoSaldo.toFixed(2)}</div>
-                        </div>
-                        
-                        <div class="thank-you">
-                            GRACIAS POR PREFERIRNOS
-                        </div>
-                    </body>
-                    </html>
-                        `);
-
-                printWindow.document.close();
-                printWindow.focus();
-
-                printWindow.onload = function () {
-                    setTimeout(() => {
-                        printWindow.print();
-                        printWindow.onafterprint = function () {
-                            printWindow.close();
-                        };
-                    }, 500);
-                };
-
-                if (printWindow.document.readyState === 'complete') {
-                    printWindow.onload();
-                }
-            },
-
-            printRetiroTicket(retiroData) {
-                const printWindow = window.open('', '_blank', 'width=300,height=600');
-                const fecha = retiroData.timestamp ? new Date(retiroData.timestamp.toDate ? retiroData.timestamp.toDate() : retiroData.timestamp) : DateUtils.getCurrentTimestampElSalvador();
-                const fechaFormateada = fecha.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' });
-
-                const categoriaText = {
-                    'compra': 'Compra de materiales',
-                    'gastos': 'Gastos operativos',
-                    'herramientas': 'Herramientas',
-                    'otros': 'Otros'
-                }[retiroData.categoria] || retiroData.categoria;
-
-                printWindow.document.write(`
-                    <!DOCTYPE html>
-                    <html>
-                    <head>
-                        <meta charset="UTF-8">
-                        <title>Retiro de Fondos</title>
-                        <style>
-                            body { 
-                                font-family: 'Courier New', monospace; 
-                                font-size: 22px; 
-                                margin: 0; 
-                                padding: 6px;
-                                width: 58mm;
-                                font-weight: bold;
-                            }
-                            .header { text-align: center; margin-bottom: 12px; }
-                            .line { border-bottom: 2px dashed #000; margin: 4px 0; }
-                            .retiro-detail { 
-                                margin: 8px 0;
-                                font-size: 20px;
-                            }
-                            .total { font-weight: bold; text-align: center; margin-top: 12px; font-size: 24px; }
-                            .footer { text-align: center; margin-top: 12px; font-size: 18px; font-weight: bold; }
-                            .small-text { font-size: 18px; }
-                            .medium-text { font-size: 20px; }
-                            .large-text { font-size: 26px; }
-                        </style>
-                    </head>
-                    <body>
-                        <div class="header">
-                            <h3 style="margin: 2px 0; font-size: 26px;">TALLER WILLIAN</h3>
-                            <div class="small-text">COMPROBANTE DE RETIRO</div>
-                            <div class="small-text">${fechaFormateada}</div>
-                        </div>
-                        
-                        <div class="line"></div>
-                        
-                        <div class="medium-text">
-                            <strong>Concepto:</strong><br>
-                            ${retiroData.concepto || 'Sin descripción'}
-                        </div>
-                        
-                        <div class="medium-text" style="margin-top: 5px;">
-                            <strong>Categoría:</strong> ${categoriaText}
-                        </div>
-                        
-                        <div class="line"></div>
-                        
-                        <div class="retiro-detail">
-                            <div style="text-align: center; font-size: 24px; margin: 10px 0;">
-                                MONTO RETIRADO
-                            </div>
-                            <div style="text-align: center; font-size: 28px; font-weight: bold;">
-                                $${Math.abs(retiroData.monto).toFixed(2)}
-                            </div>
-                        </div>
-                        
-                        <div class="line"></div>
-                        
-                        <div class="footer">
-                            Firma de Responsable
-                            <br><br><br>
-                            _____________________
-                        </div>
-                    </body>
-                    </html>
-                        `);
-
-                printWindow.document.close();
-                printWindow.focus();
-
-                printWindow.onload = function () {
-                    setTimeout(() => {
-                        printWindow.print();
-                        printWindow.onafterprint = function () {
-                            printWindow.close();
-                        };
-                    }, 500);
-                };
-
-                if (printWindow.document.readyState === 'complete') {
-                    printWindow.onload();
-                }
-            },
-
 
             setTodayDate() {
                 const today = DateUtils.getCurrentDateStringElSalvador();
@@ -6831,13 +5383,13 @@
 
                     if (filtered.length === 0) {
                         historialBody.innerHTML = `
-                    < tr >
+                    <tr>
                     <td colspan="6" class="empty-cart">No hay movimientos para el equipo ${filter}</td>
-                            </tr >
+                            </tr>
                     `;
                     } else {
                         AppState.filteredHistorial = filtered;
-                        UIService.renderHistorial();
+                        HistorialService.renderHistorial();
                     }
                 });
 
@@ -7035,7 +5587,61 @@
                     document.getElementById('bulk-abono-modal').style.display = 'none';
                 });
 
-                // (Código duplicado eliminado para corregir error de abonos masivos)
+                document.getElementById('process-bulk-abono-btn').addEventListener('click', async (e) => {
+                    if (e.target.disabled) return;
+                    e.target.disabled = true;
+
+                    const monto = parseFloat(document.getElementById('monto-bulk-abono').value) || 0;
+                    const grupoData = AppState.currentGrupoAbono;
+
+                    if (!grupoData) {
+                        UIService.showStatus("Error: No hay grupo seleccionado", "error");
+                        e.target.disabled = false;
+                        return;
+                    }
+
+                    if (monto <= 0) {
+                        UIService.showStatus("Ingrese un monto válido", "error");
+                        e.target.disabled = false;
+                        return;
+                    }
+
+                    if (monto > grupoData.total) {
+                        UIService.showStatus("El monto no puede ser mayor al saldo del grupo", "error");
+                        e.target.disabled = false;
+                        return;
+                    }
+
+                    try {
+                        UIService.showLoading(true);
+
+                        // Obtener todas las facturas del grupo
+                        const facturasIds = [];
+                        grupoData.equipos.forEach(equipoNum => {
+                            GrupoManager.equiposPendientes.forEach((equipo, key) => {
+                                if (equipo.numero === equipoNum && equipo.facturas) {
+                                    equipo.facturas.forEach(f => facturasIds.push(f.id));
+                                }
+                            });
+                        });
+
+                        if (facturasIds.length > 0) {
+                            await DataService.procesarAbonoMasivo(facturasIds, monto);
+                            UIService.showStatus(`Abono de $${monto.toFixed(2)} aplicado al grupo "${grupoData.nombre}"`, "success");
+                            document.getElementById('bulk-abono-modal').style.display = 'none';
+                            await GrupoManager.loadEquiposPendientes();
+                            await GrupoManager.actualizarTotalesGrupos();
+                            GrupoManager.updateUI();
+                        } else {
+                            UIService.showStatus("No se encontraron facturas para abonar", "error");
+                        }
+                    } catch (error) {
+                        UIService.showStatus("Error al procesar abono: " + error.message, "error");
+                    } finally {
+                        UIService.showLoading(false);
+                        e.target.disabled = false;
+                    }
+                });
 
                 // CORRECCIÓN 8: Cleanup al cerrar la página
                 window.addEventListener('beforeunload', () => {
@@ -7071,4 +5677,4 @@
     </script>
 </body>
 
-</html><script src="js/fix_search.js"></script>
+</html>
