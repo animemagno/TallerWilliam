@@ -600,10 +600,18 @@ window.GrupoManager = {
         const modal = document.getElementById('bulk-abono-modal');
         const info = document.getElementById('bulk-abono-info');
 
+        // Mostrar info y ocultar elementos de grupo
+        info.style.display = 'block';
         info.innerHTML = `
             <strong>Facturas Seleccionadas:</strong> ${AppState.selectedInvoicesForPayment.size}<br>
             Ingrese el monto total a abonar. Se distribuirá entre las facturas seleccionadas (más antiguas primero).
         `;
+
+        // Ocultar elementos específicos de grupos
+        document.getElementById('bulk-abono-grupo-nombre').textContent = '';
+        document.getElementById('bulk-abono-fecha').textContent = '';
+        document.getElementById('bulk-abono-equipos-list').innerHTML = '';
+        document.getElementById('bulk-abono-equipos-list').parentElement.style.display = 'none';
 
         document.getElementById('monto-bulk-abono').value = '';
         modal.style.display = 'block';
@@ -631,6 +639,11 @@ window.GrupoManager = {
                 document.getElementById('detalle-modal').style.display = 'none';
                 AppState.selectedInvoicesForPayment.clear();
 
+                // Recargar datos de grupos y equipos
+                await GrupoManager.loadEquiposPendientes(true);
+                await GrupoManager.actualizarTotalesGrupos(true);
+                GrupoManager.updateUI();
+
             } catch (error) {
                 UIService.showStatus("Error: " + error.message, "error");
             } finally {
@@ -647,11 +660,12 @@ window.GrupoManager = {
         const modal = document.getElementById('bulk-abono-modal');
         const info = document.getElementById('bulk-abono-info');
 
-        info.innerHTML = `
-            <strong>Abonar a Grupo:</strong> ${grupo.nombre}<br>
-            <strong>Total Pendiente del Grupo:</strong> $${grupo.total.toFixed(2)}<br>
-            Ingrese el monto total a abonar. Se distribuirá entre las facturas más antiguas del grupo.
-        `;
+        // Ocultar info de facturas individuales
+        info.style.display = 'none';
+        info.innerHTML = '';
+
+        // Mostrar elementos específicos de grupos
+        document.getElementById('bulk-abono-equipos-list').parentElement.style.display = 'block';
 
         document.getElementById('monto-bulk-abono').value = '';
         modal.style.display = 'block';

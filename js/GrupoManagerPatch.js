@@ -156,7 +156,7 @@ GrupoManager.calcularSaldoRestante = function () {
     const saldoRestanteElement = document.getElementById('saldo-restante');
 
     if (monto > 0) {
-        const saldoRestante = totalGrupo - monto;
+        const saldoRestante = Math.max(0, totalGrupo - monto); // Asegurar que nunca sea negativo
         saldoRestanteElement.textContent = `$${saldoRestante.toFixed(2)}`;
         saldoRestanteElement.style.color = saldoRestante > 0 ? '#e74c3c' : '#27ae60';
         saldoRestanteContainer.style.display = 'block';
