@@ -350,12 +350,10 @@
 
         .modal-content {
             background-color: var(--card-bg);
-            padding: 25px;
-            /* Reducido de 30px */
+            padding: 35px;
             border-radius: 10px;
             width: 90%;
-            max-width: 650px;
-            /* Reducido de 700px */
+            max-width: 700px;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
             color: var(--text-color);
             max-height: 90vh;
@@ -363,45 +361,37 @@
         }
 
         .modal h2 {
-            margin-bottom: 15px;
-            /* Reducido de 20px */
+            margin-bottom: 25px;
             color: var(--dark-gray);
-            font-size: 1.5rem;
-            /* Reducido de 1.8rem */
+            font-size: 1.7rem;
         }
 
         .form-group {
-            margin-bottom: 12px;
-            /* Reducido de 15px */
+            margin-bottom: 18px;
         }
 
         .form-group label {
             display: block;
-            margin-bottom: 4px;
-            /* Reducido de 5px */
+            margin-bottom: 8px;
             font-weight: 600;
-            font-size: 0.9rem;
-            /* Reducido de 1rem */
+            font-size: 0.95rem;
         }
 
         .form-group input,
         .form-group select,
         .form-group textarea {
             width: 100%;
-            padding: 8px;
-            /* Reducido de 10px */
+            padding: 12px;
             border: 1px solid var(--border-color);
             border-radius: 5px;
-            font-size: 0.9rem;
-            /* Reducido de 1rem */
+            font-size: 1rem;
             background-color: var(--card-bg);
             color: var(--text-color);
         }
 
         .form-row {
             display: flex;
-            gap: 12px;
-            /* Reducido de 15px */
+            gap: 18px;
         }
 
         .form-row .form-group {
@@ -411,10 +401,8 @@
         .form-actions {
             display: flex;
             justify-content: flex-end;
-            gap: 8px;
-            /* Reducido de 10px */
-            margin-top: 15px;
-            /* Reducido de 20px */
+            gap: 12px;
+            margin-top: 25px;
         }
 
         .floating-notification {
@@ -1613,7 +1601,6 @@
 
             const productData = {
                 codigo: document.getElementById('product-code').value,
-                marca: document.getElementById('product-brand').value,
                 descripcion: document.getElementById('product-description').value,
                 descripcionTaller: document.getElementById('product-workshop-description').value,
                 cantidad: parseInt(document.getElementById('product-quantity').value),
