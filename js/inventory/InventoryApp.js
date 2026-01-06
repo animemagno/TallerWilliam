@@ -154,9 +154,6 @@ function renderInventory(data) {
     data.forEach(product => {
         const listItem = document.createElement('div');
         listItem.className = 'list-item';
-        listItem.ondblclick = () => editProduct(product.id);
-        listItem.title = "Doble clic para editar detalles";
-        listItem.style.cursor = "pointer";
 
         const minStock = product.minStock || 10;
         const isLowStock = product.cantidad <= minStock;
@@ -165,9 +162,10 @@ function renderInventory(data) {
             listItem.classList.add('low-stock-row');
         }
 
+        // Estructura de columnas (Grid layout implícito por CSS existente)
         listItem.innerHTML = `
-            <div style="font-weight: bold; color: var(--dark-gray);">${product.codigo || 'N/A'}</div>
-            <div style="font-weight: 500;">${product.descripcion}</div>
+            <div onclick="editProduct('${product.id}')" style="font-weight: bold; color: var(--dark-gray); cursor:pointer;">${product.codigo || 'N/A'}</div>
+            <div onclick="editProduct('${product.id}')" style="font-weight: 500; cursor:pointer;">${product.descripcion}</div>
             <div style="color: #666; font-size: 0.9em;">${product.descripcionTaller || '-'}</div>
             <div style="text-align: center;">
                 <span style="font-weight: bold; font-size: 1.1em; ${isLowStock ? 'color: var(--danger-color);' : 'color: var(--dark-gray);'}">
@@ -180,11 +178,104 @@ function renderInventory(data) {
             <div style="text-align: right; font-family: monospace; font-size: 1em; font-weight: bold; color: var(--success-color);">
                 $${(product.precio || 0).toFixed(2)}
             </div>
+            <div style="display:flex; justify-content:flex-end; gap:5px;">
+                 <button class="btn-warning" style="padding:5px 10px; border:none; border-radius:4px; cursor:pointer;" onclick="showKardex('${product.id}')" title="Ver Historial (Kardex)">
+                    <i class="fas fa-list-alt"></i>
+                 </button>
+            </div>
         `;
 
         inventoryBody.appendChild(listItem);
     });
 }
+
+// ... (Rest of the file remains unchanged until the end) ...
+
+// --- KARDEX UI LOGIC ---
+
+let currentKardexProductId = null;
+
+async function showKardex(productId) {
+    currentKardexProductId = productId;
+    const modal = document.getElementById('kardex-modal');
+    modal.style.display = 'flex';
+    document.getElementById('kardex-table-body').innerHTML = '<tr><td colspan="5" style="text-align:center;">Cargando historial...</td></tr>';
+
+    // Obtener info del producto para el título
+    const prod = inventoryData.find(p => p.id === productId);
+    document.getElementById('kardex-title').textContent = `Kardex: ${prod ? prod.descripcion : 'Producto'}`;
+
+    try {
+        const history = await KardexService.getHistory(productId);
+        const tbody = document.getElementById('kardex-table-body');
+        tbody.innerHTML = '';
+
+        if (history.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Sin movimientos registrados.</td></tr>';
+            return;
+        }
+
+        history.forEach(log => {
+            const tr = document.createElement('tr');
+            const dateStr = log.timestamp ? log.timestamp.toDate().toLocaleString() : '---';
+
+            let color = 'black';
+            if (log.type === 'entrada') color = 'green';
+            if (log.type === 'salida') color = 'red';
+
+            const allowDelete = !log.isReverted; // Solo permitir si no está ya revertido
+
+            tr.innerHTML = `
+                <td style="padding:10px; border-bottom:1px solid #eee;">${dateStr}</td>
+                <td style="padding:10px; border-bottom:1px solid #eee; font-weight:bold; color:${color}">${log.type.toUpperCase()}</td>
+                <td style="padding:10px; border-bottom:1px solid #eee;">${log.quantity}</td>
+                <td style="padding:10px; border-bottom:1px solid #eee;">${log.reference || ''}</td>
+                <td style="padding:10px; border-bottom:1px solid #eee;">
+                    ${allowDelete ? `<button onclick="deleteKardexMovement('${log.id}')" style="background:none; border:none; color:red; cursor:pointer;" title="Eliminar/Revertir Movimiento"><i class="fas fa-trash"></i></button>` : '<span style="color:gray; font-size:0.8em">Revertido</span>'}
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+    } catch (e) {
+        console.error(e);
+        alert("Error cargando historial: " + e.message);
+    }
+}
+
+async function rebuildStockCurrent() {
+    if (!currentKardexProductId) return;
+    if (!confirm("¿Estás seguro? Esto recalculará el stock sumando TODAS las entradas y restando las salidas del historial. Usa esto solo si el stock actual es incorrecto.")) return;
+
+    try {
+        const newStock = await KardexService.rebuildStock(currentKardexProductId);
+        alert(`Stock reconstruido exitosamente. Nuevo Stock: ${newStock}`);
+        loadInventory(); // Recargar tabla principal
+        showKardex(currentKardexProductId); // Recargar tabla kardex
+    } catch (e) {
+        console.error(e);
+        alert("Error reconstruyendo stock: " + e.message);
+    }
+}
+
+async function deleteKardexMovement(logId) {
+    if (!confirm("ADVERTENCIA: ¿Eliminar este movimiento? \n\nEsto creará un movimiento de compensación (reversión) y ajustará el stock automáticamente. Esta acción no se puede deshacer.")) return;
+
+    try {
+        await KardexService.revertMovement(logId);
+        showFloatingNotification("Movimiento revertido correctamente", "success");
+        showKardex(currentKardexProductId); // Recargar
+        loadInventory(); // Actualizar stock visual
+    } catch (e) {
+        console.error(e);
+        alert("Error al revertir: " + e.message);
+    }
+}
+
+// Exponer globalmente
+window.showKardex = showKardex;
+window.rebuildStockCurrent = rebuildStockCurrent;
+window.deleteKardexMovement = deleteKardexMovement;
 
 // Actualizar contador de productos
 function updateTotalProducts() {
@@ -569,11 +660,13 @@ async function saveEntry() {
     if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = "Guardando..."; }
 
     try {
-        const batch = db.batch();
-        const timestamp = firebase.firestore.FieldValue.serverTimestamp();
+        // Verificar KardexService
+        if (typeof KardexService === 'undefined') {
+            throw new Error("KardexService no está cargado. Recarga la página.");
+        }
+
         const refVal = document.getElementById('entry-reference').value || 'Sin Ref';
         const hasIva = document.getElementById('entry-has-iva').checked;
-
         let validCount = 0;
 
         for (const row of rows) {
@@ -589,36 +682,29 @@ async function saveEntry() {
                 const found = inventoryData.find(p => p.codigo === code);
                 if (found) pid = found.id;
                 else {
-                    // Auto-crear si no existe? Por ahora error.
                     alert("Producto no encontrado: " + code);
-                    throw new Error("Producto no existe");
+                    throw new Error("Producto no existe: " + code);
                 }
             }
 
             const costUnit = hasIva ? (price / 1.13) : price;
 
-            const pRef = db.collection('INVENTARIO').doc(pid);
-            batch.update(pRef, {
-                cantidad: firebase.firestore.FieldValue.increment(qty),
-                costo: costUnit
-            });
+            // USAR KARDEX SERVICE
+            // Esto actualiza el stock y guarda el log automáticamente
+            await KardexService.logMovement(
+                pid,
+                'entrada',
+                qty,
+                costUnit,
+                refVal,
+                { createdBy: 'Sistema' } // TODO: Agregar usuario real cuando existan roles
+            );
 
-            // Movimiento
-            const mRef = db.collection('MOVIMIENTOS_INVENTARIO').doc();
-            batch.set(mRef, {
-                productId: pid,
-                tipo: 'entrada',
-                cantidad: qty,
-                costo: costUnit,
-                referencia: refVal,
-                fecha: timestamp
-            });
             validCount++;
         }
 
         if (validCount > 0) {
-            await batch.commit();
-            showFloatingNotification("Entrada guardada", "success");
+            showFloatingNotification("Entrada guardada y registrada en Kardex", "success");
             document.getElementById('entry-modal').style.display = 'none';
             loadInventory();
         }

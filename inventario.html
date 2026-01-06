@@ -1001,53 +1001,90 @@
     <div class="modal" id="product-modal">
         <div class="modal-content">
             <h2 id="modal-title">Agregar Producto</h2>
-            <form id="product-form">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="product-code">Código</label>
-                        <input type="text" id="product-code" required>
+            <form id="product-form" style="display: flex; flex-direction: column; gap: 15px; padding: 10px;">
+                <div class="form-row" style="display: flex; gap: 15px;">
+                    <div class="form-group" style="flex: 1;">
+                        <label for="product-code"
+                            style="font-weight: bold; display: block; margin-bottom: 5px;">Código</label>
+                        <input type="text" id="product-code" required
+                            style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
                     </div>
-                    <div class="form-group">
+                </div>
+
+                <div class="form-group">
+                    <label for="product-description"
+                        style="font-weight: bold; display: block; margin-bottom: 5px;">Descripción</label>
+                    <input type="text" id="product-description" required
+                        style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+                </div>
+
+                <div class="form-group">
+                    <label for="product-workshop-description"
+                        style="font-weight: bold; display: block; margin-bottom: 5px;">Descripción Taller</label>
+                    <textarea id="product-workshop-description" rows="2"
+                        style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="product-aliases" style="font-weight: bold; display: block; margin-bottom: 5px;">
+                        Palabras Clave / Alias (Búsqueda)
+                        <i class="fas fa-info-circle"
+                            title="Escribe nombres alternativos separados por coma. Ejemplo: Empaque Maniful, Junta, Goma"
+                            style="color: #666; cursor: help;"></i>
+                    </label>
+                    <input type="text" id="product-aliases" placeholder="Ej: empaque maniful, junta, goma..."
+                        style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; background-color: #fcfcfc;">
+                    <small style="color: #666; font-size: 0.85em;">El buscador encontrará el producto usando cualquiera
+                        de estas palabras.</small>
+                </div>
+
+                <div class="form-row" style="display: flex; gap: 15px;">
+                    <div class="form-group" style="flex: 1;">
+                        <label for="product-quantity"
+                            style="font-weight: bold; display: block; margin-bottom: 5px;">Stock</label>
+                        <input type="number" id="product-quantity" min="0" required
+                            style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
                     </div>
-                    <div class="form-group">
-                        <label for="product-description">Descripción</label>
-                        <input type="text" id="product-description" required>
+                    <div class="form-group" style="flex: 1;">
+                        <label for="product-min-stock"
+                            style="font-weight: bold; display: block; margin-bottom: 5px;">Stock Mínimo</label>
+                        <input type="number" id="product-min-stock" min="0" value="10"
+                            style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
                     </div>
-                    <div class="form-group">
-                        <label for="product-workshop-description">Descripción Taller</label>
-                        <textarea id="product-workshop-description" rows="2"></textarea>
+                </div>
+
+                <div class="form-row" style="display: flex; gap: 15px;">
+                    <div class="form-group" style="flex: 1;">
+                        <label for="product-cost" style="font-weight: bold; display: block; margin-bottom: 5px;">Precio
+                            Unidad ($)</label>
+                        <input type="number" id="product-cost" min="0" step="0.01"
+                            style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
                     </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="product-quantity">Stock</label>
-                            <input type="number" id="product-quantity" min="0" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="product-min-stock">Alerta Stock Mínimo</label>
-                            <input type="number" id="product-min-stock" min="0" value="10">
-                        </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label for="product-price" style="font-weight: bold; display: block; margin-bottom: 5px;">Precio
+                            Venta ($)</label>
+                        <input type="number" id="product-price" min="0" step="0.01"
+                            style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
                     </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="product-cost">Precio Unidad</label>
-                            <input type="number" id="product-cost" min="0" step="0.01">
-                        </div>
-                        <div class="form-group">
-                            <label for="product-price">Precio Venta</label>
-                            <input type="number" id="product-price" min="0" step="0.01">
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="product-credit-fiscal">Crédito Fiscal</label>
-                        <select id="product-credit-fiscal">
-                            <option value="false">No</option>
-                            <option value="true">Sí</option>
-                        </select>
-                    </div>
-                    <div class="form-actions">
-                        <button type="button" class="btn btn-danger" id="cancel-btn">Cancelar</button>
-                        <button type="submit" class="btn btn-primary" id="save-btn">Guardar</button>
-                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="product-credit-fiscal"
+                        style="font-weight: bold; display: block; margin-bottom: 5px;">Crédito Fiscal</label>
+                    <select id="product-credit-fiscal"
+                        style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+                        <option value="false">No</option>
+                        <option value="true">Sí</option>
+                    </select>
+                </div>
+
+                <div class="form-actions"
+                    style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+                    <button type="button" class="btn btn-danger" id="cancel-btn"
+                        style="padding: 10px 20px; cursor: pointer;">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" id="save-btn"
+                        style="padding: 10px 20px; cursor: pointer;">Guardar</button>
+                </div>
             </form>
         </div>
     </div>
@@ -1098,6 +1135,39 @@
             <div class="form-actions">
                 <button type="button" class="btn btn-danger" id="cancel-order-btn">Cancelar</button>
                 <button type="button" class="btn btn-success" id="save-order-btn">Guardar Pedido</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Historial (Kardex) -->
+    <div class="modal" id="kardex-modal">
+        <div class="modal-content" style="max-width: 900px;">
+            <div class="modal-header"
+                style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h2 id="kardex-title">Historial de Movimientos</h2>
+                <button onclick="document.getElementById('kardex-modal').style.display='none'"
+                    style="background:none; border:none; font-size:1.5rem; cursor:pointer;">&times;</button>
+            </div>
+            <div style="margin-bottom: 15px; display:flex; gap:10px;">
+                <button id="btn-rebuild-stock" class="btn btn-warning" onclick="rebuildStockCurrent()">
+                    <i class="fas fa-hammer"></i> Reconstruir Stock (Reparar)
+                </button>
+            </div>
+            <div style="max-height: 500px; overflow-y: auto;">
+                <table style="width:100%; border-collapse:collapse; font-size:0.9rem;">
+                    <thead>
+                        <tr style="background:var(--header-bg); color:white;">
+                            <th style="padding:10px;">Fecha</th>
+                            <th style="padding:10px;">Tipo</th>
+                            <th style="padding:10px;">Cantidad</th>
+                            <th style="padding:10px;">Referencia</th>
+                            <th style="padding:10px;">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="kardex-table-body">
+                        <!-- Rows injected by JS -->
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
@@ -1548,11 +1618,14 @@
             }
 
             const filteredData = inventoryData.filter(product => {
+                // Verificar si algún alias coincide
+                const hasAliasMatch = product.aliases && product.aliases.some(alias => alias.includes(searchTerm));
+
                 return (
                     (product.codigo && product.codigo.toLowerCase().includes(searchTerm)) ||
                     (product.descripcion && product.descripcion.toLowerCase().includes(searchTerm)) ||
-
-                    (product.descripcionTaller && product.descripcionTaller.toLowerCase().includes(searchTerm))
+                    (product.descripcionTaller && product.descripcionTaller.toLowerCase().includes(searchTerm)) ||
+                    hasAliasMatch
                 );
             });
 
@@ -1576,6 +1649,11 @@
 
                 document.getElementById('product-description').value = product.descripcion || '';
                 document.getElementById('product-workshop-description').value = product.descripcionTaller || '';
+
+                // Cargar alias si existen
+                const aliases = product.aliases || [];
+                document.getElementById('product-aliases').value = aliases.join(', ');
+
                 document.getElementById('product-quantity').value = product.cantidad || 0;
                 document.getElementById('product-min-stock').value = product.minStock || 10;
                 document.getElementById('product-cost').value = product.costo || 0;
@@ -1599,10 +1677,17 @@
         function saveProduct(e) {
             e.preventDefault();
 
+            // Procesar alias: convertir string separado por comas a array
+            const aliasesInput = document.getElementById('product-aliases').value || '';
+            const aliasesArray = aliasesInput.split(',')
+                .map(s => s.trim().toLowerCase()) // Limpiar espacios y normalizar a minúsculas
+                .filter(s => s.length > 0); // Eliminar vacíos
+
             const productData = {
                 codigo: document.getElementById('product-code').value,
                 descripcion: document.getElementById('product-description').value,
                 descripcionTaller: document.getElementById('product-workshop-description').value,
+                aliases: aliasesArray, // Guardar array de palabras clave
                 cantidad: parseInt(document.getElementById('product-quantity').value),
                 minStock: parseInt(document.getElementById('product-min-stock').value),
                 costo: parseFloat(document.getElementById('product-cost').value) || 0,
@@ -1708,10 +1793,15 @@
                 return;
             }
 
-            // Buscar producto por código
-            const product = inventoryData.find(p =>
-                p.codigo && p.codigo.toLowerCase().includes(code.toLowerCase())
-            );
+            // Buscar producto por código, descripción o ALIAs
+            const product = inventoryData.find(p => {
+                const search = code.toLowerCase();
+                const hasAliasMatch = p.aliases && p.aliases.some(alias => alias.includes(search));
+
+                return (p.codigo && p.codigo.toLowerCase().includes(search)) ||
+                    (p.descripcion && p.descripcion.toLowerCase().includes(search)) ||
+                    hasAliasMatch;
+            });
 
             if (product) {
                 currentProduct = product;
@@ -2615,7 +2705,8 @@
             reader.readAsText(file);
         }
     </script>
-    <!-- Cargar lógica modularizada de inventario (incluye importación mejorada) -->
+    <!-- Servicios de Inventario -->
+    <script src="js/inventory/KardexService.js"></script>
     <script src="js/inventory/InventoryApp.js"></script>
     <!-- Inyección Directa de Función de Importación (Bypass de errores de carga de archivo externo) -->
     <script>
