@@ -1083,6 +1083,7 @@
 
             .monto-descanso,
             .dia-descanso-tabla {
+                /* Sin estilos especiales - todos los días iguales */
                 color: #000 !important;
                 background-color: white !important;
             }
@@ -1163,22 +1164,20 @@
         }
 
         .tabla-dias .col-monto {
-            width: 25%;
+            width: 20%;
         }
 
         .tabla-dias .col-observacion {
-            width: 60%;
+            width: 65%;
             text-align: left;
         }
 
         .dia-descanso-tabla {
-            background: #ffebee !important;
+            /* Sin fondo especial - todos los días iguales */
         }
 
         .monto-descanso {
-            text-decoration: line-through;
-            color: #d32f2f;
-            font-weight: bold;
+            /* Mostrar $0 normalmente */
         }
 
         .datos-conductor {
@@ -2916,7 +2915,7 @@
                             <tr class="${claseDescanso}">
                                 <td class="col-dia">${dia}</td>
                                 <td class="col-monto ${claseMonto}">$${monto}</td>
-                                <td class="col-observacion"></td> <!-- Observación siempre vacía -->
+                                <td class="col-observacion"></td>
                             </tr>
                         `;
                     }
@@ -2939,7 +2938,7 @@
                                             <tr>
                                                 <th class="col-dia">Día</th>
                                                 <th class="col-monto">Monto</th>
-                                                <th class="col-observacion">Observación</th>
+                                                <th class="col-observacion"></th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -2962,17 +2961,16 @@
                                             <span class="dato-label">DUI:</span>
                                             <span class="dato-valor">${equipo.dui || 'N/A'}</span>
                                         </div>
-                                    </div>
-
-                                    <div class="seccion-firma">
-                                        <div class="total-recibo">
-                                            TOTAL: $${totalMes}
-                                        </div>
-                                        <div class="firma-recibo">
-                                            <div style="text-align: center; margin-bottom: 5px;">Recibí conforme:</div>
+                                        <div class="firma-recibo" style="margin-top: 30px;">
                                             <div class="linea-firma" style="text-align: center;">
                                                 Firma
                                             </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="seccion-firma">
+                                        <div class="total-recibo" style="text-align: center;">
+                                            TOTAL: $${totalMes}
                                         </div>
                                     </div>
                                 </div>
