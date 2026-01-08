@@ -1386,13 +1386,13 @@
                     </div>
                 </div>
 
-                <h2 class="mb-3">Selecciona un Equipo para Registrar Entregas</h2>
+                <h2 class="mb-3" id="titulo-registro-rapido">Selecciona un Equipo para Registrar Entregas</h2>
                 <div class="grid-equipos" id="grid-equipos-rapido">
                     <!-- Los equipos se cargarán aquí dinámicamente -->
                 </div>
 
                 <div class="calendario-periodo" id="calendario-periodo-container"
-                    style="display: none; max-width: 900px; margin: 0 auto;">
+                    style="display: none; max-width: 1200px; margin: 0 auto; background: #2d3748; border-radius: 8px;">
                     <div class="header-calendario-simple"
                         style="display: flex; justify-content: space-between; align-items: center;">
                         <button class="btn btn-secondary btn-sm" id="cerrar-calendario" style="margin: 0;">
@@ -1404,19 +1404,28 @@
                         <div style="width: 80px;"></div> <!-- Spacer for alignment -->
                     </div>
 
-                    <!-- DÍAS DE LA SEMANA - DOMINGO PRIMERO -->
-                    <div class="dias-semana">
-                        <div class="dia-semana">DOM</div>
-                        <div class="dia-semana">LUN</div>
-                        <div class="dia-semana">MAR</div>
-                        <div class="dia-semana">MIÉ</div>
-                        <div class="dia-semana">JUE</div>
-                        <div class="dia-semana">VIE</div>
-                        <div class="dia-semana">SÁB</div>
-                    </div>
+                    <div class="layout-calendario-rapido" style="display: flex; gap: 20px; padding: 20px;">
+                        <!-- BARRA LATERAL DE ESTADÍSTICAS -->
+                        <div class="sidebar-stats-rapido" id="sidebar-stats-rapido"
+                            style="width: 250px; background: #1a202c; padding: 20px; border-radius: 8px; border: 1px solid #4a5568;">
+                            <!-- Se poblará dinámicamente -->
+                        </div>
 
-                    <div class="grid-dias-calendario" id="grid-dias-calendario">
-                        <!-- Los días del período se generarán aquí -->
+                        <!-- LADO DERECHO: CALENDARIO -->
+                        <div class="calendario-main-rapido" style="flex: 1;">
+                            <div class="dias-semana">
+                                <div class="dia-semana">DOM</div>
+                                <div class="dia-semana">LUN</div>
+                                <div class="dia-semana">MAR</div>
+                                <div class="dia-semana">MIÉ</div>
+                                <div class="dia-semana">JUE</div>
+                                <div class="dia-semana">VIE</div>
+                                <div class="dia-semana">SÁB</div>
+                            </div>
+                            <div class="grid-dias-calendario" id="grid-dias-calendario">
+                                <!-- Los días del período se generarán aquí -->
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1934,31 +1943,22 @@
                         ingreso.fecha <= periodoActual.finStr
                     );
 
-                    // Calcular estadísticas
+                    // Calcular estadísticas solicitadas
                     const diasPeriodo = calcularDiasEnPeriodo();
                     const ingresosRegistrados = ingresosEquipo.length;
+
+                    // Días laborados (monto > 0)
+                    const diasLaborados = ingresosEquipo.filter(ing => ing.monto > 0).length;
+
+                    // Días de descanso (monto == 0)
+                    const diasDescanso = ingresosEquipo.filter(ing => ing.monto === 0).length;
+
                     const porcentajeCompletado = Math.round((ingresosRegistrados / diasPeriodo) * 100);
 
-                    // Obtener monto predeterminado del equipo (o $30 por defecto)
-                    const montoPredeterminado = equipo.montoPredeterminado || 30;
-
-                    // Calcular total registrado
+                    // Calcular total registrado (Saldo Acumulado)
                     const totalRegistrado = ingresosEquipo.reduce((sum, ingreso) => sum + ingreso.monto, 0);
 
-                    // Determinar estado
-                    let estadoClase, estadoTexto;
-                    if (ingresosRegistrados === 0) {
-                        estadoClase = 'estado-sin-registros';
-                        estadoTexto = 'Sin registros';
-                    } else if (ingresosRegistrados >= diasPeriodo) {
-                        estadoClase = 'estado-completo';
-                        estadoTexto = 'Completo';
-                    } else {
-                        estadoClase = 'estado-pendiente';
-                        estadoTexto = 'Pendiente';
-                    }
-
-                    // Calcular fechas pendientes
+                    // Calcular fechas pendientes de registro
                     const fechasPendientes = [];
                     const hoy = new Date();
                     const inicioDate = new Date(periodoActual.inicio);
@@ -1970,32 +1970,34 @@
                         const esPasado = new Date(d) < hoy;
 
                         if (!tieneIngreso && esPasado) {
-                            // Mostrar solo el día (ej: 24, 25) en lugar de fecha completa
                             const diaPendiente = fechaStr.split('-')[2];
                             fechasPendientes.push(parseInt(diaPendiente));
                         }
                     }
 
                     html += `
-                        <div class="equipo-card-rapido" data-equipo="${equipo.numero}">
-                            <div class="equipo-header-rapido">
+                        <div class="equipo-card-rapido" data-equipo="${equipo.numero}" 
+                            style="display: flex; flex-direction: column; min-height: 180px;">
+                            <div class="equipo-header-rapido" style="margin-bottom: 5px;">
                                 <div class="equipo-numero-rapido">Equipo ${equipo.numero}</div>
                             </div>
-                            <div class="equipo-info-rapido">
+                            
+                            <div class="equipo-info-rapido" style="flex-grow: 1; padding-top: 5px;">
                                 ${fechasPendientes.length > 0 ? `
-                                    <div style="margin-bottom: 10px;">
-                                        <strong style="color: #e53e3e;">Fechas pendientes:</strong>
-                                        <div style="margin-top: 5px; font-size: 0.85rem; color: #a0aec0;">
-                                            ${fechasPendientes.join(', ')}
+                                    <div style="display: flex; flex-direction: column; gap: 2px;">
+                                        <strong style="color: #F87171; font-size: 0.85rem;">Fechas pendientes:</strong>
+                                        <div style="font-size: 0.8rem; color: #94A3B8; line-height: 1.2;">
+                                            ${fechasPendientes.slice(0, 8).join(', ')}${fechasPendientes.length > 8 ? '...' : ''}
                                         </div>
                                     </div>
                                 ` : `
-                                    <div style="margin-bottom: 10px; color: #48bb78;">
+                                    <div style="color: #4ADE80; font-size: 0.85rem; font-weight: 500;">
                                         ✓ Todas las fechas registradas
                                     </div>
                                 `}
                             </div>
-                            <div class="equipo-progreso">
+
+                            <div class="equipo-progreso" style="margin-top: 10px;">
                                 <div class="barra-progreso">
                                     <div class="progreso-completado" style="width: ${porcentajeCompletado}%"></div>
                                 </div>
@@ -2004,7 +2006,7 @@
                                     <span>${porcentajeCompletado}%</span>
                                 </div>
                             </div>
-                            <div class="total-equipo-periodo">
+                            <div class="total-equipo-periodo" style="text-align: right; margin-top: 5px; font-weight: bold; font-size: 1rem; color: #F1F5F9;">
                                 Total: $${totalRegistrado}
                             </div>
                         </div>
@@ -2036,7 +2038,8 @@
                 document.getElementById('nombre-equipo-calendario').textContent =
                     `Equipo ${equipoSeleccionado.numero} - ${equipoSeleccionado.nombre}`;
 
-                // Mostrar calendario y ocultar grid de equipos
+                // Mostrar calendario y ocultar grid de equipos y título
+                document.getElementById('titulo-registro-rapido').style.display = 'none';
                 document.getElementById('grid-equipos-rapido').style.display = 'none';
                 document.getElementById('calendario-periodo-container').style.display = 'block';
 
@@ -2046,6 +2049,7 @@
 
             // Función para cerrar calendario y volver a equipos
             function cerrarCalendario() {
+                document.getElementById('titulo-registro-rapido').style.display = 'block';
                 document.getElementById('grid-equipos-rapido').style.display = 'grid';
                 document.getElementById('calendario-periodo-container').style.display = 'none';
                 equipoSeleccionado = null;
@@ -2057,9 +2061,60 @@
                 if (!equipoSeleccionado || !periodoActual) return;
 
                 const gridDias = document.getElementById('grid-dias-calendario');
+                const sidebarStats = document.getElementById('sidebar-stats-rapido');
                 const ingresos = JSON.parse(localStorage.getItem('ingresosMototaxis')) || [];
                 const hoy = new Date();
                 hoy.setHours(0, 0, 0, 0);
+
+                // Obtener ingresos del equipo en el período actual para las estadísticas
+                const ingresosEquipo = ingresos.filter(ing =>
+                    ing.equipo === equipoSeleccionado.numero &&
+                    ing.fecha >= periodoActual.inicioStr &&
+                    ing.fecha <= periodoActual.finStr
+                );
+
+                // Cálculos de estadísticas
+                const diasLaborados = ingresosEquipo.filter(ing => ing.monto > 0).length;
+                const diasDescanso = ingresosEquipo.filter(ing => ing.monto === 0).length;
+                const totalAcumulado = ingresosEquipo.reduce((sum, ing) => sum + ing.monto, 0);
+                const diasTotalesPeriodo = calcularDiasEnPeriodo();
+                const porcentaje = Math.round((ingresosEquipo.length / diasTotalesPeriodo) * 100);
+
+                // Poblar barra lateral
+                if (sidebarStats) {
+                    sidebarStats.innerHTML = `
+                        <div style="text-align: center; margin-bottom: 20px;">
+                            <div style="font-size: 0.8rem; color: #a0aec0; text-transform: uppercase; letter-spacing: 1px;">Saldo Acumulado</div>
+                            <div style="font-size: 2.2rem; font-weight: bold; color: #48bb78; margin-top: 5px;">$${totalAcumulado}</div>
+                        </div>
+
+                        <div style="display: flex; flex-direction: column; gap: 15px;">
+                            <div style="background: rgba(72, 187, 120, 0.1); padding: 12px; border-radius: 6px; border-left: 4px solid #48bb78;">
+                                <div style="font-size: 0.75rem; color: #a0aec0;">Días Laborados</div>
+                                <div style="font-size: 1.1rem; font-weight: bold; color: #e2e8f0;">${diasLaborados} días</div>
+                            </div>
+
+                            <div style="background: rgba(160, 174, 192, 0.1); padding: 12px; border-radius: 6px; border-left: 4px solid #a0aec0;">
+                                <div style="font-size: 0.75rem; color: #a0aec0;">Días de Descanso ($0)</div>
+                                <div style="font-size: 1.1rem; font-weight: bold; color: #e2e8f0;">${diasDescanso} días</div>
+                            </div>
+
+                            <div style="background: rgba(66, 153, 225, 0.1); padding: 12px; border-radius: 6px; border-left: 4px solid #4299e1;">
+                                <div style="font-size: 0.75rem; color: #a0aec0;">Progreso del Período</div>
+                                <div style="font-size: 1.1rem; font-weight: bold; color: #e2e8f0;">${porcentaje}%</div>
+                                <div style="height: 4px; background: #2d3748; border-radius: 2px; margin-top: 8px;">
+                                    <div style="width: ${porcentaje}%; height: 100%; background: #4299e1; border-radius: 2px;"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 25px; padding-top: 15px; border-top: 1px solid #4a5568;">
+                            <div style="font-size: 0.75rem; color: #718096; line-height: 1.4;">
+                                * Los datos se actualizan automáticamente al registrar montos en el calendario.
+                            </div>
+                        </div>
+                    `;
+                }
 
                 // Obtener monto predeterminado del equipo
                 const montoPredeterminado = equipoSeleccionado.montoPredeterminado || 30;
