@@ -1160,7 +1160,7 @@
         }
 
         .tabla-dias .col-dia {
-            width: 15%;
+            width: 20%;
         }
 
         .tabla-dias .col-monto {
@@ -1168,17 +1168,11 @@
         }
 
         .tabla-dias .col-observacion {
-            width: 65%;
+            width: 60%;
             text-align: left;
         }
 
-        .dia-descanso-tabla {
-            /* Sin fondo especial - todos los días iguales */
-        }
 
-        .monto-descanso {
-            /* Mostrar $0 normalmente */
-        }
 
         .datos-conductor {
             border: 1px solid black;
@@ -1224,6 +1218,144 @@
             border-top: 1px solid black;
             margin-top: 30px;
             padding-top: 5px;
+        }
+
+        /* RESTRICCIONES Y DISEÑO CALENDARIO V2 */
+        .layout-calendario {
+            display: flex;
+            gap: 20px;
+            margin-top: 15px;
+            align-items: flex-start;
+        }
+
+        .sidebar-controles {
+            flex: 0 0 280px;
+            background: #2d3748;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #4a5568;
+            position: sticky;
+            top: 20px;
+        }
+
+        .calendario-principal {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .seccion-control {
+            margin-bottom: 25px;
+        }
+
+        .seccion-control h4 {
+            font-size: 0.9rem;
+            color: #a0aec0;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 12px;
+            border-bottom: 1px solid #4a5568;
+            padding-bottom: 5px;
+        }
+
+        .grid-botones {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+            gap: 8px;
+        }
+
+        .btn-seleccion {
+            background: #1a202c;
+            border: 1px solid #4a5568;
+            color: #e2e8f0;
+            padding: 8px 5px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .btn-seleccion:hover {
+            border-color: #48bb78;
+            background: #2d3748;
+        }
+
+        .btn-seleccion.active {
+            background: #48bb78;
+            border-color: #48bb78;
+            color: white;
+            font-weight: bold;
+            box-shadow: 0 0 10px rgba(72, 187, 120, 0.3);
+        }
+
+        /* Re-estilos para el grid de vista previa */
+        .grid-dias-visual {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            background: #4a5568;
+            border: 1px solid #4a5568;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .celda-dia-visual {
+            background: #2d3748;
+            min-height: 90px;
+            padding: 8px;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+        }
+
+        .celda-dia-visual:hover {
+            background: #374151;
+        }
+
+        .celda-dia-visual.dia-descanso {
+            background: #1f2937;
+        }
+
+        .celda-dia-visual .numero {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #e2e8f0;
+            margin-bottom: 5px;
+        }
+
+        .celda-dia-visual.dia-descanso .numero {
+            color: #718096;
+        }
+
+        .celda-dia-visual .badge-monto {
+            align-self: flex-end;
+            margin-top: auto;
+            background: rgba(72, 187, 120, 0.2);
+            color: #48bb78;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+
+        .celda-dia-visual.dia-descanso .badge-monto {
+            background: transparent;
+            color: #4a5568;
+            border: 1px solid #4a5568;
+        }
+
+        @media (max-width: 900px) {
+            .layout-calendario {
+                flex-direction: column;
+            }
+
+            .sidebar-controles {
+                flex: none;
+                width: 100%;
+            }
         }
     </style>
 </head>
@@ -1369,29 +1501,74 @@
 
         <!-- Pestaña de Calendario Mensual -->
         <div class="tab-content" id="calendario">
-            <h2 class="mb-3">Calendario Mensual para Imprimir</h2>
+            <div class="layout-calendario">
+                <!-- SIDEBAR: Controles -->
+                <div class="sidebar-controles no-print">
+                    <div class="seccion-control">
+                        <h4>Mes de Trabajo</h4>
+                        <div class="grid-botones" id="grid-meses-calendario">
+                            <!-- Se generará por JS -->
+                        </div>
+                        <div style="margin-top: 10px; text-align: center;">
+                            <span id="label-mes-seleccionado" style="font-weight: bold; color: #48bb78;"></span>
+                        </div>
+                    </div>
 
-            <div class="filtros">
-                <div class="filtro-group">
-                    <label for="filtro-mes-calendario">Seleccionar Mes:</label>
-                    <input type="month" id="filtro-mes-calendario">
+                    <div class="seccion-control">
+                        <h4>Seleccionar Equipo</h4>
+                        <div class="grid-botones" id="grid-equipos-calendario">
+                            <!-- Se generará por JS -->
+                        </div>
+                    </div>
+
+                    <div class="seccion-control" style="margin-top: 30px;">
+                        <button class="btn btn-warning w-100" id="imprimir-calendario"
+                            style="padding: 12px; font-weight: bold;" onclick="window.prepararImpresion()">
+                            🖨️ Imprimir Recibo
+                        </button>
+                        <button class="btn btn-info w-100" style="margin-top: 10px; padding: 10px;"
+                            onclick="regenerarDescansos()">
+                            🎲 Aleatorizar Descansos
+                        </button>
+                    </div>
+
+                    <p style="font-size: 0.8rem; color: #718096; text-align: center;">
+                        * Puedes hacer clic en los días del calendario para cambiar manualmente su estado.
+                    </p>
                 </div>
-                <div class="filtro-group">
-                    <label for="filtro-equipo-calendario">Filtrar por Equipo:</label>
-                    <select id="filtro-equipo-calendario">
-                        <option value="">Todos los equipos</option>
-                    </select>
+
+                <!-- ÁREA PRINCIPAL: Calendario -->
+                <div class="calendario-principal">
+                    <div class="header-calendario-visual"
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h2 style="margin: 0;">Calendario de Entregas</h2>
+                        <div style="text-align: right;">
+                            <div id="info-equipo-header" style="font-size: 1.2rem; font-weight: bold; color: #48bb78;">
+                            </div>
+                            <div id="info-mes-header" style="color: #a0aec0;"></div>
+                        </div>
+                    </div>
+
+                    <div class="grid-dias-visual-container">
+                        <div class="dias-semana"
+                            style="display: grid; grid-template-columns: repeat(7, 1fr); margin-bottom: 5px;">
+                            <div class="dia-semana">DOM</div>
+                            <div class="dia-semana">LUN</div>
+                            <div class="dia-semana">MAR</div>
+                            <div class="dia-semana">MIÉ</div>
+                            <div class="dia-semana">JUE</div>
+                            <div class="dia-semana">VIE</div>
+                            <div class="dia-semana">SÁB</div>
+                        </div>
+                        <div class="grid-dias-visual" id="grid-dias-calendario-visual">
+                            <!-- Se generará por JS -->
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div class="vista-previa-calendario" style="max-width: 400px; margin: 0 auto; font-size: 0.9rem;">
-                <h3>Vista Previa del Calendario</h3>
-                <div id="calendario-preview" style="width: 100%;"></div>
-            </div>
-
-            <button class="btn btn-warning mt-3" id="btn-imprimir-nuevo" onclick="prepararImpresion()">Imprimir
-                Calendario</button>
-            <div class="recibo-print" id="recibo-print"></div>
+            <!-- Contenedor oculto para impresión -->
+            <div id="recibo-print" class="recibo-print"></div>
         </div>
     </div>
 
@@ -1518,11 +1695,7 @@
                         actualizarFiltroEquipos('filtro-equipo-depositos');
                         cargarPeriodosDisponibles();
                     } else if (tabId === 'calendario') {
-                        actualizarFiltroEquipos('filtro-equipo-calendario');
-                        const hoy = new Date();
-                        const mesActual = hoy.getFullYear() + '-' + String(hoy.getMonth() + 1).padStart(2, '0');
-                        document.getElementById('filtro-mes-calendario').value = mesActual;
-                        generarRecibo();
+                        setTimeout(inicializarCalendarioVisual, 100);
                     }
                 });
             });
@@ -1550,8 +1723,7 @@
                 periodoFiltroDepositos = this.value;
                 cargarDepositosPorEquipo();
             });
-            document.getElementById('filtro-mes-calendario').addEventListener('change', generarRecibo);
-            document.getElementById('filtro-equipo-calendario').addEventListener('change', generarRecibo);
+
 
             // ===== FUNCIONES PRINCIPALES =====
 
@@ -2704,11 +2876,124 @@
                 });
             }
 
-            // ===== FUNCIÓN DE CALENDARIO MENSUAL PARA IMPRIMIR =====
+            // ===== FUNCIÓN DE CALENDARIO MENSUAL REDISEÑADO (V2) =====
 
-            // Estado global para días de descanso
+            // Variables de estado
+            let mesCalendarioVisual = null; // Formato "YYYY-MM"
+            let equiposSeleccionadosVisual = new Set(); // IDs de equipos seleccionados
+            let primeraCargaEquipos = true;
             if (!window.diasDescanso) {
                 window.diasDescanso = {};
+            }
+
+            // Inicializar botones de la sidebar
+            function inicializarCalendarioVisual() {
+                // 1. Generar botones de meses
+                const gridMeses = document.getElementById('grid-meses-calendario');
+                if (!gridMeses) return;
+
+                gridMeses.innerHTML = '';
+                const fechaBase = new Date();
+
+                for (let i = -3; i <= 0; i++) {
+                    const d = new Date(fechaBase.getFullYear(), fechaBase.getMonth() + i, 1);
+                    const val = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+                    const nombresMesesCorte = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+                    const label = nombresMesesCorte[d.getMonth()];
+
+                    const btn = document.createElement('button');
+                    btn.className = 'btn-seleccion';
+                    btn.textContent = label;
+                    btn.onclick = () => seleccionarMes(val, btn);
+                    gridMeses.appendChild(btn);
+
+                    if (i === 0) {
+                        btn.classList.add('active');
+                        mesCalendarioVisual = val;
+                        document.getElementById('label-mes-seleccionado').textContent = val;
+                    }
+                }
+
+                // 2. Generar botones de equipos
+                cargarBotonesEquipos();
+            }
+
+            function cargarBotonesEquipos() {
+                const gridEquipos = document.getElementById('grid-equipos-calendario');
+                if (!gridEquipos) return;
+
+                gridEquipos.innerHTML = '';
+                const equipos = JSON.parse(localStorage.getItem('equiposMototaxis')) || [];
+                equipos.sort((a, b) => a.numero - b.numero);
+
+                // Si es la primera vez, seleccionamos todos por defecto
+                if (primeraCargaEquipos) {
+                    equipos.forEach(e => equiposSeleccionadosVisual.add(e.numero.toString()));
+                    primeraCargaEquipos = false;
+                }
+
+                // Botón "TODOS"
+                const btnTodos = document.createElement('button');
+                btnTodos.className = 'btn-seleccion';
+                if (equiposSeleccionadosVisual.size === equipos.length && equipos.length > 0) {
+                    btnTodos.classList.add('active');
+                }
+                btnTodos.textContent = 'TODOS';
+                btnTodos.onclick = () => seleccionarEquipo(null, btnTodos);
+                gridEquipos.appendChild(btnTodos);
+
+                // Botones individuales
+                equipos.forEach(e => {
+                    const btn = document.createElement('button');
+                    btn.className = 'btn-seleccion';
+                    const idStr = e.numero.toString();
+                    if (equiposSeleccionadosVisual.has(idStr)) {
+                        btn.classList.add('active');
+                    }
+                    btn.textContent = e.numero;
+                    btn.onclick = () => seleccionarEquipo(idStr, btn);
+                    gridEquipos.appendChild(btn);
+                });
+
+                generarRecibo();
+            }
+
+            function seleccionarMes(mes, btn) {
+                document.querySelectorAll('#grid-meses-calendario .btn-seleccion').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                mesCalendarioVisual = mes;
+                document.getElementById('label-mes-seleccionado').textContent = mes;
+                generarRecibo();
+            }
+
+            function seleccionarEquipo(id, btn) {
+                if (id === null) {
+                    // Si es "TODOS"
+                    const esActivo = btn.classList.contains('active');
+                    if (!esActivo) {
+                        equiposSeleccionadosVisual.clear();
+                        document.querySelectorAll('#grid-equipos-calendario .btn-seleccion').forEach(b => b.classList.add('active'));
+                        const equipos = JSON.parse(localStorage.getItem('equiposMototaxis')) || [];
+                        equipos.forEach(e => equiposSeleccionadosVisual.add(e.numero.toString()));
+                    } else {
+                        equiposSeleccionadosVisual.clear();
+                        document.querySelectorAll('#grid-equipos-calendario .btn-seleccion').forEach(b => b.classList.remove('active'));
+                    }
+                } else {
+                    // Si es un equipo individual
+                    const idStr = id.toString();
+                    if (equiposSeleccionadosVisual.has(idStr)) {
+                        equiposSeleccionadosVisual.delete(idStr);
+                        btn.classList.remove('active');
+                        // Desactivar el botón "TODOS" si se deselecciona uno
+                        const btnTodos = Array.from(document.querySelectorAll('#grid-equipos-calendario .btn-seleccion')).find(b => b.textContent === 'TODOS');
+                        if (btnTodos) btnTodos.classList.remove('active');
+                    } else {
+                        equiposSeleccionadosVisual.add(idStr);
+                        btn.classList.add('active');
+                    }
+                }
+                generarRecibo();
             }
 
             // Función para toggle día de descanso (Global para acceso HTML)
@@ -2717,58 +3002,31 @@
                     window.diasDescanso[clave] = new Set();
                 }
 
-                // Lógica de Intercambio Semanal (Solo 1 descanso por semana)
-                // Obtenemos mes para calcular fecha real
-                const mesInput = document.getElementById('filtro-mes-calendario').value;
-                if (mesInput) {
-                    const [año, mes] = mesInput.split('-').map(Number);
-                    const fechaDia = new Date(año, mes - 1, dia);
-                    const diaSemana = fechaDia.getDay(); // 0 Dom - 6 Sab
-
-                    // Calcular rango de la semana (Domingo a Sábado)
-                    const inicioSemana = dia - diaSemana;
-                    const finSemana = dia + (6 - diaSemana);
-
-                    if (window.diasDescanso[clave].has(dia)) {
-                        // Si ya está marcado, lo desmarcamos (opcional, usuario pidió intercambiar, pero toggle es útil)
-                        window.diasDescanso[clave].delete(dia);
-                    } else {
-                        // Si vamos a marcar uno nuevo, desmarcamos cualquier otro en esta semana
-                        const descansosActuales = Array.from(window.diasDescanso[clave]);
-                        descansosActuales.forEach(d => {
-                            // Verificar si 'd' cae en la misma semana
-                            if (d >= inicioSemana && d <= finSemana) {
-                                window.diasDescanso[clave].delete(d);
-                            }
-                        });
-
-                        // Marcar el nuevo día
-                        window.diasDescanso[clave].add(dia);
-                    }
+                if (window.diasDescanso[clave].has(dia)) {
+                    window.diasDescanso[clave].delete(dia);
                 } else {
-                    // Fallback simple si no hay fecha (no debería pasar)
-                    if (window.diasDescanso[clave].has(dia)) {
-                        window.diasDescanso[clave].delete(dia);
-                    } else {
-                        window.diasDescanso[clave].add(dia);
-                    }
+                    window.diasDescanso[clave].add(dia);
                 }
 
                 generarRecibo();
             };
 
+            window.regenerarDescansos = function () {
+                if (!mesCalendarioVisual) return;
+                const claveDescanso = `${mesCalendarioVisual}_${equipoCalendarioVisual || 'todos'}`;
+
+                // Borrar configuración actual para forzar regeneración
+                delete window.diasDescanso[claveDescanso];
+
+                // Regenerar con la lógica aleatoria
+                generarRecibo();
+                alert('¡Días de descanso aleatorios regenerados para este mes!');
+            };
+
             function generarRecibo() {
-                const mesSeleccionado = document.getElementById('filtro-mes-calendario').value;
-                const equipoFiltro = document.getElementById('filtro-equipo-calendario').value;
+                if (!mesCalendarioVisual) return;
 
-                if (!mesSeleccionado) {
-                    document.getElementById('calendario-preview').innerHTML = '<p style="color: #a0aec0;">Selecciona un mes para generar el recibo.</p>';
-                    document.getElementById('recibo-print').innerHTML = '';
-                    return;
-                }
-
-                const [año, mes] = mesSeleccionado.split('-').map(Number);
-                // Crear fechas usando UTC para evitar problemas de zona horaria en cálculo de día semana
+                const [año, mes] = mesCalendarioVisual.split('-').map(Number);
                 const primerDia = new Date(año, mes - 1, 1);
                 const ultimoDia = new Date(año, mes, 0);
                 const diasEnMes = ultimoDia.getDate();
@@ -2776,109 +3034,65 @@
                 const equipos = JSON.parse(localStorage.getItem('equiposMototaxis')) || [];
                 const ingresos = JSON.parse(localStorage.getItem('ingresosMototaxis')) || [];
 
-                // Filtrar equipos
-                let equiposFiltrados = equipos;
-                if (equipoFiltro) {
-                    equiposFiltrados = equipos.filter(e => e.numero == equipoFiltro);
-                }
+                let equiposFiltrados = equipos.filter(e => equiposSeleccionadosVisual.has(e.numero.toString()));
 
-                if (equiposFiltrados.length === 0) {
-                    document.getElementById('calendario-preview').innerHTML = '<p style="color: #a0aec0;">No hay equipos registrados.</p>';
-                    document.getElementById('recibo-print').innerHTML = '';
-                    return;
-                }
+                const claveDescanso = `${mesCalendarioVisual}_todos`;
 
-                const claveDescanso = `${mesSeleccionado}_${equipoFiltro || 'todos'}`;
-
-                // Inicialización Automática de Descansos (Domingos)
+                // Autogeneración de descansos
                 if (!window.diasDescanso[claveDescanso]) {
                     window.diasDescanso[claveDescanso] = new Set();
-                    // Marcar Domingos como descanso por defecto
+                    const feriadosList = [{ m: 0, d: 1 }, { m: 4, d: 1 }, { m: 7, d: 6 }, { m: 8, d: 15 }, { m: 10, d: 2 }, { m: 11, d: 25 }];
                     for (let d = 1; d <= diasEnMes; d++) {
-                        const fechaDia = new Date(año, mes - 1, d);
-                        if (fechaDia.getDay() === 0) { // 0 = Domingo
-                            window.diasDescanso[claveDescanso].add(d);
+                        if (feriadosList.some(f => f.d === d && f.m === (mes - 1))) window.diasDescanso[claveDescanso].add(d);
+                    }
+                    let semanaDias = [];
+                    for (let d = 1; d <= diasEnMes; d++) {
+                        const dObj = new Date(año, mes - 1, d);
+                        semanaDias.push(d);
+                        if (dObj.getDay() === 6 || d === diasEnMes) {
+                            const disp = semanaDias.filter(dia => !window.diasDescanso[claveDescanso].has(dia));
+                            if (disp.length > 0) window.diasDescanso[claveDescanso].add(disp[Math.floor(Math.random() * disp.length)]);
+                            semanaDias = [];
                         }
                     }
                 }
 
-                // Generar vista previa con Diseño CSS Grid (Igual al principal)
-                let htmlPreview = `
-                    <p style="margin-bottom: 10px; color: #e2e8f0; text-align: center;">
-                        <strong>Vista Previa (Plantilla):</strong> Click en un día para marcar/desmarcar descanso ($0).
-                        <br>
-                        <span style="font-size: 0.85rem; color: #a0aec0;">Verde = Laboral ($30) | Gris = Descanso ($0)</span>
-                    </p>
-                    
-                    <div class="calendario-periodo" style="border: 1px solid #4a5568; margin-bottom: 20px; width: 100%;">
-                        <div class="dias-semana" style="display: grid; grid-template-columns: repeat(7, 1fr);">
-                            <div class="dia-semana">Dom</div>
-                            <div class="dia-semana">Lun</div>
-                            <div class="dia-semana">Mar</div>
-                            <div class="dia-semana">Mié</div>
-                            <div class="dia-semana">Jue</div>
-                            <div class="dia-semana">Vie</div>
-                            <div class="dia-semana">Sáb</div>
-                        </div>
-                        <div class="grid-dias-calendario">
-                `;
-
-                // Celdas vacías iniciales
-                const diaSemanaInicio = primerDia.getDay(); // 0 Domingo
-                for (let i = 0; i < diaSemanaInicio; i++) {
-                    htmlPreview += '<div class="dia-calendario fuera-periodo" style="background: #1a202c;"></div>';
-                }
-
-                // Días del mes
-                for (let diaActual = 1; diaActual <= diasEnMes; diaActual++) {
-                    const esDescanso = window.diasDescanso[claveDescanso].has(diaActual);
-
-                    // Estilos según estado (Plantilla Ideal)
-                    // Registrado (Verde) si trabaja, Descanso (Gris oscuro/negro) si no
-                    // Usamos las clases del calendario principal para consistencia
-                    let claseDia = esDescanso ? 'descanso' : 'registrado';
-                    let estiloExtra = esDescanso ? 'background-color: #1a202c !important; color: #718096;' : 'cursor: pointer;';
-
-                    if (!esDescanso) {
-                        // Forzar estilo verde "registrado" manualmente si la clase no es suficiente o para diferenciar
-                        estiloExtra += 'background-color: #2f4f3f; border-left: 2px solid #48bb78;';
-                    } else {
-                        estiloExtra += 'border: 1px solid #4a5568;';
+                // Renderizar Grid Visual
+                const gridVisual = document.getElementById('grid-dias-calendario-visual');
+                if (gridVisual) {
+                    gridVisual.innerHTML = '';
+                    for (let i = 0; i < primerDia.getDay(); i++) gridVisual.innerHTML += '<div style="background: transparent;"></div>';
+                    for (let d = 1; d <= dEnMes(año, mes); d++) {
+                        const esDescanso = window.diasDescanso[claveDescanso].has(d);
+                        const celda = document.createElement('div');
+                        celda.className = `celda-dia-visual ${esDescanso ? 'dia-descanso' : 'dia-laboral'}`;
+                        celda.onclick = () => window.toggleDescanso(claveDescanso, d);
+                        celda.innerHTML = `
+                            <div class="numero" style="font-weight: bold; font-size: 1.1rem;">${d}</div>
+                            <div class="badge-monto" style="font-size: 0.9rem; opacity: 0.9;">$${esDescanso ? '0' : '30'}</div>
+                        `;
+                        gridVisual.appendChild(celda);
                     }
-
-                    const montoMostrar = esDescanso ? 0 : 30;
-
-                    htmlPreview += `
-                        <div class="dia-calendario ${claseDia}" 
-                             style="${estiloExtra} min-height: 60px;"
-                             onclick="toggleDescanso('${claveDescanso}', ${diaActual})">
-                            
-                            <div class="numero-dia">${diaActual}</div>
-                            
-                            <div class="monto-preview-simple" style="
-                                position: absolute; 
-                                bottom: 5px; 
-                                right: 5px; 
-                                font-weight: bold; 
-                                color: ${esDescanso ? '#a0aec0' : '#48bb78'};
-                            ">
-                                $${montoMostrar}
-                            </div>
-                            
-                            ${esDescanso ? '<div style="font-size: 0.7rem; position: absolute; bottom: 5px; left: 5px; color: #a0aec0;">DESC</div>' : ''}
-                        </div>
-                    `;
                 }
 
-                htmlPreview += `
-                        </div>
-                    </div>
-                `;
+                function dEnMes(y, m) { return new Date(y, m, 0).getDate(); }
 
-                document.getElementById('calendario-preview').innerHTML = htmlPreview;
+                const nmFull = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 
-                // Generar contenido de impresión
-                generarContenidoImpresion(equiposFiltrados, año, mes, diasEnMes, ingresos, claveDescanso);
+                // Actualizar encabezado visual
+                let textoEquipo = '';
+                if (equiposSeleccionadosVisual.size === 0) {
+                    textoEquipo = 'Ningún equipo seleccionado';
+                } else if (equiposSeleccionadosVisual.size === 1) {
+                    textoEquipo = `Equipo ${Array.from(equiposSeleccionadosVisual)[0]}`;
+                } else {
+                    textoEquipo = `${equiposSeleccionadosVisual.size} Equipos seleccionados`;
+                }
+
+                document.getElementById('info-equipo-header').textContent = textoEquipo;
+                document.getElementById('info-mes-header').textContent = `${nmFull[mes - 1]} ${año}`;
+
+                generarContenidoImpresion(equiposFiltrados, año, mes, dEnMes(año, mes), ingresos, claveDescanso);
             }
 
             // Función para generar contenido de impresión
@@ -2912,12 +3126,12 @@
                         const claseMonto = esDescanso ? 'monto-descanso' : '';
 
                         filasTabla += `
-                            <tr class="${claseDescanso}">
-                                <td class="col-dia">${dia}</td>
-                                <td class="col-monto ${claseMonto}">$${monto}</td>
-                                <td class="col-observacion"></td>
-                            </tr>
-                        `;
+                                <tr class="${claseDescanso}">
+                                    <td class="col-dia">${dia}</td>
+                                    <td class="col-monto ${claseMonto}">$${monto}</td>
+                                    <td class="col-observacion"></td>
+                                </tr>
+                            `;
                     }
 
                     // Formatear placa si es necesario (asegurar M)
@@ -2936,9 +3150,9 @@
                                     <table class="tabla-dias">
                                         <thead>
                                             <tr>
-                                                <th class="col-dia">Día</th>
-                                                <th class="col-monto">Monto</th>
-                                                <th class="col-observacion"></th>
+                                                <th class="col-dia" style="border: 1px solid black; padding: 5px; width: 20%;">Día</th>
+                                                <th class="col-monto" style="border: 1px solid black; padding: 5px; width: 20%;">Monto</th>
+                                                <th class="col-observacion" style="border: 1px solid black; padding: 5px; width: 60%;">Observación</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -2954,23 +3168,23 @@
                                             <span class="dato-valor">${placa}</span>
                                         </div>
                                         <div class="dato-item">
-                                            <span class="dato-label">Nombre:</span>
+                                            <span class="dato-label">Conductor:</span>
                                             <span class="dato-valor">${equipo.nombre || 'N/A'}</span>
                                         </div>
                                         <div class="dato-item">
                                             <span class="dato-label">DUI:</span>
                                             <span class="dato-valor">${equipo.dui || 'N/A'}</span>
                                         </div>
-                                        <div class="firma-recibo" style="margin-top: 30px;">
-                                            <div class="linea-firma" style="text-align: center;">
+                                        <div class="firma-recibo" style="margin-top: 50px;">
+                                            <div class="linea-firma" style="text-align: center; border-top: 1px solid black; padding-top: 5px;">
                                                 Firma
                                             </div>
                                         </div>
-                                    </div>
 
-                                    <div class="seccion-firma">
-                                        <div class="total-recibo" style="text-align: center;">
-                                            TOTAL: $${totalMes}
+                                        <div class="seccion-total" style="margin-top: 30px; text-align: center;">
+                                            <div style="display: inline-block; border: 1px solid black; padding: 10px 20px; font-size: 9pt; font-weight: bold;">
+                                                TOTAL: $${totalMes}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -2986,23 +3200,17 @@
 
             // Reemplazar listener cuando el documento esté listo
             document.addEventListener('DOMContentLoaded', function () {
-                // setTimeout(() => {
-                const btnImprimir = document.getElementById('imprimir-calendario');
-                if (btnImprimir) {
-                    // Clonar para limpiar listeners previos
-                    const nuevoBtn = btnImprimir.cloneNode(true);
-                    btnImprimir.parentNode.replaceChild(nuevoBtn, btnImprimir);
-
-                    nuevoBtn.addEventListener('click', function () {
-                        const equipoFiltro = document.getElementById('filtro-equipo-calendario').value;
-                        if (!equipoFiltro) {
-                            iniciarSeleccionImpresion();
-                        } else {
-                            window.print();
+                const tabsList = document.querySelectorAll('.tab');
+                tabsList.forEach(t => {
+                    t.addEventListener('click', () => {
+                        if (t.getAttribute('data-tab') === 'calendario') {
+                            setTimeout(inicializarCalendarioVisual, 100);
                         }
                     });
-                }
-                // }, 1000); // Pequeño delay para asegurar carga
+                });
+
+                // Carga inicial
+                setTimeout(inicializarCalendarioVisual, 500);
             });
 
             function iniciarSeleccionImpresion() {
@@ -3010,10 +3218,10 @@
                 equipos.sort((a, b) => a.numero - b.numero);
 
                 const modalId = 'modal-seleccion-impresion';
-                let modal = document.getElementById(modalId);
-                if (modal) modal.remove();
+                let mod = document.getElementById(modalId);
+                if (mod) mod.remove();
 
-                const htmlEquipos = equipos.map(e => `
+                const hEquipos = equipos.map(e => `
                     <div style="margin-bottom: 8px;">
                         <label style="display: flex; align-items: center; cursor: pointer; color: black;">
                             <input type="checkbox" class="chk-impresion" value="${e.numero}" checked style="margin-right: 10px;">
@@ -3022,11 +3230,11 @@
                     </div>
                 `).join('');
 
-                const modalHtml = `
+                const mHtml = `
                     <div class="modal-overlay" id="${modalId}" style="display: flex; z-index: 10000;">
                         <div class="modal-contenido" style="max-width: 400px; background: white; color: black;">
                             <div class="modal-header">
-                                <h3 style="color: black;">Seleccionar Equipos a Imprimir</h3>
+                                <h3 style="color: black;">Seleccionar Equipos</h3>
                                 <button class="modal-cerrar" onclick="document.getElementById('${modalId}').remove()">&times;</button>
                             </div>
                             <div class="modal-body" style="max-height: 300px; overflow-y: auto;">
@@ -3034,56 +3242,43 @@
                                     <button class="btn btn-secondary btn-sm" onclick="document.querySelectorAll('.chk-impresion').forEach(c => c.checked = true)">Todos</button>
                                     <button class="btn btn-secondary btn-sm" onclick="document.querySelectorAll('.chk-impresion').forEach(c => c.checked = false)">Ninguno</button>
                                 </div>
-                                ${htmlEquipos}
+                                ${hEquipos}
                             </div>
                             <div class="modal-footer">
                                 <button class="btn btn-secondary" onclick="document.getElementById('${modalId}').remove()">Cancelar</button>
-                                <button class="btn btn-primary" id="btn-confirmar-impresion">Imprimir Seleccionados</button>
+                                <button class="btn btn-primary" id="btn-confirmar-impresion">Imprimir</button>
                             </div>
                         </div>
                     </div>
                 `;
 
-                document.body.insertAdjacentHTML('beforeend', modalHtml);
+                document.body.insertAdjacentHTML('beforeend', mHtml);
 
                 document.getElementById('btn-confirmar-impresion').addEventListener('click', function () {
-                    const seleccionados = Array.from(document.querySelectorAll('.chk-impresion:checked')).map(c => c.value);
+                    const sel = Array.from(document.querySelectorAll('.chk-impresion:checked')).map(c => c.value);
+                    if (sel.length === 0) return alert('Seleccione al menos uno.');
 
-                    if (seleccionados.length === 0) {
-                        alert('Seleccione al menos un equipo.');
-                        return;
-                    }
+                    const eqFiltrados = equipos.filter(e => sel.includes(e.numero.toString()));
+                    const [año, mes] = mesCalendarioVisual.split('-').map(Number);
+                    const dMes = new Date(año, mes, 0).getDate();
+                    const clave = `${mesCalendarioVisual}_todos`;
 
-                    // Regenerar impresión con filtro
-                    const equiposFiltrados = equipos.filter(e => seleccionados.includes(e.numero.toString()));
-
-                    const mesSeleccionado = document.getElementById('filtro-mes-calendario').value;
-                    const [año, mes] = mesSeleccionado.split('-').map(Number);
-                    const diasEnMes = new Date(año, mes, 0).getDate();
-                    const ingresos = JSON.parse(localStorage.getItem('ingresosMototaxis')) || [];
-                    const claveDescanso = `${mesSeleccionado}_todos`;
-
-                    generarContenidoImpresion(equiposFiltrados, año, mes, diasEnMes, ingresos, claveDescanso);
+                    generarContenidoImpresion(eqFiltrados, año, mes, dMes, [], clave);
 
                     document.getElementById(modalId).remove();
-
                     setTimeout(() => window.print(), 500);
                 });
             }
 
             // INYECCIÓN FINAL DE FUNCIÓN GLOBAL (Asegura funcionamiento)
             window.prepararImpresion = function () {
-                const equipoFiltro = document.getElementById('filtro-equipo-calendario').value;
-                if (!equipoFiltro) {
-                    iniciarSeleccionImpresion();
-                } else {
-                    // Mover recibo al body si es necesario
-                    const recibo = document.getElementById('recibo-print');
-                    if (recibo && recibo.parentElement !== document.body) {
-                        document.body.appendChild(recibo);
-                    }
-                    window.print();
+                if (equiposSeleccionadosVisual.size === 0) {
+                    alert('Por favor, selecciona al menos un equipo en el panel lateral para imprimir.');
+                    return;
                 }
+                // Asegurar que el contenido está actualizado y disparar impresión
+                generarRecibo();
+                setTimeout(() => window.print(), 300);
             };
         });
     </script>
