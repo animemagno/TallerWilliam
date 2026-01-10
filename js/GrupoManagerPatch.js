@@ -21,14 +21,14 @@ GrupoManager.showGroupPaymentModal = function (grupoId) {
     let contador = 0;
 
     for (const equipoNum of grupo.equipos) {
-        let equipoEncontrado = null;
-        this.equiposPendientes.forEach((equipo, key) => {
-            if (equipo.numero === equipoNum && equipo.total > 0) {
-                equipoEncontrado = equipo;
-            }
-        });
+        let equipoEncontrado = this.equiposPendientes.get(equipoNum);
 
-        if (equipoEncontrado) {
+        // Falback para llaves compuestas
+        if (!equipoEncontrado) {
+            equipoEncontrado = this.equiposPendientes.get(`${equipoNum}-Equipo ${equipoNum}`);
+        }
+
+        if (equipoEncontrado && equipoEncontrado.total > 0) {
             totalGrupo += equipoEncontrado.total;
             const bgColor = contador % 2 === 0 ? '#f9f9f9' : 'white';
             equiposHTML += `
@@ -79,17 +79,22 @@ GrupoManager.showGroupPaymentModal = function (grupoId) {
             // Recopilar todas las facturas del grupo y ordenarlas por fecha (más antiguas primero)
             const facturas = [];
             for (const equipoNum of grupo.equipos) {
-                GrupoManager.equiposPendientes.forEach((equipo, key) => {
-                    if (equipo.numero === equipoNum && equipo.facturas) {
-                        equipo.facturas.forEach(f => {
-                            facturas.push({
-                                id: f.id,
-                                timestamp: f.timestamp,
-                                saldoPendiente: f.saldoPendiente !== undefined ? f.saldoPendiente : f.total
-                            });
+                let equipo = GrupoManager.equiposPendientes.get(equipoNum);
+
+                // Fallback para procesamiento de pagos
+                if (!equipo) {
+                    equipo = GrupoManager.equiposPendientes.get(`${equipoNum}-Equipo ${equipoNum}`);
+                }
+
+                if (equipo && equipo.facturas) {
+                    equipo.facturas.forEach(f => {
+                        facturas.push({
+                            id: f.id,
+                            timestamp: f.timestamp,
+                            saldoPendiente: f.saldoPendiente !== undefined ? f.saldoPendiente : f.total
                         });
-                    }
-                });
+                    });
+                }
             }
 
             if (facturas.length === 0) {

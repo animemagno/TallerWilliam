@@ -2779,7 +2779,22 @@
                             throw new Error("El monto del abono no puede ser mayor al saldo pendiente");
                         }
 
-                        const abonoDateString = abonoData.fechaString ? abonoData.fechaString.split(',')[0].trim().split('/').reverse().join('-') : DateUtils.getCurrentDateStringElSalvador();
+                        let abonoDateString;
+                        if (abonoData.fechaString) {
+                            const datePart = abonoData.fechaString.split(',')[0].trim();
+                            const parts = datePart.split('/');
+                            if (parts.length === 3) {
+                                // Revertir a YYYY-MM-DD asegurando ceros a la izquierda
+                                const day = parts[0].padStart(2, '0');
+                                const month = parts[1].padStart(2, '0');
+                                const year = parts[2];
+                                abonoDateString = `${year}-${month}-${day}`;
+                            } else {
+                                abonoDateString = DateUtils.getCurrentDateStringElSalvador();
+                            }
+                        } else {
+                            abonoDateString = DateUtils.getCurrentDateStringElSalvador();
+                        }
 
                         // 1. Guardar en colección INGRESOS para que aparezca en historial y caja del día
                         const ingresoData = {
@@ -4610,10 +4625,12 @@
 
                                 ${abonosSection}
 
-                                <div style="display: flex; gap: 15px; margin-top: 25px;">
-                                    <button onclick="ModalService.closeInvoiceModal()" style="flex: 1; padding: 12px; background-color: #3498db; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; transition: background 0.2s;">
-                                        CERRAR
+                                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                                    ${saldoPendiente > 0 ? `
+                                    <button onclick="SalesService.registrarAbono('${venta.id}'); ModalService.closeInvoiceModal();" style="flex: 1; padding: 12px; background-color: #f39c12; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; transition: background 0.2s;">
+                                        <i class="fas fa-money-bill-wave"></i> ABONAR
                                     </button>
+                                    ` : ''}
                                     <button onclick="SalesService.reprintInvoice('${venta.id}')" style="flex: 1; padding: 12px; background-color: #27ae60; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; transition: background 0.2s;">
                                         <i class="fas fa-print"></i> IMPRIMIR
                                     </button>
@@ -5307,7 +5324,8 @@
 
             async loadInitialData() {
                 try {
-                    UIService.showLoading(true);
+                    // NO bloquear la UI con showLoading(true) aquí
+                    // Permitir que la interfaz cargue inmediatamente y los datos lleguen después
 
                     // CORRECCIÓN: Limpiar listeners antiguos del botón de abono masivo
                     const bulkAbonoBtn = document.getElementById('process-bulk-abono-btn');
@@ -5322,9 +5340,8 @@
                     await GrupoManager.initialize();
                 } catch (error) {
                     console.error("Error cargando datos iniciales:", error);
-                } finally {
-                    UIService.showLoading(false);
                 }
+                // No es necesario finally/showLoading(false) porque no lo activamos
             },
 
             setupEventListeners() {
@@ -5573,7 +5590,10 @@
                 });
 
                 document.getElementById('cancelar-confirmacion-btn').addEventListener('click', () => {
-                    GrupoManager.closeConfirmacionAbonoModal();
+                    document.getElementById('confirmacion-abono-modal').style.display = 'none';
+                    // Reactivar botones
+                    document.getElementById('contado-btn').disabled = false;
+                    document.getElementById('pendiente-btn').disabled = false;
                 });
 
                 // Event listener para el campo de monto de abono inicial
@@ -5625,7 +5645,11 @@
                 });
 
                 document.getElementById('cancelar-abono-inicial-btn').addEventListener('click', () => {
-                    GrupoManager.closeAbonoInicialModal();
+                    document.getElementById('abono-inicial-modal').style.display = 'none';
+                    // Si se cancela este modal, volvemos al anterior o cerramos todo? 
+                    // Generalmente volvemos a habilitar los botones principales por si quieren corregir
+                    document.getElementById('contado-btn').disabled = false;
+                    document.getElementById('pendiente-btn').disabled = false;
                 });
 
                 // Bulk Abono Modal Listeners
@@ -5722,6 +5746,32 @@
 
         document.addEventListener('DOMContentLoaded', function () {
             App.init();
+        });
+    </script>
+    <!-- Script de seguridad para garantizar visualización -->
+    <script>
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                // 1. Ocultar overlay de carga si sigue activo por error
+                const overlay = document.getElementById('loading-overlay');
+                if (overlay && getComputedStyle(overlay).display !== 'none') {
+                    console.warn("Safety: Forzando ocultar loading overlay");
+                    overlay.style.display = 'none';
+                }
+
+                // 2. Asegurar que las pestañas sean visibles
+                const tabsHeader = document.querySelector('.tabs-header');
+                if (tabsHeader && getComputedStyle(tabsHeader).display === 'none') {
+                    console.warn("Safety: Forzando mostrar pestañas");
+                    tabsHeader.style.display = 'flex';
+                }
+
+                // 3. Asegurar dashboard visible
+                const dashboard = document.querySelector('.dashboard-section');
+                if (dashboard && getComputedStyle(dashboard).display === 'none') {
+                    dashboard.style.display = 'flex';
+                }
+            }, 2500);
         });
     </script>
 </body>

@@ -22,8 +22,8 @@ window.GrupoManager = {
             .where("paymentType", "==", "pendiente")
             .where("status", "==", "pendiente")
             .onSnapshot(async (snapshot) => {
-                await this.loadEquiposPendientes(true); // Force update
-                await this.actualizarTotalesGrupos(true); // Force update totals
+                await this.loadEquiposPendientes(true); // Forzar actualización
+                await this.actualizarTotalesGrupos(true); // Forzar actualización de totales
                 this.updateUI();
             }, (error) => {
                 console.error("Error en listener tiempo real:", error);
@@ -71,14 +71,16 @@ window.GrupoManager = {
                 let nuevoTotal = 0;
 
                 for (const equipoNum of grupo.equipos) {
-                    let equipoEncontrado = null;
-                    this.equiposPendientes.forEach((equipo, key) => {
-                        if (equipo.numero === equipoNum && equipo.total > 0) {
-                            equipoEncontrado = equipo;
-                        }
-                    });
+                    let equipoEncontrado = this.equiposPendientes.get(equipoNum);
 
-                    if (equipoEncontrado) {
+                    // FALLBACK INTELIGENTE: Si no se encuentra con la clave simple (solo número),
+                    // intentar con la convención "Numero-Equipo Numero" que es el nombre por defecto.
+                    // Esto recupera los totales de los grupos existentes sin mezclar clientes externos.
+                    if (!equipoEncontrado) {
+                        equipoEncontrado = this.equiposPendientes.get(`${equipoNum}-Equipo ${equipoNum}`);
+                    }
+
+                    if (equipoEncontrado && equipoEncontrado.total > 0) {
                         nuevoTotal += equipoEncontrado.total;
                     }
                 }
@@ -147,7 +149,8 @@ window.GrupoManager = {
                 }
 
                 if (equipo && saldoPendiente > 0) {
-                    const key = `${equipo}-${cliente}`;
+                    // CORRECCIÓN LÓGICA: Separar por equipo Y cliente para evitar mezclar cuentas distintas con el mismo número de equipo
+                    const key = cliente ? `${equipo}-${cliente}` : equipo;
 
                     if (!this.equiposPendientes.has(key)) {
                         this.equiposPendientes.set(key, {
@@ -159,6 +162,10 @@ window.GrupoManager = {
                     }
 
                     const equipoData = this.equiposPendientes.get(key);
+
+                    // Actualizar cliente principal si el actual está vacío (para casos donde la primera factura no tenía nombre)
+                    if (!equipoData.cliente && cliente) equipoData.cliente = cliente;
+
                     equipoData.facturas.push({
                         id: doc.id,
                         ...venta,
@@ -167,6 +174,8 @@ window.GrupoManager = {
                     equipoData.total += saldoPendiente;
                 }
             });
+
+            // Lógica de Sets de clientes eliminada porque ahora las claves son únicas por cliente
 
             await this.actualizarTotalesGrupos(force);
             MemoryManager.cleanupIfNeeded(this.equiposPendientes);
@@ -399,17 +408,31 @@ window.GrupoManager = {
 
     getEquiposSinGrupo() {
         const equiposSinGrupo = new Map();
+        const equiposEnGrupos = this.getEquiposEnGrupos(); // Usar el Set optimizado
 
         this.equiposPendientes.forEach((equipo, key) => {
-            let tieneGrupo = false;
+            // Verificar si esta CLAVE ESPECÍFICA está en algún grupo
+            let isGrouped = equiposEnGrupos.has(key);
 
-            this.grupos.forEach(grupo => {
-                if (grupo.equipos.includes(equipo.numero)) {
-                    tieneGrupo = true;
+            // LOGICA DE COMPATIBILIDAD CRÍTICA:
+            // Si la clave es del tipo "65-Equipo 65" (nombre por defecto) y NO está explícitamente en un grupo,
+            // verificamos si el número simple "65" sí está en un grupo (grupos antiguos).
+            // Si es así, consideramos que este equipo genérico pertenece a ese grupo antiguo.
+            // ESTO PREVIENE duplicados visuales para el dueño original.
+            // PERO permite que "65-Amadeo" (que no coincide con este formato) se muestre libre en Facturas.
+            if (!isGrouped && key === `${equipo.numero}-Equipo ${equipo.numero}`) {
+                if (equiposEnGrupos.has(equipo.numero.toString())) {
+                    isGrouped = true;
                 }
-            });
+            }
+            // También verificar si el número simple está en grupo para casos sin nombre de cliente
+            else if (!isGrouped && key === equipo.numero.toString()) {
+                if (equiposEnGrupos.has(equipo.numero.toString())) {
+                    isGrouped = true;
+                }
+            }
 
-            if (!tieneGrupo && equipo.total > 0) {
+            if (!isGrouped && equipo.total > 0) {
                 equiposSinGrupo.set(key, equipo);
             }
         });
@@ -446,12 +469,19 @@ window.GrupoManager = {
     },
 
     async mostrarDetalleEquipo(key) {
-        const equipo = this.equiposPendientes.get(key);
+        let equipo = this.equiposPendientes.get(key);
+
+        // FALLBACK PARA CLIC EN DETALLES:
+        // Si el click viene de un grupo antiguo (token "65"), buscar la clave compuesta ("65-Equipo 65")
+        if (!equipo) {
+            equipo = this.equiposPendientes.get(`${key}-Equipo ${key}`);
+        }
+
         AppState.selectedInvoicesForPayment = new Set();
 
         let facturasHTML = '';
         if (equipo) {
-            // Sort invoices by date (oldest first)
+            // Ordenar facturas por fecha (las más antiguas primero)
             const sortedFacturas = [...equipo.facturas].sort((a, b) => {
                 const dateA = a.timestamp ? (a.timestamp.toDate ? a.timestamp.toDate() : new Date(a.timestamp)) : new Date(0);
                 const dateB = b.timestamp ? (b.timestamp.toDate ? b.timestamp.toDate() : new Date(b.timestamp)) : new Date(0);
@@ -1353,5 +1383,12 @@ window.GrupoManager = {
         } finally {
             UIService.showLoading(false);
         }
+    },
+
+    async actualizarDesdeVenta(venta) {
+        // Forzar recarga de equipos y totales cuando una venta cambia
+        console.log("Actualizando GrupoManager desde venta:", venta.invoiceNumber);
+        await this.loadEquiposPendientes(true);
+        this.updateUI();
     }
 };

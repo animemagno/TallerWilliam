@@ -22,16 +22,16 @@ window.GruposTabManager = {
             let equiposHTML = '';
 
             grupo.equipos.forEach(equipoNum => {
-                let equipoEncontrado = null;
-                GrupoManager.equiposPendientes.forEach((equipo, key) => {
-                    if (equipo.numero === equipoNum && equipo.total > 0) {
-                        equipoEncontrado = equipo;
-                    }
-                });
+                let equipoEncontrado = GrupoManager.equiposPendientes.get(equipoNum);
 
-                if (equipoEncontrado) {
+                // FALLBACK VISUAL: Si no se encuentra con clave simple, intentar con la compuesta por defecto
+                if (!equipoEncontrado) {
+                    equipoEncontrado = GrupoManager.equiposPendientes.get(`${equipoNum}-Equipo ${equipoNum}`);
+                }
+
+                if (equipoEncontrado && equipoEncontrado.total > 0) {
                     equiposHTML += `
-                        <div class="grupo-equipo-item" onclick="GrupoManager.mostrarDetalleEquipo('${equipoEncontrado.numero}-${equipoEncontrado.cliente}')">
+                        <div class="grupo-equipo-item" onclick="GrupoManager.mostrarDetalleEquipo('${equipoEncontrado.numero}')"> <!-- Usar numero para mantener compatibilidad en click -->
                             <div class="grupo-equipo-number">${equipoEncontrado.numero}</div>
                             <div class="grupo-equipo-total">$${equipoEncontrado.total.toFixed(2)}</div>
                         </div>

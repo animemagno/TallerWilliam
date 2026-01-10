@@ -14,8 +14,8 @@ window.FacturasTabManager = {
 
         const equiposOrdenados = Array.from(equiposSinGrupo.entries())
             .sort(([a], [b]) => {
-                const numA = parseInt(a.split('-')[0]);
-                const numB = parseInt(b.split('-')[0]);
+                const numA = parseInt(a);
+                const numB = parseInt(b);
                 return numA - numB;
             });
 
