@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Análisis de Productos - Taller Willian</title>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --primary-dark: #1e40af;
+            --background-color: #f1f5f9;
+            --text-main: #1e293b;
+            --text-secondary: #64748b;
+            --card-bg: #ffffff;
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+            --radius-lg: 16px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--background-color);
+            color: var(--text-main);
+            padding-bottom: 90px;
+        }
+
+        /* HEADER */
+        header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .header-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .back-btn {
+            background: #f1f5f9;
+            border: none;
+            color: var(--text-main);
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+
+        /* CONTENEDOR */
+        .main-container {
+            padding: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* CARD TOTALES FLOTANTE COMPACTA */
+        .summary-card {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            color: white;
+            border-radius: var(--radius-lg);
+            padding: 15px;
+            /* Más compacto */
+            margin-bottom: 20px;
+            box-shadow: 0 4px 10px rgba(37, 99, 235, 0.2);
+            display: flex;
+            /* Flex para horizontal */
+            align-items: center;
+            justify-content: space-between;
+            display: none;
+            /* Oculto default */
+            animation: slideDown 0.3s ease;
+        }
+
+        .summary-left {
+            text-align: left;
+        }
+
+        .summary-title {
+            font-size: 0.75rem;
+            opacity: 0.9;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+
+        .summary-total {
+            font-size: 1.5rem;
+            /* Reducido de 2.2rem */
+            font-weight: 800;
+            line-height: 1.1;
+        }
+
+        .summary-qty {
+            font-size: 0.9rem;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+
+        /* FORMULARIO COMPACTO */
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        .input-control {
+            width: 100%;
+            padding: 10px 12px;
+            /* Compacto */
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .input-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .date-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .search-btn {
+            width: 100%;
+            padding: 14px;
+            background: var(--text-main);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            margin-top: 10px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .search-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* AUTOCOMPLETE */
+        .autocomplete-list {
+            position: absolute;
+            background: white;
+            width: calc(100% - 40px);
+            max-width: 560px;
+            border: 1px solid #e2e8f0;
+            border-radius: 0 0 12px 12px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 100;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            display: none;
+        }
+
+        .autocomplete-item {
+            padding: 12px 15px;
+            cursor: pointer;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 0.95rem;
+        }
+
+        .autocomplete-item:hover,
+        .autocomplete-item.active {
+            background-color: #f8fafc;
+            color: var(--primary-color);
+        }
+
+        /* TABLA RESULTADOS */
+        .results-table {
+            background: white;
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+            margin-top: 25px;
+            display: none;
+        }
+
+        .table-header {
+            display: flex;
+            background: #f8fafc;
+            padding: 10px 15px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+        }
+
+        .col-cant {
+            width: 15%;
+            text-align: center;
+        }
+
+        .col-prod {
+            width: 55%;
+            padding: 0 10px;
+        }
+
+        .col-fecha {
+            width: 30%;
+            text-align: right;
+        }
+
+        .table-row {
+            padding: 12px 15px;
+            border-bottom: 1px solid #f1f5f9;
+            display: flex;
+            align-items: center;
+            font-size: 0.9rem;
+        }
+
+        .row-cant {
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .row-prod {
+            font-size: 0.85rem;
+            color: var(--text-main);
+            line-height: 1.3;
+        }
+
+        .row-fecha {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+
+        .row-total {
+            font-weight: 700;
+            color: var(--text-main);
+            font-size: 0.9rem;
+            margin-top: 2px;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .empty-msg {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-secondary);
+            font-style: italic;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <button class="back-btn" onclick="window.location.href='movil.html'">
+            <i class="fas fa-arrow-left"></i>
+        </button>
+        <div class="header-title">Análisis de Productos</div>
+        <div style="width: 40px;"></div> <!-- Spacer -->
+    </header>
+
+    <div class="main-container">
+
+        <!-- RESUMEN FLOTANTE -->
+        <div id="summary-card" class="summary-card">
+            <div class="summary-left">
+                <div class="summary-title">Total Vendido</div>
+                <div class="summary-total" id="sum-total">$0.00</div>
+            </div>
+            <div class="summary-qty" id="sum-qty">0 U.</div>
+        </div>
+
+        <!-- FILTROS -->
+        <div class="form-group" style="position: relative;">
+            <label class="form-label">Producto (Inventario)</label>
+            <input type="text" id="product-input" class="input-control"
+                placeholder="Escribe para buscar (ej. Repsol)..." autocomplete="off">
+            <div id="autocomplete-list" class="autocomplete-list"></div>
+        </div>
+
+        <div class="date-row">
+            <div class="form-group" style="flex:1">
+                <label class="form-label">Desde</label>
+                <input type="date" id="date-from" class="input-control">
+            </div>
+            <div class="form-group" style="flex:1">
+                <label class="form-label">Hasta</label>
+                <input type="date" id="date-to" class="input-control">
+            </div>
+        </div>
+
+        <button class="search-btn" onclick="runAnalysis()">
+            <i class="fas fa-calculator"></i> Analizar Ventas
+        </button>
+
+        <!-- RESULTADOS -->
+        <div id="results-container" class="results-table">
+            <div class="table-header">
+                <div class="col-cant">Cant</div>
+                <div class="col-prod">Producto</div>
+                <div class="col-fecha">Fecha / Total</div>
+            </div>
+            <div id="results-list">
+                <div class="empty-msg">Seleccione producto y rango de fechas para analizar.</div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // CONFIGURACIÓN FIREBASE (Misma que movil.html)
+        const firebaseConfig = {
+            apiKey: "AIzaSyDh074AarXaYCc-Htw-lsCeIc_95QQNSnY",
+            authDomain: "tallerwilliam-732b3.firebaseapp.com",
+            projectId: "tallerwilliam-732b3",
+            storageBucket: "tallerwilliam-732b3.firebasestorage.app",
+            messagingSenderId: "822262666247",
+            appId: "1:822262666247:web:6680487bbf1108006b86a2"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // ESTADO
+        let inventoryCache = [];
+        let selectedProductExactName = "";
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Set fechas default (Mes actual)
+            const today = new Date();
+            const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+
+            document.getElementById('date-from').valueAsDate = firstDay;
+            document.getElementById('date-to').valueAsDate = today;
+
+            loadInventoryNames();
+            setupAutocomplete();
+        });
+
+        // 1. CARGA LIGERA INVENTARIO
+        async function loadInventoryNames() {
+            try {
+                // Intentamos cargar de INVENTARIO
+                const snap = await db.collection('INVENTARIO').get();
+
+                if (snap.empty) {
+                    console.warn("La colección INVENTARIO está vacía o no existe.");
+                }
+
+                snap.forEach(doc => {
+                    const d = doc.data();
+                    // Buscamos el nombre en varios campos posibles para asegurar compatibilidad
+                    const name = d.name || d.descripcion || d.product || d.producto || '';
+                    if (name) {
+                        // Evitamos duplicados
+                        if (!inventoryCache.includes(name)) {
+                            inventoryCache.push(name);
+                        }
+                    }
+                });
+
+                console.log(`Inventario cargado: ${inventoryCache.length} productos para autocompletar.`);
+
+            } catch (e) {
+                console.error("Error cargando inventario para autocompletar:", e);
+                // Fallback visual si falla
+                document.getElementById('product-input').placeholder = "Error cargando lista. Escriba manualmente...";
+            }
+        }
+
+        // 2. AUTOCOMPLETADO
+        function setupAutocomplete() {
+            const input = document.getElementById('product-input');
+            const list = document.getElementById('autocomplete-list');
+
+            input.addEventListener('input', function () {
+                const val = this.value;
+                list.innerHTML = '';
+                if (!val) {
+                    list.style.display = 'none';
+                    return;
+                }
+
+                const matches = inventoryCache.filter(name =>
+                    name.toLowerCase().includes(val.toLowerCase())
+                ).slice(0, 10); // Max 10 sugerencias
+
+                if (matches.length > 0) {
+                    matches.forEach(name => {
+                        const item = document.createElement('div');
+                        item.className = 'autocomplete-item';
+                        // Resaltar coincidencia
+                        const regex = new RegExp(`(${val})`, 'gi');
+                        item.innerHTML = name.replace(regex, "<strong>$1</strong>");
+                        item.onclick = () => {
+                            input.value = name;
+                            selectedProductExactName = name; // Guardamos nombre exacto para búsqueda
+                            list.style.display = 'none';
+                        };
+                        list.appendChild(item);
+                    });
+                    list.style.display = 'block';
+                } else {
+                    list.style.display = 'none';
+                }
+            });
+
+            // Cerrar al click fuera
+            document.addEventListener('click', (e) => {
+                if (e.target !== input) list.style.display = 'none';
+            });
+        }
+
+        // 3. ANÁLISIS
+        async function runAnalysis() {
+            const prodName = document.getElementById('product-input').value.trim();
+            const dateFromStr = document.getElementById('date-from').value;
+            const dateToStr = document.getElementById('date-to').value;
+            const btn = document.querySelector('.search-btn');
+
+            if (!prodName || !dateFromStr || !dateToStr) {
+                alert("Por favor complete todos los campos.");
+                return;
+            }
+
+            // UI Loading
+            const originalBtnText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analizando...';
+            btn.disabled = true;
+
+            try {
+                const start = new Date(dateFromStr + 'T00:00:00');
+                const end = new Date(dateToStr + 'T23:59:59');
+
+                // CONSULTA
+                // Traemos ventas en rango. Filtrado total de productos se hace en cliente
+                // porque Firestore no busca dentro de arrays de objetos facilmente.
+                const snap = await db.collection('VENTAS')
+                    .where('timestamp', '>=', start)
+                    .where('timestamp', '<=', end)
+                    .orderBy('timestamp', 'desc')
+                    .get();
+
+                let totalQty = 0;
+                let totalSold = 0;
+                let matches = [];
+
+                snap.forEach(doc => {
+                    const sale = doc.data();
+                    if (sale.products && Array.isArray(sale.products)) {
+                        // Buscar coincidencia en productos de la venta
+                        sale.products.forEach(p => {
+                            const pName = (p.descripcion || p.name || '').toLowerCase();
+                            // Coincidencia laxa (includes) para atrapar variantes
+                            if (pName.includes(prodName.toLowerCase())) {
+                                const qty = parseFloat(p.cantidad || 1);
+                                const price = parseFloat(p.precio || 0);
+                                const subtotal = qty * price;
+
+                                totalQty += qty;
+                                totalSold += subtotal;
+
+                                matches.push({
+                                    qty: qty,
+                                    name: p.descripcion || p.name,
+                                    date: sale.timestamp.toDate(),
+                                    total: subtotal,
+                                    equipo: sale.equipoNumber || 'S/N' // Capturamos equipo
+                                });
+                            }
+                        });
+                    }
+                });
+
+                renderResults(matches, totalQty, totalSold);
+
+            } catch (error) {
+                console.error("Error en análisis:", error);
+                alert("Error al analizar datos. Revise la consola.");
+            } finally {
+                btn.innerHTML = originalBtnText;
+                btn.disabled = false;
+            }
+        }
+
+        function renderResults(items, totalQty, totalSold) {
+            const list = document.getElementById('results-list');
+            const summaryCard = document.getElementById('summary-card');
+
+            // Actualizar Totales
+            document.getElementById('sum-total').textContent = `$${totalSold.toFixed(2)}`;
+            document.getElementById('sum-qty').textContent = `${totalQty} Unidades`;
+            summaryCard.style.display = 'block';
+            document.getElementById('results-container').style.display = 'block';
+
+            if (items.length === 0) {
+                list.innerHTML = '<div class="empty-msg">No se encontraron ventas de este producto en el rango seleccionado.</div>';
+                return;
+            }
+
+            // Render lista
+            list.innerHTML = items.map(item => `
+                <div class="table-row">
+                    <div class="col-cant row-cant">${item.qty}</div>
+                    <div class="col-prod row-prod">${item.name}</div>
+                    <div class="col-fecha row-fecha">
+                        <span style="font-weight:700; color:var(--primary-color)">Eq. ${item.equipo}</span>
+                        <span>${item.date.toLocaleDateString()}</span>
+                        <span class="row-total">$${item.total.toFixed(2)}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+    </script>
+</body>
+
+</html>

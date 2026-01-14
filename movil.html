@@ -575,6 +575,73 @@
             opacity: 0.2;
             color: var(--primary-color);
         }
+
+        /* SWITCH TOGGLE */
+        .switch-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            opacity: 0.8;
+            transition: opacity 0.2s;
+        }
+
+        .switch-container.active {
+            opacity: 1;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #cbd5e1;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        input:checked+.slider {
+            background-color: var(--primary-color);
+        }
+
+        input:checked+.slider:before {
+            transform: translateX(20px);
+        }
+
+        .switch-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
     </style>
 </head>
 
@@ -604,6 +671,9 @@
             </li>
             <li class="menu-item" onclick="switchSection('busqueda'); toggleMenu()">
                 <i class="fas fa-search"></i> Búsquedas
+            </li>
+            <li class="menu-item" onclick="window.location.href='movil_analisis.html'">
+                <i class="fas fa-chart-line"></i> Análisis Productos
             </li>
         </ul>
     </div>
@@ -660,11 +730,13 @@
                 </button>
             </div>
 
-            <div class="search-tabs" style="margin-bottom: 20px; justify-content: center;">
+            <div class="search-tabs" style="margin-bottom: 15px; justify-content: center;">
                 <button class="search-tab active" onclick="setSearchMode('equipo', this)">Por Equipo</button>
                 <button class="search-tab" onclick="setSearchMode('producto', this)">Por Producto</button>
                 <button class="search-tab" onclick="setSearchMode('fecha', this)">Por Fecha</button>
             </div>
+
+
 
             <!-- RESULTADOS CON HEADER -->
             <div class="history-container-box">
@@ -932,17 +1004,43 @@
                     const query = document.getElementById('search-input').value.trim().toLowerCase();
                     if (!query) return;
 
-                    // Busqueda de productos es compleja en NoSQL si están dentro de arrays 'products'.
-                    // Solución cliente-side: Traer ultimas X ventas y filtrar. NO es lo optimo para BD grande.
-                    // Solución MVP: Buscar en las ultimas 500 ventas.
+                    // CHECK IMPORTANTE: MODO AVANZADO
+                    const isAdvanced = document.getElementById('advanced-search-toggle').checked;
+                    const searchLimit = isAdvanced ? 1000 : 500; // Doble historial si es profundo
 
-                    const snap = await db.collection('VENTAS').orderBy('timestamp', 'desc').limit(500).get();
+                    const snap = await db.collection('VENTAS').orderBy('timestamp', 'desc').limit(searchLimit).get();
+
                     snap.forEach(doc => {
                         const data = doc.data();
                         if (data.products && Array.isArray(data.products)) {
-                            const found = data.products.some(p => (p.descripcion || '').toLowerCase().includes(query));
-                            if (found) {
-                                results.push({ ...data, id: doc.id, type: 'venta', dateObj: parseDate(data) });
+
+                            if (isAdvanced) {
+                                // MODO PROFUNDO: Nombre + Desc + Codigo
+                                const matchedProduct = data.products.find(p => {
+                                    const desc = (p.descripcion || '').toLowerCase();
+                                    const name = (p.name || '').toLowerCase();
+                                    const code = (p.codigo || p.code || '').toLowerCase();
+                                    return desc.includes(query) || name.includes(query) || code.includes(query);
+                                });
+
+                                if (matchedProduct) {
+                                    // Guardamos QUÉ coincidió
+                                    const matchName = matchedProduct.descripcion || matchedProduct.name || 'Producto';
+                                    results.push({
+                                        ...data,
+                                        id: doc.id,
+                                        type: 'venta',
+                                        dateObj: parseDate(data),
+                                        searchMatch: matchName
+                                    });
+                                }
+
+                            } else {
+                                // MODO SIMPLE (Original)
+                                const found = data.products.some(p => (p.descripcion || '').toLowerCase().includes(query));
+                                if (found) {
+                                    results.push({ ...data, id: doc.id, type: 'venta', dateObj: parseDate(data) });
+                                }
                             }
                         }
                     });
@@ -994,6 +1092,12 @@
                         col1Text = `${eNum} - ${cName}`;
                     } else {
                         col1Text = eNum;
+                    }
+
+                    // Mostrar coincidencia SOLO si existe (Modo avanzado)
+                    if (item.searchMatch) {
+                        const shortMatch = item.searchMatch.length > 18 ? item.searchMatch.substring(0, 18) + '...' : item.searchMatch;
+                        col1Text += ` [${shortMatch}]`;
                     }
 
                     const estado = item.status === 'cancelado' ? 'cancelado' : (item.paymentType || 'pendiente');
