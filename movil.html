@@ -900,15 +900,23 @@
                     // Por ahora solo Ventas.
 
                 } else if (currentSearchMode === 'equipo') {
-                    const query = document.getElementById('search-input').value.trim();
+                    const query = document.getElementById('search-input').value.trim().toLowerCase();
                     if (!query) return;
 
-                    // Buscar coincidencias exactas o parciales si fuera posible (Firebase no soporta parcial nativo facilmente sin hacks)
-                    // Haremos busqueda exacta o usaremos el campo equipoNumber que suele ser string.
-                    // Para "historial completo" necesitamos buscar todas las ventas donde equipoNumber == query
+                    // ESTRATEGIA ROBUSTA: Carga Masiva + Filtro Local
+                    // Firestore es muy estricto con tipos (Num vs String) y no tiene "contains".
+                    // Para asegurar que encontramos el equipo sin importar formato, traemos historial reciente y filtramos.
 
-                    const snap = await db.collection('VENTAS').where('equipoNumber', '==', query).orderBy('timestamp', 'desc').get();
-                    snap.forEach(doc => results.push({ ...doc.data(), id: doc.id, type: 'venta', dateObj: parseDate(doc.data()) }));
+                    // Traemos hasta 1000 ultimas ventas para asegurar buen historial
+                    const snap = await db.collection('VENTAS').orderBy('timestamp', 'desc').limit(1000).get();
+
+                    snap.forEach(doc => {
+                        const data = doc.data();
+                        // Filtrado flexible: Convierte a string y busca parcial
+                        if (String(data.equipoNumber || '').toLowerCase().includes(query)) {
+                            results.push({ ...data, id: doc.id, type: 'venta', dateObj: parseDate(data) });
+                        }
+                    });
 
                 } else if (currentSearchMode === 'producto') {
                     const query = document.getElementById('search-input').value.trim().toLowerCase();
