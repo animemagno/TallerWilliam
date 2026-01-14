@@ -237,42 +237,42 @@
             margin-top: 2px;
         }
 
-        /* LISTA CON ENCABEZADO */
+        /* LISTA CON ENCABEZADO COMPACTA */
         .history-container-box {
-            background: var(--card-bg);
-            border-radius: 20px;
-            box-shadow: var(--shadow-lg);
-            /* Sombra más flotante */
+            background: white;
+            border-radius: 12px;
+            box-shadow: var(--shadow-sm);
             overflow: hidden;
-            border: 1px solid rgba(0, 0, 0, 0.03);
+            border: 1px solid rgba(0, 0, 0, 0.05);
         }
 
         .list-header {
             display: flex;
             background: #f8fafc;
             /* border-bottom: 1px solid #e2e8f0; */
-            padding: 15px 20px;
-            font-size: 0.75rem;
+            padding: 8px 12px;
+            /* Header compacto */
+            font-size: 0.7rem;
             font-weight: 700;
             color: var(--text-secondary);
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 0.5px;
         }
 
         .col-1 {
-            width: 30%;
+            width: 35%;
         }
 
-        /* Equipo */
+        /* Equipo un poco mas ancho */
         .col-2 {
             width: 30%;
             text-align: right;
-            padding-right: 15px;
+            padding-right: 10px;
         }
 
         /* Monto */
         .col-3 {
-            width: 40%;
+            width: 35%;
             text-align: center;
         }
 
@@ -280,7 +280,7 @@
 
 
         .history-item {
-            border-bottom: 1px solid #f0f0f0;
+            border-bottom: 1px solid #f1f5f9;
         }
 
         .history-item:last-child {
@@ -288,21 +288,25 @@
         }
 
         .item-row {
-            padding: 12px 15px;
+            padding: 10px 12px;
+            /* Fila compacta (antes 12px 15px) */
             display: flex;
             align-items: center;
             cursor: pointer;
             transition: background 0.1s;
+            min-height: 44px;
+            /* Altura touch amigable pero compacta */
         }
 
         .item-row:active {
-            background: #f1f1f1;
+            background: #f1f5f9;
         }
 
         .cell-1 {
-            width: 30%;
-            font-weight: bold;
-            color: #333;
+            width: 35%;
+            font-weight: 600;
+            color: var(--text-main);
+            font-size: 0.9rem;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
@@ -311,22 +315,26 @@
         .cell-2 {
             width: 30%;
             text-align: right;
-            font-weight: bold;
-            padding-right: 15px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            padding-right: 10px;
         }
 
         .cell-3 {
-            width: 40%;
+            width: 35%;
             text-align: center;
         }
 
         .status-badge {
-            font-size: 0.7rem;
+            font-size: 0.65rem;
+            /* Badge más pequeño */
             padding: 3px 8px;
-            border-radius: 10px;
+            border-radius: 6px;
+            /* Menos redondo, más técnico */
             text-transform: uppercase;
-            font-weight: 600;
+            font-weight: 700;
             display: inline-block;
+            letter-spacing: 0.5px;
         }
 
         .status-contado {
