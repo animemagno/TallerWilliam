@@ -619,85 +619,118 @@
             listContainer.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i> Cargando...</div>';
 
             try {
-                // Obtener fecha hoy string en formato YYYY-MM-DD local (aproximado)
-                // Para consistencia con el sistema actual, usaremos lógica simple de fecha
+                // FECHA LOCAL SEGURA
                 const now = new Date();
-                const todayStr = formatDate(now);
+                const currentDay = now.getDate();
+                const currentMonth = now.getMonth();
+                const currentYear = now.getFullYear();
 
-                // Cargar colecciones en paralelo (Limitado para optimizar)
+                const isSameDay = (dateObj) => {
+                    return dateObj.getDate() === currentDay &&
+                        dateObj.getMonth() === currentMonth &&
+                        dateObj.getFullYear() === currentYear;
+                };
+
+                // Cargar colecciones en paralelo
                 const [ventasSnap, retirosSnap, ingresosSnap] = await Promise.all([
-                    db.collection('VENTAS').orderBy('timestamp', 'desc').limit(100).get(), // Traemos las ultimas 100 y filtramos en cliente si es necesario
+                    db.collection('VENTAS').orderBy('timestamp', 'desc').limit(200).get(),
                     db.collection('RETIROS').orderBy('timestamp', 'desc').limit(50).get(),
                     db.collection('INGRESOS').orderBy('timestamp', 'desc').limit(50).get()
                 ]);
 
                 let allItems = [];
+                let totalVentasContado = 0;
+                let totalCredito = 0;
+                let totalAbonos = 0;
+                let totalRetiros = 0;
+                let totalIngresosExtras = 0;
 
-                // Procesar Ventas
+                // 1. PROCESAR VENTAS
                 ventasSnap.forEach(doc => {
                     const data = doc.data();
                     const date = parseDate(data);
-                    if (formatDate(date) === todayStr) {
-                        allItems.push({ ...data, id: doc.id, type: 'venta', dateObj: date });
+
+                    if (isSameDay(date)) {
+                        const item = { ...data, id: doc.id, type: 'venta', dateObj: date };
+                        allItems.push(item);
+
+                        const monto = parseFloat(item.total || item.monto || 0);
+
+                        // Sumar Venta (Contado o Crédito)
+                        if (item.paymentType === 'contado') {
+                            totalVentasContado += monto;
+                        } else {
+                            totalCredito += monto;
+                        }
+
+                        // Sumar Abonos DE HOY dentro de esta venta (aunque la venta sea vieja, pero aquí filatramos por venta de hoy)
+                        // NOTA: Si la venta es de hoy, asumimos que sus abonos iniciales son de hoy.
+                        if (item.abonos && Array.isArray(item.abonos)) {
+                            item.abonos.forEach(ab => {
+                                // Idealmente verificar fecha del abono, pero si la venta es hoy, el abono inicial es hoy.
+                                totalAbonos += parseFloat(ab.monto || 0);
+                            });
+                        }
                     }
                 });
 
-                // Procesar Retiros
+                // 2. PROCESAR RETIROS
                 retirosSnap.forEach(doc => {
                     const data = doc.data();
                     const date = parseDate(data);
-                    if (formatDate(date) === todayStr) {
-                        allItems.push({ ...data, id: doc.id, type: 'retiro', dateObj: date });
+
+                    if (isSameDay(date)) {
+                        const item = { ...data, id: doc.id, type: 'retiro', dateObj: date };
+                        allItems.push(item);
+                        totalRetiros += parseFloat(item.monto || 0);
                     }
                 });
 
-                // Procesar Ingresos (incluye abonos sueltos y otros ingresos)
+                // 3. PROCESAR INGRESOS (Y ABONOS INDEPENDIENTES)
                 ingresosSnap.forEach(doc => {
                     const data = doc.data();
                     const date = parseDate(data);
-                    if (formatDate(date) === todayStr) {
-                        allItems.push({ ...data, id: doc.id, type: data.categoria === 'abono' ? 'abono_indep' : 'ingreso', dateObj: date });
+
+                    if (isSameDay(date)) {
+                        const isAbono = data.categoria === 'abono';
+                        const item = { ...data, id: doc.id, type: isAbono ? 'abono_indep' : 'ingreso', dateObj: date };
+                        allItems.push(item);
+
+                        const monto = parseFloat(item.monto || 0);
+                        if (isAbono) {
+                            totalAbonos += monto;
+                        } else {
+                            totalVentasContado += monto; // Ingresos extras suman a la caja "venta del dia"
+                        }
                     }
                 });
 
                 // Ordenar por hora descendente
                 allItems.sort((a, b) => b.dateObj - a.dateObj);
 
-                // Calcular Totales
-                let totalVentas = 0;
-                let totalAbonos = 0;
-                let totalRetiros = 0;
-
-                allItems.forEach(item => {
-                    const monto = parseFloat(item.total || item.monto || 0);
-
-                    if (item.type === 'venta') {
-                        if (item.paymentType === 'contado') totalVentas += monto;
-                        // Si tiene abonos internos la venta
-                        if (item.abonos && Array.isArray(item.abonos)) {
-                            // Sumar abonos que sean de hoy
-                            item.abonos.forEach(ab => {
-                                // Asumimos que si la venta es hoy, los abonos iniciales son hoy.
-                                // Para abonos posteriores, deberian estar en la coleccion INGRESOS
-                                totalAbonos += parseFloat(ab.monto || 0);
-                            });
-                        }
-                    } else if (item.type === 'abono_indep') {
-                        totalAbonos += monto;
-                    } else if (item.type === 'retiro') {
-                        totalRetiros += monto;
-                    } else if (item.type === 'ingreso') {
-                        // Ingresos extra se suman a la caja pero quiza no en "Ventas" directas
-                        totalVentas += monto;
-                    }
-                });
-
                 // Renderizar Resumen
-                document.getElementById('today-total').textContent = `$${totalVentas.toFixed(2)}`;
+                // Ventas Hoy: Sumamos Contado + Crédito para mostrar "Lo que se vendió" (aunque no todo entró en caja)
+                // OJO: El usuario suele querer ver "Cuánto dinero entró".
+                // Ajuste a lógica 'historialUnificado': 
+                // Contado: $X
+                // Caja Final = Contado + Abonos - Retiros
+
+                // Tarjeta 1: Ventas Totales (Volumen de ventas)
+                document.getElementById('today-total').textContent = `$${(totalVentasContado + totalCredito).toFixed(2)}`;
+
+                // Tarjeta 2: Abonos (Dinero recuperado)
                 document.getElementById('today-abonos').textContent = `$${totalAbonos.toFixed(2)}`;
+
+                // Tarjeta 3: Retiros
                 document.getElementById('today-retiros').textContent = `$${totalRetiros.toFixed(2)}`;
-                const cajaFinal = totalVentas + totalAbonos - totalRetiros;
+
+                // Tarjeta 4: Caja Final (Dinero Real en Mano: Contado + Abonos + IngresosExtra - Retiros)
+                // Nota: totalVentasContado ya incluye totalIngresosExtras según lógica arriba linea 687
+                const cajaFinal = totalVentasContado + totalAbonos - totalRetiros;
                 document.getElementById('today-caja').textContent = `$${cajaFinal.toFixed(2)}`;
+
+                // Debug para usuario si lo necesita
+                console.log("Cálculo Día:", { totalVentasContado, totalCredito, totalAbonos, totalRetiros, cajaFinal });
 
                 // Renderizar Lista
                 renderList(allItems, listContainer);
