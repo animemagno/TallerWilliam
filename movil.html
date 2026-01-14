@@ -195,50 +195,46 @@
             }
         }
 
-        /* DASHBOARD COMPACTO */
+        /* DASHBOARD ULTRA COMPACTO (TIPO PANEL) */
         .dashboard-resume {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            /* Gap reducido */
-            margin-bottom: 20px;
+            background: #e2e8f0;
+            /* Color de líneas divisorias */
+            gap: 1px;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 15px;
+            border: 1px solid #e2e8f0;
         }
 
         .stat-card {
-            background: var(--card-bg);
-            padding: 12px 10px;
-            /* Padding mucho más compacto */
-            border-radius: 16px;
-            box-shadow: var(--shadow-sm);
+            background: white;
+            padding: 10px 5px;
+            border-radius: 0;
+            /* Sin bordes redondeados individuales */
+            box-shadow: none;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            position: relative;
-            border: 1px solid rgba(0, 0, 0, 0.02);
-            min-height: 80px;
-            /* Altura controlada */
-        }
-
-        .stat-card:active {
-            transform: scale(0.98);
+            min-height: auto;
+            border: none;
         }
 
         .stat-value {
-            font-size: 1.2rem;
-            /* Texto más pequeño pero legible */
+            font-size: 1rem;
             font-weight: 700;
-            margin-bottom: 2px;
-            letter-spacing: -0.5px;
+            margin-bottom: 0;
+            line-height: 1.2;
         }
 
         .stat-label {
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             color: var(--text-secondary);
             text-transform: uppercase;
             font-weight: 600;
-            text-align: center;
-            line-height: 1.1;
+            margin-top: 2px;
         }
 
         /* LISTA CON ENCABEZADO */
