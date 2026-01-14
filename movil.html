@@ -524,18 +524,18 @@
         <div id="section-busqueda" class="section">
             <h3 class="section-title"><i class="fas fa-search"></i> Búsqueda Avanzada</h3>
 
-            <div class="search-tabs">
-                <button class="search-tab active" onclick="setSearchMode('equipo', this)">Por Equipo</button>
-                <button class="search-tab" onclick="setSearchMode('producto', this)">Por Producto</button>
-                <button class="search-tab" onclick="setSearchMode('fecha', this)">Por Fecha</button>
-            </div>
-
             <div class="search-input-group">
                 <input type="text" id="search-input" class="search-input" placeholder="Ingrese número de equipo...">
                 <input type="date" id="search-date" class="search-input" style="display:none">
                 <button class="search-btn" onclick="performSearch()">
                     <i class="fas fa-search"></i>
                 </button>
+            </div>
+
+            <div class="search-tabs" style="margin-bottom: 20px; justify-content: center;">
+                <button class="search-tab active" onclick="setSearchMode('equipo', this)">Por Equipo</button>
+                <button class="search-tab" onclick="setSearchMode('producto', this)">Por Producto</button>
+                <button class="search-tab" onclick="setSearchMode('fecha', this)">Por Fecha</button>
             </div>
 
             <div id="search-results-list" class="history-list">
