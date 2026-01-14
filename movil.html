@@ -196,147 +196,209 @@
             text-transform: uppercase;
         }
 
-        /* TARJETAS DE HISTORIAL */
-        .history-list {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .history-card {
+        /* LISTA CON ENCABEZADO */
+        .history-container-box {
             background: white;
-            border-radius: 12px;
-            padding: 15px;
+            border-radius: 8px;
             box-shadow: var(--shadow);
-            border-left: 5px solid #ddd;
-            position: relative;
+            overflow: hidden;
         }
 
-        .history-card.venta {
-            border-left-color: #3498db;
-        }
-
-        .history-card.abono {
-            border-left-color: #f1c40f;
-        }
-
-        .history-card.retiro {
-            border-left-color: #e74c3c;
-        }
-
-        .history-card.ingreso {
-            border-left-color: #2ecc71;
-        }
-
-        .card-header {
+        .list-header {
             display: flex;
-            justify-content: space-between;
-            margin-bottom: 10px;
-            font-size: 0.9rem;
-            color: #888;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
+            padding: 10px 15px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: #6c757d;
+            text-transform: uppercase;
         }
 
-        .card-main {
+        .col-1 {
+            width: 30%;
+        }
+
+        /* Equipo */
+        .col-2 {
+            width: 30%;
+            text-align: right;
+            padding-right: 15px;
+        }
+
+        /* Monto */
+        .col-3 {
+            width: 40%;
+            text-align: center;
+        }
+
+        /* Estado */
+
+
+        .history-item {
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .history-item:last-child {
+            border-bottom: none;
+        }
+
+        .item-row {
+            padding: 12px 15px;
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            margin-bottom: 10px;
+            cursor: pointer;
+            transition: background 0.1s;
         }
 
-        .card-title {
+        .item-row:active {
+            background: #f1f1f1;
+        }
+
+        .cell-1 {
+            width: 30%;
             font-weight: bold;
-            font-size: 1.1rem;
             color: #333;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
-        .card-amount {
+        .cell-2 {
+            width: 30%;
+            text-align: right;
             font-weight: bold;
-            font-size: 1.2rem;
+            padding-right: 15px;
+        }
+
+        .cell-3 {
+            width: 40%;
+            text-align: center;
+        }
+
+        .status-badge {
+            font-size: 0.7rem;
+            padding: 3px 8px;
+            border-radius: 10px;
+            text-transform: uppercase;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .status-contado {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-pendiente {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-cancelado {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-retiro {
+            background: #fdedec;
+            color: #c0392b;
+        }
+
+        .status-abono {
+            background: #d1ecf1;
+            color: #0c5460;
         }
 
         .amount-positive {
-            color: #2ecc71;
+            color: #27ae60;
         }
 
         .amount-negative {
-            color: #e74c3c;
+            color: #c0392b;
         }
 
-        .card-footer {
-            border-top: 1px solid #eee;
-            padding-top: 10px;
-            font-size: 0.85rem;
-            color: #555;
-            display: flex;
-            gap: 5px;
-            flex-wrap: wrap;
-        }
-
-        .tag {
-            background: #eee;
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-size: 0.75rem;
-        }
-
-        /* FORMULARIOS DE BÚSQUEDA */
-        .search-tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            overflow-x: auto;
-            padding-bottom: 5px;
-        }
-
-        .search-tab {
-            padding: 8px 16px;
-            background: #eee;
-            border-radius: 20px;
-            border: none;
-            white-space: nowrap;
-            cursor: pointer;
+        /* DETALLES DESPLEGABLES */
+        .item-details {
+            display: none;
+            background: #fafafa;
+            padding: 15px;
+            border-top: 1px dashed #eee;
             font-size: 0.9rem;
         }
 
-        .search-tab.active {
-            background: var(--primary-color);
-            color: white;
+        .item-details.active {
+            display: block;
+            animation: slideDown 0.2s ease;
         }
 
-        .search-input-group {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-5px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
-        .search-input {
-            flex: 1;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-size: 1rem;
-            outline: none;
+        .details-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 10px;
         }
 
-        .search-btn {
-            background: var(--primary-color);
-            color: white;
-            border: none;
-            padding: 0 20px;
-            border-radius: 8px;
-            cursor: pointer;
-        }
-
-        .loading-spinner {
-            text-align: center;
-            padding: 30px;
+        .details-table th {
+            text-align: left;
             color: #888;
+            font-size: 0.8rem;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+        }
+
+        .details-table td {
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .dt-cant {
+            width: 15%;
+            text-align: center;
+            color: #666;
+        }
+
+        .dt-desc {
+            width: 60%;
+            padding-left: 10px;
+        }
+
+        .dt-monto {
+            width: 25%;
+            text-align: left;
+            font-weight: bold;
+        }
+
+        .abonos-section {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #eee;
+            color: #555;
+        }
+
+        .abonos-title {
+            font-size: 0.85rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #2a5298;
         }
 
         /* UTILS */
         .section-title {
             font-size: 1.1rem;
-            margin-bottom: 15px;
+            margin: 20px 0 10px 0;
+            /* Espaciado ajustado */
             color: #444;
             display: flex;
             align-items: center;
@@ -444,8 +506,17 @@
             </div>
 
             <h3 class="section-title"><i class="fas fa-history"></i> Historial del Día</h3>
-            <div id="today-list" class="history-list">
-                <div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i> Cargando datos...</div>
+
+            <!-- CONTENEDOR NUEVO TIPO TABLA -->
+            <div class="history-container-box">
+                <div class="list-header">
+                    <div class="col-1">EQUIPO</div>
+                    <div class="col-2">MONTO</div>
+                    <div class="col-3">ESTADO</div>
+                </div>
+                <div id="today-list">
+                    <div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i> Cargando...</div>
+                </div>
             </div>
         </div>
 
@@ -704,7 +775,7 @@
             }
         }
 
-        // RENDERIZADO GENÉRICO (TARJETAS)
+        // RENDERIZADO SIMPLIFICADO
         function renderList(items, container) {
             container.innerHTML = '';
 
@@ -717,45 +788,31 @@
                 const card = document.createElement('div');
                 card.className = `history-card ${getCardClass(item.type)}`;
 
-                // Formatear datos
-                const fecha = item.dateObj ? item.dateObj.toLocaleString('es-ES') : 'Fecha desconocida';
                 const monto = parseFloat(item.total || item.monto || 0).toFixed(2);
-                let titulo = 'Registro desconocido';
-                let subtitulo = '';
-
-                if (item.type === 'venta') {
-                    titulo = `Venta ${item.equipoNumber ? '- Equipo ' + item.equipoNumber : ''}`;
-                    subtitulo = item.clientName || 'Cliente General';
-                    if (item.products && item.products.length > 0) {
-                        subtitulo += `<br><small>${item.products.length} productos (ver detalle en desktop)</small>`;
-                    }
-                } else if (item.type === 'retiro') {
-                    titulo = 'Retiro de Caja';
-                    subtitulo = item.concepto || 'Sin concepto';
-                } else if (item.type === 'ingreso' || item.type === 'abono_indep') {
-                    titulo = item.type === 'ingreso' ? 'Ingreso Extra' : 'Abono';
-                    subtitulo = item.concepto || 'Ingreso';
-                }
-
                 const isNegative = item.type === 'retiro';
 
+                // DATA
+                let mainText = '';
+                let statusText = '';
+
+                if (item.type === 'venta') {
+                    mainText = item.equipoNumber ? `Equipo: ${item.equipoNumber}` : 'Venta General';
+                    statusText = item.status === 'cancelado' ? 'CANCELADO' : (item.paymentType || '---');
+                } else if (item.type === 'retiro') {
+                    mainText = item.concepto || 'Retiro';
+                    statusText = 'RETIRO';
+                } else if (item.type === 'ingreso' || item.type.includes('abono')) {
+                    const isAbono = item.type.includes('abono');
+                    mainText = item.equipoNumber ? `Equipo: ${item.equipoNumber}` : (item.concepto || (isAbono ? 'Abono' : 'Ingreso'));
+                    statusText = isAbono ? 'ABONO' : 'INGRESO';
+                }
+
+                // Render linea simple
                 card.innerHTML = `
-                    <div class="card-header">
-                        <span>${item.invoiceNumber || 'S/N'}</span>
-                        <span>${fecha}</span>
-                    </div>
-                    <div class="card-main">
-                        <div>
-                            <div class="card-title">${titulo}</div>
-                            <div style="color:#666; font-size:0.9rem">${subtitulo}</div>
-                        </div>
-                        <div class="card-amount ${isNegative ? 'amount-negative' : 'amount-positive'}">
-                            ${isNegative ? '-' : ''}$${monto}
-                        </div>
-                    </div>
-                    <div class="card-footer">
-                        <span class="tag">${item.paymentType || item.categoria || 'General'}</span>
-                        ${item.status ? `<span class="tag">${item.status}</span>` : ''}
+                    <div class="item-left">${mainText}</div>
+                    <div class="item-right">
+                        <span class="item-amount ${isNegative ? 'amount-negative' : 'amount-positive'}">${isNegative ? '-' : ''}$${monto}</span>
+                        <span class="item-status">${statusText}</span>
                     </div>
                 `;
 
