@@ -663,14 +663,17 @@
                             totalCredito += monto;
                         }
 
-                        // Sumar Abonos DE HOY dentro de esta venta (aunque la venta sea vieja, pero aquí filatramos por venta de hoy)
-                        // NOTA: Si la venta es de hoy, asumimos que sus abonos iniciales son de hoy.
+                        // Sumar Abonos DE HOY dentro de esta venta
+                        // CORRECCIÓN: NO SUMAR ARRAY INTERNO.
+                        // Causa duplicidad si ya existen documentos de abono independientes en 'INGRESOS'/'ABONOS'.
+                        // Confiamos 100% en que cada abono real genera su propio documento en la colección INGRESOS.
+                        /* 
                         if (item.abonos && Array.isArray(item.abonos)) {
                             item.abonos.forEach(ab => {
-                                // Idealmente verificar fecha del abono, pero si la venta es hoy, el abono inicial es hoy.
                                 totalAbonos += parseFloat(ab.monto || 0);
                             });
                         }
+                        */
                     }
                 });
 
