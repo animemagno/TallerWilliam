@@ -715,8 +715,9 @@
                 // Contado: $X
                 // Caja Final = Contado + Abonos - Retiros
 
-                // Tarjeta 1: Ventas Totales (Volumen de ventas)
-                document.getElementById('today-total').textContent = `$${(totalVentasContado + totalCredito).toFixed(2)}`;
+                // Tarjeta 1: Ventas Hoy (Efectivo Real: Contado + Ingresos)
+                // Ajuste solicitado: Solo mostrar lo que entró en efectivo real por ventas/ingresos, excluyendo crédito.
+                document.getElementById('today-total').textContent = `$${totalVentasContado.toFixed(2)}`;
 
                 // Tarjeta 2: Abonos (Dinero recuperado)
                 document.getElementById('today-abonos').textContent = `$${totalAbonos.toFixed(2)}`;
@@ -724,8 +725,7 @@
                 // Tarjeta 3: Retiros
                 document.getElementById('today-retiros').textContent = `$${totalRetiros.toFixed(2)}`;
 
-                // Tarjeta 4: Caja Final (Dinero Real en Mano: Contado + Abonos + IngresosExtra - Retiros)
-                // Nota: totalVentasContado ya incluye totalIngresosExtras según lógica arriba linea 687
+                // Tarjeta 4: Caja Final (Dinero Real en Mano: Ventas(Contado+Ingresos) + Abonos - Retiros)
                 const cajaFinal = totalVentasContado + totalAbonos - totalRetiros;
                 document.getElementById('today-caja').textContent = `$${cajaFinal.toFixed(2)}`;
 
