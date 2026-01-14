@@ -605,16 +605,6 @@
             <li class="menu-item" onclick="switchSection('busqueda'); toggleMenu()">
                 <i class="fas fa-search"></i> Búsquedas
             </li>
-            <div style="border-top: 1px solid #eee; margin: 10px 0;"></div>
-            <li class="menu-item" onclick="window.location.href='index.html'">
-                <i class="fas fa-home"></i> Volver al Inicio
-            </li>
-            <li class="menu-item" onclick="window.location.href='ventas.html'">
-                <i class="fas fa-shopping-cart"></i> Ir a Ventas (Desktop)
-            </li>
-            <li class="menu-item" onclick="window.location.href='inventario.html'">
-                <i class="fas fa-boxes"></i> Ir a Inventario
-            </li>
         </ul>
     </div>
 
@@ -923,8 +913,9 @@
 
                     snap.forEach(doc => {
                         const data = doc.data();
-                        // Filtrado flexible: Convierte a string y busca parcial
-                        if (String(data.equipoNumber || '').toLowerCase().includes(query)) {
+                        // BUSQUEDA EXACTA: Comparamos el valor tal cual (convertido a string para seguridad)
+                        // "1" == "1", pero "1" != "10"
+                        if (String(data.equipoNumber || '').trim() === query) {
                             results.push({ ...data, id: doc.id, type: 'venta', dateObj: parseDate(data) });
                         }
                     });
