@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Taller Willian - Móvil</title>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #2a5298;
+            --secondary-color: #1e3c72;
+            --accent-color: #4CAF50;
+            --background-color: #f4f7f6;
+            --text-color: #333;
+            --card-bg: #fff;
+            --shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--background-color);
+            color: var(--text-color);
+            padding-bottom: 80px;
+            /* Espacio para navegación inferior si hubiera, o safe area */
+        }
+
+        /* HEADER */
+        header {
+            background: linear-gradient(135deg, var(--secondary-color) 0%, var(--primary-color) 100%);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .header-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .menu-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 5px;
+        }
+
+        /* MENU LATERAL (Overlay) */
+        .menu-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .menu-overlay.active {
+            display: block;
+            opacity: 1;
+        }
+
+        .side-menu {
+            position: fixed;
+            top: 0;
+            left: -280px;
+            width: 280px;
+            height: 100%;
+            background: white;
+            z-index: 2001;
+            transition: left 0.3s ease;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .side-menu.active {
+            left: 0;
+        }
+
+        .menu-header {
+            background: var(--primary-color);
+            color: white;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .menu-list {
+            list-style: none;
+            padding: 10px 0;
+            overflow-y: auto;
+        }
+
+        .menu-item {
+            padding: 15px 20px;
+            border-bottom: 1px solid #efefef;
+            color: var(--text-color);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: background 0.2s;
+        }
+
+        .menu-item:hover,
+        .menu-item:active {
+            background-color: #f0f0f0;
+        }
+
+        .menu-item i {
+            width: 25px;
+            text-align: center;
+            color: var(--primary-color);
+        }
+
+        /* CONTENIDO PRINCIPAL */
+        .main-container {
+            padding: 15px;
+            max-width: 600px;
+            /* Limitar ancho en desktop */
+            margin: 0 auto;
+        }
+
+        /* SECCIONES */
+        .section {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* DASHBOARD HOY */
+        .dashboard-resume {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            /* Dos columnas */
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            text-align: center;
+            border-bottom: 4px solid var(--primary-color);
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin: 5px 0;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: #666;
+            text-transform: uppercase;
+        }
+
+        /* TARJETAS DE HISTORIAL */
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .history-card {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: var(--shadow);
+            border-left: 5px solid #ddd;
+            position: relative;
+        }
+
+        .history-card.venta {
+            border-left-color: #3498db;
+        }
+
+        .history-card.abono {
+            border-left-color: #f1c40f;
+        }
+
+        .history-card.retiro {
+            border-left-color: #e74c3c;
+        }
+
+        .history-card.ingreso {
+            border-left-color: #2ecc71;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+            color: #888;
+        }
+
+        .card-main {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .card-title {
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: #333;
+        }
+
+        .card-amount {
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .amount-positive {
+            color: #2ecc71;
+        }
+
+        .amount-negative {
+            color: #e74c3c;
+        }
+
+        .card-footer {
+            border-top: 1px solid #eee;
+            padding-top: 10px;
+            font-size: 0.85rem;
+            color: #555;
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+
+        .tag {
+            background: #eee;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+        }
+
+        /* FORMULARIOS DE BÚSQUEDA */
+        .search-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+            padding-bottom: 5px;
+        }
+
+        .search-tab {
+            padding: 8px 16px;
+            background: #eee;
+            border-radius: 20px;
+            border: none;
+            white-space: nowrap;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .search-tab.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .search-input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            outline: none;
+        }
+
+        .search-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0 20px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .loading-spinner {
+            text-align: center;
+            padding: 30px;
+            color: #888;
+        }
+
+        /* UTILS */
+        .section-title {
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            color: #444;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .fab-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 56px;
+            height: 56px;
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            font-size: 1.5rem;
+            z-index: 900;
+            border: none;
+            cursor: pointer;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            opacity: 0.3;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <button class="menu-btn" onclick="toggleMenu()">
+            <i class="fas fa-bars"></i>
+        </button>
+        <div class="header-title">Taller Willian - Móvil</div>
+        <div>
+            <!-- Espacio reservado para iconos a la derecha si necesarios -->
+            <i class="fas fa-sync-alt" onclick="loadTodayData()" style="cursor:pointer" title="Actualizar"></i>
+        </div>
+    </header>
+
+    <!-- MENÚ LATERAL -->
+    <div class="menu-overlay" onclick="toggleMenu()" id="menuOverlay"></div>
+    <div class="side-menu" id="sideMenu">
+        <div class="menu-header">
+            <h3>Menú</h3>
+            <i class="fas fa-times" onclick="toggleMenu()" style="cursor:pointer"></i>
+        </div>
+        <ul class="menu-list">
+            <li class="menu-item" onclick="switchSection('hoy'); toggleMenu()">
+                <i class="fas fa-calendar-day"></i> Resumen de Hoy
+            </li>
+            <li class="menu-item" onclick="switchSection('busqueda'); toggleMenu()">
+                <i class="fas fa-search"></i> Búsquedas
+            </li>
+            <div style="border-top: 1px solid #eee; margin: 10px 0;"></div>
+            <li class="menu-item" onclick="window.location.href='index.html'">
+                <i class="fas fa-home"></i> Volver al Inicio
+            </li>
+            <li class="menu-item" onclick="window.location.href='ventas.html'">
+                <i class="fas fa-shopping-cart"></i> Ir a Ventas (Desktop)
+            </li>
+            <li class="menu-item" onclick="window.location.href='inventario.html'">
+                <i class="fas fa-boxes"></i> Ir a Inventario
+            </li>
+        </ul>
+    </div>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <div class="main-container">
+
+        <!-- SECCIÓN 1: HOY -->
+        <div id="section-hoy" class="section active">
+            <div class="dashboard-resume">
+                <div class="stat-card">
+                    <div class="stat-value" id="today-total">$0.00</div>
+                    <div class="stat-label">Ventas Hoy</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="today-abonos" style="color: #f1c40f">$0.00</div>
+                    <div class="stat-label">Abonos Hoy</div>
+                </div>
+            </div>
+
+            <div class="dashboard-resume">
+                <div class="stat-card" style="border-color: #e74c3c">
+                    <div class="stat-value" id="today-retiros" style="color: #e74c3c">$0.00</div>
+                    <div class="stat-label">Retiros</div>
+                </div>
+                <div class="stat-card" style="border-color: #2c3e50">
+                    <div class="stat-value" style="color: #2c3e50" id="today-caja">$0.00</div>
+                    <div class="stat-label">Caja Final</div>
+                </div>
+            </div>
+
+            <h3 class="section-title"><i class="fas fa-history"></i> Historial del Día</h3>
+            <div id="today-list" class="history-list">
+                <div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i> Cargando datos...</div>
+            </div>
+        </div>
+
+        <!-- SECCIÓN 2: BÚSQUEDAS -->
+        <div id="section-busqueda" class="section">
+            <h3 class="section-title"><i class="fas fa-search"></i> Búsqueda Avanzada</h3>
+
+            <div class="search-tabs">
+                <button class="search-tab active" onclick="setSearchMode('equipo', this)">Por Equipo</button>
+                <button class="search-tab" onclick="setSearchMode('producto', this)">Por Producto</button>
+                <button class="search-tab" onclick="setSearchMode('fecha', this)">Por Fecha</button>
+            </div>
+
+            <div class="search-input-group">
+                <input type="text" id="search-input" class="search-input" placeholder="Ingrese número de equipo...">
+                <input type="date" id="search-date" class="search-input" style="display:none">
+                <button class="search-btn" onclick="performSearch()">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+
+            <div id="search-results-list" class="history-list">
+                <div class="empty-state">
+                    <i class="fas fa-search"></i>
+                    <p>Seleccione un tipo de búsqueda e ingrese los datos.</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Script de Lógica -->
+    <script>
+        // CONFIGURACIÓN FIREBASE (Copiada de ventas.html)
+        const firebaseConfig = {
+            apiKey: "AIzaSyDh074AarXaYCc-Htw-lsCeIc_95QQNSnY",
+            authDomain: "tallerwilliam-732b3.firebaseapp.com",
+            projectId: "tallerwilliam-732b3",
+            storageBucket: "tallerwilliam-732b3.firebasestorage.app",
+            messagingSenderId: "822262666247",
+            appId: "1:822262666247:web:6680487bbf1108006b86a2"
+        };
+
+        // Inicializar Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // ESTADO GLOBAL
+        let currentSearchMode = 'equipo';
+
+        // INICIALIZACIÓN
+        document.addEventListener('DOMContentLoaded', () => {
+            loadTodayData();
+        });
+
+        // FUNCIONES DE UI
+        function toggleMenu() {
+            document.getElementById('sideMenu').classList.toggle('active');
+            document.getElementById('menuOverlay').classList.toggle('active');
+        }
+
+        function switchSection(sectionId) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.getElementById(`section-${sectionId}`).classList.add('active');
+        }
+
+        function setSearchMode(mode, btnElement) {
+            currentSearchMode = mode;
+
+            // UI Tabs
+            document.querySelectorAll('.search-tab').forEach(b => b.classList.remove('active'));
+            btnElement.classList.add('active');
+
+            // UI Inputs
+            const textInput = document.getElementById('search-input');
+            const dateInput = document.getElementById('search-date');
+            const resultsList = document.getElementById('search-results-list');
+
+            resultsList.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-search"></i>
+                    <p>Ingrese los datos para buscar.</p>
+                </div>`;
+
+            if (mode === 'fecha') {
+                textInput.style.display = 'none';
+                dateInput.style.display = 'block';
+            } else {
+                textInput.style.display = 'block';
+                dateInput.style.display = 'none';
+                if (mode === 'equipo') textInput.placeholder = "Ingrese número de equipo...";
+                if (mode === 'producto') textInput.placeholder = "Nombre del producto...";
+            }
+        }
+
+        // --- LÓGICA DE DATOS ---
+
+        async function loadTodayData() {
+            const listContainer = document.getElementById('today-list');
+            listContainer.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i> Cargando...</div>';
+
+            try {
+                // Obtener fecha hoy string en formato YYYY-MM-DD local (aproximado)
+                // Para consistencia con el sistema actual, usaremos lógica simple de fecha
+                const now = new Date();
+                const todayStr = formatDate(now);
+
+                // Cargar colecciones en paralelo (Limitado para optimizar)
+                const [ventasSnap, retirosSnap, ingresosSnap] = await Promise.all([
+                    db.collection('VENTAS').orderBy('timestamp', 'desc').limit(100).get(), // Traemos las ultimas 100 y filtramos en cliente si es necesario
+                    db.collection('RETIROS').orderBy('timestamp', 'desc').limit(50).get(),
+                    db.collection('INGRESOS').orderBy('timestamp', 'desc').limit(50).get()
+                ]);
+
+                let allItems = [];
+
+                // Procesar Ventas
+                ventasSnap.forEach(doc => {
+                    const data = doc.data();
+                    const date = parseDate(data);
+                    if (formatDate(date) === todayStr) {
+                        allItems.push({ ...data, id: doc.id, type: 'venta', dateObj: date });
+                    }
+                });
+
+                // Procesar Retiros
+                retirosSnap.forEach(doc => {
+                    const data = doc.data();
+                    const date = parseDate(data);
+                    if (formatDate(date) === todayStr) {
+                        allItems.push({ ...data, id: doc.id, type: 'retiro', dateObj: date });
+                    }
+                });
+
+                // Procesar Ingresos (incluye abonos sueltos y otros ingresos)
+                ingresosSnap.forEach(doc => {
+                    const data = doc.data();
+                    const date = parseDate(data);
+                    if (formatDate(date) === todayStr) {
+                        allItems.push({ ...data, id: doc.id, type: data.categoria === 'abono' ? 'abono_indep' : 'ingreso', dateObj: date });
+                    }
+                });
+
+                // Ordenar por hora descendente
+                allItems.sort((a, b) => b.dateObj - a.dateObj);
+
+                // Calcular Totales
+                let totalVentas = 0;
+                let totalAbonos = 0;
+                let totalRetiros = 0;
+
+                allItems.forEach(item => {
+                    const monto = parseFloat(item.total || item.monto || 0);
+
+                    if (item.type === 'venta') {
+                        if (item.paymentType === 'contado') totalVentas += monto;
+                        // Si tiene abonos internos la venta
+                        if (item.abonos && Array.isArray(item.abonos)) {
+                            // Sumar abonos que sean de hoy
+                            item.abonos.forEach(ab => {
+                                // Asumimos que si la venta es hoy, los abonos iniciales son hoy.
+                                // Para abonos posteriores, deberian estar en la coleccion INGRESOS
+                                totalAbonos += parseFloat(ab.monto || 0);
+                            });
+                        }
+                    } else if (item.type === 'abono_indep') {
+                        totalAbonos += monto;
+                    } else if (item.type === 'retiro') {
+                        totalRetiros += monto;
+                    } else if (item.type === 'ingreso') {
+                        // Ingresos extra se suman a la caja pero quiza no en "Ventas" directas
+                        totalVentas += monto;
+                    }
+                });
+
+                // Renderizar Resumen
+                document.getElementById('today-total').textContent = `$${totalVentas.toFixed(2)}`;
+                document.getElementById('today-abonos').textContent = `$${totalAbonos.toFixed(2)}`;
+                document.getElementById('today-retiros').textContent = `$${totalRetiros.toFixed(2)}`;
+                const cajaFinal = totalVentas + totalAbonos - totalRetiros;
+                document.getElementById('today-caja').textContent = `$${cajaFinal.toFixed(2)}`;
+
+                // Renderizar Lista
+                renderList(allItems, listContainer);
+
+            } catch (error) {
+                console.error("Error cargando datos:", error);
+                listContainer.innerHTML = '<div class="empty-state" style="color:red">Error cargando datos. Verifique conexión.</div>';
+            }
+        }
+
+        async function performSearch() {
+            const listContainer = document.getElementById('search-results-list');
+            listContainer.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i> Buscando...</div>';
+
+            try {
+                let results = [];
+
+                if (currentSearchMode === 'fecha') {
+                    const dateStr = document.getElementById('search-date').value;
+                    if (!dateStr) { alert('Seleccione una fecha'); return; }
+
+                    // Buscar en todas las colecciones match de fecha
+                    // Esto puede ser pesado, así que limitamos o hacemos query compuesta si fuese posible.
+                    // Por simplicidad en MVP: Traemos un rango razonable o usamos filtros de cliente.
+                    // Firebase no deja filtrar por fecha string facilmente si guardamos timestamps.
+                    // Haremos query por rango de timestamp del dia seleccionado.
+
+                    const startOfDay = new Date(dateStr + 'T00:00:00');
+                    const endOfDay = new Date(dateStr + 'T23:59:59');
+
+                    const ventasRef = db.collection('VENTAS').where('timestamp', '>=', startOfDay).where('timestamp', '<=', endOfDay);
+                    const snap = await ventasRef.get();
+
+                    snap.forEach(doc => results.push({ ...doc.data(), id: doc.id, type: 'venta', dateObj: parseDate(doc.data()) }));
+
+                    // Nota: Podriamos buscar tambien en RETIROS e INGRESOS si se desea historial completo del dia.
+                    // Por ahora solo Ventas.
+
+                } else if (currentSearchMode === 'equipo') {
+                    const query = document.getElementById('search-input').value.trim();
+                    if (!query) return;
+
+                    // Buscar coincidencias exactas o parciales si fuera posible (Firebase no soporta parcial nativo facilmente sin hacks)
+                    // Haremos busqueda exacta o usaremos el campo equipoNumber que suele ser string.
+                    // Para "historial completo" necesitamos buscar todas las ventas donde equipoNumber == query
+
+                    const snap = await db.collection('VENTAS').where('equipoNumber', '==', query).orderBy('timestamp', 'desc').get();
+                    snap.forEach(doc => results.push({ ...doc.data(), id: doc.id, type: 'venta', dateObj: parseDate(doc.data()) }));
+
+                } else if (currentSearchMode === 'producto') {
+                    const query = document.getElementById('search-input').value.trim().toLowerCase();
+                    if (!query) return;
+
+                    // Busqueda de productos es compleja en NoSQL si están dentro de arrays 'products'.
+                    // Solución cliente-side: Traer ultimas X ventas y filtrar. NO es lo optimo para BD grande.
+                    // Solución MVP: Buscar en las ultimas 500 ventas.
+
+                    const snap = await db.collection('VENTAS').orderBy('timestamp', 'desc').limit(500).get();
+                    snap.forEach(doc => {
+                        const data = doc.data();
+                        if (data.products && Array.isArray(data.products)) {
+                            const found = data.products.some(p => (p.descripcion || '').toLowerCase().includes(query));
+                            if (found) {
+                                results.push({ ...data, id: doc.id, type: 'venta', dateObj: parseDate(data) });
+                            }
+                        }
+                    });
+                }
+
+                renderList(results, listContainer);
+
+            } catch (error) {
+                console.error(error);
+                listContainer.innerHTML = '<div class="empty-state">Error en la búsqueda o sin resultados.</div>';
+            }
+        }
+
+        // RENDERIZADO GENÉRICO (TARJETAS)
+        function renderList(items, container) {
+            container.innerHTML = '';
+
+            if (items.length === 0) {
+                container.innerHTML = '<div class="empty-state">No se encontraron registros.</div>';
+                return;
+            }
+
+            items.forEach(item => {
+                const card = document.createElement('div');
+                card.className = `history-card ${getCardClass(item.type)}`;
+
+                // Formatear datos
+                const fecha = item.dateObj ? item.dateObj.toLocaleString('es-ES') : 'Fecha desconocida';
+                const monto = parseFloat(item.total || item.monto || 0).toFixed(2);
+                let titulo = 'Registro desconocido';
+                let subtitulo = '';
+
+                if (item.type === 'venta') {
+                    titulo = `Venta ${item.equipoNumber ? '- Equipo ' + item.equipoNumber : ''}`;
+                    subtitulo = item.clientName || 'Cliente General';
+                    if (item.products && item.products.length > 0) {
+                        subtitulo += `<br><small>${item.products.length} productos (ver detalle en desktop)</small>`;
+                    }
+                } else if (item.type === 'retiro') {
+                    titulo = 'Retiro de Caja';
+                    subtitulo = item.concepto || 'Sin concepto';
+                } else if (item.type === 'ingreso' || item.type === 'abono_indep') {
+                    titulo = item.type === 'ingreso' ? 'Ingreso Extra' : 'Abono';
+                    subtitulo = item.concepto || 'Ingreso';
+                }
+
+                const isNegative = item.type === 'retiro';
+
+                card.innerHTML = `
+                    <div class="card-header">
+                        <span>${item.invoiceNumber || 'S/N'}</span>
+                        <span>${fecha}</span>
+                    </div>
+                    <div class="card-main">
+                        <div>
+                            <div class="card-title">${titulo}</div>
+                            <div style="color:#666; font-size:0.9rem">${subtitulo}</div>
+                        </div>
+                        <div class="card-amount ${isNegative ? 'amount-negative' : 'amount-positive'}">
+                            ${isNegative ? '-' : ''}$${monto}
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <span class="tag">${item.paymentType || item.categoria || 'General'}</span>
+                        ${item.status ? `<span class="tag">${item.status}</span>` : ''}
+                    </div>
+                `;
+
+                container.appendChild(card);
+            });
+        }
+
+        function getCardClass(type) {
+            if (type === 'venta') return 'venta';
+            if (type === 'retiro') return 'retiro';
+            if (type.includes('abono')) return 'abono';
+            return 'ingreso';
+        }
+
+        // HELPERS
+        function parseDate(data) {
+            if (data.timestamp && data.timestamp.toDate) return data.timestamp.toDate();
+            // Fallback para fechas string YYYY-MM-DD
+            if (data.date) {
+                const parts = data.date.split('-');
+                return new Date(parts[0], parts[1] - 1, parts[2]);
+            }
+            return new Date();
+        }
+
+        function formatDate(date) {
+            const y = date.getFullYear();
+            const m = String(date.getMonth() + 1).padStart(2, '0');
+            const d = String(date.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        }
+    </script>
+</body>
+
+</html>
