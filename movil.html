@@ -480,12 +480,14 @@
         .search-input-group {
             background: var(--card-bg);
             border-radius: var(--radius-full);
-            padding: 8px 8px 8px 20px;
-            box-shadow: var(--shadow-md);
+            padding: 4px 4px 4px 15px;
+            /* Compacto */
+            box-shadow: var(--shadow-sm);
             display: flex;
             align-items: center;
-            margin-bottom: 20px;
-            border: 1px solid transparent;
+            margin-bottom: 12px;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            height: 42px;
             transition: border-color 0.2s;
         }
 
@@ -506,15 +508,16 @@
             background: var(--primary-color);
             color: white;
             border: none;
-            width: 40px;
-            height: 40px;
+            width: 34px;
+            height: 34px;
             border-radius: 50%;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);
+            box-shadow: none;
             transition: transform 0.2s;
+            font-size: 0.9rem;
         }
 
         .search-btn:active {
@@ -536,8 +539,9 @@
         }
 
         .search-tab {
-            padding: 10px 20px;
+            padding: 6px 12px;
             background: white;
+            /* ... sigue igual el color ... */
             color: var(--text-secondary);
             border-radius: var(--radius-full);
             border: 1px solid #e2e8f0;
