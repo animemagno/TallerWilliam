@@ -195,8 +195,8 @@
             }
         }
 
-        /* DASHBOARD ULTRA COMPACTO (TIPO PANEL) */
-        .dashboard-resume {
+        /* DASHBOARD ULTRA COMPACTO (TIPO PANEL - Renombrado para romper caché) */
+        .dashboard-grid-panel {
             display: grid;
             grid-template-columns: 1fr 1fr;
             background: #e2e8f0;
@@ -208,7 +208,7 @@
             border: 1px solid #e2e8f0;
         }
 
-        .stat-card {
+        .stat-cell {
             background: white;
             padding: 10px 5px;
             border-radius: 0;
@@ -616,26 +616,24 @@
     <!-- CONTENIDO PRINCIPAL -->
     <div class="main-container">
 
-        <!-- SECCIÓN 1: HOY -->
+        <!-- DASHBOARD HOY -->
         <div id="section-hoy" class="section active">
-            <div class="dashboard-resume">
-                <div class="stat-card">
-                    <div class="stat-value" id="today-total">$0.00</div>
+            <!-- RESUMEN HOY (Clases actualizadas) -->
+            <div class="dashboard-grid-panel">
+                <div class="stat-cell">
+                    <div class="stat-value" id="today-total" style="color: #2563eb">$0.00</div>
                     <div class="stat-label">Ventas Hoy</div>
                 </div>
-                <div class="stat-card">
+                <div class="stat-cell">
                     <div class="stat-value" id="today-abonos" style="color: #f1c40f">$0.00</div>
                     <div class="stat-label">Abonos Hoy.</div>
                 </div>
-            </div>
-
-            <div class="dashboard-resume">
-                <div class="stat-card" style="border-color: #e74c3c">
-                    <div class="stat-value" id="today-retiros" style="color: #e74c3c">$0.00</div>
+                <div class="stat-cell">
+                    <div class="stat-value" id="today-retiros" style="color: #ef4444">$0.00</div>
                     <div class="stat-label">Retiros</div>
                 </div>
-                <div class="stat-card" style="border-color: #2c3e50">
-                    <div class="stat-value" style="color: #2c3e50" id="today-caja">$0.00</div>
+                <div class="stat-cell">
+                    <div class="stat-value" id="today-caja" style="color: #10b981">$0.00</div>
                     <div class="stat-label">Caja Final</div>
                 </div>
             </div>
