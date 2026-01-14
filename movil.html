@@ -195,26 +195,29 @@
             }
         }
 
-        /* DASHBOARD - TARJETAS FLOTANTES */
+        /* DASHBOARD COMPACTO */
         .dashboard-resume {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 25px;
+            gap: 10px;
+            /* Gap reducido */
+            margin-bottom: 20px;
         }
 
         .stat-card {
             background: var(--card-bg);
-            padding: 20px 15px;
-            border-radius: 20px;
+            padding: 12px 10px;
+            /* Padding mucho más compacto */
+            border-radius: 16px;
             box-shadow: var(--shadow-sm);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             position: relative;
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            transition: transform 0.2s, box-shadow 0.2s;
+            border: 1px solid rgba(0, 0, 0, 0.02);
+            min-height: 80px;
+            /* Altura controlada */
         }
 
         .stat-card:active {
@@ -222,19 +225,20 @@
         }
 
         .stat-value {
-            font-size: 1.4rem;
-            font-weight: 800;
-            /* color: var(--text-main); */
-            margin-bottom: 4px;
+            font-size: 1.2rem;
+            /* Texto más pequeño pero legible */
+            font-weight: 700;
+            margin-bottom: 2px;
             letter-spacing: -0.5px;
         }
 
         .stat-label {
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             color: var(--text-secondary);
             text-transform: uppercase;
-            letter-spacing: 0.5px;
             font-weight: 600;
+            text-align: center;
+            line-height: 1.1;
         }
 
         /* LISTA CON ENCABEZADO */
