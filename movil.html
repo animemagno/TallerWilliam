@@ -666,10 +666,18 @@
                 <button class="search-tab" onclick="setSearchMode('fecha', this)">Por Fecha</button>
             </div>
 
-            <div id="search-results-list" class="history-list">
-                <div class="empty-state">
-                    <i class="fas fa-search"></i>
-                    <p>Seleccione un tipo de búsqueda e ingrese los datos.</p>
+            <!-- RESULTADOS CON HEADER -->
+            <div class="history-container-box">
+                <div class="list-header">
+                    <div class="col-1">EQUIPO</div>
+                    <div class="col-2">MONTO</div>
+                    <div class="col-3">ESTADO</div>
+                </div>
+                <div id="search-results-list">
+                    <div class="empty-state">
+                        <i class="fas fa-search"></i>
+                        <p>Seleccione un tipo de búsqueda e ingrese los datos.</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -971,7 +979,23 @@
                 let badgeClass = '';
 
                 if (item.type === 'venta') {
-                    col1Text = item.equipoNumber || 'S/N';
+                    // LOGICA NOMBRE INTELIGENTE: "2" vs "2 - Cedros"
+                    let eNum = item.equipoNumber || 'S/N';
+                    let cName = item.clientName || '';
+
+                    // Normalizar para comparar
+                    const cNameLow = cName.toLowerCase();
+                    const eNumLow = String(eNum).toLowerCase();
+
+                    // Si hay nombre y NO es redundante (no contiene "equipo" ni repite el numero)
+                    const isRedundant = cNameLow.includes('equipo') || cNameLow === eNumLow;
+
+                    if (cName && !isRedundant) {
+                        col1Text = `${eNum} - ${cName}`;
+                    } else {
+                        col1Text = eNum;
+                    }
+
                     const estado = item.status === 'cancelado' ? 'cancelado' : (item.paymentType || 'pendiente');
                     badgeClass = `status-${estado}`;
                     col3Badge = estado;
@@ -1051,8 +1075,12 @@
                     </div>
                     <div id="${uniqueId}" class="item-details">
                         ${detailsHTML}
-                        <div style="text-align:right; margin-top:10px; font-size:0.8rem; color:#aaa">
-                            Ref: ${item.invoiceNumber || item.id.substring(0, 8)} | ${item.dateObj ? item.dateObj.toLocaleTimeString() : ''}
+                        <div style="display:flex; justify-content:space-between; margin-top:15px; font-size:0.75rem; color:#888;">
+                            <span style="font-weight:600">Ref: ${item.invoiceNumber || item.id.substring(0, 8)}</span>
+                            <span>
+                                ${item.dateObj ? item.dateObj.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }) : ''} |
+                                ${item.dateObj ? item.dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
+                            </span>
                         </div>
                     </div>
                 `;
