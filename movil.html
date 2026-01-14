@@ -775,7 +775,7 @@
             }
         }
 
-        // RENDERIZADO SIMPLIFICADO
+        // RENDERIZADO ACORDEÓN (CORREGIDO)
         function renderList(items, container) {
             container.innerHTML = '';
 
@@ -784,47 +784,122 @@
                 return;
             }
 
-            items.forEach(item => {
-                const card = document.createElement('div');
-                card.className = `history-card ${getCardClass(item.type)}`;
+            items.forEach((item, index) => {
+                const uniqueId = `item-${index}-${Date.now()}`; // ID único para toggle
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'history-item';
 
                 const monto = parseFloat(item.total || item.monto || 0).toFixed(2);
                 const isNegative = item.type === 'retiro';
 
-                // DATA
-                let mainText = '';
-                let statusText = '';
+                // COLUMNAS PRINCIPALES
+                let col1Text = ''; // Equipo
+                let col3Badge = ''; // Estado
+                let badgeClass = '';
 
                 if (item.type === 'venta') {
-                    mainText = item.equipoNumber ? `Equipo: ${item.equipoNumber}` : 'Venta General';
-                    statusText = item.status === 'cancelado' ? 'CANCELADO' : (item.paymentType || '---');
+                    col1Text = item.equipoNumber || 'S/N';
+                    const estado = item.status === 'cancelado' ? 'cancelado' : (item.paymentType || 'pendiente');
+                    badgeClass = `status-${estado}`;
+                    col3Badge = estado;
                 } else if (item.type === 'retiro') {
-                    mainText = item.concepto || 'Retiro';
-                    statusText = 'RETIRO';
-                } else if (item.type === 'ingreso' || item.type.includes('abono')) {
-                    const isAbono = item.type.includes('abono');
-                    mainText = item.equipoNumber ? `Equipo: ${item.equipoNumber}` : (item.concepto || (isAbono ? 'Abono' : 'Ingreso'));
-                    statusText = isAbono ? 'ABONO' : 'INGRESO';
+                    col1Text = 'RETIRO';
+                    badgeClass = 'status-retiro';
+                    col3Badge = 'RETIRO';
+                } else if (item.type && item.type.includes('abono')) {
+                    col1Text = item.equipoNumber || 'ABONO';
+                    badgeClass = 'status-abono';
+                    col3Badge = 'ABONO';
+                } else {
+                    col1Text = 'INGRESO';
+                    badgeClass = 'status-contado';
+                    col3Badge = 'INGRESO';
                 }
 
-                // Render linea simple
-                card.innerHTML = `
-                    <div class="item-left">${mainText}</div>
-                    <div class="item-right">
-                        <span class="item-amount ${isNegative ? 'amount-negative' : 'amount-positive'}">${isNegative ? '-' : ''}$${monto}</span>
-                        <span class="item-status">${statusText}</span>
+                // CONTENIDO DETALLE
+                let detailsHTML = '';
+
+                // 1. Tabla de Productos (Solo Ventas)
+                if (item.type === 'venta' && item.products && item.products.length > 0) {
+                    let rows = item.products.map(p => `
+                        <tr>
+                            <td class="dt-cant">${p.cantidad || 1}</td>
+                            <td class="dt-desc">${p.descripcion || p.name || '---'}</td>
+                            <td class="dt-monto">$${parseFloat((p.precio || 0) * (p.cantidad || 1)).toFixed(2)}</td>
+                        </tr>
+                     `).join('');
+
+                    detailsHTML += `
+                        <table class="details-table">
+                            <thead>
+                                <tr>
+                                    <th style="padding-left:10px;text-align:center">CANT</th>
+                                    <th style="padding-left:10px">DESCRIPCIÓN</th>
+                                    <th style="text-align:right">MONTO</th>
+                                </tr>
+                            </thead>
+                            <tbody>${rows}</tbody>
+                        </table>
+                     `;
+                } else if (item.type === 'retiro' || item.type === 'ingreso') {
+                    // Para retiros mostramos el concepto como detalle
+                    detailsHTML += `<p><strong>Concepto:</strong> ${item.concepto || 'Sin descripción'}</p>`;
+                }
+
+                // 2. Sección Abonos (Si existen)
+                if (item.abonos && item.abonos.length > 0) {
+                    let abonoRows = item.abonos.map(a => `
+                        <div style="display:flex; justify-content:space-between; font-size:0.85rem">
+                            <span>Abono (${new Date(a.fecha).toLocaleDateString()})</span>
+                            <span style="font-weight:bold">$${parseFloat(a.monto).toFixed(2)}</span>
+                        </div>
+                    `).join('');
+
+                    detailsHTML += `
+                        <div class="abonos-section">
+                            <div class="abonos-title">Historial de Abonos:</div>
+                            ${abonoRows}
+                        </div>
+                    `;
+                }
+
+                // Si no hay detalles, mensaje simple
+                if (!detailsHTML) detailsHTML = '<div style="color:#999; font-style:italic">Sin detalles adicionales</div>';
+
+                itemDiv.innerHTML = `
+                    <div class="item-row" onclick="toggleDetails('${uniqueId}')">
+                        <div class="cell-1">${col1Text}</div>
+                        <div class="cell-2 ${isNegative ? 'amount-negative' : 'amount-positive'}">
+                            ${isNegative ? '-' : ''}$${monto}
+                        </div>
+                        <div class="cell-3">
+                            <span class="status-badge ${badgeClass}">${col3Badge}</span>
+                        </div>
+                    </div>
+                    <div id="${uniqueId}" class="item-details">
+                        ${detailsHTML}
+                        <div style="text-align:right; margin-top:10px; font-size:0.8rem; color:#aaa">
+                            Ref: ${item.invoiceNumber || item.id.substring(0, 8)} | ${item.dateObj ? item.dateObj.toLocaleTimeString() : ''}
+                        </div>
                     </div>
                 `;
 
-                container.appendChild(card);
+                container.appendChild(itemDiv);
             });
         }
 
-        function getCardClass(type) {
-            if (type === 'venta') return 'venta';
-            if (type === 'retiro') return 'retiro';
-            if (type.includes('abono')) return 'abono';
-            return 'ingreso';
+        function toggleDetails(id) {
+            const el = document.getElementById(id);
+            if (el) {
+                // Alternar clase active para mostrar/ocultar
+                if (el.style.display === "block") {
+                    el.style.display = "none";
+                    el.classList.remove('active');
+                } else {
+                    el.style.display = "block";
+                    el.classList.add('active');
+                }
+            }
         }
 
         // HELPERS
