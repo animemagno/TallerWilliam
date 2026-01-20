@@ -3080,11 +3080,19 @@
 
             async loadAllMovements(limit = 10000) {
                 try {
-                    const [ventas, retiros, ingresos] = await Promise.all([
+                    const results = await Promise.allSettled([
                         this.loadSales(limit),
                         this.loadRetiros(limit),
                         this.loadIngresos(limit)
                     ]);
+
+                    const ventas = results[0].status === 'fulfilled' ? results[0].value : [];
+                    const retiros = results[1].status === 'fulfilled' ? results[1].value : [];
+                    const ingresos = results[2].status === 'fulfilled' ? results[2].value : [];
+
+                    if (results[0].status === 'rejected') console.error("Error loading sales:", results[0].reason);
+                    if (results[1].status === 'rejected') console.error("Error loading retiros:", results[1].reason);
+                    if (results[2].status === 'rejected') console.error("Error loading ingresos:", results[2].reason);
 
                     const allMovements = [
                         ...ventas.map(v => ({ ...v, tipo: 'venta' })),
@@ -3093,12 +3101,12 @@
                     ];
 
                     return allMovements.sort((a, b) => {
-                        const dateA = a.timestamp?.toDate ? a.timestamp.toDate() : a.timestamp;
-                        const dateB = b.timestamp?.toDate ? b.timestamp.toDate() : b.timestamp;
+                        const dateA = a.timestamp?.toDate ? a.timestamp.toDate() : (new Date(a.timestamp) || new Date(0));
+                        const dateB = b.timestamp?.toDate ? b.timestamp.toDate() : (new Date(b.timestamp) || new Date(0));
                         return dateB - dateA;
                     }).slice(0, limit);
                 } catch (error) {
-                    console.error("Error loading all movements:", error);
+                    console.error("Critical error loading all movements:", error);
                     return [];
                 }
             },
@@ -3161,18 +3169,20 @@
                 try {
                     if (!AppState.firebaseInitialized) return [];
 
-                    // Cargar en paralelo ventas, retiros e ingresos (sin orderBy para evitar índices)
-                    const [ventasSnap, retirosSnap, ingresosSnap] = await Promise.all([
-                        AppState.db.collection("VENTAS")
-                            .where("date", "==", date)
-                            .get(),
-                        AppState.db.collection("RETIROS")
-                            .where("date", "==", date)
-                            .get(),
-                        AppState.db.collection("INGRESOS")
-                            .where("date", "==", date)
-                            .get()
+                    // Cargar en paralelo con Promise.allSettled
+                    const results = await Promise.allSettled([
+                        AppState.db.collection("VENTAS").where("date", "==", date).get(),
+                        AppState.db.collection("RETIROS").where("date", "==", date).get(),
+                        AppState.db.collection("INGRESOS").where("date", "==", date).get()
                     ]);
+
+                    const ventasSnap = results[0].status === 'fulfilled' ? results[0].value : { docs: [] };
+                    const retirosSnap = results[1].status === 'fulfilled' ? results[1].value : { docs: [] };
+                    const ingresosSnap = results[2].status === 'fulfilled' ? results[2].value : { docs: [] };
+
+                    if (results[0].status === 'rejected') console.error("Error loading sales by date:", results[0].reason);
+                    if (results[1].status === 'rejected') console.error("Error loading retiros by date:", results[1].reason);
+                    if (results[2].status === 'rejected') console.error("Error loading ingresos by date:", results[2].reason);
 
                     const ventas = ventasSnap.docs.map(doc => ({ id: doc.id, ...doc.data(), tipo: 'venta' }));
                     const retiros = retirosSnap.docs.map(doc => ({ id: doc.id, ...doc.data(), tipo: 'retiro' }));
@@ -3194,7 +3204,7 @@
                         return dateB - dateA;
                     }).slice(0, limit);
                 } catch (error) {
-                    console.error("Error cargando movimientos por fecha:", error);
+                    console.error("Critical error loading movements by date:", error);
                     return [];
                 }
             },

@@ -675,6 +675,9 @@
             <li class="menu-item" onclick="window.location.href='movil_analisis.html'">
                 <i class="fas fa-chart-line"></i> Análisis Productos
             </li>
+            <li class="menu-item" onclick="window.location.href='ventas_movil.html'">
+                <i class="fas fa-plus-circle"></i> Nueva Venta
+            </li>
         </ul>
     </div>
 
@@ -848,10 +851,14 @@
 
                 let allItems = [];
                 let totalVentasContado = 0;
-                let totalCredito = 0;
+                let totalVentasCredito = 0;
                 let totalAbonos = 0;
                 let totalRetiros = 0;
                 let totalIngresosExtras = 0;
+
+                // Sets para rastrear ventas de contado de HOY y evitar duplicidad con abonos
+                const ventasContadoHoyIds = new Set();
+                const ventasContadoHoyNumbers = new Set();
 
                 // 1. PROCESAR VENTAS
                 ventasSnap.forEach(doc => {
@@ -865,23 +872,14 @@
                         const monto = parseFloat(item.total || item.monto || 0);
 
                         // Sumar Venta (Contado o Crédito)
+                        // Si es contado, la registramos para NO sumar su abono si aparece en INGRESOS
                         if (item.paymentType === 'contado') {
                             totalVentasContado += monto;
+                            ventasContadoHoyIds.add(doc.id);
+                            if (item.invoiceNumber) ventasContadoHoyNumbers.add(String(item.invoiceNumber));
                         } else {
-                            totalCredito += monto;
+                            totalVentasCredito += monto;
                         }
-
-                        // Sumar Abonos DE HOY dentro de esta venta
-                        // CORRECCIÓN: NO SUMAR ARRAY INTERNO.
-                        // Causa duplicidad si ya existen documentos de abono independientes en 'INGRESOS'/'ABONOS'.
-                        // Confiamos 100% en que cada abono real genera su propio documento en la colección INGRESOS.
-                        /* 
-                        if (item.abonos && Array.isArray(item.abonos)) {
-                            item.abonos.forEach(ab => {
-                                totalAbonos += parseFloat(ab.monto || 0);
-                            });
-                        }
-                        */
                     }
                 });
 
@@ -909,9 +907,20 @@
 
                         const monto = parseFloat(item.monto || 0);
                         if (isAbono) {
-                            totalAbonos += monto;
+                            // VERIFICACIÓN CRÍTICA:
+                            // Si este abono corresponde a una venta que HOY ya se cobró como CONTADO,
+                            // NO debemos sumarlo de nuevo, pues el dinero ya entró en 'totalVentasContado'.
+                            // Se verifica por ID de documento (saleId) o Número de Factura.
+                            const isDuplicate = (data.saleId && ventasContadoHoyIds.has(data.saleId)) ||
+                                (data.invoiceNumber && ventasContadoHoyNumbers.has(String(data.invoiceNumber)));
+
+                            if (!isDuplicate) {
+                                totalAbonos += monto;
+                            } else {
+                                console.log("Abono omitido de caja por pertenecer a Venta Contado de hoy:", data.invoiceNumber);
+                            }
                         } else {
-                            totalVentasContado += monto; // Ingresos extras suman a la caja "venta del dia"
+                            totalIngresosExtras += monto;
                         }
                     }
                 });
@@ -919,29 +928,39 @@
                 // Ordenar por hora descendente
                 allItems.sort((a, b) => b.dateObj - a.dateObj);
 
-                // Renderizar Resumen
-                // Ventas Hoy: Sumamos Contado + Crédito para mostrar "Lo que se vendió" (aunque no todo entró en caja)
-                // OJO: El usuario suele querer ver "Cuánto dinero entró".
-                // Ajuste a lógica 'historialUnificado': 
-                // Contado: $X
-                // Caja Final = Contado + Abonos - Retiros
+                // --- CÁLCULOS FILOSOFÍA DE CAJA ---
+                // "Ventas Hoy": Para el usuario, esto debe reflejar "Cuánto vendí/produje hoy",
+                // por lo tanto debe incluir Ventas (Contado + Crédito) + Ingresos Extras (Servicios, etc).
+                const totalProducido = totalVentasContado + totalVentasCredito + totalIngresosExtras;
 
-                // Tarjeta 1: Ventas Hoy (Efectivo Real: Contado + Ingresos)
-                // Ajuste solicitado: Solo mostrar lo que entró en efectivo real por ventas/ingresos, excluyendo crédito.
-                document.getElementById('today-total').textContent = `$${totalVentasContado.toFixed(2)}`;
+                // "Caja Final": Esto es DINERO FÍSICO REAL.
+                // Caja = (Ventas Contado + Ingresos) + Abonos (validos) - Retiros
+                const cajaFinal = (totalVentasContado + totalIngresosExtras) + totalAbonos - totalRetiros;
 
-                // Tarjeta 2: Abonos (Dinero recuperado)
+                // Renderizar Tarjetas
+
+                // Tarjeta 1: Total Producido (Ventas + Créditos + Ingresos)
+                document.getElementById('today-total').textContent = `$${totalProducido.toFixed(2)}`;
+
+                // Tarjeta 2: Abonos (Dinero recuperado de deudas pasadas)
                 document.getElementById('today-abonos').textContent = `$${totalAbonos.toFixed(2)}`;
 
                 // Tarjeta 3: Retiros
                 document.getElementById('today-retiros').textContent = `$${totalRetiros.toFixed(2)}`;
 
-                // Tarjeta 4: Caja Final (Dinero Real en Mano: Ventas(Contado+Ingresos) + Abonos - Retiros)
-                const cajaFinal = totalVentasContado + totalAbonos - totalRetiros;
+                // Tarjeta 4: Caja Final
                 document.getElementById('today-caja').textContent = `$${cajaFinal.toFixed(2)}`;
 
-                // Debug para usuario si lo necesita
-                console.log("Cálculo Día:", { totalVentasContado, totalCredito, totalAbonos, totalRetiros, cajaFinal });
+                // Debug para validación
+                console.log("Resumen del Día:", {
+                    VentasContado: totalVentasContado,
+                    VentasCredito: totalVentasCredito,
+                    IngresosExtras: totalIngresosExtras,
+                    Abonos: totalAbonos,
+                    Retiros: totalRetiros,
+                    TOTAL_PRODUCIDO: totalProducido,
+                    CAJA_FINAL: cajaFinal
+                });
 
                 // Renderizar Lista
                 renderList(allItems, listContainer);
