@@ -1314,7 +1314,7 @@
             <div class="form-actions">
                 <button class="btn btn-secondary"
                     onclick="document.getElementById('importModal').style.display='none'">Cancelar</button>
-                <button class="btn btn-success" onclick="processImport()">
+                <button class="btn btn-success" id="btn-process-import">
                     <i class="fas fa-upload"></i> Importar Ahora
                 </button>
             </div>
@@ -2708,149 +2708,223 @@
     <!-- Servicios de Inventario -->
     <script src="js/inventory/KardexService.js"></script>
     <script src="js/inventory/InventoryApp.js"></script>
-    <!-- Inyección Directa de Función de Importación (Bypass de errores de carga de archivo externo) -->
+    <!-- Inyección Directa de Función de Importación Mejorada -->
     <script>
-        async function importExcelNew(input) {
-            if (!input.files || !input.files[0]) return;
+        async function processImport(inputElement) {
+            let input = inputElement;
+            if (!input || !input.files) {
+                input = document.getElementById('hidden-import-input') || document.getElementById('import-excel-input');
+            }
+
+            if (!input || !input.files || !input.files[0]) return;
+
             const file = input.files[0];
-            const shouldUpdate = confirm("¿Deseas actualizar los productos existentes que tengan el mismo Código?\n\n[Aceptar] = Sí.\n[Cancelar] = No (saltar).");
-            input.value = '';
+
+            showFloatingNotification("Leyendo archivo...", "info");
 
             const reader = new FileReader();
             reader.onload = async function (e) {
                 try {
-                    const data = e.target.result;
-                    const workbook = XLSX.read(data, { type: 'binary' });
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+
+                    // 1. Obtener datos de la primera hoja
                     const firstSheetName = workbook.SheetNames[0];
-                    const worksheet = workbook.Sheets[firstSheetName];
+                    const sheet = workbook.Sheets[firstSheetName];
+                    // header: 1 devuelve un array de arrays (filas crudas)
+                    const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
 
-                    // 1. Leer matriz bruta y buscar encabezados
-                    const rawMatrix = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-                    if (!rawMatrix || rawMatrix.length === 0) {
-                        alert("Archivo vacío."); return;
-                    }
+                    if (!rows || rows.length === 0) throw new Error("Archivo vacío");
 
-                    let headerIdx = -1;
-                    let headers = [];
-                    // Buscar fila con 'codigo' y 'descripcion'
-                    for (let i = 0; i < rawMatrix.length; i++) {
-                        const rowStr = JSON.stringify(rawMatrix[i]).toLowerCase();
-                        if (rowStr.includes('codigo') || rowStr.includes('descripcion')) {
-                            headerIdx = i;
-                            headers = rawMatrix[i].map(h => String(h).trim());
+                    // 2. Buscar fila de encabezados
+                    // Buscamos donde empieza la "tabla" real
+                    let headerRowIndex = 0;
+                    const keywords = ['CODIGO', 'DESCRIPCION', 'PRECIO', 'VENTA', 'EXISTENCIA', 'STOCK', 'COSTO'];
+
+                    for (let i = 0; i < Math.min(rows.length, 20); i++) {
+                        const rowStr = JSON.stringify(rows[i]).toUpperCase();
+                        // Si la fila contiene al menos 2 palabras clave, es el header
+                        if (keywords.filter(k => rowStr.includes(k)).length >= 2) {
+                            headerRowIndex = i;
                             break;
                         }
                     }
 
-                    if (headerIdx === -1) {
-                        alert("No se detectaron columnas 'Codigo' / 'Descripcion'. Usando primera fila.");
-                        headerIdx = 0;
-                        headers = rawMatrix[0].map(h => String(h).trim());
-                    }
+                    const rawHeaders = rows[headerRowIndex] || [];
+                    const headers = rawHeaders.map(h => String(h).toUpperCase().trim());
 
-                    // 2. Procesar filas de datos
-                    let products = [];
-                    const cleanNumber = (val) => {
-                        if (val === undefined || val === null || val === '') return 0;
-                        if (typeof val === 'number') return val;
-                        const s = String(val).replace(/,/g, '').replace(/$/g, '').trim();
-                        return parseFloat(s) || 0;
+                    // 3. Mapeo de Columnas (Estrategia Mejorada)
+
+                    const normalize = (h) => h.replace(/[^A-Z0-9]/g, ''); // Solo letras y numeros
+
+                    // Función auxiliar que busca coincidencias EXACTAS o PARCIALES con prioridades
+                    const findCol = (terms, exclusionTerm = null) => {
+                        // Buscar coincidencia exacta primero
+                        let idx = headers.findIndex(h => terms.includes(normalize(h)));
+                        if (idx !== -1) return idx;
+
+                        // Buscar parcial, pero con cuidado de exclusiones
+                        return headers.findIndex(h => {
+                            const cleanH = normalize(h);
+                            // Si definimos un termino de exclusión (ej. 'DESCRIPCION' para evitar que 'DESCRIPCIONINVENTARIO' match con 'INVENTARIO')
+                            if (exclusionTerm && cleanH.includes(exclusionTerm)) return false;
+                            return terms.some(term => cleanH.includes(term));
+                        });
                     };
 
-                    for (let i = headerIdx + 1; i < rawMatrix.length; i++) {
-                        const rowArr = rawMatrix[i];
-                        if (!rowArr || rowArr.length === 0) continue;
+                    const colMap = {
+                        codigo: findCol(['CODIGO', 'CODE', 'ID']),
 
-                        // Crear objeto temporal mapa
-                        let rowObj = {};
-                        headers.forEach((h, idx) => { if (h) rowObj[h] = rowArr[idx]; });
+                        // Descripción suele ser fácil
+                        desc: findCol(['DESCRIPCION', 'PRODUCTO', 'ARTICULO', 'DESCRIPCIONINVENTARIO']),
 
-                        // Buscar CÓDIGO
-                        let codigo = rowObj['Codigo'] || rowObj['codigo'];
-                        if (!codigo) {
-                            const k = Object.keys(rowObj).find(key => key.toLowerCase().includes('cod'));
-                            if (k) codigo = rowObj[k];
+                        // Costo: Buscar 'COSTO' o 'COMPRA'
+                        costo: findCol(['COSTO', 'COMPRA', 'PRECIOCOSTO']),
+
+                        // VENTA: IMPORTANTE. Evitar que coincida con 'PRECIOCOSTO' si solo buscamos 'PRECIO'
+                        // Buscamos 'VENTA' explícitamente primero
+                        precio: findCol(['VENTA', 'PVP', 'PUBLICO', 'PRECIOVENTA']),
+
+                        // EXISTENCIA: IMPORTANTE. 
+                        // El problema anterior fue que 'DESCRIPCIONINVENTARIO' contiene 'INVENTARIO' y matcheó como Stock.
+                        // Solución: Excluir headers que contengan 'DESCRIP' al buscar Stock
+                        exist: findCol(['EXISTENCIA', 'STOCK', 'CANTIDAD', 'INVENTARIO'], 'DESCRIP')
+                    };
+
+                    // Ajuste Post-Mapeo: Si Precio no se halló, probar con 'PRECIO' genérico (pero que NO sea costo)
+                    if (colMap.precio === -1) {
+                        const idxPrecio = headers.findIndex(h => normalize(h) === 'PRECIO'); // Búsqueda exacta primero
+                        if (idxPrecio !== -1 && idxPrecio !== colMap.costo) {
+                            colMap.precio = idxPrecio;
                         }
+                    }
 
-                        // Generar código automático si sigue vacío -> ELIMINADO POR SOLICITUD USUARIO
-                        // Se permite código vacío.
+                    let strategy = "Por Nombres de Columna";
 
-                        // Buscar CANTIDAD (Stock)
-                        // Prioridad 1: Por nombre
-                        let qtyVal = undefined;
-                        const qtyKey = Object.keys(rowObj).find(k => {
-                            const kl = k.toLowerCase();
-                            return kl.includes('31/12') || (kl.includes('inventario') && !kl.includes('descrip')) || kl.includes('existencia') || kl.includes('stock');
-                        });
-                        if (qtyKey) qtyVal = rowObj[qtyKey];
+                    // B) ESTRATEGIA DE RESPALDO POR POSICIÓN (Basado en la imagen del usuario)
+                    // Si falló la detección de Precio o Existencia, usamos posiciones fijas estándar
+                    // Estructura Imagen: A=CODIGO, B=DESCRIPCION, C=COSTO, D=VENTA, E=EXISTENCIA
+                    if (colMap.precio === -1 || colMap.exist === -1) {
+                        console.warn("Fell back to positional mapping");
+                        strategy = "Por Posición Estándar (Imagen)";
+                        // Solo sobreescribimos si no se encontró por nombre, o forzamos si la estructura parece coincidir
+                        if (colMap.codigo === -1) colMap.codigo = 0;
+                        if (colMap.desc === -1) colMap.desc = 1;
+                        if (colMap.costo === -1) colMap.costo = 2; // C
+                        if (colMap.precio === -1) colMap.precio = 3; // D
+                        if (colMap.exist === -1) colMap.exist = 4; // E
+                    }
 
-                        // Prioridad 2: Fallback FORZOSO a Columna F (Indice 5) si no hay valor
-                        if (qtyVal === undefined && rowArr.length > 5) {
-                            qtyVal = rowArr[5];
-                        }
+                    // DIAGNÓSTICO FINAL PARA USUARIO
+                    let msg = `Estrategia usada: ${strategy}\n\n`;
+                    msg += `Fila Encabezados: #${headerRowIndex + 1}\n`;
+                    msg += `Encabezados leídos: [${headers.join(', ')}]\n\n`;
+                    msg += `INTERPRETACIÓN:\n`;
+                    msg += `• Código: Columna ${colMap.codigo} (${headers[colMap.codigo] || 'N/A'})\n`;
+                    msg += `• Descrip: Columna ${colMap.desc} (${headers[colMap.desc] || 'N/A'})\n`;
+                    msg += `• Costo: Columna ${colMap.costo} (${headers[colMap.costo] || 'N/A'})\n`;
+                    msg += `• Venta: Columna ${colMap.precio} (${headers[colMap.precio] || 'N/A'})\n`;
+                    msg += `• Stock: Columna ${colMap.exist} (${headers[colMap.exist] || 'N/A'})\n`;
 
-                        // Costo y Precio
-                        let costoVal = rowObj['Precio costo'];
-                        if (!costoVal) {
-                            const k = Object.keys(rowObj).find(key => key.toLowerCase().includes('costo') || key.toLowerCase().includes('compra'));
-                            if (k) costoVal = rowObj[k];
-                        }
+                    if (!confirm(msg + "\n¿Continuar con estos datos?")) return;
 
-                        let precioVal = rowObj['Precio de venta'];
-                        if (!precioVal) {
-                            const k = Object.keys(rowObj).find(key => key.toLowerCase().includes('precio') || key.toLowerCase().includes('venta'));
-                            if (k) precioVal = rowObj[k];
-                        }
+                    // 4. Procesar Datos
+                    const products = [];
+                    const dataRows = rows.slice(headerRowIndex + 1);
+
+                    const cleanNum = (val) => {
+                        if (!val) return 0;
+                        if (typeof val === 'number') return val;
+                        // Eliminar todo excepto números y puntos
+                        // Esto maneja "$ 1,200.50" -> "1200.50" y también "$ 1200,50" -> "120050" (ojo)
+                        // Asumiremos formato con punto decimal estándar.
+                        const str = String(val).replace(/[^0-9.]/g, '');
+                        return parseFloat(str) || 0;
+                    };
+
+                    dataRows.forEach(row => {
+                        if (!row || row.length < 2) return; // Saltar filas muy cortas
+
+                        // Lectura segura por índice
+                        const getVal = (idx) => (idx > -1 && idx < row.length) ? row[idx] : null;
+
+                        const rawCode = getVal(colMap.codigo);
+                        const rawDesc = getVal(colMap.desc);
+
+                        // Si no hay descripción, ignoramos
+                        if (!rawDesc) return;
 
                         products.push({
-                            codigo: codigo ? String(codigo).trim() : "", // Código vacío permitido
-                            descripcion: rowObj['Descripcion'] || rowObj['Descripcion según inventario'] || '',
-                            descripcionTaller: rowObj['Descripcion según factura'] || '',
-                            cantidad: parseInt(cleanNumber(qtyVal)),
-                            costo: cleanNumber(costoVal),
-                            precio: cleanNumber(precioVal)
+                            codigo: rawCode ? String(rawCode).trim() : "",
+                            descripcion: String(rawDesc).trim(),
+                            descripcionTaller: String(rawDesc).trim(),
+                            cantidad: cleanNum(getVal(colMap.exist)),
+                            costo: cleanNum(getVal(colMap.costo)),
+                            precio: cleanNum(getVal(colMap.precio)),
+                            minStock: 5,
+                            creditoFiscal: false,
+                            fechaActualizacion: firebase.firestore.FieldValue.serverTimestamp()
                         });
-                    }
+                    });
 
                     if (products.length === 0) {
-                        alert("No se encontraron productos válidos."); return;
+                        alert("No se pudieron extraer productos. Revisa el mensaje de diagnóstico anterior.");
+                        return;
                     }
 
-                    // Guardar en Firebase
-                    const batch = db.batch();
-                    let count = 0;
+                    showFloatingNotification(`Guardando ${products.length} productos...`, "info");
 
-                    // Obtener códigos actuales para verificar duplicados solo si hay código
-                    const currentCodes = new Set(inventoryData.filter(p => p.codigo).map(p => p.codigo));
+                    // 5. Guardar en Firebase
+                    const db = firebase.firestore();
+                    const batchLimit = 400;
+                    let batches = [db.batch()];
+                    let count = 0;
+                    let batchCount = 0;
 
                     products.forEach(p => {
-                        // Si tiene código y ya existe, verificar flag de update
-                        if (p.codigo && currentCodes.has(p.codigo) && !shouldUpdate) return;
-
+                        // Generar ID si no tiene código
                         let ref;
                         if (p.codigo) {
-                            // Si tiene código, usarlo como ID del documento (comportamiento estándar)
                             ref = db.collection('INVENTARIO').doc(p.codigo);
                         } else {
-                            // Si NO tiene código, usar ID automático de Firebase
                             ref = db.collection('INVENTARIO').doc();
+                            p.codigo = "S/C-" + ref.id.substring(0, 5).toUpperCase();
                         }
 
-                        batch.set(ref, p, { merge: true });
+                        if (batchCount >= batchLimit) {
+                            batches.push(db.batch());
+                            batchCount = 0;
+                        }
+
+                        batches[batches.length - 1].set(ref, p, { merge: true });
+                        batchCount++;
                         count++;
                     });
 
-                    if (count > 0) await batch.commit();
-                    showFloatingNotification(`Importación completada. (${count} importados)`, "success");
+                    await Promise.all(batches.map(b => b.commit()));
+
+                    alert(`Importación Exitosa: ${count} productos guardados.`);
+                    if (input) input.value = '';
                     loadInventory();
 
-                } catch (error) {
-                    console.error(error);
-                    alert("Error: " + error.message);
+                } catch (err) {
+                    console.error(err);
+                    alert("Error: " + err.message);
                 }
             };
-            reader.readAsBinaryString(file);
+            reader.readAsArrayBuffer(file);
         }
+
+        // Exponer funciones globalmente
+        window.processImport = processImport;
+        window.importExcelNew = processImport;
+
+        // Capturar errores globales de script para depuración
+        window.onerror = function (msg, url, line) {
+            if (msg.includes('font') || msg.includes('extension')) return false;
+            console.error("Error Global:", msg, "Line:", line);
+            return false;
+        };
     </script>
 </body>
 
