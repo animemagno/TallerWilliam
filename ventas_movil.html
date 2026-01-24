@@ -181,8 +181,21 @@
             color: var(--text-secondary);
         }
 
+        .search-clear-icon {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 5px;
+            display: none;
+            z-index: 10;
+        }
+
         .search-input {
             padding-left: 42px;
+            padding-right: 40px;
             height: 50px;
             border-radius: 25px;
             /* Pill shape */
@@ -483,6 +496,7 @@
                 <i class="fas fa-search search-icon"></i>
                 <input type="text" id="input-busqueda" class="search-input" placeholder="Buscar Repuesto..."
                     autocomplete="off">
+                <i class="fas fa-times search-clear-icon" id="btn-clear-search" onclick="App.clearSearch()"></i>
             </div>
 
             <div id="search-results" class="results-list">
@@ -622,7 +636,18 @@
                 console.log("Inventario cargado items:", this.state.inventarioCache.length);
             },
 
+            clearSearch() {
+                const input = document.getElementById('input-busqueda');
+                input.value = '';
+                input.focus();
+                this.handleSearch('');
+            },
+
             async handleSearch(query) {
+                // Mostrar/Ocultar botón X
+                const clearBtn = document.getElementById('btn-clear-search');
+                if (clearBtn) clearBtn.style.display = query && query.length > 0 ? 'block' : 'none';
+
                 const container = document.getElementById('search-results');
                 if (!query || query.length < 2) {
                     container.innerHTML = `
