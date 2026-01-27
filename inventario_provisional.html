@@ -171,11 +171,80 @@
             display: flex;
             gap: 8px;
         }
+
+        /* Estilos para Checkboxes y Borrado Masivo */
+        .select-checkbox {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: #3498db;
+        }
+
+        .delete-bar {
+            background-color: #e74c3c;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+            /* Oculto por defecto */
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .delete-bar span {
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .btn-delete-all {
+            background-color: white;
+            color: #c0392b;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            transition: transform 0.1s;
+        }
+
+        .btn-delete-all:hover {
+            transform: scale(1.05);
+            background-color: #ecf0f1;
+        }
+
+        .btn-delete-all:active {
+            transform: scale(0.95);
+        }
     </style>
 </head>
 
 <body>
     <div class="container">
+
+        <!-- Barra de Borrado Masivo -->
+        <div id="deleteBar" class="delete-bar">
+            <span><i class="fas fa-check-circle"></i> <span id="selectedCount">0</span> productos seleccionados</span>
+            <button class="btn-delete-all" onclick="deleteSelectedItems()">
+                <i class="fas fa-trash-alt"></i> ELIMINAR SELECCIONADOS
+            </button>
+        </div>
+
         <div class="nav-header">
             <button class="btn btn-secondary" onclick="window.location.href='inventario.html'">
                 <i class="fas fa-arrow-left"></i> Volver al Inventario
@@ -194,6 +263,10 @@
             <table id="inventoryTable">
                 <thead>
                     <tr>
+                        <th style="width: 40px; text-align: center;">
+                            <input type="checkbox" id="selectAll" class="select-checkbox" onclick="toggleAll(this)"
+                                title="Seleccionar Todo">
+                        </th>
                         <th>Código</th>
                         <th>Descripción</th>
                         <th>Precio Venta</th>
@@ -282,6 +355,8 @@
                 currentData.sort((a, b) => (a.descripcion || '').localeCompare(b.descripcion || ''));
 
                 renderTable(currentData);
+                document.getElementById('selectAll').checked = false;
+                updateSelectionUI();
             } catch (error) {
                 console.error(error);
                 tbody.innerHTML = `<tr><td colspan="6" style="color:red; text-align:center; padding: 20px;">Error al cargar: ${error.message}</td></tr>`;
@@ -300,6 +375,9 @@
             data.forEach(item => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
+                    <td style="text-align: center;">
+                        <input type="checkbox" class="select-checkbox item-checkbox" value="${item.id}" onclick="updateSelectionUI()">
+                    </td>
                     <td><strong>${item.codigo || '<span style="color:#aaa;">S/C</span>'}</strong></td>
                     <td>${item.descripcion || 'Sin descripción'}</td>
                     <td style="color: #27ae60; font-weight:bold;">$${parseFloat(item.precio || 0).toFixed(2)}</td>
@@ -379,11 +457,92 @@
                 await db.collection(COLLECTION_NAME).doc(id).delete();
                 // Eliminar localmente
                 currentData = currentData.filter(i => i.id !== id);
-                filterTable();
+                renderTable(currentData); // Usar renderTable para mantener consistencia UI
 
             } catch (error) {
                 console.error(error);
                 alert('Error al eliminar: ' + error.message);
+            }
+        }
+
+        // --- Funciones de Borrado Masivo ---
+
+        function toggleAll(source) {
+            const checkboxes = document.querySelectorAll('.item-checkbox');
+            checkboxes.forEach(cb => {
+                // Solo marcar los visibles (filtrados)
+                if (cb.offsetParent !== null) {
+                    cb.checked = source.checked;
+                }
+            });
+            updateSelectionUI();
+        }
+
+        function updateSelectionUI() {
+            const checkboxes = document.querySelectorAll('.item-checkbox:checked');
+            const count = checkboxes.length;
+            const deleteBar = document.getElementById('deleteBar');
+            const counterSpan = document.getElementById('selectedCount');
+
+            counterSpan.textContent = count;
+
+            if (count > 0) {
+                deleteBar.style.display = 'flex';
+            } else {
+                deleteBar.style.display = 'none';
+                document.getElementById('selectAll').checked = false;
+            }
+        }
+
+        async function deleteSelectedItems() {
+            const checkboxes = document.querySelectorAll('.item-checkbox:checked');
+            const idsToDelete = Array.from(checkboxes).map(cb => cb.value);
+
+            if (idsToDelete.length === 0) return;
+
+            if (!confirm(`¿Estás seguro de ELIMINAR ${idsToDelete.length} PRODUCTOS seleccionados?\nEsta acción es irreversible.`)) {
+                return;
+            }
+
+            const btnDelete = document.querySelector('.btn-delete-all');
+            const originalText = btnDelete.innerHTML;
+            btnDelete.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Eliminando...';
+            btnDelete.disabled = true;
+
+            try {
+                // Firebase: Batch delete (límite 500 ops por batch)
+                const batchSize = 400;
+                const chunks = [];
+
+                for (let i = 0; i < idsToDelete.length; i += batchSize) {
+                    chunks.push(idsToDelete.slice(i, i + batchSize));
+                }
+
+                for (const chunk of chunks) {
+                    const batch = db.batch();
+                    chunk.forEach(id => {
+                        const ref = db.collection(COLLECTION_NAME).doc(id);
+                        batch.delete(ref);
+                    });
+                    await batch.commit();
+                }
+
+                // Actualizar localmente
+                currentData = currentData.filter(item => !idsToDelete.includes(item.id));
+
+                // Reset UI
+                filterTable(); // Re-renderizar
+                document.getElementById('selectAll').checked = false;
+                updateSelectionUI(); // Ocultará la barra
+
+                alert(`Se han eliminado ${idsToDelete.length} productos correctamente.`);
+
+            } catch (error) {
+                console.error("Error en borrado masivo:", error);
+                alert("Error al eliminar productos: " + error.message);
+            } finally {
+                btnDelete.innerHTML = originalText;
+                btnDelete.disabled = false;
             }
         }
 

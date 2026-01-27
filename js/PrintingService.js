@@ -471,7 +471,8 @@ const PrintingService = {
     },
 
     printTicket(saleData) {
-        const printWindow = window.open('', '_blank', 'width=300,height=600');
+        // CORRECCIÓN IMPRESIÓN: Ventana un poco más ancha para evitar cortes laterales
+        const printWindow = window.open('', '_blank', 'width=320,height=600');
         const fecha = saleData.timestamp ? new Date(saleData.timestamp.toDate ? saleData.timestamp.toDate() : saleData.timestamp) : DateUtils.getCurrentTimestampElSalvador();
         const fechaFormateada = fecha.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' });
 
@@ -503,7 +504,7 @@ const PrintingService = {
                             <div>$${(producto.precio * producto.cantidad).toFixed(2)}</div>
                         </div>
                     </div>
-                    <div style="border-bottom: 1px dotted #000; margin: 2px 0;"></div>
+                    <div style="border-bottom: 3px solid #000; margin: 2px 0;"></div>
                 `;
             });
         }
@@ -515,6 +516,12 @@ const PrintingService = {
                 <meta charset="UTF-8">
                 <title>Ticket #${this._escape(saleData.invoiceNumber)}</title>
                 <style>
+                    /* CORRECCIÓN IMPRESIÓN: Forzar negro puro y renderizado óptimo */
+                    * {
+                        color: #000 !important;
+                        text-rendering: optimizeLegibility;
+                        -webkit-font-smoothing: antialiased;
+                    }
                     body { 
                         font-family: 'Courier New', monospace; 
                         font-size: 22px; 
@@ -522,9 +529,11 @@ const PrintingService = {
                         padding: 6px;
                         width: 58mm;
                         font-weight: bold;
+                        background: white; /* Asegurar fondo blanco */
                     }
                     .header { text-align: center; margin-bottom: 12px; }
-                    .line { border-bottom: 2px dashed #000; margin: 4px 0; }
+                    /* Líneas más gruesas y negras para evitar difuminado */
+                    .line { border-bottom: 3px dashed #000; margin: 4px 0; }
                     .total { font-weight: bold; text-align: center; margin-top: 12px; font-size: 24px; }
                     .footer { text-align: center; margin-top: 12px; font-size: 18px; font-weight: bold; }
                     .small-text { font-size: 18px; }
@@ -533,10 +542,10 @@ const PrintingService = {
                     .equipo-text { font-size: 32px; font-weight: 900; margin: 5px 0; }
                     .thank-you { text-align: center; margin-top: 15px; font-weight: bold; font-size: 20px; }
                     .saldo-info {
-                        background: #f0f0f0;
+                        background: #fff; /* Quitar fondo gris para impresión térmica */
+                        border: 2px solid #000; /* Borde negro en lugar de fondo gris */
                         padding: 8px;
                         margin: 8px 0;
-                        border-radius: 4px;
                         font-size: 18px;
                     }
                 </style>
@@ -590,25 +599,23 @@ const PrintingService = {
         printWindow.document.open();
         printWindow.document.write(contenido);
         printWindow.document.close();
-        printWindow.focus();
 
+        // CORRECCIÓN IMPRESIÓN: Asegurar carga completa antes de imprimir
         printWindow.onload = function () {
-            setTimeout(() => {
-                printWindow.print();
-                printWindow.onafterprint = function () {
-                    printWindow.close(); // Cerrar solo después de imprimir
-                };
-            }, 500);
+            // Esperar un momento extra para rendering y carga de fuentes
+            printWindow.document.fonts.ready.then(() => {
+                setTimeout(() => {
+                    printWindow.focus();
+                    printWindow.print();
+                    // Cerrar automáticamente después de imprimir (opcional, algunos navegadores bloquean esto)
+                    // printWindow.onafterprint = function() { printWindow.close(); }; 
+                }, 800); // 800ms de retraso para asegurar nitidez
+            });
         };
-
-        // Fallback
-        if (printWindow.document.readyState === 'complete') {
-            printWindow.onload();
-        }
     },
 
     printAbonoTicket(venta, abonoData, nuevoSaldo) {
-        const printWindow = window.open('', '_blank', 'width=300,height=600');
+        const printWindow = window.open('', '_blank', 'width=320,height=600');
         const fechaAbono = abonoData.fecha ? new Date(abonoData.fecha.toDate ? abonoData.fecha.toDate() : abonoData.fecha) : DateUtils.getCurrentTimestampElSalvador();
         const fechaFormateada = fechaAbono.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' });
 
@@ -619,6 +626,12 @@ const PrintingService = {
                 <meta charset="UTF-8">
                 <title>Abono #${this._escape(venta.invoiceNumber)}</title>
                 <style>
+                    /* CORRECCIÓN IMPRESIÓN: Forzar negro puro */
+                    * {
+                        color: #000 !important;
+                        text-rendering: optimizeLegibility;
+                        -webkit-font-smoothing: antialiased;
+                    }
                     body { 
                         font-family: 'Courier New', monospace; 
                         font-size: 22px; 
@@ -626,9 +639,10 @@ const PrintingService = {
                         padding: 6px;
                         width: 58mm;
                         font-weight: bold;
+                        background: white;
                     }
                     .header { text-align: center; margin-bottom: 12px; }
-                    .line { border-bottom: 2px dashed #000; margin: 4px 0; }
+                    .line { border-bottom: 3px dashed #000; margin: 4px 0; }
                     .abono-detail { 
                         margin: 8px 0;
                         font-size: 20px;
@@ -641,7 +655,8 @@ const PrintingService = {
                     .equipo-text { font-size: 32px; font-weight: 900; margin: 5px 0; }
                     .thank-you { text-align: center; margin-top: 15px; font-weight: bold; font-size: 20px; }
                     .saldo-info {
-                        background: #f0f0f0;
+                        background: #fff;
+                        border: 2px solid #000;
                         padding: 8px;
                         margin: 8px 0;
                         border-radius: 4px;
@@ -690,24 +705,20 @@ const PrintingService = {
                 `);
 
         printWindow.document.close();
-        printWindow.focus();
 
         printWindow.onload = function () {
-            setTimeout(() => {
-                printWindow.print();
-                printWindow.onafterprint = function () {
-                    printWindow.close();
-                };
-            }, 500);
+            printWindow.document.fonts.ready.then(() => {
+                setTimeout(() => {
+                    printWindow.focus();
+                    printWindow.print();
+                    // printWindow.onafterprint = function() { printWindow.close(); };
+                }, 800);
+            });
         };
-
-        if (printWindow.document.readyState === 'complete') {
-            printWindow.onload();
-        }
     },
 
     printRetiroTicket(retiroData) {
-        const printWindow = window.open('', '_blank', 'width=300,height=600');
+        const printWindow = window.open('', '_blank', 'width=320,height=600');
         const fecha = retiroData.timestamp ? new Date(retiroData.timestamp.toDate ? retiroData.timestamp.toDate() : retiroData.timestamp) : DateUtils.getCurrentTimestampElSalvador();
         const fechaFormateada = fecha.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' });
 
@@ -725,6 +736,12 @@ const PrintingService = {
                 <meta charset="UTF-8">
                 <title>Retiro de Fondos</title>
                 <style>
+                    /* CORRECCIÓN IMPRESIÓN: Forzar negro puro */
+                    * {
+                        color: #000 !important;
+                        text-rendering: optimizeLegibility;
+                        -webkit-font-smoothing: antialiased;
+                    }
                     body { 
                         font-family: 'Courier New', monospace; 
                         font-size: 22px; 
@@ -732,9 +749,10 @@ const PrintingService = {
                         padding: 6px;
                         width: 58mm;
                         font-weight: bold;
+                        background: white;
                     }
                     .header { text-align: center; margin-bottom: 12px; }
-                    .line { border-bottom: 2px dashed #000; margin: 4px 0; }
+                    .line { border-bottom: 3px dashed #000; margin: 4px 0; }
                     .retiro-detail { 
                         margin: 8px 0;
                         font-size: 20px;
@@ -787,19 +805,15 @@ const PrintingService = {
                 `);
 
         printWindow.document.close();
-        printWindow.focus();
 
         printWindow.onload = function () {
-            setTimeout(() => {
-                printWindow.print();
-                printWindow.onafterprint = function () {
-                    printWindow.close();
-                };
-            }, 500);
+            printWindow.document.fonts.ready.then(() => {
+                setTimeout(() => {
+                    printWindow.focus();
+                    printWindow.print();
+                    // printWindow.onafterprint = function() { printWindow.close(); };
+                }, 800);
+            });
         };
-
-        if (printWindow.document.readyState === 'complete') {
-            printWindow.onload();
-        }
     }
 };
