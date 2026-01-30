@@ -9,6 +9,136 @@ const PrintingService = {
             .replace(/'/g, "&#039;");
     },
 
+    printBalanceHistory(reportData) {
+        // VERSIÓN SIMPLIFICADA PARA DIAGNÓSTICO
+        try {
+            if (!reportData || !reportData.movimientos) { alert("Error: Sin datos para imprimir"); return; }
+
+            // Generar HTML básico string concatenado (más seguro que templates complejos por ahora)
+            let filas = "";
+            reportData.movimientos.forEach(m => {
+                let monto = m.tipo === 'abono' ? (m.abono || 0) : (m.cargo || 0);
+                filas += "<tr><td>" + (m.fecha ? new Date(m.fecha).toLocaleDateString() : '-') + "</td>" +
+                    "<td>" + (m.concepto || '') + "</td>" +
+                    "<td style='text-align:right'>$" + Number(monto).toFixed(2) + "</td></tr>";
+            });
+
+            const html = "<html><head><title>Ticket</title><style>body{font-family:monospace;width:80mm} table{width:100%;font-size:12px}</style></head>" +
+                "<body><h3 style='text-align:center'>TALLER WILLIAN</h3>" +
+                "<p>Cliente: " + (reportData.cliente || '') + "</p><hr>" +
+                "<table>" + filas + "</table>" +
+                "<hr><p style='text-align:right'><b>Saldo: $" + Number(reportData.saldoFinal || 0).toFixed(2) + "</b></p>" +
+                "</body></html>";
+
+            const w = window.open('', '_blank', 'width=450,height=600');
+            if (w) {
+                w.document.open();
+                w.document.write(html);
+                w.document.close();
+                setTimeout(() => { w.focus(); w.print(); }, 1000);
+            } else {
+                alert("Pop-up bloqueado");
+            }
+            return; // DETENER EJECUCIÓN AQUÍ
+
+
+            let reportHTML = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Historial de Saldos - ${this._escape(reportData.cliente)}</title>
+                    <style>
+                        body { font-family: 'Courier New', monospace; font-size: 12px; margin: 0; padding: 10px; width: 80mm; }
+                        .header { text-align: center; margin-bottom: 10px; border-bottom: 1px dashed black; padding-bottom: 5px; }
+                        .header h2 { margin: 5px 0; font-size: 16px; font-weight: bold; }
+                        .info-line { display: flex; justify-content: space-between; margin: 3px 0; font-size: 11px; }
+                        .movimientos-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+                        .movimientos-table th { text-align: left; border-bottom: 1px solid black; font-size: 10px; }
+                        .movimientos-table td { padding: 4px 0; border-bottom: 1px dotted #ccc; vertical-align: top; }
+                        .total-line { border-top: 1px solid black; margin-top: 10px; padding-top: 5px; font-weight: bold; text-align: right; font-size: 14px; }
+                        .footer { text-align: center; margin-top: 15px; font-size: 10px; color: #555; }
+                        .abono { color: #27ae60; } /* Solo visual en pantalla */
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <h2>TALLER WILLIAN</h2>
+                        <div>HISTORIAL DE SALDOS</div>
+                        <div>${new Date().toLocaleString('es-ES')}</div>
+                    </div>
+
+                    <div class="info-line">
+                        <span>Cliente:</span>
+                        <strong>${this._escape(reportData.cliente)}</strong>
+                    </div>
+                    <div class="info-line">
+                        <span>Equipo:</span>
+                        <strong>${this._escape(reportData.equipo)}</strong>
+                    </div>
+
+                    <table class="movimientos-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 25%">Fecha</th>
+                                <th style="width: 50%">Movimiento</th>
+                                <th style="width: 25%; text-align: right">Monto</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            reportData.movimientos.forEach(mov => {
+                const esAbono = mov.tipo === 'abono';
+                const signo = esAbono ? '-' : '+';
+                const cantidad = esAbono ? mov.abono : mov.cargo;
+                // Validación extra para fechas
+                let fechaStr = "N/A";
+                try {
+                    fechaStr = mov.fecha ? new Date(mov.fecha).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' }) : '';
+                } catch (e) { console.error("Error fecha", e); }
+
+                reportHTML += `
+                    <tr>
+                        <td>${fechaStr}</td>
+                        <td>${this._escape(mov.concepto)}</td>
+                        <td style="text-align: right; ${esAbono ? 'font-weight: bold;' : ''}">
+                            ${signo}$${Number(cantidad).toFixed(2)}
+                        </td>
+                    </tr>
+                `;
+            });
+
+            reportHTML += `
+                        </tbody>
+                    </table>
+
+                    <div class="total-line">
+                        SALDO PENDIENTE: $${Number(reportData.saldoFinal).toFixed(2)}
+                    </div>
+
+                    <div class="footer">
+                        *** FIN DEL REPORTE ***
+                    </div>
+                </body>
+                </html>
+            `;
+
+            printWindow.document.open();
+            printWindow.document.write(reportHTML);
+            printWindow.document.close();
+
+            // Esperar a que cargue
+            setTimeout(() => {
+                printWindow.focus();
+                printWindow.print();
+            }, 1000);
+
+        } catch (error) {
+            console.error("Error crítico generando ticket:", error);
+            alert("Error generando ticket: " + error.message);
+        }
+    },
+
     printCurrentHistorial() {
         // Obtenemos los movimientos SIN referencia directa a la UI si es posible, 
         // pero aquí dependemos de AppState que es el estado global.
@@ -815,5 +945,133 @@ const PrintingService = {
                 }, 800);
             });
         };
-    }
+    },
+
+    printAccountStatement(equipoData) {
+        const printWindow = window.open('', '_blank', 'width=320,height=600');
+        const fechaActual = DateUtils.getCurrentTimestampElSalvador().toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+        // Ordenar facturas por fecha (más antiguas primero)
+        const sortedFacturas = [...equipoData.facturas].sort((a, b) => {
+            const dateA = a.timestamp ? (a.timestamp.toDate ? a.timestamp.toDate() : new Date(a.timestamp)) : new Date(0);
+            const dateB = b.timestamp ? (b.timestamp.toDate ? b.timestamp.toDate() : new Date(b.timestamp)) : new Date(0);
+            return dateA - dateB;
+        });
+
+        let facturasHTML = '';
+        sortedFacturas.forEach(factura => {
+            const fechaFactura = factura.timestamp ? new Date(factura.timestamp.toDate ? factura.timestamp.toDate() : factura.timestamp).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' }) : 'N/A';
+            const saldoPendiente = factura.saldoPendiente !== undefined ? factura.saldoPendiente : factura.total;
+            const tieneAbonos = factura.abonos && factura.abonos.length > 0;
+
+            let abonosDetalle = '';
+            if (tieneAbonos) {
+                factura.abonos.forEach(abono => {
+                    const fechaAbono = abono.fecha ? new Date(abono.fecha.toDate ? abono.fecha.toDate() : abono.fecha).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' }) : '';
+                    abonosDetalle += `
+                        <div style="display: flex; justify-content: space-between; font-size: 16px; color: #555; margin-left: 10px;">
+                            <span>- Abono (${fechaAbono})</span>
+                            <span>$${abono.monto.toFixed(2)}</span>
+                        </div>
+                    `;
+                });
+            }
+
+            facturasHTML += `
+                <div style="margin-bottom: 8px; border-bottom: 1px dotted #ccc; padding-bottom: 4px;">
+                    <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 18px;">
+                        <span>${fechaFactura} - Fac #${this._escape(factura.invoiceNumber)}</span>
+                        <span>$${factura.total.toFixed(2)}</span>
+                    </div>
+                    ${abonosDetalle}
+                    <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 18px; margin-top: 2px;">
+                        <span>Saldo Pendiente:</span>
+                        <span>$${saldoPendiente.toFixed(2)}</span>
+                    </div>
+                </div>
+            `;
+        });
+
+        printWindow.document.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <title>Estado de Cuenta - Equipo ${this._escape(equipoData.numero)}</title>
+                <style>
+                    /* CORRECCIÓN IMPRESIÓN: Forzar negro puro */
+                    * {
+                        color: #000 !important;
+                        text-rendering: optimizeLegibility;
+                        -webkit-font-smoothing: antialiased;
+                    }
+                    body { 
+                        font-family: 'Courier New', monospace; 
+                        font-size: 18px; 
+                        margin: 0; 
+                        padding: 6px;
+                        width: 58mm;
+                        font-weight: bold;
+                        background: white;
+                    }
+                    .header { text-align: center; margin-bottom: 12px; }
+                    .line { border-bottom: 3px dashed #000; margin: 4px 0; }
+                    .client-info { margin: 8px 0; font-size: 18px; text-align: center;}
+                    .total-box { 
+                        text-align: center; 
+                        margin-top: 15px; 
+                        border: 2px solid #000;
+                        padding: 8px;
+                        font-size: 20px;
+                    }
+                    .footer { text-align: center; margin-top: 12px; font-size: 14px; }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h3 style="margin: 2px 0; font-size: 22px;">TALLER WILLIAN</h3>
+                    <div style="font-size: 18px;">ESTADO DE CUENTA</div>
+                    <div style="font-size: 16px;">${fechaActual}</div>
+                </div>
+                
+                <div class="line"></div>
+                
+                <div class="client-info">
+                    <strong>Equipo:</strong> <span style="font-size: 24px;">${this._escape(equipoData.numero)}</span><br>
+                    ${this._escape(equipoData.cliente)}
+                </div>
+                
+                <div class="line"></div>
+                
+                <div style="margin-top: 10px;">
+                    ${facturasHTML || '<div style="text-align: center;">No hay facturas pendientes</div>'}
+                </div>
+                
+                <div class="total-box">
+                    <div>GRAN TOTAL PENDIENTE</div>
+                    <div style="font-size: 28px; font-weight: 900;">$${equipoData.total.toFixed(2)}</div>
+                </div>
+                
+                <div class="footer">
+                    Por favor revisar sus facturas pendientes.<br>
+                    GRACIAS POR SU PREFERENCIA
+                </div>
+            </body>
+            </html>
+        `);
+
+        printWindow.document.close();
+
+        printWindow.onload = function () {
+            printWindow.document.fonts.ready.then(() => {
+                setTimeout(() => {
+                    printWindow.focus();
+                    printWindow.print();
+                    // printWindow.onafterprint = function() { printWindow.close(); };
+                }, 800);
+            });
+        };
+    },
+
+
 };

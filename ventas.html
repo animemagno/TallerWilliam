@@ -481,10 +481,14 @@
         <div class="modal-overlay" id="detalle-modal">
             <div class="modal-content">
                 <div id="detalle-modal-content"></div>
-                <button class="btn btn-primary" id="close-detalle-modal"
-                    style="margin-top: 15px; width: 100%;">CERRAR</button>
-                <button class="btn btn-success" id="imprimir-detalle-modal"
-                    style="margin-top: 10px; width: 100%;">IMPRIMIR</button>
+                <div style="display: flex; gap: 10px; margin-top: 15px;">
+                    <button class="btn btn-success" id="imprimir-detalle-modal" style="flex: 1;">
+                        <i class="fas fa-print"></i> IMPRIMIR HISTORIAL
+                    </button>
+                    <button class="btn btn-primary" id="close-detalle-modal" style="flex: 1;">
+                        CERRAR
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -1413,7 +1417,57 @@
                     container.innerHTML = html;
                 },
     
-                async mostrarDetalleEquipo(key) {
+                printBalanceHistory(key) {
+                    const equipo = this.equiposPendientes.get(key);
+                    if (!equipo) {
+                        alert("Error: No se encontraron datos del equipo.");
+                        return;
+                    }
+
+                    // Transformar datos jerárquicos a movimiento plano para el ticket simplificado
+                    let movimientos = [];
+
+                    equipo.facturas.forEach(factura => {
+                        const fechaFactura = factura.timestamp ? new Date(factura.timestamp.toDate ? factura.timestamp.toDate() : factura.timestamp) : new Date();
+                        
+                        // 1. Agregar Venta
+                        movimientos.push({
+                            fecha: fechaFactura,
+                            tipo: 'venta',
+                            monto: factura.total,
+                            ref: factura.invoiceNumber
+                        });
+
+                        // 2. Agregar Abonos incrustados
+                        if (factura.abonos && Array.isArray(factura.abonos)) {
+                            factura.abonos.forEach(abono => {
+                                movimientos.push({
+                                    fecha: abono.fecha ? new Date(abono.fecha.toDate ? abono.fecha.toDate() : abono.fecha) : fechaFactura,
+                                    tipo: 'abono',
+                                    monto: abono.monto,
+                                    ref: 'Abono'
+                                });
+                            });
+                        }
+                    });
+
+                    // Ordenar todo cronológicamente
+                    movimientos.sort((a, b) => a.fecha - b.fecha);
+
+                    const historyData = {
+                        numero: equipo.numero,
+                        saldoPendiente: equipo.total, // El total del equipo ya es el saldo pendiente global
+                        movimientos: movimientos
+                    };
+
+                    if (typeof PrintingService !== 'undefined' && PrintingService.printBalanceHistory) {
+                        PrintingService.printBalanceHistory(historyData);
+                    } else {
+                        console.error("PrintingService no disponible");
+                    }
+                },
+
+                mostrarDetalleEquipo(key) {
                     const equipo = this.equiposPendientes.get(key);
                     AppState.selectedInvoicesForPayment = new Set();
     
@@ -1530,18 +1584,27 @@
                     <div style="font-size: 1.1em; color: #e74c3c;"><strong><i class="fas fa-money-bill-wave"></i> Total Pendiente:</strong> $${equipo ? equipo.total.toFixed(2) : '0.00'}</div>
                 </div>
                 
-                <div style="margin: 15px 0; text-align: right;">
-                    <button class="btn btn-info" id="pay-selected-btn" onclick="GrupoManager.showBulkPaymentModal()" style="display: none; background-color: #3498db; border: none; padding: 8px 15px; border-radius: 5px; color: white; font-weight: bold; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-                        <i class="fas fa-check-circle"></i> ABONAR SELECCIONADAS
-                    </button>
-                </div>
+                
     
                 <div class="grupo-facturas">
                     ${facturasHTML || '<p style="text-align: center; padding: 20px; color: #7f8c8d;">No hay facturas pendientes para este equipo</p>'}
                 </div>
             `;
     
-                    document.getElementById('detalle-modal-content').innerHTML = modalContent;
+                    // Definir variable del botón aquí, en el ámbito correcto
+                    let printButtonHtml = `
+                    <div style="margin: 15px 0; text-align: center;">
+                        <button class="btn btn-success" onclick="GrupoManager.printBalanceHistory('${key}')" 
+                                style="width: 100%; padding: 12px; font-size: 1.1rem; font-weight: bold; background-color: #27ae60; color: white; border: none; border-radius: 5px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                            <i class="fas fa-print"></i> IMPRIMIR HISTORIAL (${new Date().toLocaleTimeString()})
+                        </button>
+                    </div>`;
+
+                    // Renderizar con el botón al principio Y al final para asegurar visibilidad
+                    let finalHtml = printButtonHtml + modalContent + printButtonHtml;
+
+                    document.getElementById('detalle-modal-content').innerHTML = finalHtml;
+                    console.log("Detalle modal renderizado: " + new Date().toLocaleTimeString()); // Verificación de actualización
                     document.getElementById('detalle-modal').style.display = 'block';
                     AppState.currentDetalle = { tipo: 'equipo', data: key };
                 },
@@ -5509,12 +5572,7 @@
                 document.getElementById('imprimir-detalle-modal').addEventListener('click', () => {
                     const detalle = AppState.currentDetalle;
                     if (detalle && detalle.tipo === 'equipo') {
-                        const equipo = GrupoManager.equiposPendientes.get(detalle.data);
-                        if (equipo) {
-                            equipo.facturas.forEach(factura => {
-                                GrupoManager.imprimirTicketFactura(factura, equipo);
-                            });
-                        }
+                        GrupoManager.printBalanceHistory(detalle.data);
                     }
                 });
 

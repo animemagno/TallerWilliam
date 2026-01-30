@@ -468,6 +468,83 @@ window.GrupoManager = {
         }
     },
 
+    printBalanceHistory(key) {
+        let equipo = this.equiposPendientes.get(key);
+
+        // Fallback igual que en mostrarDetalleEquipo
+        if (!equipo) {
+            equipo = this.equiposPendientes.get(`${key}-Equipo ${key}`);
+        }
+
+        if (!equipo) {
+            alert("Error: No se encontraron datos del equipo.");
+            return;
+        }
+
+        // Transformar datos jerárquicos a movimiento plano para el ticket simplificado
+        let movimientos = [];
+
+        equipo.facturas.forEach(factura => {
+            const fechaFactura = factura.timestamp ? new Date(factura.timestamp.toDate ? factura.timestamp.toDate() : factura.timestamp) : new Date();
+
+            // 1. Agregar Venta
+            movimientos.push({
+                fecha: fechaFactura,
+                concepto: `Venta #${factura.invoiceNumber}`,
+                cargo: factura.total,
+                abono: 0,
+                monto: factura.total,
+                tipo: 'venta'
+            });
+
+            // 2. Agregar Abonos individuales
+            if (factura.abonos && factura.abonos.length > 0) {
+                factura.abonos.forEach(abono => {
+                    const fechaAbono = abono.fecha ? new Date(abono.fecha.toDate ? abono.fecha.toDate() : abono.fecha) : fechaFactura;
+                    movimientos.push({
+                        fecha: fechaAbono,
+                        concepto: `Abono a #${factura.invoiceNumber}`,
+                        cargo: 0,
+                        abono: abono.monto,
+                        monto: abono.monto,
+                        tipo: 'abono'
+                    });
+                });
+            }
+        });
+
+        // Ordenar cronológicamente
+        movimientos.sort((a, b) => a.fecha - b.fecha);
+
+        // Calcular saldos acumulativos
+        let saldoAcumulado = 0;
+        movimientos = movimientos.map(m => {
+            saldoAcumulado += (m.cargo - m.abono);
+            return { ...m, saldo: saldoAcumulado };
+        });
+
+        const datosReporte = {
+            cliente: equipo.cliente || `Equipo ${equipo.numero}`,
+            equipo: equipo.numero,
+            movimientos: movimientos,
+            saldoFinal: equipo.total,
+            fechaImpresion: new Date()
+        };
+
+        try {
+            console.log("Llamando a PrintingService...");
+            if (typeof PrintingService === 'undefined') {
+                alert("CRITICO: PrintingService no está definido.");
+            } else if (!PrintingService.printBalanceHistory) {
+                alert("CRITICO: La función printBalanceHistory no existe en PrintingService.");
+            } else {
+                PrintingService.printBalanceHistory(datosReporte);
+            }
+        } catch (e) {
+            alert("Excepción al llamar a imprimir: " + e.message);
+        }
+    },
+
     async mostrarDetalleEquipo(key) {
         let equipo = this.equiposPendientes.get(key);
 
@@ -586,6 +663,7 @@ window.GrupoManager = {
             <h3 style="margin-bottom: 15px; text-align: center; color: #2c3e50;">
                 <i class="fas fa-tools"></i> Equipo ${equipo.numero}
             </h3>
+
             <div class="detalle-equipo" style="background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #e9ecef; display: flex; justify-content: space-around; flex-wrap: wrap; gap: 10px;">
                 <div><strong><i class="fas fa-user"></i> Cliente:</strong> ${equipo.cliente}</div>
                 <div><strong><i class="fas fa-file-invoice-dollar"></i> Facturas:</strong> ${equipo ? equipo.facturas.length : 0}</div>
@@ -601,6 +679,8 @@ window.GrupoManager = {
             <div class="grupo-facturas">
                 ${facturasHTML || '<p style="text-align: center; padding: 20px; color: #7f8c8d;">No hay facturas pendientes para este equipo</p>'}
             </div>
+            
+
         `;
 
         document.getElementById('detalle-modal-content').innerHTML = modalContent;

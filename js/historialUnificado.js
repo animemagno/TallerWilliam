@@ -234,6 +234,67 @@ const HistorialManagerUnificado = {
         if (typeof SalesService !== 'undefined' && SalesService.reprintInvoice) SalesService.reprintInvoice(id);
     },
 
+    printBalanceHistory(equipoNumber, clientName) {
+        // Buscar todas las facturas pendientes de este cliente/equipo
+        const pendientes = this.allSales.filter(s => {
+            const isSameEntity = (equipoNumber && (String(s.equipoNumber) === String(equipoNumber))) ||
+                (!equipoNumber && s.clientName === clientName);
+            return isSameEntity && s.paymentType === 'pendiente' && s.status !== 'cancelado';
+        });
+
+        if (pendientes.length === 0) {
+            alert("No se encontraron movimientos pendientes para este equipo.");
+            return;
+        }
+
+        let movimientos = [];
+        let totalPendiente = 0;
+
+        // Procesar cada venta pendiente
+        pendientes.forEach(venta => {
+            const fechaVenta = this.parseDate(venta);
+            const saldo = venta.saldoPendiente !== undefined ? venta.saldoPendiente : venta.total;
+            totalPendiente += Number(saldo || 0);
+
+            // 1. Agregar la venta original
+            movimientos.push({
+                fecha: fechaVenta,
+                tipo: 'venta',
+                monto: Number(venta.total),
+                ref: venta.invoiceNumber
+            });
+
+            // 2. Agregar sus abonos (si los tiene incrustados)
+            if (venta.abonos && Array.isArray(venta.abonos)) {
+                venta.abonos.forEach(abono => {
+                    movimientos.push({
+                        fecha: abono.fecha ? new Date(abono.fecha.toDate ? abono.fecha.toDate() : abono.fecha) : fechaVenta,
+                        tipo: 'abono',
+                        monto: Number(abono.monto),
+                        ref: 'Abono'
+                    });
+                });
+            }
+        });
+
+        // Ordenar cronológicamente
+        movimientos.sort((a, b) => a.fecha - b.fecha);
+
+        // Construir objeto para impresión
+        const historyData = {
+            numero: equipoNumber || clientName || 'S/N',
+            saldoPendiente: totalPendiente,
+            movimientos: movimientos
+        };
+
+        if (typeof PrintingService !== 'undefined' && PrintingService.printBalanceHistory) {
+            PrintingService.printBalanceHistory(historyData);
+        } else {
+            console.error("PrintingService no tiene printBalanceHistory");
+            alert("Error: Servicio de impresión no actualizado.");
+        }
+    },
+
     editInvoice(id) {
         // Solo ventas pueden editarse por ahora
         const item = this.allSales.find(s => s.id === id);
