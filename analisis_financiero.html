@@ -1,0 +1,1309 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Análisis de Ganancias - Taller Willian</title>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #8e44ad;
+            --secondary: #2c3e50;
+            --bg: #f4f7f6;
+            --card-bg: #ffffff;
+            --text: #333;
+            --success: #2ecc71;
+            --warning: #f39c12;
+            --danger: #e74c3c;
+            --info: #3498db;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            margin: 0;
+            padding: 20px;
+            color: var(--text);
+        }
+
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            background: var(--card-bg);
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        h1,
+        h2,
+        h3 {
+            margin: 0;
+        }
+
+        h1 {
+            color: var(--primary);
+            font-size: 1.5rem;
+        }
+
+        .btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: 0.2s;
+        }
+
+        .btn-sm {
+            padding: 4px 8px;
+            font-size: 0.8rem;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #95a5a6;
+            color: white;
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-info {
+            background: var(--info);
+            color: white;
+        }
+
+        .grid-layout {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 20px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #fff, #f8f9fa);
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--secondary);
+            margin: 5px 0;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: #7f8c8d;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 5px;
+        }
+
+        th,
+        td {
+            padding: 10px 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+            font-size: 0.9rem;
+        }
+
+        th {
+            background: #f8f9fa;
+            color: var(--secondary);
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+        }
+
+        tr.invoice-row:hover {
+            background-color: #f1f8ff;
+            cursor: pointer;
+        }
+
+        tr.selected {
+            background-color: #e3f2fd;
+            border-left: 4px solid var(--primary);
+        }
+
+        input,
+        select {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .filters {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            background: #e8eaf6;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+
+        .tag-prod {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .tag-serv {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .tag-mix {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .tag-unknown {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        #loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            display: none;
+        }
+
+        .detail-panel {
+            background: #fafafa;
+            border-top: 1px solid #eee;
+            padding: 15px;
+            display: none;
+        }
+
+        .detail-panel.active {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            margin-top: 10px;
+        }
+
+        .calendar-header {
+            font-weight: bold;
+            text-align: center;
+            padding: 5px;
+            background: #eee;
+        }
+
+        .calendar-day {
+            min-height: 80px;
+            border: 1px solid #ddd;
+            padding: 5px;
+            position: relative;
+            background: white;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .calendar-day:hover {
+            background: #f9f9f9;
+            border-color: var(--primary);
+        }
+
+        .calendar-day.selected {
+            background: #e8f4fd;
+            border: 2px solid var(--primary);
+        }
+
+        .calendar-day.empty {
+            background: #fdfdfd;
+            border: none;
+            cursor: default;
+        }
+
+        .day-number {
+            font-weight: bold;
+            color: #777;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+
+        .day-value {
+            font-size: 0.95rem;
+            font-weight: bold;
+            text-align: right;
+            margin-top: auto;
+            padding-top: 5px;
+        }
+
+        .val-total {
+            color: #2c3e50;
+        }
+
+        .val-mo {
+            color: #27ae60;
+        }
+
+        .val-mat {
+            color: #e74c3c;
+        }
+
+        .metric-toggle {
+            display: inline-flex;
+            background: #eee;
+            border-radius: 20px;
+            padding: 3px;
+        }
+
+        .metric-toggle button {
+            border: none;
+            background: transparent;
+            padding: 5px 15px;
+            border-radius: 17px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #666;
+        }
+
+        .metric-toggle button.active {
+            background: white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            color: var(--primary);
+        }
+
+        .invoice-items-table th {
+            background: #eceff1;
+            font-size: 0.8rem;
+        }
+
+        .invoice-items-table td {
+            font-size: 0.85rem;
+            padding: 6px 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="loading">
+        <div style="text-align: center;">
+            <i class="fas fa-spinner fa-spin" style="font-size: 3rem; color: var(--primary);"></i>
+            <p>Analizando facturas...</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <div>
+                <h1><i class="fas fa-file-invoice-dollar"></i> Análisis de Facturas</h1>
+                <small style="color: #666;">Revisión detallada de Mano de Obra vs. Venta de Productos</small>
+            </div>
+            <button onclick="window.close()" class="btn btn-secondary">
+                <i class="fas fa-times"></i> Cerrar
+            </button>
+        </div>
+
+        <div class="grid-layout">
+            <!-- Columna Izquierda: Contenedor Principal (Lista o Calendario) -->
+            <div class="left-col">
+
+                <!-- 1. VISTA DE LISTA (Default) -->
+                <div id="view-list" class="card">
+                    <div class="filters">
+                        <label>Desde:</label>
+                        <input type="date" id="date-start">
+                        <label>Hasta:</label>
+                        <input type="date" id="date-end">
+                        <button class="btn btn-primary" onclick="AnalisisService.runAnalysis()">
+                            <i class="fas fa-search"></i> BUSCAR
+                        </button>
+                        <button class="btn btn-info" onclick="ChartService.showCharts()">
+                            <i class="fas fa-chart-pie"></i> VER GRÁFICOS
+                        </button>
+                        <button class="btn btn-secondary" onclick="AnalisisService.toggleView('calendar')"
+                            style="margin-left: auto;">
+                            <i class="fas fa-calendar-alt"></i> VER CALENDARIO
+                        </button>
+                    </div>
+
+                    <div class="stats-grid">
+                        <div class="stat-card" style="border-left-color: #3498db;">
+                            <div class="stat-label">Total Facturado</div>
+                            <div class="stat-value" id="total-ventas">$0.00</div>
+                        </div>
+                        <div class="stat-card" style="border-left-color: #27ae60;">
+                            <div class="stat-label">Mano de Obra (MO)</div>
+                            <div class="stat-value" id="total-mano-obra">$0.00</div>
+                        </div>
+                        <div class="stat-card" style="border-left-color: #e74c3c;">
+                            <div class="stat-label">Materiales (Mat)</div>
+                            <div class="stat-value" id="total-materiales">$0.00</div>
+                        </div>
+                        <div class="stat-card" style="border-left-color: #f39c12;">
+                            <div class="stat-label">% MO Global</div>
+                            <div class="stat-value" id="total-percent">0%</div>
+                        </div>
+                    </div>
+
+                    <div style="flex: 1; overflow: hidden; display: flex; flex-direction: column;">
+                        <h3 style="margin-bottom: 10px; padding-bottom: 5px; border-bottom: 2px solid #eee;">
+                            Listado de Facturas
+                        </h3>
+                        <div style="overflow-y: auto; max-height: 600px;">
+                            <table id="invoices-table">
+                                <thead>
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Factura</th>
+                                        <th>Equipo/Grupo</th>
+                                        <th>Total</th>
+                                        <th>M. Obra</th>
+                                        <th>Mat.</th>
+                                        <th>Estado</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="invoices-body">
+                                    <tr>
+                                        <td colspan="7" style="text-align: center; padding: 20px;">Seleccione un rango
+                                            de fechas y presione Buscar</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. VISTA CALENDARIO (Oculta por defecto) -->
+                <div id="view-calendar" class="card" style="display: none;">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <h3 style="margin:0;"><i class="fas fa-calendar-alt"></i> Calendario de Ingresos</h3>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <div class="metric-toggle">
+                                <button class="active" onclick="CalendarService.setMetric('total')"
+                                    id="btn-m-total">Total</button>
+                                <button onclick="CalendarService.setMetric('mo')" id="btn-m-mo">Mano Obra</button>
+                                <button onclick="CalendarService.setMetric('mat')" id="btn-m-mat">Productos</button>
+                            </div>
+                            <button class="btn btn-sm btn-secondary" onclick="AnalisisService.toggleView('list')">
+                                <i class="fas fa-list"></i> VOLVER A LISTA
+                            </button>
+                        </div>
+                    </div>
+
+                    <div
+                        style="background: #f8f9fa; padding: 10px; border-radius: 8px; margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between;">
+                        <button class="btn btn-sm btn-secondary" onclick="CalendarService.changeMonth(-1)"><i
+                                class="fas fa-chevron-left"></i></button>
+
+                        <div style="text-align: center;">
+                            <h2 id="calendar-title" style="margin: 0; color: var(--secondary);">Mes Año</h2>
+                            <div id="calendar-month-total"
+                                style="font-size: 1.1rem; font-weight: bold; color: var(--primary); margin-top: 5px;">
+                                Total Mes: $0.00
+                            </div>
+                        </div>
+
+                        <button class="btn btn-sm btn-secondary" onclick="CalendarService.changeMonth(1)"><i
+                                class="fas fa-chevron-right"></i></button>
+                    </div>
+
+                    <div class="calendar-grid" id="calendar-grid">
+                        <!-- Header Dias -->
+                        <div class="calendar-header">Lun</div>
+                        <div class="calendar-header">Mar</div>
+                        <div class="calendar-header">Mié</div>
+                        <div class="calendar-header">Jue</div>
+                        <div class="calendar-header">Vie</div>
+                        <div class="calendar-header">Sáb</div>
+                        <div class="calendar-header">Dom</div>
+                        <!-- Dias generados JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Columna Derecha: Detalle y Reglas -->
+            <div class="right-col">
+                <!-- Panel de Detalle (Sticky) -->
+                <!-- Panel de Detalle (Sticky) -->
+                <div class="card" id="detail-card"
+                    style="position: sticky; top: 20px; max-height: 90vh; overflow-y: auto;">
+                    <div id="invoice-list-container" style="display: none; margin-bottom: 20px;">
+                        <h3 style="margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px;">
+                            Facturas del <span id="selected-date-label"></span>
+                        </h3>
+                        <div style="max-height: 200px; overflow-y: auto; margin-bottom: 15px;">
+                            <table id="mini-invoice-list" class="invoice-items-table">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Cliente</th>
+                                        <th>Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="mini-invoice-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+
+                    <div id="empty-selection" style="text-align: center; padding: 40px; color: #999;">
+                        <i class="fas fa-calendar-day" style="font-size: 3rem; margin-bottom: 15px; opacity: 0.3;"></i>
+                        <p>Selecciona un día en el calendario<br>para ver sus facturas.</p>
+                    </div>
+
+                    <div id="selection-content" style="display: none;">
+                        <div style="border-bottom: 1px solid #eee; padding-bottom: 15px; margin-bottom: 15px;">
+                            <h2 id="sel-invoice-number" style="color: var(--secondary);">Factura #</h2>
+                            <div id="sel-client" style="color: #666; margin-bottom: 5px;">Cliente</div>
+                            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                                <div class="tag tag-prod">Mat: $<span id="sel-mat">0</span></div>
+                                <div class="tag tag-serv">MO: $<span id="sel-mo">0</span></div>
+                            </div>
+                        </div>
+
+                        <h4 style="margin-bottom: 10px;">Items de la Factura:</h4>
+                        <div class="table-responsive">
+                            <table class="invoice-items-table">
+                                <thead>
+                                    <tr>
+                                        <th>Item</th>
+                                        <th>Total</th>
+                                        <th>Tipo</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="sel-items-body"></tbody>
+                            </table>
+                        </div>
+
+                        <div
+                            style="background: #fff3cd; padding: 10px; border-radius: 6px; margin-top: 20px; font-size: 0.9rem;">
+                            <i class="fas fa-lightbulb" style="color: #f39c12;"></i>
+                            <strong>Tip:</strong> Si un item está "Sin Clasificar" o mal clasificado, usa el botón <i
+                                class="fas fa-plus-circle"></i> para crear una regla permanente.
+                        </div>
+
+                        <!-- Mini Formulario de Regla Rápida -->
+                        <div id="quick-rule-form"
+                            style="margin-top: 20px; display: none; border-top: 2px dashed #ddd; padding-top: 15px; background: #e8f4fd; padding: 15px; border-radius: 8px;">
+                            <h4 style="color: var(--primary); margin-top: 0;"><i class="fas fa-link"></i> Vincular
+                                Concepto</h4>
+                            <p style="font-size: 0.85rem; color: #555; margin-bottom: 10px;">
+                                Aprendiendo de: <strong id="qr-source-text"></strong>
+                            </p>
+
+                            <label style="font-size: 0.8rem; font-weight: bold;">Patrón de Búsqueda (Keyword):</label>
+                            <input type="text" id="qr-keyword"
+                                style="background: white; font-weight: bold; margin-bottom: 5px;"
+                                oninput="AnalisisService.calculateImpact()">
+                            <div id="qr-impact-msg"
+                                style="font-size: 0.75rem; color: #2980b9; margin-bottom: 10px; font-style: italic;">
+                                <i class="fas fa-info-circle"></i> Escribe para ver a cuántos items afectará...
+                            </div>
+
+                            <label style="font-size: 0.8rem; font-weight: bold;">Clasificar Automáticamente
+                                Como:</label>
+                            <select id="qr-type" onchange="AnalisisService.toggleQuickRuleInputs()"
+                                style="margin-bottom: 8px;">
+                                <option value="servicio">Servicio (100% MO)</option>
+                                <option value="producto">Producto (100% Mat)</option>
+                                <option value="mixto">Mixto (Costo Fijo)</option>
+                            </select>
+
+                            <div id="qr-cost-container" style="display: none; margin-bottom: 8px;">
+                                <input type="number" id="qr-cost" placeholder="Costo del Material" step="0.01">
+                            </div>
+
+                            <button class="btn btn-success" style="width: 100%;"
+                                onclick="AnalisisService.saveQuickRule()">
+                                <i class="fas fa-save"></i> GUARDAR Y APLICAR A TODO
+                            </button>
+                            <button class="btn btn-secondary" style="width: 100%; margin-top: 5px;"
+                                onclick="document.getElementById('quick-rule-form').style.display='none'">
+                                CANCELAR
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal de Gráficos -->
+        <div id="charts-modal"
+            style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; overflow-y: auto;">
+            <div
+                style="background: white; margin: 50px auto; width: 90%; max-width: 1200px; padding: 25px; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.3);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2 style="color: var(--secondary);"><i class="fas fa-chart-line"></i> Dashboard Financiero</h2>
+                    <button class="btn btn-secondary"
+                        onclick="document.getElementById('charts-modal').style.display='none'">CERRAR</button>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                    <div class="card" style="height: 350px;">
+                        <h3>Evolución Mensual</h3>
+                        <canvas id="chart-history"></canvas>
+                    </div>
+                    <div class="card" style="height: 350px;">
+                        <h3>Distribución por Categoría</h3>
+                        <canvas id="chart-categories"></canvas>
+                    </div>
+                </div>
+
+                <div class="card" style="height: 300px;">
+                    <h3>Distribución Global: Mano de Obra vs Materiales</h3>
+                    <canvas id="chart-global"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            const CONFIG = {
+                firebase: {
+                    apiKey: "AIzaSyDh074AarXaYCc-Htw-lsCeIc_95QQNSnY",
+                    authDomain: "tallerwilliam-732b3.firebaseapp.com",
+                    projectId: "tallerwilliam-732b3",
+                    storageBucket: "tallerwilliam-732b3.firebasestorage.app",
+                    messagingSenderId: "822262666247",
+                    appId: "1:822262666247:web:6680487bbf1108006b86a2"
+                }
+            };
+
+            firebase.initializeApp(CONFIG.firebase);
+            const db = firebase.firestore();
+            let rulesCache = [];
+            let inventoryCache = new Map();
+            let currentInvoices = []; // Store analyzed invoices
+
+            const AnalisisService = {
+                async init() {
+                    this.setDefaultDates();
+                    await this.loadRules();
+                    await this.loadInventory();
+                    this.runAnalysis(); // Start with list view analysis
+                },
+
+                setDefaultDates() {
+                    const now = new Date();
+                    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+                    document.getElementById('date-start').valueAsDate = firstDay;
+                    document.getElementById('date-end').valueAsDate = now;
+                },
+
+                toggleView(viewName) {
+                    if (viewName === 'calendar') {
+                        document.getElementById('view-list').style.display = 'none';
+                        document.getElementById('view-calendar').style.display = 'flex'; // card is flex col
+                        CalendarService.init(); // Refresh calendar data
+                    } else {
+                        document.getElementById('view-calendar').style.display = 'none';
+                        document.getElementById('view-list').style.display = 'flex';
+                    }
+                },
+
+                async loadInventory() {
+                    try {
+                        const snapshot = await db.collection("INVENTARIO").get();
+                        snapshot.forEach(doc => {
+                            const data = doc.data();
+                            inventoryCache.set(doc.id, data);
+                            inventoryCache.set(data.codigo, data);
+                        });
+                    } catch (e) { console.error("Error cargando inventario", e); }
+                },
+
+                async loadRules() {
+                    try {
+                        const snapshot = await db.collection("CONFIG_ANALISIS").get();
+                        rulesCache = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    } catch (e) { console.error(e); }
+                },
+
+                toggleQuickRuleInputs() {
+                    const type = document.getElementById('qr-type').value;
+                    document.getElementById('qr-cost-container').style.display = type === 'mixto' ? 'block' : 'none';
+                },
+
+                classifyItem(item) {
+                    const desc = (item.descripcion || '').toUpperCase();
+
+                    // 0. Clasificación Explícita (Guardada desde Ventas si fue seleccionado de Servicios)
+                    if (item.tipo === 'servicio') {
+                        return { type: 'servicio', manoObra: item.precio, material: 0, source: 'explicit_service' };
+                    }
+
+                    // 1. Producto de Inventario Real
+                    if (item.id && inventoryCache.has(item.id)) {
+                        // El usuario quiere ver VENTA de productos vs SERVICIOS.
+                        // No desglosamos ganancia aquí, sino Venta Total de Repuesto.
+                        return { type: 'producto', manoObra: 0, material: item.precio, source: 'inventory' };
+                    }
+
+                    // 2. Reglas
+                    for (const rule of rulesCache) {
+                        if (desc.includes(rule.keyword)) {
+                            const result = { type: rule.type, source: 'rule', ruleKeyword: rule.keyword, ruleId: rule.id };
+
+                            if (rule.type === 'servicio') {
+                                return { ...result, manoObra: item.precio, material: 0 };
+                            } else if (rule.type === 'producto') {
+                                return { ...result, manoObra: 0, material: item.precio };
+                            } else if (rule.type === 'mixto') {
+                                const matCost = rule.cost;
+                                const mo = Math.max(0, item.precio - matCost);
+                                return { ...result, manoObra: mo, material: matCost };
+                            }
+                        }
+                    }
+
+                    // 3. Sin Clasificar (No asumir nada para no inflar totales)
+                    return { type: 'unclassified', manoObra: 0, material: 0, source: 'default' };
+                },
+
+                async runAnalysis() {
+                    const start = document.getElementById('date-start').value;
+                    const end = document.getElementById('date-end').value;
+                    document.getElementById('loading').style.display = 'flex';
+                    currentInvoices = [];
+
+                    try {
+                        const snapshot = await db.collection("VENTAS")
+                            .where("date", ">=", start)
+                            .where("date", "<=", end)
+                            .get();
+
+                        let grandTotal = 0;
+                        let grandMO = 0;
+                        let grandMat = 0;
+
+                        snapshot.forEach(doc => {
+                            const sale = doc.data();
+                            if (sale.status === 'cancelada') return;
+
+                            let invTotal = 0;
+                            let invMO = 0;
+                            let invMat = 0;
+                            let hasUnclassified = false;
+                            let analyzedItems = [];
+
+                            (sale.products || []).forEach(prod => {
+                                const analysis = this.classifyItem(prod);
+                                const itemTotal = prod.precio * prod.cantidad;
+                                const lineMO = analysis.manoObra * prod.cantidad;
+                                const lineMat = analysis.material * prod.cantidad;
+
+                                invTotal += itemTotal;
+                                invMO += lineMO;
+                                invMat += lineMat;
+
+                                if (analysis.source === 'default') hasUnclassified = true;
+
+                                analyzedItems.push({
+                                    ...prod,
+                                    analysis: analysis,
+                                    lineMO,
+                                    lineMat,
+                                    itemTotal
+                                });
+                            });
+
+                            currentInvoices.push({
+                                id: doc.id,
+                                invoiceNumber: sale.invoiceNumber,
+                                client: sale.clientName || sale.equipoNumber,
+                                date: sale.date,
+                                total: invTotal,
+                                mo: invMO,
+                                mat: invMat,
+                                items: analyzedItems,
+                                hasUnclassified
+                            });
+
+                            grandTotal += invTotal;
+                            grandMO += invMO;
+                            grandMat += invMat;
+                        });
+
+                        // Update UI Totals
+                        document.getElementById('total-ventas').textContent = '$' + grandTotal.toFixed(2);
+                        document.getElementById('total-mano-obra').textContent = '$' + grandMO.toFixed(2);
+                        document.getElementById('total-materiales').textContent = '$' + grandMat.toFixed(2);
+
+                        const percent = grandTotal > 0 ? (grandMO / grandTotal * 100).toFixed(1) : 0;
+                        document.getElementById('total-percent').textContent = percent + '%';
+
+                        this.renderInvoicesTable();
+
+                    } catch (e) {
+                        console.error(e);
+                        alert("Error loading analysis");
+                    } finally {
+                        document.getElementById('loading').style.display = 'none';
+                    }
+                },
+                async runAnalysisForRange(startStr, endStr) {
+                    document.getElementById('loading').style.display = 'flex';
+                    // Nota: Usamos una variable local para no afectar currentInvoices de la lista principal si es posible,
+                    // PERO la arquitectura actual comparte currentInvoices para la vista de detalle.
+                    currentInvoices = [];
+
+                    try {
+                        const snapshot = await db.collection("VENTAS")
+                            .where("date", ">=", startStr)
+                            .where("date", "<=", endStr)
+                            .get();
+
+                        snapshot.forEach(doc => {
+                            const sale = doc.data();
+                            if (sale.status === 'cancelada') return;
+
+                            let invTotal = 0;
+                            let invMO = 0;
+                            let invMat = 0;
+                            let hasUnclassified = false;
+                            let analyzedItems = [];
+
+                            (sale.products || []).forEach(prod => {
+                                const analysis = this.classifyItem(prod);
+                                const itemTotal = prod.precio * prod.cantidad;
+                                const lineMO = analysis.manoObra * prod.cantidad;
+                                const lineMat = analysis.material * prod.cantidad;
+
+                                invTotal += itemTotal;
+                                invMO += lineMO;
+                                invMat += lineMat;
+
+                                if (analysis.source === 'default') hasUnclassified = true;
+
+                                analyzedItems.push({
+                                    ...prod,
+                                    analysis: analysis,
+                                    lineMO,
+                                    lineMat,
+                                    itemTotal
+                                });
+                            });
+
+                            currentInvoices.push({
+                                id: doc.id,
+                                invoiceNumber: sale.invoiceNumber,
+                                client: sale.clientName || sale.equipoNumber,
+                                date: sale.date,
+                                total: invTotal,
+                                mo: invMO,
+                                mat: invMat,
+                                items: analyzedItems,
+                                hasUnclassified
+                            });
+                        });
+
+                        CalendarService.processData(currentInvoices);
+
+                    } catch (e) {
+                        console.error(e);
+                    } finally {
+                        document.getElementById('loading').style.display = 'none';
+                    }
+                },
+
+                renderInvoicesTable() {
+                    const tbody = document.getElementById('invoices-body');
+
+                    if (currentInvoices.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No se encontraron facturas en este periodo.</td></tr>';
+                        return;
+                    }
+
+                    // Sort by Number Desc
+                    currentInvoices.sort((a, b) => b.invoiceNumber.localeCompare(a.invoiceNumber));
+
+                    tbody.innerHTML = currentInvoices.map((inv, index) => `
+                    <tr class="invoice-row" onclick="AnalisisService.showInvoiceDetail(currentInvoices[${index}])" id="row-${index}">
+                        <td>${inv.date}</td>
+                        <td><strong>${inv.invoiceNumber}</strong></td>
+                        <td>${inv.client}</td>
+                        <td>$${inv.total.toFixed(2)}</td>
+                        <td style="color: #27ae60;">$${inv.mo.toFixed(2)}</td>
+                        <td style="color: #e74c3c;">$${inv.mat.toFixed(2)}</td>
+                        <td>
+                            ${inv.hasUnclassified ? '<i class="fas fa-exclamation-circle" style="color: #f39c12;" title="Contiene items sin regla específica"></i>' : '<i class="fas fa-check-circle" style="color: #2ecc71;"></i>'}
+                        </td>
+                    </tr>
+                `).join('');
+                },
+
+                showInvoiceDetail(invoice) {
+                    // Show Details
+                    document.getElementById('empty-selection').style.display = 'none';
+                    document.getElementById('selection-content').style.display = 'block';
+                    document.getElementById('quick-rule-form').style.display = 'none';
+
+                    document.getElementById('sel-invoice-number').textContent = 'Factura #' + invoice.invoiceNumber;
+                    document.getElementById('sel-client').textContent = invoice.client;
+                    document.getElementById('sel-mat').textContent = invoice.mat.toFixed(2);
+                    document.getElementById('sel-mo').textContent = invoice.mo.toFixed(2);
+
+                    const itemsBody = document.getElementById('sel-items-body');
+                    itemsBody.innerHTML = invoice.items.map(item => {
+                        let badgeClass = '';
+                        let badgeText = '';
+                        if (item.analysis.source === 'inventory') { badgeClass = 'tag-prod'; badgeText = 'INV'; }
+                        else if (item.analysis.type === 'servicio') { badgeClass = 'tag-serv'; badgeText = 'SERV'; }
+                        else if (item.analysis.type === 'mixto') { badgeClass = 'tag-mix'; badgeText = 'MIXT'; }
+                        else { badgeClass = 'tag-prod'; badgeText = 'PROD'; }
+
+                        if (item.analysis.source === 'default') { badgeClass = 'tag-unknown'; badgeText = '?'; }
+
+                        return `
+                        <tr>
+                            <td>
+                                <div>${item.descripcion}</div>
+                                <div style="font-size: 0.75rem; color: #999;">$${item.precio} x ${item.cantidad}</div>
+                            </td>
+                            <td>$${item.itemTotal.toFixed(2)}</td>
+                            <td><span class="tag ${badgeClass}">${badgeText}</span></td>
+                            <td style="text-align: right;">
+                                ${item.analysis.source === 'default' ?
+                                `<button class="btn-sm btn-info" title="Crear Vinculación" onclick="AnalisisService.prepareQuickRule('${item.descripcion.replace(/'/g, "\\'")}')"><i class="fas fa-plus"></i></button>` :
+                                item.analysis.source === 'rule' ?
+                                    `<button class="btn-sm btn-secondary" title="Editar Regla: ${item.analysis.ruleKeyword}" onclick="AnalisisService.prepareQuickRule('${item.analysis.ruleKeyword}', '${item.analysis.ruleId}')"><i class="fas fa-edit"></i></button>` :
+                                    '<span style="color:#27ae60"><i class="fas fa-check"></i> INV</span>'
+                            }
+                            </td>
+                        </tr>
+                    `;
+                    }).join('');
+                },
+
+                prepareQuickRule(descOrKeyword, ruleId = null) {
+                    document.getElementById('quick-rule-form').style.display = 'block';
+                    document.getElementById('qr-source-text').textContent = descOrKeyword;
+                    document.getElementById('qr-keyword').value = descOrKeyword;
+                    document.getElementById('qr-keyword').dataset.editingId = ruleId || ''; // Store ID if editing
+                    this.toggleQuickRuleInputs();
+                    this.calculateImpact();
+                    document.getElementById('quick-rule-form').scrollIntoView({ behavior: 'smooth' });
+                },
+
+                calculateImpact() {
+                    const keyword = document.getElementById('qr-keyword').value.trim().toUpperCase();
+                    if (!keyword) {
+                        document.getElementById('qr-impact-msg').innerHTML = '<i class="fas fa-info-circle"></i> Escribe para ver a cuántos items afectará...';
+                        return;
+                    }
+
+                    let count = 0;
+                    let invoicesAffected = new Set();
+                    const currentRuleId = document.getElementById('qr-keyword').dataset.editingId;
+
+                    const existing = rulesCache.find(r => r.keyword === keyword && r.id !== currentRuleId);
+                    if (existing) {
+                        document.getElementById('qr-impact-msg').innerHTML =
+                            `<span style="color: #e74c3c"><i class="fas fa-exclamation-triangle"></i> ¡ATENCIÓN! La regla "<strong>${existing.keyword}</strong>" ya existe. Estás a punto de duplicarla o editarla.</span>`;
+                        return;
+                    }
+
+                    currentInvoices.forEach(inv => {
+                        inv.items.forEach(item => {
+                            const d = (item.descripcion || '').toUpperCase();
+                            if (d.includes(keyword)) {
+                                count++;
+                                invoicesAffected.add(inv.id);
+                            }
+                        });
+                    });
+
+                    document.getElementById('qr-impact-msg').innerHTML =
+                        `<i class="fas fa-bolt"></i> Esta regla identificará <strong>${count} items</strong> en <strong>${invoicesAffected.size} facturas</strong> de la vista actual.`;
+                },
+
+                async saveQuickRule() {
+                    const keyword = document.getElementById('qr-keyword').value.trim().toUpperCase();
+                    const type = document.getElementById('qr-type').value;
+                    const cost = parseFloat(document.getElementById('qr-cost').value) || 0;
+                    const editingId = document.getElementById('qr-keyword').dataset.editingId;
+
+                    if (!keyword) return alert("Ingrese una palabra clave");
+
+                    if (!editingId) {
+                        const existing = rulesCache.find(r => r.keyword === keyword);
+                        if (existing) {
+                            if (!confirm(`Ya existe una regla para "${keyword}". ¿Desea crear otra igual? (Se recomienda editar la existente)`)) return;
+                        }
+                    }
+
+                    try {
+                        if (editingId) {
+                            await db.collection("CONFIG_ANALISIS").doc(editingId).update({
+                                keyword, type, cost, updatedAt: new Date()
+                            });
+                            alert("Regla actualizada correctamente.");
+                        } else {
+                            await db.collection("CONFIG_ANALISIS").add({
+                                keyword, type, cost, createdAt: new Date()
+                            });
+                            alert(`¡Vinculación Exitosa!\n\nEl sistema ha aprendido que "${keyword}" es un ${type.toUpperCase()}.`);
+                        }
+
+                        // Reload rules and Re-Run Analysis to reflect changes immediately
+
+                        await this.loadRules();
+                        await this.loadRules();
+
+                        // Determinar qué vista actualizar
+                        if (document.getElementById('view-calendar').style.display !== 'none') {
+                            CalendarService.refresh();
+                            // También limpiamos el panel de detalle para forzar al usuario a re-seleccionar y ver los datos actualizados
+                            document.getElementById('selection-content').style.display = 'none';
+                            document.getElementById('empty-selection').style.display = 'block';
+                            document.getElementById('invoice-list-container').style.display = 'none';
+                        } else {
+                            await this.runAnalysis();
+                        }
+
+                    } catch (e) {
+                        console.error(e);
+                        alert("Error guardando regla");
+                    }
+                }
+            };
+
+            const ChartService = {
+                charts: {},
+
+                showCharts() {
+                    if (currentInvoices.length === 0) return alert("Primero ejecute una búsqueda para ver datos.");
+                    document.getElementById('charts-modal').style.display = 'block';
+                    this.renderAll();
+                },
+
+                renderAll() {
+                    this.renderHistory();
+                    this.renderCategories();
+                    this.renderGlobal();
+                },
+
+                renderHistory() {
+                    // Agrupar por mes
+                    const months = {};
+                    currentInvoices.forEach(inv => {
+                        const date = new Date(inv.date);
+                        // Usar UTC month para evitar desfases visuales si la fecha string es pura
+                        // O usar split si sabemos formato YYYY-MM-DD
+                        const k = inv.date.substring(0, 7); // YYYY-MM
+                        if (!months[k]) months[k] = { mo: 0, mat: 0, total: 0 };
+                        months[k].mo += inv.mo;
+                        months[k].mat += inv.mat;
+                        months[k].total += inv.total;
+                    });
+
+                    const labels = Object.keys(months).sort();
+                    const dataMO = labels.map(k => months[k].mo);
+                    const dataMat = labels.map(k => months[k].mat);
+                    const dataTotal = labels.map(k => months[k].total);
+
+                    this.destroyChart('history');
+                    this.charts.history = new Chart(document.getElementById('chart-history'), {
+                        type: 'line',
+                        data: {
+                            labels: labels,
+                            datasets: [
+                                { label: 'Total Ventas', data: dataTotal, borderColor: '#3498db', fill: false, tension: 0.3 },
+                                { label: 'Mano de Obra', data: dataMO, borderColor: '#2ecc71', fill: false, tension: 0.3 },
+                                { label: 'Materiales', data: dataMat, borderColor: '#e74c3c', fill: false, tension: 0.3 }
+                            ]
+                        },
+                        options: { maintainAspectRatio: false }
+                    });
+                },
+
+                renderCategories() {
+                    let counts = { producto: 0, servicio: 0, mixto: 0 };
+                    let money = { producto: 0, servicio: 0, mixto: 0 };
+
+                    currentInvoices.forEach(inv => {
+                        inv.items.forEach(item => {
+                            const type = item.analysis.type; // producto, servicio, mixto
+                            counts[type] = (counts[type] || 0) + 1;
+                            money[type] = (money[type] || 0) + item.itemTotal;
+                        });
+                    });
+
+                    this.destroyChart('categories');
+                    this.charts.categories = new Chart(document.getElementById('chart-categories'), {
+                        type: 'bar',
+                        data: {
+                            labels: ['Servicios', 'Productos', 'Mixtos'],
+                            datasets: [{
+                                label: 'Ingresos Generados ($)',
+                                data: [money.servicio, money.producto, money.mixto],
+                                backgroundColor: ['#d1ecf1', '#d4edda', '#fff3cd'],
+                                borderColor: ['#0c5460', '#155724', '#856404'],
+                                borderWidth: 1
+                            }]
+                        },
+                        options: { maintainAspectRatio: false }
+                    });
+                },
+
+                renderGlobal() {
+                    const mo = parseFloat(document.getElementById('total-mano-obra').textContent.replace('$', '').replace(',', ''));
+                    const mat = parseFloat(document.getElementById('total-materiales').textContent.replace('$', '').replace(',', ''));
+
+                    this.destroyChart('global');
+                    this.charts.global = new Chart(document.getElementById('chart-global'), {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['Mano de Obra (Ganancia)', 'Costo Materiales/Repuestos'],
+                            datasets: [{
+                                data: [mo, mat],
+                                backgroundColor: ['#2ecc71', '#e74c3c']
+                            }]
+                        },
+                        options: { maintainAspectRatio: false, responsive: true }
+                    });
+                },
+
+                destroyChart(key) {
+                    if (this.charts[key]) {
+                        this.charts[key].destroy();
+                        this.charts[key] = null;
+                    }
+                }
+            };
+
+            const CalendarService = {
+                currentDate: new Date(),
+                currentMetric: 'total', // total, mo, mat
+                dailyData: {},
+
+                init() {
+                    // Set to start of month
+                    this.currentDate.setDate(1);
+                    this.refresh();
+                },
+
+                setMetric(metric) {
+                    this.currentMetric = metric;
+                    document.querySelectorAll('.metric-toggle button').forEach(b => b.classList.remove('active'));
+                    document.getElementById(`btn-m-${metric}`).classList.add('active');
+                    this.renderGrid();
+                },
+
+                changeMonth(delta) {
+                    this.currentDate.setMonth(this.currentDate.getMonth() + delta);
+                    this.refresh();
+                },
+
+                refresh() {
+                    // Determine range for current month view
+                    const year = this.currentDate.getFullYear();
+                    const month = this.currentDate.getMonth();
+
+                    const start = new Date(year, month, 1);
+                    const end = new Date(year, month + 1, 0);
+
+                    // Format for query
+                    const startStr = this.formatDate(start);
+                    const endStr = this.formatDate(end);
+
+                    // Update Title
+                    const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+                    document.getElementById('calendar-title').textContent = `${monthNames[month]} ${year}`;
+
+                    // Fetch Data
+                    AnalisisService.runAnalysisForRange(startStr, endStr);
+                },
+
+                processData(invoices) {
+                    // Aggregate by day
+                    this.dailyData = {};
+                    invoices.forEach(inv => {
+                        const date = inv.date; // YYYY-MM-DD
+                        if (!this.dailyData[date]) {
+                            this.dailyData[date] = { total: 0, mo: 0, mat: 0, count: 0, invoices: [] };
+                        }
+                        this.dailyData[date].total += inv.total;
+                        this.dailyData[date].mo += inv.mo;
+                        this.dailyData[date].mat += inv.mat;
+                        this.dailyData[date].count++;
+                        this.dailyData[date].invoices.push(inv);
+                    });
+
+                    this.renderGrid();
+                },
+
+                renderGrid() {
+                    const grid = document.getElementById('calendar-grid');
+                    // Clear days (keep header)
+                    while (grid.children.length > 7) {
+                        grid.removeChild(grid.lastChild);
+                    }
+
+                    const year = this.currentDate.getFullYear();
+                    const month = this.currentDate.getMonth();
+                    const firstDay = new Date(year, month, 1).getDay(); // 0 = Sun
+                    const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+                    // Adjust for Monday start (0=Mon... 6=Sun)
+                    let startOffset = (firstDay + 6) % 7;
+
+                    // Empty slots
+                    for (let i = 0; i < startOffset; i++) {
+                        const div = document.createElement('div');
+                        div.className = 'calendar-day empty';
+                        grid.appendChild(div);
+                    }
+
+                    let monthTotal = 0;
+
+                    // Days
+                    for (let d = 1; d <= daysInMonth; d++) {
+                        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                        const data = this.dailyData[dateStr];
+
+                        const div = document.createElement('div');
+                        div.className = 'calendar-day';
+                        div.onclick = () => this.selectDay(dateStr, div);
+
+                        let valHtml = '';
+                        if (data) {
+                            let val = 0;
+                            let colorClass = '';
+                            if (this.currentMetric === 'total') { val = data.total; colorClass = 'val-total'; }
+                            else if (this.currentMetric === 'mo') { val = data.mo; colorClass = 'val-mo'; }
+                            else { val = data.mat; colorClass = 'val-mat'; }
+
+                            monthTotal += val;
+
+                            if (val > 0) valHtml = `<div class="day-value ${colorClass}">$${val.toFixed(2)}</div>`;
+                        }
+
+                        div.innerHTML = `<div class="day-number">${d}</div>${valHtml}`;
+                        grid.appendChild(div);
+                    }
+
+                    // Update Month Total Display
+                    const metricLabels = { 'total': 'Total Ingresos', 'mo': 'Total Mano de Obra', 'mat': 'Total Productos' };
+                    document.getElementById('calendar-month-total').textContent = `${metricLabels[this.currentMetric]}: $${monthTotal.toFixed(2)}`;
+                },
+
+                selectDay(dateStr, element) {
+                    // Highlight
+                    document.querySelectorAll('.calendar-day').forEach(d => d.classList.remove('selected'));
+                    element.classList.add('selected');
+
+                    const data = this.dailyData[dateStr];
+
+                    document.getElementById('invoice-list-container').style.display = 'block';
+                    document.getElementById('empty-selection').style.display = 'none';
+                    document.getElementById('selection-content').style.display = 'none'; // Hide detail until invoice clicked
+                    document.getElementById('selected-date-label').textContent = dateStr;
+
+                    const tbody = document.getElementById('mini-invoice-body');
+                    tbody.innerHTML = '';
+
+                    if (!data || !data.invoices.length) {
+                        tbody.innerHTML = '<tr><td colspan="3">No hay registros</td></tr>';
+                        return;
+                    }
+
+                    data.invoices.forEach(inv => {
+                        const tr = document.createElement('tr');
+                        tr.style.cursor = 'pointer';
+                        tr.innerHTML = `<td>${inv.invoiceNumber}</td><td>${inv.client}</td><td>$${inv.total.toFixed(2)}</td>`;
+                        tr.onclick = () => {
+                            // Highlight sub-row
+                            Array.from(tbody.children).forEach(r => r.style.backgroundColor = 'transparent');
+                            tr.style.backgroundColor = '#e3f2fd';
+                            AnalisisService.showInvoiceDetail(inv);
+                        };
+                        tbody.appendChild(tr);
+                    });
+                },
+
+                formatDate(date) {
+                    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+                }
+            };
+
+            AnalisisService.init();
+
+        </script>
+</body>
+
+</html>

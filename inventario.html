@@ -955,11 +955,9 @@
             <button class="btn btn-success" onclick="openEntryModal()">
                 <i class="fas fa-file-invoice"></i> Registrar Entrada
             </button>
-            <!-- Restaurado: Importación de Excel -->
-            <input type="file" id="hidden-import-input" accept=".xlsx, .xls, .json" style="display:none"
-                onchange="importExcelNew(this)">
+            <!-- Botón de Importación con Mapeo de Columnas -->
             <button class="btn btn-warning" id="import-excel-btn"
-                onclick="document.getElementById('hidden-import-input').click()">
+                onclick="document.getElementById('importModal').style.display='flex'">
                 <i class="fas fa-file-import"></i> Importar Excel
             </button>
             <button class="btn btn-danger" onclick="deleteAllInventory()" title="Eliminar todo el inventario">
@@ -1290,33 +1288,151 @@
         </div>
     </div>
 
-    <!-- Modal Importación Simple -->
+    <!-- Modal Importación con Mapeo de Columnas -->
     <div class="modal" id="importModal">
-        <div class="modal-content" style="max-width: 500px;">
+        <div class="modal-content" style="max-width: 95%; max-height: 90vh; overflow-y: auto;">
             <h2 style="color: #2c3e50;"><i class="fas fa-file-excel"></i> Importar Inventario</h2>
-            <p style="color: #666; margin-bottom: 20px;">
-                Sube un archivo Excel con las columnas: <br>
-                <b>Codigo, Descripcion según inventario, Precio venta, Existencia, etc.</b>
-            </p>
 
-            <div class="file-input-container">
-                <input type="file" id="import-excel-input" accept=".xlsx, .xls, .json"
-                    style="width: 100%; border: 2px dashed #ddd; padding: 20px;">
+            <!-- Paso 1: Selección de Archivo -->
+            <div id="import-step-1">
+                <p style="color: #666; margin-bottom: 20px;">
+                    Sube un archivo Excel y mapea las columnas a los campos del sistema
+                </p>
+
+                <div class="file-input-container">
+                    <input type="file" id="import-excel-input" accept=".xlsx, .xls"
+                        style="width: 100%; border: 2px dashed #ddd; padding: 20px;">
+                </div>
+
+                <div class="form-actions">
+                    <button class="btn btn-secondary"
+                        onclick="document.getElementById('importModal').style.display='none'">Cancelar</button>
+                    <button class="btn btn-primary" id="btn-analyze-file" onclick="analyzeExcelFile()">
+                        <i class="fas fa-search"></i> Analizar Archivo
+                    </button>
+                </div>
             </div>
 
-            <div class="form-group" style="margin-top: 15px;">
-                <label style="cursor: pointer;">
-                    <input type="checkbox" id="update-existing-check" checked>
-                    Actualizar productos existentes (mismo Código)
-                </label>
-            </div>
+            <!-- Paso 2: Mapeo de Columnas -->
+            <div id="import-step-2" style="display: none;">
+                <p style="color: #666; margin-bottom: 15px;">
+                    <strong>Instrucciones:</strong> Selecciona qué columna de tu Excel corresponde a cada campo del
+                    sistema.
+                </p>
 
-            <div class="form-actions">
-                <button class="btn btn-secondary"
-                    onclick="document.getElementById('importModal').style.display='none'">Cancelar</button>
-                <button class="btn btn-success" id="btn-process-import">
-                    <i class="fas fa-upload"></i> Importar Ahora
-                </button>
+                <!-- Tabla de Mapeo -->
+                <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="background: var(--dark-gray); color: white;">
+                                <th style="padding: 10px; text-align: left;">Campo del Sistema</th>
+                                <th style="padding: 10px; text-align: left;">Columna del Excel</th>
+                                <th style="padding: 10px; text-align: left;">Obligatorio</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="padding: 10px; border-bottom: 1px solid #ddd;"><strong>Código</strong></td>
+                                <td style="padding: 10px; border-bottom: 1px solid #ddd;">
+                                    <select id="map-codigo" class="column-mapper"
+                                        style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+                                        <option value="">-- No mapear --</option>
+                                    </select>
+                                </td>
+                                <td style="padding: 10px; border-bottom: 1px solid #ddd; color: #e53e3e;">No (se genera
+                                    automático)</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 10px; border-bottom: 1px solid #ddd;"><strong>Descripción</strong>
+                                </td>
+                                <td style="padding: 10px; border-bottom: 1px solid #ddd;">
+                                    <select id="map-descripcion" class="column-mapper"
+                                        style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+                                        <option value="">-- Seleccionar --</option>
+                                    </select>
+                                </td>
+                                <td style="padding: 10px; border-bottom: 1px solid #ddd; color: #e53e3e;">
+                                    <strong>Sí</strong>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 10px; border-bottom: 1px solid #ddd;"><strong>Descripción
+                                        Factura</strong></td>
+                                <td style="padding: 10px; border-bottom: 1px solid #ddd;">
+                                    <select id="map-descripcionTaller" class="column-mapper"
+                                        style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+                                        <option value="">-- No mapear --</option>
+                                    </select>
+                                </td>
+                                <td style="padding: 10px; border-bottom: 1px solid #ddd;">No</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 10px; border-bottom: 1px solid #ddd;"><strong>Precio Costo</strong>
+                                </td>
+                                <td style="padding: 10px; border-bottom: 1px solid #ddd;">
+                                    <select id="map-costo" class="column-mapper"
+                                        style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+                                        <option value="">-- No mapear --</option>
+                                    </select>
+                                </td>
+                                <td style="padding: 10px; border-bottom: 1px solid #ddd;">No</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 10px; border-bottom: 1px solid #ddd;"><strong>Precio Venta</strong>
+                                </td>
+                                <td style="padding: 10px; border-bottom: 1px solid #ddd;">
+                                    <select id="map-precio" class="column-mapper"
+                                        style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+                                        <option value="">-- No mapear --</option>
+                                    </select>
+                                </td>
+                                <td style="padding: 10px; border-bottom: 1px solid #ddd;">No</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 10px; border-bottom: 1px solid #ddd;"><strong>Stock /
+                                        Existencia</strong></td>
+                                <td style="padding: 10px; border-bottom: 1px solid #ddd;">
+                                    <select id="map-cantidad" class="column-mapper"
+                                        style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+                                        <option value="">-- No mapear --</option>
+                                    </select>
+                                </td>
+                                <td style="padding: 10px; border-bottom: 1px solid #ddd;">No (default: 0)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Vista Previa de Datos -->
+                <div style="margin-bottom: 20px;">
+                    <h3 style="color: var(--dark-gray); margin-bottom: 10px;">
+                        <i class="fas fa-eye"></i> Vista Previa (Primeras 5 filas)
+                    </h3>
+                    <div style="overflow-x: auto; max-height: 300px; border: 1px solid #ddd; border-radius: 5px;">
+                        <table id="preview-table" style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+                            <thead id="preview-header" style="background: var(--light-gray); position: sticky; top: 0;">
+                            </thead>
+                            <tbody id="preview-body">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-top: 15px;">
+                    <label style="cursor: pointer;">
+                        <input type="checkbox" id="update-existing-check" checked>
+                        Actualizar productos existentes (mismo Código)
+                    </label>
+                </div>
+
+                <div class="form-actions">
+                    <button class="btn btn-secondary" onclick="resetImportModal()">
+                        <i class="fas fa-arrow-left"></i> Volver
+                    </button>
+                    <button class="btn btn-success" id="btn-execute-import" onclick="executeImport()">
+                        <i class="fas fa-upload"></i> Importar Ahora
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -2918,6 +3034,290 @@
         // Exponer funciones globalmente
         window.processImport = processImport;
         window.importExcelNew = processImport;
+
+        // ========== NUEVO SISTEMA DE MAPEO DE COLUMNAS ==========
+        let excelData = null; // Almacena los datos del Excel
+        let excelHeaders = []; // Almacena los encabezados
+
+        // Función para analizar el archivo Excel
+        function analyzeExcelFile() {
+            const fileInput = document.getElementById('import-excel-input');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                showFloatingNotification("Por favor selecciona un archivo", "error");
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+
+                    // Leer como array de arrays
+                    const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+                    if (!rows || rows.length === 0) {
+                        showFloatingNotification("El archivo está vacío", "error");
+                        return;
+                    }
+
+                    // Buscar fila de encabezados (primera fila con datos)
+                    let headerRowIndex = 0;
+                    for (let i = 0; i < Math.min(rows.length, 10); i++) {
+                        if (rows[i] && rows[i].length >= 2) {
+                            headerRowIndex = i;
+                            break;
+                        }
+                    }
+
+                    excelHeaders = rows[headerRowIndex].map((h, idx) => h || `Columna ${idx + 1}`);
+                    excelData = rows.slice(headerRowIndex + 1).filter(row => row && row.length > 0);
+
+                    if (excelData.length === 0) {
+                        showFloatingNotification("No se encontraron datos después de los encabezados", "error");
+                        return;
+                    }
+
+                    // Llenar los selectores de mapeo
+                    populateColumnMappers();
+
+                    // Intentar mapeo automático inteligente
+                    autoMapColumns();
+
+                    // Mostrar vista previa
+                    showPreview();
+
+                    // Cambiar a paso 2
+                    document.getElementById('import-step-1').style.display = 'none';
+                    document.getElementById('import-step-2').style.display = 'block';
+
+                } catch (error) {
+                    console.error(error);
+                    showFloatingNotification("Error al leer el archivo: " + error.message, "error");
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        // Llenar los selectores con las columnas del Excel
+        function populateColumnMappers() {
+            const mappers = ['map-codigo', 'map-descripcion', 'map-descripcionTaller', 'map-costo', 'map-precio', 'map-cantidad'];
+
+            mappers.forEach(mapperId => {
+                const select = document.getElementById(mapperId);
+                // Limpiar opciones existentes excepto la primera
+                while (select.options.length > 1) {
+                    select.remove(1);
+                }
+
+                // Agregar columnas del Excel
+                excelHeaders.forEach((header, index) => {
+                    const option = document.createElement('option');
+                    option.value = index;
+                    option.textContent = `${header} (Columna ${index + 1})`;
+                    select.appendChild(option);
+                });
+            });
+        }
+
+        // Mapeo automático inteligente
+        function autoMapColumns() {
+            const normalize = (str) => String(str).toLowerCase().replace(/[^a-z0-9]/g, '');
+
+            // Función para encontrar la mejor coincidencia
+            const findBestMatch = (keywords) => {
+                for (let i = 0; i < excelHeaders.length; i++) {
+                    const normalized = normalize(excelHeaders[i]);
+                    for (const keyword of keywords) {
+                        if (normalized.includes(normalize(keyword))) {
+                            return i;
+                        }
+                    }
+                }
+                return '';
+            };
+
+            // Mapear automáticamente
+            document.getElementById('map-codigo').value = findBestMatch(['codigo', 'code', 'id', 'sku']);
+            document.getElementById('map-descripcion').value = findBestMatch(['descripcion', 'description', 'producto', 'articulo', 'inventario']);
+            document.getElementById('map-descripcionTaller').value = findBestMatch(['factura', 'taller', 'desc factura', 'descripcion factura']);
+            document.getElementById('map-costo').value = findBestMatch(['costo', 'compra', 'precio costo', 'precio compra']);
+            document.getElementById('map-precio').value = findBestMatch(['venta', 'precio venta', 'pvp', 'publico', 'precio de venta']);
+            document.getElementById('map-cantidad').value = findBestMatch(['existencia', 'stock', 'cantidad', 'inventario']);
+        }
+
+        // Mostrar vista previa de los datos
+        function showPreview() {
+            const previewHeader = document.getElementById('preview-header');
+            const previewBody = document.getElementById('preview-body');
+
+            // Limpiar
+            previewHeader.innerHTML = '';
+            previewBody.innerHTML = '';
+
+            // Crear encabezados
+            const headerRow = document.createElement('tr');
+            excelHeaders.forEach(header => {
+                const th = document.createElement('th');
+                th.textContent = header;
+                th.style.padding = '10px';
+                th.style.borderBottom = '2px solid #ddd';
+                th.style.textAlign = 'left';
+                th.style.whiteSpace = 'nowrap';
+                headerRow.appendChild(th);
+            });
+            previewHeader.appendChild(headerRow);
+
+            // Crear filas de vista previa (máximo 5)
+            const previewRows = excelData.slice(0, 5);
+            previewRows.forEach(row => {
+                const tr = document.createElement('tr');
+                excelHeaders.forEach((_, index) => {
+                    const td = document.createElement('td');
+                    td.textContent = row[index] || '';
+                    td.style.padding = '8px';
+                    td.style.borderBottom = '1px solid #eee';
+                    tr.appendChild(td);
+                });
+                previewBody.appendChild(tr);
+            });
+        }
+
+        // Ejecutar la importación con el mapeo seleccionado
+        async function executeImport() {
+            try {
+                // Obtener mapeo
+                const mapping = {
+                    codigo: document.getElementById('map-codigo').value,
+                    descripcion: document.getElementById('map-descripcion').value,
+                    descripcionTaller: document.getElementById('map-descripcionTaller').value,
+                    costo: document.getElementById('map-costo').value,
+                    precio: document.getElementById('map-precio').value,
+                    cantidad: document.getElementById('map-cantidad').value
+                };
+
+                // Validar que al menos descripción esté mapeada
+                if (mapping.descripcion === '') {
+                    showFloatingNotification("Debes mapear al menos el campo 'Descripción'", "error");
+                    return;
+                }
+
+                const updateExisting = document.getElementById('update-existing-check').checked;
+
+                // Deshabilitar botón
+                const btn = document.getElementById('btn-execute-import');
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Importando...';
+
+                // Función para limpiar números
+                const cleanNumber = (val) => {
+                    if (!val) return 0;
+                    if (typeof val === 'number') return val;
+                    const str = String(val).replace(/[^0-9.]/g, '');
+                    return parseFloat(str) || 0;
+                };
+
+                // Procesar datos
+                const products = [];
+                excelData.forEach(row => {
+                    const getVal = (idx) => idx !== '' ? row[parseInt(idx)] : null;
+
+                    const descripcion = getVal(mapping.descripcion);
+                    if (!descripcion) return; // Saltar filas sin descripción
+
+                    const codigo = getVal(mapping.codigo) || `AUTO-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
+
+                    products.push({
+                        codigo: String(codigo).trim(),
+                        descripcion: String(descripcion).trim(),
+                        descripcionTaller: getVal(mapping.descripcionTaller) ? String(getVal(mapping.descripcionTaller)).trim() : '',
+                        cantidad: cleanNumber(getVal(mapping.cantidad)),
+                        costo: cleanNumber(getVal(mapping.costo)),
+                        precio: cleanNumber(getVal(mapping.precio)),
+                        minStock: 5,
+                        creditoFiscal: false,
+                        ultimaActualizacion: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                });
+
+                if (products.length === 0) {
+                    showFloatingNotification("No se encontraron productos válidos para importar", "error");
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-upload"></i> Importar Ahora';
+                    return;
+                }
+
+                showFloatingNotification(`Guardando ${products.length} productos...`, "info");
+
+                // Guardar en Firebase por lotes
+                const batchSize = 400;
+                let batch = db.batch();
+                let count = 0;
+                const promises = [];
+
+                for (const product of products) {
+                    // Buscar si existe
+                    const existingProduct = inventoryData.find(p => p.codigo === product.codigo);
+                    let docRef;
+
+                    if (existingProduct && updateExisting) {
+                        docRef = db.collection('INVENTARIO').doc(existingProduct.id);
+                        batch.update(docRef, product);
+                    } else if (!existingProduct) {
+                        docRef = db.collection('INVENTARIO').doc();
+                        batch.set(docRef, product);
+                    } else {
+                        continue; // Ya existe y no queremos actualizar
+                    }
+
+                    count++;
+
+                    if (count >= batchSize) {
+                        promises.push(batch.commit());
+                        batch = db.batch();
+                        count = 0;
+                    }
+                }
+
+                if (count > 0) {
+                    promises.push(batch.commit());
+                }
+
+                await Promise.all(promises);
+
+                showFloatingNotification(`¡Importación exitosa! ${products.length} productos procesados`, "success");
+
+                // Cerrar modal y recargar
+                document.getElementById('importModal').style.display = 'none';
+                resetImportModal();
+                loadInventory();
+
+            } catch (error) {
+                console.error(error);
+                showFloatingNotification("Error al importar: " + error.message, "error");
+                const btn = document.getElementById('btn-execute-import');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-upload"></i> Importar Ahora';
+            }
+        }
+
+        // Resetear modal a paso 1
+        function resetImportModal() {
+            document.getElementById('import-step-1').style.display = 'block';
+            document.getElementById('import-step-2').style.display = 'none';
+            document.getElementById('import-excel-input').value = '';
+            excelData = null;
+            excelHeaders = [];
+        }
+
+        // Exponer funciones globalmente
+        window.analyzeExcelFile = analyzeExcelFile;
+        window.executeImport = executeImport;
+        window.resetImportModal = resetImportModal;
 
         // Capturar errores globales de script para depuración
         window.onerror = function (msg, url, line) {
