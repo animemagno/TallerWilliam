@@ -31,7 +31,7 @@ const HistorialService = {
                 // Obtener fecha de hoy en formato local YYYY-MM-DD
                 const now = new Date();
                 const today = now.toLocaleDateString('en-CA'); // YYYY-MM-DD
-                
+
                 filtered = filtered.filter(mov => {
                     // 1. Intentar coincidencia exacta de string
                     if (mov.date === today) return true;
@@ -51,7 +51,7 @@ const HistorialService = {
                             return movDate.toLocaleDateString('en-CA') === today;
                         }
                     } catch (e) {
-                         console.warn("Error comparando fechas:", e);
+                        console.warn("Error comparando fechas:", e);
                     }
                     return false;
                 });
@@ -82,7 +82,51 @@ const HistorialService = {
         let historialHTML = '';
 
         movimientos.forEach(movimiento => {
-            const fecha = movimiento.timestamp ? new Date(movimiento.timestamp.toDate ? movimiento.timestamp.toDate() : movimiento.timestamp).toLocaleDateString('es-ES') : 'N/A';
+            let fecha = 'N/A';
+
+            // Lógica robusta para obtener la fecha
+            try {
+                let dateObj = null;
+
+                if (movimiento.timestamp) {
+                    if (typeof movimiento.timestamp.toDate === 'function') {
+                        dateObj = movimiento.timestamp.toDate();
+                    } else if (movimiento.timestamp instanceof Date) {
+                        dateObj = movimiento.timestamp;
+                    } else if (typeof movimiento.timestamp === 'string') {
+                        dateObj = new Date(movimiento.timestamp);
+                    }
+                }
+
+                // Si el timestamp no generó una fecha válida, intentar con el campo 'date'
+                if ((!dateObj || isNaN(dateObj.getTime())) && movimiento.date) {
+                    // movimiento.date suele ser YYYY-MM-DD
+                    const parts = movimiento.date.split('-');
+                    if (parts.length === 3) {
+                        dateObj = new Date(parts[0], parts[1] - 1, parts[2]);
+                    } else {
+                        dateObj = new Date(movimiento.date);
+                    }
+                }
+
+                // Si aún falla, intentar extraer del número de factura (YYYMMDD o YYYYMMDD)
+                if ((!dateObj || isNaN(dateObj.getTime())) && movimiento.invoiceNumber) {
+                    // Buscar patrones como 20260208 o 260208
+                    const fullDateMatch = String(movimiento.invoiceNumber).match(/(20\d{2})(\d{2})(\d{2})/);
+                    if (fullDateMatch) {
+                        dateObj = new Date(fullDateMatch[1], fullDateMatch[2] - 1, fullDateMatch[3]);
+                    }
+                }
+
+                if (dateObj && !isNaN(dateObj.getTime())) {
+                    fecha = dateObj.toLocaleDateString('es-ES');
+                } else {
+                    fecha = 'Fecha Inválida';
+                }
+            } catch (e) {
+                console.warn("Error parseando fecha:", e);
+                fecha = 'Error Fecha';
+            }
 
             if (movimiento.tipo === 'retiro') {
                 historialHTML += `

@@ -19,27 +19,19 @@
         :root {
             /* Paleta Dark Premium */
             --bg-body: #0f172a;
-            /* Slate 900 */
             --bg-card: #1e293b;
-            /* Slate 800 */
             --bg-input: #334155;
-            /* Slate 700 */
             --text-primary: #f8fafc;
-            /* Slate 50 */
             --text-secondary: #94a3b8;
-            /* Slate 400 */
-
             --accent-color: #3b82f6;
-            /* Blue 500 */
             --accent-hover: #2563eb;
-            /* Blue 600 */
             --success-color: #10b981;
-            /* Emerald 500 */
             --danger-color: #ef4444;
-            /* Red 500 */
 
-            --nav-height: 65px;
-            --header-height: 60px;
+            --nav-height: 55px;
+            /* Reducido de 65px */
+            --header-height: 50px;
+            /* Reducido de 60px */
         }
 
         * {
@@ -53,10 +45,10 @@
             background-color: var(--bg-body);
             color: var(--text-primary);
             font-family: 'Inter', sans-serif;
-            font-size: 16px;
+            font-size: 14px;
+            /* Reducido de 16px */
             overflow-x: hidden;
-            padding-bottom: calc(var(--nav-height) + 20px);
-            /* Espacio para el nav menu */
+            padding-bottom: calc(var(--nav-height) + 10px);
         }
 
         /* --- HEADER --- */
@@ -71,16 +63,17 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0 16px;
+            padding: 0 12px;
+            /* Menos padding lateral */
         }
 
         .header-logo {
             font-weight: 700;
-            font-size: 1.1rem;
+            font-size: 1rem;
             color: var(--text-primary);
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
         }
 
         .header-logo i {
@@ -91,22 +84,23 @@
             background: var(--bg-input);
             border: 1px solid rgba(255, 255, 255, 0.1);
             color: var(--text-primary);
-            padding: 6px 10px;
-            border-radius: 20px;
-            font-size: 0.85rem;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
             outline: none;
             max-width: 140px;
         }
 
         /* --- CONTENEDOR PRINCIPAL --- */
         .main-container {
-            padding: 16px;
+            padding: 12px;
+            /* Menos padding */
             min-height: calc(100vh - var(--header-height) - var(--nav-height));
         }
 
         .view-section {
             display: none;
-            animation: fadeIn 0.3s ease;
+            animation: fadeIn 0.2s ease;
         }
 
         .view-section.active {
@@ -116,7 +110,7 @@
         @keyframes fadeIn {
             from {
                 opacity: 0;
-                transform: translateY(5px);
+                transform: translateY(3px);
             }
 
             to {
@@ -129,12 +123,13 @@
         .form-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            margin-bottom: 20px;
+            gap: 8px;
+            /* Menos gap */
+            margin-bottom: 12px;
         }
 
         .form-group {
-            margin-bottom: 16px;
+            margin-bottom: 10px;
         }
 
         .form-group.full-width {
@@ -144,8 +139,8 @@
         label {
             display: block;
             color: var(--text-secondary);
-            font-size: 0.8rem;
-            margin-bottom: 6px;
+            font-size: 0.75rem;
+            margin-bottom: 4px;
             font-weight: 500;
         }
 
@@ -154,9 +149,10 @@
             background: var(--bg-input);
             border: 1px solid transparent;
             color: white;
-            padding: 12px;
-            border-radius: 12px;
-            font-size: 1rem;
+            padding: 8px 10px;
+            /* Input mas compacto */
+            border-radius: 8px;
+            font-size: 0.9rem;
             transition: all 0.2s;
         }
 
@@ -170,20 +166,21 @@
         /* --- BUSCADOR --- */
         .search-container {
             position: relative;
-            margin-bottom: 20px;
+            margin-bottom: 12px;
         }
 
         .search-icon {
             position: absolute;
-            left: 14px;
+            left: 12px;
             top: 50%;
             transform: translateY(-50%);
             color: var(--text-secondary);
+            font-size: 0.9rem;
         }
 
         .search-clear-icon {
             position: absolute;
-            right: 14px;
+            right: 12px;
             top: 50%;
             transform: translateY(-50%);
             color: var(--text-secondary);
@@ -194,15 +191,16 @@
         }
 
         .search-input {
-            padding-left: 42px;
-            padding-right: 40px;
-            height: 50px;
-            border-radius: 25px;
+            padding-left: 36px;
+            padding-right: 36px;
+            height: 40px;
+            /* Reducido de 50px */
+            border-radius: 20px;
             /* Pill shape */
-            font-size: 1.1rem;
+            font-size: 0.95rem;
             background: var(--bg-card);
             border: 1px solid rgba(255, 255, 255, 0.05);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.2);
         }
 
         .search-input:focus {
@@ -214,13 +212,16 @@
         .results-list {
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 6px;
+            /* Menos espacio entre items */
         }
 
         .product-card {
             background: var(--bg-card);
-            padding: 16px;
-            border-radius: 16px;
+            padding: 10px 12px;
+            /* Padding reducido */
+            border-radius: 10px;
+            /* Bordes menos redondeados */
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -228,36 +229,44 @@
         }
 
         .prod-info h4 {
-            margin: 0 0 4px 0;
-            font-size: 0.95rem;
+            margin: 0 0 2px 0;
+            font-size: 0.85rem;
+            /* Texto mas pequeño */
             color: var(--text-primary);
+            width: 100%;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
         }
 
         .prod-info p {
             margin: 0;
-            font-size: 0.8rem;
+            font-size: 0.7rem;
             color: var(--text-secondary);
         }
 
         .prod-price {
             font-weight: 700;
             color: var(--success-color);
-            font-size: 1.1rem;
-            margin-top: 4px;
+            font-size: 0.95rem;
+            margin-top: 2px;
         }
 
         .add-btn {
             background: var(--accent-color);
             color: white;
             border: none;
-            width: 40px;
-            height: 40px;
-            border-radius: 12px;
+            width: 32px;
+            /* Boton mas pequeño */
+            height: 32px;
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            font-size: 1.2rem;
+            font-size: 1rem;
+            margin-left: 10px;
             transition: transform 0.1s;
         }
 
@@ -268,7 +277,7 @@
         /* --- CARRITO (TAB 2) --- */
         .cart-item {
             background: var(--bg-card);
-            padding: 16px;
+            padding: 10px 12px;
             margin-bottom: 1px;
             display: flex;
             justify-content: space-between;
@@ -276,28 +285,29 @@
         }
 
         .cart-item:first-child {
-            border-top-left-radius: 16px;
-            border-top-right-radius: 16px;
+            border-top-left-radius: 12px;
+            border-top-right-radius: 12px;
         }
 
         .cart-item:last-child {
-            border-bottom-left-radius: 16px;
-            border-bottom-right-radius: 16px;
+            border-bottom-left-radius: 12px;
+            border-bottom-right-radius: 12px;
         }
 
         .qty-control {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 8px;
             background: var(--bg-body);
-            padding: 4px 8px;
-            border-radius: 8px;
+            padding: 2px 6px;
+            /* Controles mas compactos */
+            border-radius: 6px;
         }
 
         .qty-btn {
             color: var(--text-secondary);
-            font-size: 1.1rem;
-            padding: 4px;
+            font-size: 1rem;
+            padding: 2px;
         }
 
         .qty-val {
@@ -314,17 +324,23 @@
 
         .cart-summary {
             background: var(--bg-card);
-            border-radius: 16px;
-            padding: 20px;
-            margin-top: 20px;
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 12px;
             text-align: center;
         }
 
+        .cart-summary h2 {
+            font-size: 1.1rem;
+            margin: 0;
+        }
+
         .total-display {
-            font-size: 2.5rem;
+            font-size: 1.8rem;
+            /* Reducido de 2.5rem */
             font-weight: 700;
             color: var(--text-primary);
-            margin: 10px 0 20px 0;
+            margin: 8px 0 16px 0;
         }
 
         .success-btn {
@@ -332,16 +348,17 @@
             color: white;
             border: none;
             width: 100%;
-            padding: 16px;
-            border-radius: 16px;
-            font-size: 1.1rem;
+            padding: 12px;
+            /* Boton mas delgado */
+            border-radius: 10px;
+            font-size: 1rem;
             font-weight: 600;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
-            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+            gap: 8px;
+            box-shadow: 0 2px 10px rgba(16, 185, 129, 0.2);
         }
 
         .success-btn:active {
@@ -372,9 +389,10 @@
             align-items: center;
             justify-content: center;
             color: var(--text-secondary);
-            font-size: 0.75rem;
-            gap: 4px;
-            padding: 8px 16px;
+            font-size: 0.7rem;
+            /* Texto nav mas pequeño */
+            gap: 2px;
+            padding: 4px;
             width: 100%;
             height: 100%;
             transition: color 0.2s;
@@ -382,8 +400,9 @@
         }
 
         .nav-item i {
-            font-size: 1.25rem;
-            margin-bottom: 2px;
+            font-size: 1.1rem;
+            /* Iconos nav mas pequeños */
+            margin-bottom: 1px;
         }
 
         .nav-item.active {
@@ -397,13 +416,13 @@
 
         .badge {
             position: absolute;
-            top: 6px;
-            right: calc(50% - 14px);
+            top: 4px;
+            right: calc(50% - 12px);
             background: var(--danger-color);
             color: white;
-            font-size: 0.65rem;
-            width: 18px;
-            height: 18px;
+            font-size: 0.6rem;
+            width: 16px;
+            height: 16px;
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -419,33 +438,33 @@
 
         .empty-state {
             text-align: center;
-            padding: 40px 20px;
+            padding: 30px 20px;
             color: var(--text-secondary);
             opacity: 0.7;
         }
 
         .empty-state i {
-            font-size: 3rem;
-            margin-bottom: 16px;
+            font-size: 2rem;
+            margin-bottom: 10px;
             color: var(--accent-color);
         }
 
         /* Toasts */
         .toast {
             position: fixed;
-            top: 80px;
+            top: 70px;
             left: 50%;
             transform: translateX(-50%);
             background: rgba(30, 41, 59, 0.95);
             color: white;
-            padding: 12px 24px;
-            border-radius: 30px;
+            padding: 8px 16px;
+            border-radius: 20px;
             z-index: 2000;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             display: flex;
             align-items: center;
-            gap: 10px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            gap: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
             border: 1px solid rgba(255, 255, 255, 0.1);
             opacity: 0;
             transition: opacity 0.3s;
@@ -470,10 +489,9 @@
         </div>
         <select id="user-selector" class="user-selector" onchange="App.setUsuario(this.value)">
             <option value="" disabled selected>👤 Usuario</option>
-            <option value="Mecanico 1">Mecánico 1</option>
-            <option value="Mecanico 2">Mecánico 2</option>
-            <option value="Mecanico 3">Mecánico 3</option>
-            <option value="Admin">Admin</option>
+            <option value="Ventas">Ventas</option>
+            <option value="Marcos">Marcos</option>
+            <option value="Elmer">Elmer</option>
         </select>
     </header>
 
@@ -575,6 +593,125 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
+        // --- UTILS ---
+        const DateUtils = {
+            getCurrentDateStringElSalvador() {
+                const now = new Date();
+                const options = { timeZone: 'America/El_Salvador', year: 'numeric', month: '2-digit', day: '2-digit' };
+                const formatter = new Intl.DateTimeFormat('es-SV', options);
+                const parts = formatter.formatToParts(now);
+                const year = parts.find(p => p.type === 'year').value;
+                const month = parts.find(p => p.type === 'month').value;
+                const day = parts.find(p => p.type === 'day').value;
+                return `${year}-${month}-${day}`;
+            },
+            getCurrentTimestampElSalvador() {
+                return firebase.firestore.FieldValue.serverTimestamp();
+            }
+        };
+
+        const ConcurrencyManager = {
+            operationLock: false,
+            async withLock(operationFn, operationName = "Operación") {
+                let attempts = 0;
+                while (this.operationLock && attempts < 20) {
+                    await new Promise(r => setTimeout(r, 100));
+                    attempts++;
+                }
+                if (this.operationLock) throw new Error(`Sistema ocupado (${operationName}). Intente de nuevo.`);
+
+                try {
+                    this.operationLock = true;
+                    return await operationFn();
+                } finally {
+                    this.operationLock = false;
+                }
+            }
+        };
+
+        // --- SALES SERVICE ---
+        const SalesService = {
+            async generateInvoiceNumber() {
+                const date = DateUtils.getCurrentDateStringElSalvador();
+                const counterRef = db.collection("COUNTERS").doc("sales");
+
+                return await db.runTransaction(async (transaction) => {
+                    const doc = await transaction.get(counterRef);
+                    let currentCount = 0;
+                    if (doc.exists) {
+                        currentCount = doc.data()[date] || 0;
+                    }
+                    const newCount = currentCount + 1;
+                    transaction.set(counterRef, { [date]: newCount, lastUpdate: new Date() }, { merge: true });
+
+                    // Formato Ventas.html: YYMMDDXXXX (Ej: 2602080004)
+                    // Ventas Movil agrega sufijo: YYMMDDXXXX-M
+                    const datePart = date.replace(/-/g, '').substring(2); // Quitar 20 de 2026 -> 26
+                    const countPart = String(newCount).padStart(4, '0');
+                    return `${datePart}${countPart}`;
+                });
+            },
+
+            async procesarVentaPendiente(data) {
+                return await ConcurrencyManager.withLock(async () => {
+                    let invoiceNumber = await this.generateInvoiceNumber();
+
+                    // AGREGAR INICIAL DEL USUARIO (SOLICITUD)
+                    if (data.usuario) {
+                        const initial = data.usuario.charAt(0).toUpperCase();
+                        invoiceNumber = `${invoiceNumber}-${initial}`;
+                    }
+
+
+                    const saleData = {
+                        ...data,
+                        invoiceNumber: invoiceNumber,
+                        paymentType: 'pendiente',
+                        status: 'pendiente',
+                        saldoPendiente: data.total,
+                        abonos: [],
+                        timestamp: DateUtils.getCurrentTimestampElSalvador(),
+                        date: DateUtils.getCurrentDateStringElSalvador(),
+                        fechaCreacion: DateUtils.getCurrentTimestampElSalvador(),
+                        origen: 'movil'
+                    };
+
+                    await db.collection("VENTAS").add(saleData);
+                    return invoiceNumber;
+                }, "Procesar Venta");
+            },
+
+            async updateSale(saleId, newData) {
+                return await ConcurrencyManager.withLock(async () => {
+                    // Solo permitimos editar ciertos campos
+                    const updateData = {
+                        products: newData.products,
+                        total: newData.total,
+                        saldoPendiente: newData.total, // Reset saldo al total nuevo (asumiendo sin abonos aun)
+                        equipoNumber: newData.equipoNumber,
+                        clientName: newData.clientName,
+                        fechaActualizacion: DateUtils.getCurrentTimestampElSalvador()
+                    };
+
+                    await db.collection("VENTAS").doc(saleId).update(updateData);
+                }, "Actualizar Venta");
+            },
+
+            async getPersonalHistory(usuario) {
+                // CORRECCIÓN: Evitar error de índice compuesto (usuario + timestamp).
+                // Traemos las últimas 100 ventas globales y filtramos en memoria por usuario.
+                // Es más seguro y no requiere crear índices manuales en Firebase.
+                const snapshot = await db.collection("VENTAS")
+                    .orderBy("timestamp", "desc")
+                    .limit(100)
+                    .get();
+
+                const allSales = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+                // Filtrar solo las del usuario actual
+                return allSales.filter(s => s.usuario === usuario);
+            },
+        };
+
         // --- APP LOGIC ---
         const App = {
             state: {
@@ -582,11 +719,11 @@
                 carrito: JSON.parse(localStorage.getItem('tw_carrito') || '[]'),
                 inventarioCache: [],
                 tempEquipo: localStorage.getItem('tw_temp_equipo') || '',
-                tempGrupo: localStorage.getItem('tw_temp_grupo') || ''
+                tempGrupo: localStorage.getItem('tw_temp_grupo') || '',
+                editingSaleId: null // ID si estamos editando
             },
 
             init() {
-                // UI Init
                 if (this.state.usuario) document.getElementById('user-selector').value = this.state.usuario;
                 document.getElementById('input-equipo').value = this.state.tempEquipo;
                 document.getElementById('input-grupo').value = this.state.tempGrupo;
@@ -594,10 +731,8 @@
                 this.updateBadge();
                 this.loadInventario();
 
-                // Event Listeners
                 document.getElementById('input-busqueda').addEventListener('input', (e) => this.handleSearch(e.target.value));
 
-                // Render inicial
                 this.renderCarrito();
                 this.renderHistorial();
             },
@@ -605,6 +740,7 @@
             setUsuario(val) {
                 this.state.usuario = val;
                 localStorage.setItem('tw_usuario', val);
+                this.renderHistorial(); // Recargar historial del usuario
             },
 
             saveTempData() {
@@ -619,7 +755,6 @@
                 document.getElementById('view-' + tabName).classList.add('active');
 
                 document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-                // Simple logic for nav highlight (based on order, can be improved)
                 const icons = { venta: 0, carrito: 1, historial: 2 };
                 document.querySelectorAll('.nav-item')[icons[tabName]].classList.add('active');
 
@@ -629,11 +764,22 @@
 
             // --- DATA & INVENTARIO ---
             async loadInventario() {
-                // Cache simple para móviles
-                const invSnap = await db.collection('INVENTARIO').limit(200).get(); // Limite inicial
-                // Combinar con provicional si es necesario, por ahora solo principal
-                this.state.inventarioCache = invSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-                console.log("Inventario cargado items:", this.state.inventarioCache.length);
+                try {
+                    const [invSnap, provSnap, servSnap] = await Promise.all([
+                        db.collection('INVENTARIO').limit(500).get(),
+                        db.collection('INVENTARIO_PROVICIONAL').get(),
+                        db.collection('SERVICIOS').get()
+                    ]);
+
+                    const productos = invSnap.docs.map(d => ({ id: d.id, ...d.data(), tipo: 'producto' }));
+                    const provisionales = provSnap.docs.map(d => ({ id: d.id, ...d.data(), tipo: 'provisional' }));
+                    const servicios = servSnap.docs.map(d => ({ id: d.id, ...d.data(), tipo: 'servicio' }));
+
+                    this.state.inventarioCache = [...productos, ...provisionales, ...servicios];
+                    console.log(`Cargados: ${productos.length} Prod, ${provisionales.length} Prov, ${servicios.length} Serv.`);
+                } catch (e) {
+                    console.error("Error cargando datos", e);
+                }
             },
 
             clearSearch() {
@@ -644,7 +790,6 @@
             },
 
             async handleSearch(query) {
-                // Mostrar/Ocultar botón X
                 const clearBtn = document.getElementById('btn-clear-search');
                 if (clearBtn) clearBtn.style.display = query && query.length > 0 ? 'block' : 'none';
 
@@ -652,26 +797,19 @@
                 if (!query || query.length < 2) {
                     container.innerHTML = `
                         <div class="empty-state">
-                            <i class="fas fa-search"></i><p>Escribe para buscar...</p>
+                            <i class="fas fa-search"></i><p>Escribe para buscar o agregar manual...</p>
                         </div>`;
                     return;
                 }
 
                 query = query.toLowerCase();
-                // Filtrar en cliente para velocidad (dataset pequeño < 1000 items)
                 const results = this.state.inventarioCache.filter(item => {
                     const desc = (item.descripcion || '').toLowerCase();
                     const cod = (item.codigo || '').toLowerCase();
                     return desc.includes(query) || cod.includes(query);
-                }).slice(0, 10); // Max 10 resultados visuales
+                }).slice(0, 15);
 
-                // Render resultados
-                if (results.length === 0) {
-                    container.innerHTML = `<div class="empty-state"><p>No se encontraron resultados</p></div>`;
-                    return;
-                }
-
-                container.innerHTML = results.map(item => `
+                let html = results.map(item => `
                     <div class="product-card">
                         <div class="prod-info">
                             <h4>${item.descripcion}</h4>
@@ -683,6 +821,49 @@
                         </button>
                     </div>
                 `).join('');
+
+                // OPCION MANUAL SIEMPRE VISIBLE AL FINAL O SI NO HAY RESULTADOS
+                // Usamos el texto original de la busqueda para la descripcion
+                const rawQuery = document.getElementById('input-busqueda').value;
+
+                html += `
+                    <div class="product-card" style="border-style: dashed; border-color: var(--accent-color);">
+                        <div class="prod-info">
+                            <h4 style="color: var(--accent-color)">Agregar "${rawQuery}"</h4>
+                            <p>Producto no inventariado</p>
+                            <div class="prod-price">Manual</div>
+                        </div>
+                        <button class="add-btn" onclick="App.addManualItem('${rawQuery.replace(/'/g, "\\'")}')">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                `;
+
+                container.innerHTML = html;
+            },
+
+            addManualItem(description) {
+                const priceStr = prompt(`Ingrese precio para "${description}":`, "0.00");
+                if (priceStr === null) return; // Cancelado
+
+                const price = parseFloat(priceStr);
+                if (isNaN(price) || price < 0) {
+                    alert("Precio inválido");
+                    return;
+                }
+
+                const manualId = 'MANUAL-' + Date.now();
+                this.state.carrito.push({
+                    id: manualId,
+                    descripcion: description,
+                    precio: price,
+                    cantidad: 1,
+                    codigo: 'MANUAL'
+                });
+
+                this.saveCart();
+                this.showToast(`Agregado: ${description}`);
+                this.clearSearch();
             },
 
             // --- CARRITO ---
@@ -699,10 +880,9 @@
                         descripcion: item.descripcion,
                         precio: item.precio || 0,
                         cantidad: 1,
-                        codigo: item.codigo
+                        codigo: item.codigo || ''
                     });
                 }
-
                 this.saveCart();
                 this.showToast(`Agregado: ${item.descripcion}`);
             },
@@ -739,6 +919,17 @@
 
             renderCarrito() {
                 const container = document.getElementById('cart-items-container');
+
+                // MODO EDICION BAR
+                const summaryDiv = document.querySelector('.cart-summary h2') || document.querySelector('#view-carrito h2');
+                if (this.state.editingSaleId) {
+                    summaryDiv.innerHTML = `Editando Venta <span style="font-size:0.8em; color:var(--accent-color)">#MODO_EDICIÓN</span>`;
+                    summaryDiv.style.color = 'var(--accent-color)';
+                } else {
+                    summaryDiv.innerHTML = 'Pedido Actual';
+                    summaryDiv.style.color = 'var(--text-primary)';
+                }
+
                 if (this.state.carrito.length === 0) {
                     container.innerHTML = `<div class="empty-state"><i class="fas fa-shopping-cart"></i><p>Tu carrito está vacío</p></div>`;
                     document.getElementById('cart-total').innerText = "$0.00";
@@ -759,121 +950,154 @@
                                 <span class="qty-val">${item.cantidad}</span>
                                 <i class="fas fa-plus-circle qty-btn" onclick="App.changeQty(${idx}, 1)"></i>
                             </div>
-                            <!-- <i class="fas fa-trash delete-btn" onclick="App.removeFromCart(${idx})"></i> -->
                         </div>
                     `;
                 }).join('');
-
                 document.getElementById('cart-total').innerText = "$" + total.toFixed(2);
             },
 
-            // --- ENVIAR PEDIDO ---
+            // --- PROCESAMIENTO ---
             async enviarPedido() {
                 if (!this.state.usuario) {
-                    alert("Por favor selecciona tu Usuario Mecánico arriba.");
+                    alert("Selecciona un usuario (Arriba a la derecha)");
                     return;
                 }
-                if (this.state.carrito.length === 0) {
-                    alert("El carrito está vacío.");
-                    return;
-                }
+                if (this.state.carrito.length === 0) return;
+
                 const equipo = document.getElementById('input-equipo').value.trim();
                 if (!equipo) {
-                    alert("Por favor ingresa el número de Equipo.");
+                    alert("Ingresa número de Equipo");
                     document.getElementById('input-equipo').focus();
                     return;
                 }
 
-                const confirmacion = confirm(`¿Enviar pedido para Equipo ${equipo}?`);
-                if (!confirmacion) return;
-
-                // Preparar objeto de venta
-                // NOTA: Usamos estructura compatible con Ventas.html
-                const total = this.state.carrito.reduce((sum, i) => sum + (i.precio * i.cantidad), 0);
                 const grupo = document.getElementById('input-grupo').value.trim();
-                const fecha = new Date(); // Timestamp local
+                const total = this.state.carrito.reduce((sum, i) => sum + (i.precio * i.cantidad), 0);
 
-                const ventaData = {
-                    invoiceNumber: this.generateTempInvoice(),
-                    clientName: grupo || 'Cliente General', // Grupo/Cliente
-                    equipoNumber: equipo,
-                    products: this.state.carrito,
-                    total: total,
-                    paymentType: 'pendiente', // Por defecto pendiente de cobro en caja
-                    status: 'pendiente',      // Pagado o pendiente
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                    date: fecha.toISOString().split('T')[0], // YYYY-MM-DD
+                // PREGUNTA CLAVE
+                const action = this.state.editingSaleId ? "ACTUALIZAR" : "CREAR";
+                if (!confirm(`¿${action} venta para Equipo ${equipo}? Total: $${total.toFixed(2)}`)) return;
 
-                    // CAMPOS EXTRA PARA CONTROL
-                    usuario: this.state.usuario,
-                    origen: 'movil',
-                    impreso: false, // Flag importante
-                    notas: 'Generado desde App Móvil'
-                };
+                const btn = document.querySelector('.success-btn');
+                const originalText = btn.innerHTML;
+                btn.disabled = true;
+                btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Guardando...`;
 
                 try {
-                    // Guardar en Firestore
-                    await db.collection('VENTAS').add(ventaData);
+                    const ventaData = {
+                        clientName: grupo || `Equipo ${equipo}`,
+                        equipoNumber: equipo,
+                        products: this.state.carrito,
+                        total: total,
+                        usuario: this.state.usuario
+                    };
 
-                    // Limpiar y Feedback
+                    if (this.state.editingSaleId) {
+                        await SalesService.updateSale(this.state.editingSaleId, ventaData);
+                        this.showToast('Venta Actualizada ✅');
+                        this.state.editingSaleId = null;
+                    } else {
+                        await SalesService.procesarVentaPendiente(ventaData);
+                        this.showToast('Venta Creada como PENDIENTE ✅');
+                    }
+
+                    // Limpiar
                     this.state.carrito = [];
                     this.saveCart();
-                    this.state.tempEquipo = ''; // Limpiar equipo para sgte venta
+                    this.state.tempEquipo = '';
                     this.state.tempGrupo = '';
                     this.saveTempData();
                     document.getElementById('input-equipo').value = '';
                     document.getElementById('input-grupo').value = '';
 
-                    this.showToast('Pedido enviado a Caja ✅');
-                    this.switchTab('venta'); // Volver a inicio
+                    this.switchTab('historial'); // Ver lo creado
                     this.updateBadge();
 
-                    // Guardar en historial local visual
-                    this.saveLocalHistory(ventaData);
-
                 } catch (e) {
-                    console.error(e);
-                    alert("Error al enviar pedido: " + e.message);
+                    alert("Error: " + e.message);
+                } finally {
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
                 }
             },
 
-            generateTempInvoice() {
-                // Generar un ID temporal corto
-                return 'MOV-' + Math.floor(Math.random() * 10000);
-            },
-
-            // --- HISTORIAL LOCAL ---
-            saveLocalHistory(data) {
-                let history = JSON.parse(localStorage.getItem('tw_local_history') || '[]');
-                history.unshift({
-                    equipo: data.equipoNumber,
-                    total: data.total,
-                    hora: new Date().toLocaleTimeString(),
-                    id: Math.random() // Temp ID
-                });
-                history = history.slice(0, 50); // Guardar ultimos 50
-                localStorage.setItem('tw_local_history', JSON.stringify(history));
-            },
-
-            renderHistorial() {
-                const history = JSON.parse(localStorage.getItem('tw_local_history') || '[]');
+            // --- HISTORIAL & EDICION ---
+            async renderHistorial() {
                 const container = document.getElementById('local-history-list');
 
-                if (history.length === 0) {
-                    container.innerHTML = `<div class="empty-state"><p>No has enviado pedidos hoy</p></div>`;
+                if (!this.state.usuario) {
+                    container.innerHTML = `<div class="empty-state"><p>Selecciona un usuario para ver tus ventas</p></div>`;
                     return;
                 }
 
-                container.innerHTML = history.map(h => `
-                    <div class="product-card" style="margin-bottom:8px">
-                        <div class="prod-info">
-                            <h4>Equipo ${h.equipo}</h4>
-                            <p>Enviado a las ${h.hora}</p>
+                container.innerHTML = `<div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Cargando...</p></div>`;
+
+                try {
+                    const sales = await SalesService.getPersonalHistory(this.state.usuario);
+
+                    if (sales.length === 0) {
+                        container.innerHTML = `<div class="empty-state"><p>No hay ventas tuyas hoy</p></div>`;
+                        return;
+                    }
+
+                    container.innerHTML = sales.map(s => `
+                        <div class="product-card" style="margin-bottom:8px; flex-direction:column; align-items:flex-start">
+                             <div style="display:flex; justify-content:space-between; width:100%; align-items:center">
+                                <div class="prod-info">
+                                    <h4 style="color:var(--accent-color)">#${s.invoiceNumber}</h4>
+                                    <p>${s.clientName} (${s.equipoNumber})</p>
+                                    <p style="font-size:0.75rem">${new Date(s.timestamp.seconds * 1000).toLocaleTimeString()}</p>
+                                </div>
+                                <div class="prod-price">$${s.total.toFixed(2)}</div>
+                            </div>
+                            <div style="width:100%; display:flex; gap:10px; margin-top:10px; border-top:1px solid #ffffff10; padding-top:8px">
+                                <div style="font-size:0.8rem; color:${s.status === 'pagado' ? 'var(--success-color)' : 'orange'}">
+                                    ${s.status.toUpperCase()}
+                                </div>
+                                <button onclick="App.cargarParaEditar('${s.id}')" style="margin-left:auto; background:none; border:none; color:var(--accent-color); cursor:pointer">
+                                    <i class="fas fa-edit"></i> EDITAR
+                                </button>
+                            </div>
                         </div>
-                        <div class="prod-price" style="color:var(--text-secondary)">$${h.total.toFixed(2)}</div>
-                        <i class="fas fa-check-double" style="color:var(--success-color); margin-left:10px"></i>
-                    </div>
-                `).join('');
+                    `).join('');
+
+                } catch (e) {
+                    container.innerHTML = `<div class="empty-state"><p>Error cargando historial</p></div>`;
+                }
+            },
+
+            cargarParaEditar(saleId) {
+                // Confirmar si hay algo en carrito
+                if (this.state.carrito.length > 0 && !this.state.editingSaleId) {
+                    if (!confirm("Tienes productos en el carrito actual. ¿Descartarlos para editar esta venta?")) return;
+                }
+
+                this.showToast("Cargando venta...");
+
+                db.collection("VENTAS").doc(saleId).get().then(doc => {
+                    if (!doc.exists) return;
+                    const data = doc.data();
+
+                    this.state.editingSaleId = saleId;
+                    this.state.carrito = data.products || [];
+                    this.state.tempEquipo = data.equipoNumber;
+
+                    // Asignar datos a UI
+                    document.getElementById('input-equipo').value = data.equipoNumber;
+                    // Intentar extraer grupo si es formato "Equipo X" -> cliente = grupo
+                    if (data.clientName && !data.clientName.includes("Equipo " + data.equipoNumber)) {
+                        document.getElementById('input-grupo').value = data.clientName;
+                        this.state.tempGrupo = data.clientName;
+                    } else {
+                        document.getElementById('input-grupo').value = '';
+                        this.state.tempGrupo = '';
+                    }
+
+                    this.saveCart();
+                    this.saveTempData();
+                    this.switchTab('carrito');
+                    this.showToast("Modo Edición Activado ✏️");
+                });
             },
 
             showToast(msg) {
@@ -884,7 +1108,6 @@
             }
         };
 
-        // Init App
         document.addEventListener('DOMContentLoaded', () => App.init());
 
     </script>
