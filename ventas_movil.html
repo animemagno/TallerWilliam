@@ -724,7 +724,31 @@
             },
 
             init() {
-                if (this.state.usuario) document.getElementById('user-selector').value = this.state.usuario;
+                // DETECTAR USUARIO DESDE URL (PARA QR)
+                // Se debe manejar la decodificación correctamente
+                const urlParams = new URLSearchParams(window.location.search);
+                const userFromUrl = urlParams.get('user');
+
+                if (userFromUrl) {
+                    const decodedUser = decodeURIComponent(userFromUrl);
+                    this.state.usuario = decodedUser;
+                    localStorage.setItem('tw_usuario', decodedUser);
+                    console.log("Usuario detectado desde URL:", decodedUser);
+
+                    // Mostrar confirmación visual de bienvenida
+                    setTimeout(() => this.showToast(`Bienvenido ${decodedUser} 👋`), 500);
+
+                    // Limpiar URL para que no se quede el parametro visualmente, pero asegurando refresco
+                    // history.replaceState({}, document.title, window.location.pathname);
+                }
+
+                // Sincronizar selector
+                const userSelector = document.getElementById('user-selector');
+                if (this.state.usuario) {
+                    userSelector.value = this.state.usuario;
+                    // Si el valor no coincide con ninguna opción, forzarlo o agregarlo (si fuera dinámico)
+                }
+
                 document.getElementById('input-equipo').value = this.state.tempEquipo;
                 document.getElementById('input-grupo').value = this.state.tempGrupo;
 

@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generar QRs - Taller William</title>
+    <!-- Librería QR Code -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f0f2f5;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            margin-bottom: 30px;
+        }
+
+        input {
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            width: 70%;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+
+        button {
+            padding: 12px 24px;
+            background: #e67e22;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background: #d35400;
+        }
+
+        .qr-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .qr-card {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #eee;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .qr-card h3 {
+            margin-top: 15px;
+            color: #34495e;
+        }
+
+        .qr-code {
+            margin-bottom: 10px;
+        }
+
+        @media print {
+            .no-print {
+                display: none;
+            }
+
+            body {
+                background: white;
+            }
+
+            .container {
+                box-shadow: none;
+                padding: 0;
+            }
+
+            .qr-grid {
+                gap: 50px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1 class="no-print">Generador de QRs para Empleados</h1>
+
+        <div class="input-group no-print">
+            <p>Ingresa la URL pública de tu aplicación móvil (ej: https://tu-sitio.com/ventas_movil.html):</p>
+            <input type="text" id="app-url" placeholder="https://..."
+                value="https://taller-willian.web.app/ventas_movil.html">
+            <button onclick="generarQRs()">Generar Códigos</button>
+        </div>
+
+        <div id="qrs-container" class="qr-grid"></div>
+    </div>
+
+    <script>
+        const usuarios = [
+            "William",
+            "Elmer",
+            "Marcos",
+            "Wendy",
+            "Marlon",
+            "Victor",
+            "Chele",
+            "Dani",
+            "Saul",
+            "Josue"
+        ];
+
+        function generarQRs() {
+            const baseUrl = document.getElementById('app-url').value.trim();
+            const container = document.getElementById('qrs-container');
+            container.innerHTML = '';
+
+            if (!baseUrl) {
+                alert("Por favor ingresa una URL válida");
+                return;
+            }
+
+            usuarios.forEach(usuario => {
+                const card = document.createElement('div');
+                card.className = 'qr-card';
+
+                // URL con el parámetro de usuario
+                const fullUrl = `${baseUrl}?user=${encodeURIComponent(usuario)}`;
+                console.log(`Generando QR para ${usuario}: ${fullUrl}`);
+
+                // Contenedor del QR
+                const qrDiv = document.createElement('div');
+                qrDiv.className = 'qr-code';
+
+                // Título
+                const title = document.createElement('h3');
+                title.textContent = usuario;
+
+                card.appendChild(qrDiv);
+                card.appendChild(title);
+                container.appendChild(card);
+
+                // Generar QR
+                new QRCode(qrDiv, {
+                    text: fullUrl,
+                    width: 150,
+                    height: 150,
+                    colorDark: "#000000",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+            });
+        }
+
+        // Auto-generar al cargar si hay algo en el input (demo)
+        // window.onload = generarQRs;
+    </script>
+</body>
+
+</html>
