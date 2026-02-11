@@ -473,9 +473,59 @@
             width: max-content;
         }
 
-        .toast.visible {
-            opacity: 1;
-            margin-top: 10px;
+        /* Modal Mobile */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: var(--bg-card);
+            width: 100%;
+            max-height: 80vh;
+            border-radius: 15px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .modal-header {
+            padding: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-body {
+            padding: 15px;
+            overflow-y: auto;
+        }
+
+        .btn-action {
+            width: 100%;
+            padding: 12px;
+            background: var(--bg-input);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+            border-radius: 10px;
+            margin-bottom: 15px;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
         }
     </style>
 </head>
@@ -549,10 +599,41 @@
         </div>
 
         <!-- VISTA: HISTORIAL (Últimos envios locales) -->
+        <!-- VISTA: HISTORIAL (Últimos envios locales) -->
         <div id="view-historial" class="view-section">
-            <h2 style="margin: 0 0 15px 0; font-size: 1.5rem;">Mis Envíos (Hoy)</h2>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h2 style="margin: 0; font-size: 1.5rem;">Mis Envíos</h2>
+                <button onclick="App.openSearchModal()"
+                    style="background: none; border: none; color: white; font-size: 1.4rem; padding: 5px;">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
             <div id="local-history-list" class="results-list">
                 <!-- Historial local -->
+            </div>
+        </div>
+
+        <!-- MODAL HISTORIAL EQUIPO -->
+        <div id="modal-historial-equipo" class="modal-overlay hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="historial-equipo-titulo" style="margin:0; font-size: 1.1rem">Historial de Equipo</h3>
+                    <button onclick="document.getElementById('modal-historial-equipo').classList.add('hidden')"
+                        style="background:none; border:none; color:white; font-size:1.4rem; padding:5px">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <div style="padding: 15px 15px 5px 15px; display: flex; gap: 10px;">
+                    <input type="tel" id="mobile-search-equipo" placeholder="Equipo # (ej: 25)"
+                        style="flex:1; padding:12px; border-radius:8px; border:1px solid #444; background:var(--bg-input); color:white; font-size:1rem;">
+                    <button onclick="App.buscarEquipoDesdeModal()"
+                        style="padding:0 20px; border-radius:8px; background:var(--accent-color); border:none; color:white; font-size:1.2rem;">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+
+                <div id="historial-equipo-content" class="modal-body" style="padding-top:10px"></div>
             </div>
         </div>
 
@@ -674,7 +755,8 @@
                         timestamp: DateUtils.getCurrentTimestampElSalvador(),
                         date: DateUtils.getCurrentDateStringElSalvador(),
                         fechaCreacion: DateUtils.getCurrentTimestampElSalvador(),
-                        origen: 'movil'
+                        origen: 'movil',
+                        printed: false
                     };
 
                     await db.collection("VENTAS").add(saleData);
@@ -684,11 +766,12 @@
 
             async updateSale(saleId, newData) {
                 return await ConcurrencyManager.withLock(async () => {
-                    // Solo permitimos editar ciertos campos
+                    // CORRECCIÓN: Al editar, NO modificar la fecha de creación ('date' ni 'timestamp')
+                    // para evitar que la venta se mueva al día de hoy duplicando reportes.
                     const updateData = {
                         products: newData.products,
                         total: newData.total,
-                        saldoPendiente: newData.total, // Reset saldo al total nuevo (asumiendo sin abonos aun)
+                        saldoPendiente: newData.total, // Se asume reinicio de saldo al editar monto total
                         equipoNumber: newData.equipoNumber,
                         clientName: newData.clientName,
                         fechaActualizacion: DateUtils.getCurrentTimestampElSalvador()
@@ -713,6 +796,63 @@
             },
         };
 
+        // --- CONNECTION MANAGER ---
+        const ConnectionManager = {
+            isOnline: navigator.onLine,
+
+            init() {
+                window.addEventListener('online', () => this.handleConnectionChange(true));
+                window.addEventListener('offline', () => this.handleConnectionChange(false));
+                this.handleConnectionChange(this.isOnline);
+            },
+
+            handleConnectionChange(status) {
+                this.isOnline = status;
+                const toast = document.getElementById('toast');
+                if (!status) {
+                    App.showToast("🔴 Sin conexión - Modo Offline", "error");
+                    document.body.style.borderTop = "4px solid var(--danger-color)";
+                } else {
+                    App.showToast("🟢 Conexión Restaurada", "success");
+                    document.body.style.borderTop = "none";
+                    // Recargar datos al volver
+                    if (App.state.usuario) RealTimeHistoryManager.init(App.state.usuario);
+                }
+            }
+        };
+
+        // --- REAL TIME HISTORY MANAGER ---
+        const RealTimeHistoryManager = {
+            unsubscribe: null,
+
+            init(usuario) {
+                if (this.unsubscribe) this.unsubscribe();
+
+                // Escuchar ventas del usuario, ordenadas por timestamp
+                // Nota: Requiere índice compuesto en Firestore si se usa where + orderBy
+                // Para evitar errores en móvil sin índices, traemos las últimas del día.
+                const today = DateUtils.getCurrentDateStringElSalvador();
+
+                this.unsubscribe = db.collection("VENTAS")
+                    .where("date", "==", today)
+                    .where("usuario", "==", usuario)
+                    .orderBy("timestamp", "desc")
+                    .onSnapshot(snapshot => {
+                        const sales = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                        App.updateHistoryUI(sales);
+                    }, error => {
+                        console.error("Error historial RT:", error);
+                        // Fallback a carga manual si falla por índices
+                        App.renderHistorialLegacy();
+                    });
+            },
+
+            stop() {
+                if (this.unsubscribe) this.unsubscribe();
+                this.unsubscribe = null;
+            }
+        };
+
         // --- APP LOGIC ---
         const App = {
             state: {
@@ -726,7 +866,6 @@
 
             init() {
                 // DETECTAR USUARIO DESDE URL (PARA QR)
-                // Se debe manejar la decodificación correctamente
                 const urlParams = new URLSearchParams(window.location.search);
                 const userFromUrl = urlParams.get('user');
 
@@ -735,19 +874,14 @@
                     this.state.usuario = decodedUser;
                     localStorage.setItem('tw_usuario', decodedUser);
                     console.log("Usuario detectado desde URL:", decodedUser);
-
-                    // Mostrar confirmación visual de bienvenida
                     setTimeout(() => this.showToast(`Bienvenido ${decodedUser} 👋`), 500);
-
-                    // Limpiar URL para que no se quede el parametro visualmente, pero asegurando refresco
-                    // history.replaceState({}, document.title, window.location.pathname);
                 }
 
                 // Sincronizar selector
                 const userSelector = document.getElementById('user-selector');
                 if (this.state.usuario) {
                     userSelector.value = this.state.usuario;
-                    // Si el valor no coincide con ninguna opción, forzarlo o agregarlo (si fuera dinámico)
+                    RealTimeHistoryManager.init(this.state.usuario);
                 }
 
                 document.getElementById('input-equipo').value = this.state.tempEquipo;
@@ -755,17 +889,18 @@
 
                 this.updateBadge();
                 this.loadInventario();
+                ConnectionManager.init();
 
                 document.getElementById('input-busqueda').addEventListener('input', (e) => this.handleSearch(e.target.value));
 
                 this.renderCarrito();
-                this.renderHistorial();
+                // this.renderHistorial(); // Ya no es necesario, lo maneja RealTimeHistoryManager
             },
 
             setUsuario(val) {
                 this.state.usuario = val;
                 localStorage.setItem('tw_usuario', val);
-                this.renderHistorial(); // Recargar historial del usuario
+                RealTimeHistoryManager.init(val);
             },
 
             saveTempData() {
@@ -784,7 +919,7 @@
                 document.querySelectorAll('.nav-item')[icons[tabName]].classList.add('active');
 
                 if (tabName === 'carrito') this.renderCarrito();
-                if (tabName === 'historial') this.renderHistorial();
+                // Historial se actualiza solo
             },
 
             // --- DATA & INVENTARIO ---
@@ -1047,34 +1182,30 @@
             },
 
             // --- HISTORIAL & EDICION ---
-            async renderHistorial() {
+            // --- HISTORIAL & EDICION ---
+            updateHistoryUI(sales) {
                 const container = document.getElementById('local-history-list');
 
-                if (!this.state.usuario) {
-                    container.innerHTML = `<div class="empty-state"><p>Selecciona un usuario para ver tus ventas</p></div>`;
+                if (sales.length === 0) {
+                    container.innerHTML = `<div class="empty-state"><p>No hay ventas tuyas hoy</p></div>`;
                     return;
                 }
 
-                container.innerHTML = `<div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Cargando...</p></div>`;
+                container.innerHTML = sales.map(s => {
+                    const date = new Date(s.timestamp.seconds * 1000);
+                    const dateStr = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-                try {
-                    const sales = await SalesService.getPersonalHistory(this.state.usuario);
-
-                    if (sales.length === 0) {
-                        container.innerHTML = `<div class="empty-state"><p>No hay ventas tuyas hoy</p></div>`;
-                        return;
-                    }
-
-                    container.innerHTML = sales.map(s => `
-                        <div class="product-card" style="margin-bottom:8px; flex-direction:column; align-items:flex-start">
+                    return `
+                    <div class="product-card" style="margin-bottom:8px; flex-direction:column; align-items:flex-start">
                              <div style="display:flex; justify-content:space-between; width:100%; align-items:center">
-                                <div class="prod-info">
-                                    <h4 style="color:var(--accent-color)">#${s.invoiceNumber}</h4>
-                                    <p>${s.clientName} (${s.equipoNumber})</p>
-                                    <p style="font-size:0.75rem">${new Date(s.timestamp.seconds * 1000).toLocaleTimeString()}</p>
+                                <div class="prod-info" style="flex:1">
+                                    <h4 style="color:var(--text-primary); margin-bottom:4px; font-size:1rem">${s.equipoNumber} - ${s.clientName}</h4>
+                                    <p style="font-size:0.8rem; color:var(--text-secondary); margin-bottom:2px">${dateStr}</p>
+                                    <p style="font-size:0.85rem; color:var(--accent-color); font-weight:bold">#${s.invoiceNumber}</p>
                                 </div>
-                                <div class="prod-price">$${s.total.toFixed(2)}</div>
+                                <div class="prod-price" style="align-self: flex-start; margin-top: 5px; font-size:1.1rem">$${s.total.toFixed(2)}</div>
                             </div>
+                            
                             <div style="width:100%; display:flex; gap:10px; margin-top:10px; border-top:1px solid #ffffff10; padding-top:8px">
                                 <div style="font-size:0.8rem; color:${s.status === 'pagado' ? 'var(--success-color)' : 'orange'}">
                                     ${s.status.toUpperCase()}
@@ -1084,11 +1215,150 @@
                                 </button>
                             </div>
                         </div>
-                    `).join('');
+                    `;
+                }).join('');
+            },
 
+            // Fallback para cuando falla el listener (ej: falta de índices)
+            async renderHistorialLegacy() {
+                const container = document.getElementById('local-history-list');
+                container.innerHTML = `<div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Cargando modo simple...</p></div>`;
+                try {
+                    const sales = await SalesService.getPersonalHistory(this.state.usuario);
+                    this.updateHistoryUI(sales);
                 } catch (e) {
                     container.innerHTML = `<div class="empty-state"><p>Error cargando historial</p></div>`;
                 }
+            },
+
+            // --- HISTORIAL EQUIPO MOBILE ---
+            openSearchModal() {
+                const modal = document.getElementById('modal-historial-equipo');
+                const content = document.getElementById('historial-equipo-content');
+                const title = document.getElementById('historial-equipo-titulo');
+
+                title.innerText = '';
+                content.innerHTML = '<div class="empty-state"><i class="fas fa-search"></i><p>Introduce un número</p></div>';
+
+                const input = document.getElementById('mobile-search-equipo');
+                input.value = '';
+
+                modal.classList.remove('hidden');
+                setTimeout(() => input.focus(), 300);
+            },
+
+            async buscarEquipoDesdeModal() {
+                const input = document.getElementById('mobile-search-equipo');
+                const equipo = input.value.trim();
+
+                if (!equipo) {
+                    input.focus();
+                    return;
+                }
+
+                input.blur(); // Ocultar teclado
+                document.getElementById('historial-equipo-titulo').innerText = equipo;
+
+                this.loadAndShowTeamHistory(equipo);
+            },
+
+            async loadAndShowTeamHistory(equipo) {
+                const content = document.getElementById('historial-equipo-content');
+                content.innerHTML = '<div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Buscando...</p></div>';
+
+                try {
+                    const snapshot = await db.collection("VENTAS")
+                        .where("equipoNumber", "==", equipo)
+                        .get();
+
+                    let ventas = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+                    // Ordenar por fecha desc
+                    ventas.sort((a, b) => {
+                        const dateA = a.timestamp?.toDate ? a.timestamp.toDate() : (new Date(a.timestamp) || new Date(0));
+                        const dateB = b.timestamp?.toDate ? b.timestamp.toDate() : (new Date(b.timestamp) || new Date(0));
+                        return dateB - dateA;
+                    });
+
+                    this.renderHistorialEquipo(ventas, equipo);
+                } catch (e) {
+                    content.innerHTML = `<div class="empty-state"><p>Error: ${e.message}</p></div>`;
+                }
+            },
+
+
+            renderHistorialEquipo(historial, equipo) {
+                const content = document.getElementById('historial-equipo-content');
+
+                if (historial.length === 0) {
+                    content.innerHTML = `<div class="empty-state"><p>No hay registros para Equipo ${equipo}</p></div>`;
+                    return;
+                }
+
+                content.innerHTML = historial.map(venta => {
+                    const fecha = venta.timestamp ? new Date(venta.timestamp.seconds * 1000).toLocaleDateString() : 'N/A';
+
+                    // Análisis de Contenido para Color
+                    let tieneCaja = false;
+                    let tieneAceite = false;
+
+                    if (venta.products) {
+                        const matchStr = venta.products.map(p => p.descripcion).join(' ').toLowerCase();
+                        if (matchStr.includes('caja') || matchStr.includes('transmision')) tieneCaja = true;
+                        if (matchStr.includes('aceite') || matchStr.includes('motor')) tieneAceite = true;
+                    }
+
+                    let cardClass = "";
+                    let icon = "fa-wrench";
+                    let statusColor = "var(--text-secondary)";
+
+                    if (tieneCaja) { // Prioridad Roja
+                        cardClass = "border-left: 4px solid var(--danger-color); background: rgba(239, 68, 68, 0.1);";
+                        icon = "fa-cogs";
+                        statusColor = "var(--danger-color)";
+                    } else if (tieneAceite) {
+                        cardClass = "border-left: 4px solid var(--success-color); background: rgba(16, 185, 129, 0.1);";
+                        icon = "fa-oil-can";
+                        statusColor = "var(--success-color)";
+                    }
+
+                    const detailId = `mobile-detail-${venta.id}`;
+
+                    let prodsHtml = (venta.products || []).map(p =>
+                        `<div style="font-size:0.85rem; padding:2px 0; color:#ddd">• ${p.cantidad} ${p.descripcion}</div>`
+                    ).join('');
+
+                    const fechaStr = venta.timestamp ? new Date(venta.timestamp.seconds * 1000).toLocaleString([], { year: '2-digit', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : 'N/A';
+
+                    return `
+                        <div onclick="document.getElementById('${detailId}').classList.toggle('hidden')" 
+                             style="background: var(--bg-input); padding: 12px; margin-bottom: 8px; border-radius: 8px; ${cardClass}">
+                            
+                            <div style="display:flex; justify-content:space-between; align-items:flex-start">
+                                <div style="display:flex; align-items:flex-start; gap:12px; flex:1">
+                                    <i class="fas ${icon}" style="color:${statusColor}; font-size:1.1rem; margin-top:3px"></i>
+                                    <div>
+                                        <div style="font-weight:bold; font-size:1rem; color:var(--text-primary); margin-bottom:2px">
+                                           ${venta.equipoNumber} - ${venta.clientName || 'Sin Nombre'}
+                                        </div>
+                                        <div style="font-size:0.85rem; color:${statusColor}; margin-bottom:2px">
+                                            ${fechaStr}
+                                        </div>
+                                        <div style="font-size:0.8rem; color:var(--text-secondary); opacity:0.7">
+                                            #${venta.invoiceNumber}
+                                        </div>
+                                    </div>
+                                </div>
+                                <i class="fas fa-chevron-down" style="color:var(--text-secondary); opacity:0.5; margin-top:5px"></i>
+                            </div>
+
+                            <div id="${detailId}" class="hidden" style="margin-top:10px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.1)">
+                                ${prodsHtml}
+                                <div style="text-align:right; margin-top:5px; font-weight:bold; font-size:1.1rem; color:var(--accent-color)">$${(venta.total || 0).toFixed(2)}</div>
+                            </div>
+                        </div>
+                     `;
+                }).join('');
             },
 
             cargarParaEditar(saleId) {
@@ -1125,11 +1395,25 @@
                 });
             },
 
-            showToast(msg) {
+            showToast(msg, type = 'info') {
                 const toast = document.getElementById('toast');
-                document.getElementById('toast-msg').innerText = msg;
+                const icon = toast.querySelector('i');
+                const text = document.getElementById('toast-msg');
+
+                text.innerText = msg;
+                if (type === 'error') {
+                    icon.className = 'fas fa-exclamation-circle';
+                    icon.style.color = 'var(--danger-color)';
+                } else if (type === 'success') {
+                    icon.className = 'fas fa-check-circle';
+                    icon.style.color = 'var(--success-color)';
+                } else {
+                    icon.className = 'fas fa-info-circle';
+                    icon.style.color = 'var(--accent-color)';
+                }
+
                 toast.classList.add('visible');
-                setTimeout(() => toast.classList.remove('visible'), 2000);
+                setTimeout(() => toast.classList.remove('visible'), 3000);
             }
         };
 

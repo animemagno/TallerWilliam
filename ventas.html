@@ -9,7 +9,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="css/ventas_styles.css">
+    <link rel="stylesheet" href="css/ventas_styles.css?v=2">
 </head>
 
 <body>
@@ -691,7 +691,7 @@
     <script src="js/GrupoManager.js"></script>
     <script src="js/GrupoManagerPatch.js"></script>
     <script src="js/PrintingService.js"></script>
-    <script src="js/HistorialService.js"></script>
+    <script src="js/HistorialService.js?v=3"></script>
     <script>
         // Definir firebase globalmente
         const firebase = window.firebase;
@@ -3189,6 +3189,27 @@
                 }
             },
 
+            // --- HISTORIAL EQUIPO ---
+            async getHistorialCompletoEquipo(equipoNum) {
+                try {
+                    const snapshot = await AppState.db.collection("VENTAS")
+                        .where("equipoNumber", "==", equipoNum)
+                        .get(); // Sin orderBy para evitar requerir indice compuesto
+
+                    const ventas = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+                    // Ordenar en memoria (descendente por fecha)
+                    return ventas.sort((a, b) => {
+                        const dateA = a.timestamp?.toDate ? a.timestamp.toDate() : (new Date(a.timestamp) || new Date(0));
+                        const dateB = b.timestamp?.toDate ? b.timestamp.toDate() : (new Date(b.timestamp) || new Date(0));
+                        return dateB - dateA;
+                    });
+                } catch (error) {
+                    console.error("Error cargando historial de equipo:", error);
+                    throw error;
+                }
+            },
+
             async loadAllMovements(limit = 10000) {
                 try {
                     const results = await Promise.allSettled([
@@ -3205,6 +3226,11 @@
                     if (results[1].status === 'rejected') console.error("Error loading retiros:", results[1].reason);
                     if (results[2].status === 'rejected') console.error("Error loading ingresos:", results[2].reason);
 
+                    // Si todos fallaron, es un error crítico
+                    if (results.every(r => r.status === 'rejected')) {
+                        throw new Error("No se pudieron cargar los datos de movimientos (todos fallaron)");
+                    }
+
                     const allMovements = [
                         ...ventas.map(v => ({ ...v, tipo: 'venta' })),
                         ...retiros.map(r => ({ ...r, tipo: 'retiro' })),
@@ -3218,7 +3244,7 @@
                     }).slice(0, limit);
                 } catch (error) {
                     console.error("Critical error loading all movements:", error);
-                    return [];
+                    throw error; // Lanzar error para evitar limpiar el historial
                 }
             },
 
@@ -3548,6 +3574,96 @@
                 } catch (error) {
                     return false;
                 }
+            }
+        };
+
+        // CORRECCIÓN 10: Gestor de Historial en Tiempo Real
+        const RealTimeHistoryManager = {
+            unsubscribes: [],
+
+            init() {
+                console.log("Inicializando RealTimeHistoryManager...");
+                this.stop(); // Limpiar previos
+
+                // Asegurar que historial esté inicializado
+                if (!AppState.historial) AppState.historial = [];
+
+                const today = DateUtils.getCurrentDateStringElSalvador();
+
+                if (!AppState.firebaseInitialized) return;
+
+                const db = AppState.db;
+
+                // Escuchar Ventas de Hoy
+                this.unsubscribes.push(
+                    db.collection("VENTAS")
+                        .where("date", "==", today)
+                        .onSnapshot(snapshot => this.handleUpdate(snapshot, 'venta'),
+                            err => console.error("Error en listener ventas:", err))
+                );
+
+                // Escuchar Ingresos de Hoy (incluye Abonos)
+                this.unsubscribes.push(
+                    db.collection("INGRESOS")
+                        .where("date", "==", today)
+                        .onSnapshot(snapshot => this.handleUpdate(snapshot, 'ingreso'),
+                            err => console.error("Error en listener ingresos:", err))
+                );
+
+                // Escuchar Retiros de Hoy
+                this.unsubscribes.push(
+                    db.collection("RETIROS")
+                        .where("date", "==", today)
+                        .onSnapshot(snapshot => this.handleUpdate(snapshot, 'retiro'),
+                            err => console.error("Error en listener retiros:", err))
+                );
+            },
+
+            handleUpdate(snapshot, type) {
+                let hasChanges = false;
+
+                snapshot.docChanges().forEach(change => {
+                    const docData = { id: change.doc.id, ...change.doc.data() };
+
+                    // Normalizar tipo
+                    if (type === 'ingreso') {
+                        docData.tipo = docData.categoria === 'abono' ? 'abono' : 'ingreso';
+                    } else {
+                        docData.tipo = type;
+                    }
+
+                    if (change.type === 'added' || change.type === 'modified') {
+                        hasChanges = true;
+                        // Buscar si ya existe
+                        const index = AppState.historial.findIndex(h => h.id === docData.id);
+                        if (index >= 0) {
+                            AppState.historial[index] = docData;
+                        } else {
+                            // Agregar al principio
+                            AppState.historial.unshift(docData);
+                        }
+                    } else if (change.type === 'removed') {
+                        hasChanges = true;
+                        AppState.historial = AppState.historial.filter(h => h.id !== docData.id);
+                    }
+                });
+
+                if (hasChanges) {
+                    // Reordenar
+                    AppState.historial.sort((a, b) => {
+                        const dateA = a.timestamp?.toDate ? a.timestamp.toDate() : (new Date(a.timestamp) || new Date(0));
+                        const dateB = b.timestamp?.toDate ? b.timestamp.toDate() : (new Date(b.timestamp) || new Date(0));
+                        return dateB - dateA;
+                    });
+
+                    // Actualizar UI
+                    UIService.updateHistorial(AppState.historial);
+                }
+            },
+
+            stop() {
+                this.unsubscribes.forEach(u => u());
+                this.unsubscribes = [];
             }
         };
 
@@ -4323,6 +4439,109 @@
                 document.getElementById('confirmacion-abono-modal').style.display = 'block';
             },
 
+            // --- UI HISTORIAL EQUIPO ---
+            promptHistorialEquipo() {
+                const equipo = prompt("Ingrese el número de equipo para ver su historial:");
+                if (equipo && equipo.trim()) {
+                    this.loadAndShowTeamHistory(equipo.trim());
+                }
+            },
+
+            async loadAndShowTeamHistory(equipo) {
+                const modal = document.getElementById('historial-equipo-modal');
+                const content = document.getElementById('historial-equipo-content');
+                const title = document.getElementById('historial-equipo-titulo');
+
+                title.textContent = equipo;
+                content.innerHTML = '<div style="text-align:center; padding:20px;"><i class="fas fa-spinner fa-spin fa-2x"></i><p>Cargando historial...</p></div>';
+                modal.style.display = 'block';
+
+                try {
+                    const historial = await DataService.getHistorialCompletoEquipo(equipo);
+                    this.renderHistorialEquipo(historial, equipo);
+                } catch (error) {
+                    content.innerHTML = `<div class="empty-state" style="color:red"><i class="fas fa-exclamation-triangle"></i> Error: ${error.message}</div>`;
+                }
+            },
+
+            renderHistorialEquipo(historial, equipo) {
+                const content = document.getElementById('historial-equipo-content');
+
+                if (historial.length === 0) {
+                    content.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-history"></i>
+                            <div>No hay registros previos para el equipo ${equipo}</div>
+                        </div>`;
+                    return;
+                }
+
+                let html = '<div style="display: flex; flex-direction: column; gap: 8px;">';
+
+                historial.forEach(venta => {
+                    const fecha = venta.timestamp ? new Date(venta.timestamp.toDate ? venta.timestamp.toDate() : venta.timestamp).toLocaleString() : 'N/A';
+                    const total = venta.total || 0;
+
+                    // Análisis de Contenido para Color
+                    let tieneCaja = false;
+                    let tieneAceite = false;
+
+                    // Buscar en productos
+                    if (venta.products) {
+                        const matchStr = venta.products.map(p => p.descripcion).join(' ').toLowerCase();
+                        if (matchStr.includes('caja') || matchStr.includes('transmision') || matchStr.includes('transmisión')) tieneCaja = true;
+                        if (matchStr.includes('aceite') || matchStr.includes('motor')) tieneAceite = true;
+                    }
+
+                    // Definir estilo
+                    let cardStyle = "border-left: 5px solid #bdc3c7;"; // Gris por defecto
+                    let icon = "fas fa-wrench";
+
+                    if (tieneCaja) {
+                        cardStyle = "border-left: 5px solid #e74c3c; background-color: #fadbd8;"; // Rojo (Caja)
+                        icon = "fas fa-cogs"; // Engranajes para caja
+                    } else if (tieneAceite) {
+                        cardStyle = "border-left: 5px solid #27ae60; background-color: #d5f5e3;"; // Verde (Solo Aceite)
+                        icon = "fas fa-oil-can"; // Aceitera
+                    }
+
+                    let productosHTML = '<ul style="margin: 5px 0; padding-left: 20px; font-size: 0.9rem; color: #555;">';
+                    if (venta.products && venta.products.length > 0) {
+                        venta.products.forEach(p => {
+                            productosHTML += `<li>${p.cantidad}x ${p.descripcion}</li>`;
+                        });
+                    } else {
+                        productosHTML += '<li>Sin detalles</li>';
+                    }
+                    productosHTML += '</ul>';
+
+                    // ID único para colapsar
+                    const detailId = `detail-${venta.id}`;
+
+                    html += `
+                        <div onclick="document.getElementById('${detailId}').style.display = document.getElementById('${detailId}').style.display === 'none' ? 'block' : 'none'" 
+                             style="border: 1px solid #ddd; ${cardStyle} border-radius: 4px; padding: 10px; cursor: pointer; transition: transform 0.1s; box-shadow: 0 1px 2px rgba(0,0,0,0.1);">
+                            
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div style="font-weight: bold; color: #2c3e50; display:flex; align-items:center; gap:8px">
+                                    <i class="${icon}"></i> ${fecha}
+                                </div>
+                                <div style="font-size: 0.8rem; color: #7f8c8d;">#${venta.invoiceNumber} <i class="fas fa-chevron-down"></i></div>
+                            </div>
+
+                            <div id="${detailId}" style="display: none; margin-top: 10px; border-top: 1px dashed #ccc; padding-top: 8px;">
+                                <div style="font-weight:600; font-size: 0.85rem; color: #34495e; margin-bottom:4px">Trabajos Realizados:</div>
+                                ${productosHTML}
+                                <div style="text-align: right; font-weight: bold; font-size: 0.9rem; margin-top: 5px;">Total: $${total.toFixed(2)}</div>
+                            </div>
+                        </div>
+                     `;
+                });
+
+                html += '</div>';
+                content.innerHTML = html;
+            },
+
             async procesarVentaContado(equipo, cliente, fechaVenta, totalVenta) {
                 AppState.processingSale = true;
                 UIService.updatePaymentButtonsState(true);
@@ -4358,7 +4577,8 @@
                         timestamp: DateUtils.getCurrentTimestampElSalvador(),
                         date: fechaVenta,
                         status: 'pagado',
-                        fechaCreacion: DateUtils.getCurrentTimestampElSalvador()
+                        fechaCreacion: DateUtils.getCurrentTimestampElSalvador(),
+                        printed: true
                     };
 
                     await DataService.saveSale(saleData);
@@ -4418,7 +4638,8 @@
                         status: 'pendiente',
                         saldoPendiente: totalVenta,
                         abonos: [],
-                        fechaCreacion: DateUtils.getCurrentTimestampElSalvador()
+                        fechaCreacion: DateUtils.getCurrentTimestampElSalvador(),
+                        printed: true
                     };
 
                     await DataService.saveSale(saleData);
@@ -4485,7 +4706,8 @@
                         status: saldoPendiente <= 0 ? 'pagado' : 'pendiente',
                         saldoPendiente: saldoPendiente,
                         abonos: [abonoData],
-                        fechaCreacion: DateUtils.getCurrentTimestampElSalvador()
+                        fechaCreacion: DateUtils.getCurrentTimestampElSalvador(),
+                        printed: true
                     };
 
                     await DataService.saveSale(saleData);
@@ -4615,7 +4837,9 @@
                     const movimientos = await DataService.loadAllMovements(10000);
                     UIService.updateHistorial(movimientos);
                 } catch (error) {
+                    console.error("Error cargando historial:", error);
                     UIService.showStatus("Error al cargar historial: " + error.message, "error");
+                    // No limpiar historial si falla
                 } finally {
                     UIService.showLoading(false);
                 }
@@ -5124,6 +5348,17 @@
 
                 if (venta) {
                     PrintingService.printTicket(venta);
+
+                    // Marcar como impresa si no lo estaba
+                    if (!venta.printed) {
+                        try {
+                            await AppState.db.collection('VENTAS').doc(invoiceId).update({ printed: true });
+                            console.log("Factura marcada como impresa");
+                        } catch (e) {
+                            console.error("Error marcando como impresa", e);
+                        }
+                    }
+
                     UIService.showStatus("Ticket reimpreso", "success");
                 } else {
                     UIService.showStatus("No se encontró la factura", "error");
@@ -5458,6 +5693,7 @@
                     await ProductCache.initialize();
                     AppState.saleCounter = await DataService.getSaleCounter();
                     await SalesService.loadHistorial();
+                    RealTimeHistoryManager.init(); // Iniciar listeners
                     await GrupoManager.initialize();
                 } catch (error) {
                     console.error("Error cargando datos iniciales:", error);

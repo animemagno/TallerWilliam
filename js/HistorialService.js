@@ -315,11 +315,16 @@ const HistorialService = {
                     `;
                 }
 
+
+                // Si printed es explícitamente false, mostrar alerta
+                const rowClass = venta.printed === false ? 'blink-alert' : '';
+
                 historialHTML += `
-                    <tr>
+                    <tr class="${rowClass}">
                         <td>
                             <a href="#" onclick="event.preventDefault(); SalesService.viewInvoice('${this._escape(venta.id)}');" style="color: #2c3e50; text-decoration: none; font-weight: bold;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">
                                 #${this._escape(venta.invoiceNumber)}
+                                ${venta.printed === false ? ' <i class="fas fa-exclamation-circle" style="color:#e74c3c; font-size: 1.2em;" title="Nueva sin imprimir"></i>' : ''}
                             </a>
                         </td>
                         <td>
