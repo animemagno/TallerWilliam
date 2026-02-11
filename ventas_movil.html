@@ -919,7 +919,21 @@
                 document.querySelectorAll('.nav-item')[icons[tabName]].classList.add('active');
 
                 if (tabName === 'carrito') this.renderCarrito();
-                // Historial se actualiza solo
+                if (tabName === 'historial') {
+                    // Asegurar que el historial siempre tenga datos al entrar
+                    const histList = document.getElementById('local-history-list');
+                    if (!histList.innerHTML.trim() || histList.innerHTML.includes('empty-state')) {
+                        if (this.state.usuario) {
+                            RealTimeHistoryManager.init(this.state.usuario);
+                            // Respaldo por si el listener no funciona
+                            setTimeout(() => {
+                                if (!histList.innerHTML.trim() || histList.innerHTML.includes('No hay ventas') || histList.innerHTML.includes('empty-state')) {
+                                    this.renderHistorialLegacy();
+                                }
+                            }, 1500);
+                        }
+                    }
+                }
             },
 
             // --- DATA & INVENTARIO ---
@@ -1172,6 +1186,16 @@
 
                     this.switchTab('historial'); // Ver lo creado
                     this.updateBadge();
+
+                    // FORZAR recarga del historial para que la venta aparezca al instante
+                    RealTimeHistoryManager.init(this.state.usuario);
+                    // Respaldo: si el listener RT falla, cargar manualmente después de un momento
+                    setTimeout(() => {
+                        const histList = document.getElementById('local-history-list');
+                        if (!histList.innerHTML || histList.innerHTML.includes('No hay ventas')) {
+                            this.renderHistorialLegacy();
+                        }
+                    }, 2000);
 
                 } catch (e) {
                     alert("Error: " + e.message);
