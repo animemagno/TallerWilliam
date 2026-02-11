@@ -3238,9 +3238,13 @@
                     ];
 
                     return allMovements.sort((a, b) => {
-                        const dateA = a.timestamp?.toDate ? a.timestamp.toDate() : (new Date(a.timestamp) || new Date(0));
-                        const dateB = b.timestamp?.toDate ? b.timestamp.toDate() : (new Date(b.timestamp) || new Date(0));
-                        return dateB - dateA;
+                        const getTime = (item) => {
+                            if (item.timestamp?.toDate) return item.timestamp.toDate().getTime();
+                            if (item.timestamp?.seconds) return item.timestamp.seconds * 1000;
+                            if (item.timestamp && !isNaN(new Date(item.timestamp).getTime())) return new Date(item.timestamp).getTime();
+                            return Date.now(); // Sin timestamp = recién creado, va primero
+                        };
+                        return getTime(b) - getTime(a);
                     }).slice(0, limit);
                 } catch (error) {
                     console.error("Critical error loading all movements:", error);
@@ -3336,9 +3340,13 @@
 
                     // Ordenar client-side por timestamp descendente
                     return allMovements.sort((a, b) => {
-                        const dateA = a.timestamp?.toDate ? a.timestamp.toDate() : (a.timestamp || new Date(0));
-                        const dateB = b.timestamp?.toDate ? b.timestamp.toDate() : (b.timestamp || new Date(0));
-                        return dateB - dateA;
+                        const getTime = (item) => {
+                            if (item.timestamp?.toDate) return item.timestamp.toDate().getTime();
+                            if (item.timestamp?.seconds) return item.timestamp.seconds * 1000;
+                            if (item.timestamp && !isNaN(new Date(item.timestamp).getTime())) return new Date(item.timestamp).getTime();
+                            return Date.now(); // Sin timestamp = recién creado, va primero
+                        };
+                        return getTime(b) - getTime(a);
                     }).slice(0, limit);
                 } catch (error) {
                     console.error("Critical error loading movements by date:", error);
@@ -3649,12 +3657,14 @@
                 });
 
                 if (hasChanges) {
-                    // Reordenar
-                    AppState.historial.sort((a, b) => {
-                        const dateA = a.timestamp?.toDate ? a.timestamp.toDate() : (new Date(a.timestamp) || new Date(0));
-                        const dateB = b.timestamp?.toDate ? b.timestamp.toDate() : (new Date(b.timestamp) || new Date(0));
-                        return dateB - dateA;
-                    });
+                    // Reordenar cronológicamente (más reciente primero)
+                    const getTime = (item) => {
+                        if (item.timestamp?.toDate) return item.timestamp.toDate().getTime();
+                        if (item.timestamp?.seconds) return item.timestamp.seconds * 1000;
+                        if (item.timestamp && !isNaN(new Date(item.timestamp).getTime())) return new Date(item.timestamp).getTime();
+                        return Date.now(); // Sin timestamp = recién creado, va primero
+                    };
+                    AppState.historial.sort((a, b) => getTime(b) - getTime(a));
 
                     // Actualizar UI
                     UIService.updateHistorial(AppState.historial);
