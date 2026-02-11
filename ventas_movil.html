@@ -782,17 +782,18 @@
             },
 
             async getPersonalHistory(usuario) {
-                // CORRECCIÓN: Evitar error de índice compuesto (usuario + timestamp).
-                // Traemos las últimas 100 ventas globales y filtramos en memoria por usuario.
-                // Es más seguro y no requiere crear índices manuales en Firebase.
+                // CORRECCIÓN: Solo mostrar ventas del día actual del usuario.
+                // Traemos las últimas 100 ventas globales y filtramos en memoria
+                // por usuario Y por fecha de hoy.
+                const today = DateUtils.getCurrentDateStringElSalvador();
                 const snapshot = await db.collection("VENTAS")
                     .orderBy("timestamp", "desc")
                     .limit(100)
                     .get();
 
                 const allSales = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-                // Filtrar solo las del usuario actual
-                return allSales.filter(s => s.usuario === usuario);
+                // Filtrar solo las del usuario actual Y del día de hoy
+                return allSales.filter(s => s.usuario === usuario && s.date === today);
             },
         };
 
