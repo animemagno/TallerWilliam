@@ -111,8 +111,7 @@ GrupoManager.showGroupPaymentModal = function (grupoId) {
             // Distribuir el abono entre las facturas
             let montoRestante = monto;
             const abonoData = {
-                fecha: DateUtils.getCurrentTimestampElSalvador(),
-                fechaString: DateUtils.getCurrentTimestampElSalvador().toLocaleString('es-ES')
+                fechaString: (new Date()).toLocaleString('es-ES')
             };
 
             for (const factura of facturas) {

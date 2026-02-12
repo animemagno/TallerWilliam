@@ -10,37 +10,17 @@ const PrintingService = {
     },
 
     printBalanceHistory(reportData) {
-        // VERSIÓN SIMPLIFICADA PARA DIAGNÓSTICO
         try {
-            if (!reportData || !reportData.movimientos) { alert("Error: Sin datos para imprimir"); return; }
-
-            // Generar HTML básico string concatenado (más seguro que templates complejos por ahora)
-            let filas = "";
-            reportData.movimientos.forEach(m => {
-                let monto = m.tipo === 'abono' ? (m.abono || 0) : (m.cargo || 0);
-                filas += "<tr><td>" + (m.fecha ? new Date(m.fecha).toLocaleDateString() : '-') + "</td>" +
-                    "<td>" + (m.concepto || '') + "</td>" +
-                    "<td style='text-align:right'>$" + Number(monto).toFixed(2) + "</td></tr>";
-            });
-
-            const html = "<html><head><title>Ticket</title><style>body{font-family:monospace;width:80mm} table{width:100%;font-size:12px}</style></head>" +
-                "<body><h3 style='text-align:center'>TALLER WILLIAN</h3>" +
-                "<p>Cliente: " + (reportData.cliente || '') + "</p><hr>" +
-                "<table>" + filas + "</table>" +
-                "<hr><p style='text-align:right'><b>Saldo: $" + Number(reportData.saldoFinal || 0).toFixed(2) + "</b></p>" +
-                "</body></html>";
-
-            const w = window.open('', '_blank', 'width=450,height=600');
-            if (w) {
-                w.document.open();
-                w.document.write(html);
-                w.document.close();
-                setTimeout(() => { w.focus(); w.print(); }, 1000);
-            } else {
-                alert("Pop-up bloqueado");
+            if (!reportData || !reportData.movimientos) {
+                alert("Error: Sin datos para imprimir");
+                return;
             }
-            return; // DETENER EJECUCIÓN AQUÍ
 
+            const printWindow = window.open('', '_blank', 'width=450,height=600');
+            if (!printWindow) {
+                alert("El navegador bloqueó la ventana de impresión. Por favor, permita las ventanas emergentes.");
+                return;
+            }
 
             let reportHTML = `
                 <!DOCTYPE html>
@@ -48,16 +28,15 @@ const PrintingService = {
                 <head>
                     <title>Historial de Saldos - ${this._escape(reportData.cliente)}</title>
                     <style>
-                        body { font-family: 'Courier New', monospace; font-size: 12px; margin: 0; padding: 10px; width: 80mm; }
-                        .header { text-align: center; margin-bottom: 10px; border-bottom: 1px dashed black; padding-bottom: 5px; }
+                        body { font-family: 'Courier New', monospace; font-size: 12px; margin: 0; padding: 10px; width: 80mm; color: #000; }
+                        .header { text-align: center; margin-bottom: 10px; border-bottom: 2px dashed black; padding-bottom: 5px; }
                         .header h2 { margin: 5px 0; font-size: 16px; font-weight: bold; }
                         .info-line { display: flex; justify-content: space-between; margin: 3px 0; font-size: 11px; }
                         .movimientos-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-                        .movimientos-table th { text-align: left; border-bottom: 1px solid black; font-size: 10px; }
-                        .movimientos-table td { padding: 4px 0; border-bottom: 1px dotted #ccc; vertical-align: top; }
-                        .total-line { border-top: 1px solid black; margin-top: 10px; padding-top: 5px; font-weight: bold; text-align: right; font-size: 14px; }
-                        .footer { text-align: center; margin-top: 15px; font-size: 10px; color: #555; }
-                        .abono { color: #27ae60; } /* Solo visual en pantalla */
+                        .movimientos-table th { text-align: left; border-bottom: 2px solid black; font-size: 10px; padding: 4px 0; }
+                        .movimientos-table td { padding: 4px 0; border-bottom: 1px dotted #000; vertical-align: top; }
+                        .total-line { border-top: 2px solid black; margin-top: 10px; padding-top: 5px; font-weight: bold; text-align: right; font-size: 14px; }
+                        .footer { text-align: center; margin-top: 15px; font-size: 10px; color: #000; }
                     </style>
                 </head>
                 <body>
@@ -90,11 +69,12 @@ const PrintingService = {
             reportData.movimientos.forEach(mov => {
                 const esAbono = mov.tipo === 'abono';
                 const signo = esAbono ? '-' : '+';
-                const cantidad = esAbono ? mov.abono : mov.cargo;
-                // Validación extra para fechas
+                const cantidad = esAbono ? (mov.abono || mov.monto) : (mov.cargo || mov.monto);
+
                 let fechaStr = "N/A";
                 try {
-                    fechaStr = mov.fecha ? new Date(mov.fecha).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' }) : '';
+                    const d = mov.fecha ? new Date(mov.fecha) : new Date();
+                    fechaStr = isNaN(d.getTime()) ? "N/A" : d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' });
                 } catch (e) { console.error("Error fecha", e); }
 
                 reportHTML += `
@@ -127,11 +107,14 @@ const PrintingService = {
             printWindow.document.write(reportHTML);
             printWindow.document.close();
 
-            // Esperar a que cargue
-            setTimeout(() => {
-                printWindow.focus();
-                printWindow.print();
-            }, 1000);
+            // Usar un método más robusto para disparar la impresión
+            if (printWindow.document.readyState === 'complete') {
+                setTimeout(() => { printWindow.focus(); printWindow.print(); }, 500);
+            } else {
+                printWindow.onload = () => {
+                    setTimeout(() => { printWindow.focus(); printWindow.print(); }, 500);
+                };
+            }
 
         } catch (error) {
             console.error("Error crítico generando ticket:", error);
@@ -140,8 +123,6 @@ const PrintingService = {
     },
 
     printCurrentHistorial() {
-        // Obtenemos los movimientos SIN referencia directa a la UI si es posible, 
-        // pero aquí dependemos de AppState que es el estado global.
         const movimientos = AppState.filteredHistorial || AppState.historial;
         const titulo = AppState.currentFilter === 'today' ? 'Historial del Día' : 'Historial de Movimientos';
 
@@ -185,7 +166,7 @@ const PrintingService = {
             }
         });
 
-        const fechaActual = DateUtils.getCurrentTimestampElSalvador().toLocaleDateString('es-ES');
+        const fechaActual = (new Date()).toLocaleDateString('es-ES');
         const printWindow = window.open('', '_blank', 'width=800,height=600');
 
         let reportHTML = `
@@ -576,7 +557,7 @@ const PrintingService = {
             
             <div class="footer">
                 <div>Documento generado automáticamente por el Sistema de Ventas Taller Wilian</div>
-                <div>Fecha de impresión: ${DateUtils.getCurrentTimestampElSalvador().toLocaleString('es-ES')}</div>
+                <div>Fecha de impresión: ${(new Date()).toLocaleString('es-ES')}</div>
             </div>
         `;
 
@@ -730,23 +711,39 @@ const PrintingService = {
         printWindow.document.write(contenido);
         printWindow.document.close();
 
-        // CORRECCIÓN IMPRESIÓN: Asegurar carga completa antes de imprimir
-        printWindow.onload = function () {
-            // Esperar un momento extra para rendering y carga de fuentes
-            printWindow.document.fonts.ready.then(() => {
+        const triggerPrint = () => {
+            if (printWindow.document.fonts) {
+                printWindow.document.fonts.ready.then(() => {
+                    setTimeout(() => {
+                        printWindow.focus();
+                        printWindow.print();
+                    }, 500);
+                });
+            } else {
                 setTimeout(() => {
                     printWindow.focus();
                     printWindow.print();
-                    // Cerrar automáticamente después de imprimir (opcional, algunos navegadores bloquean esto)
-                    // printWindow.onafterprint = function() { printWindow.close(); }; 
-                }, 800); // 800ms de retraso para asegurar nitidez
-            });
+                }, 800);
+            }
         };
+
+        if (printWindow.document.readyState === 'complete') {
+            triggerPrint();
+        } else {
+            printWindow.onload = triggerPrint;
+        }
     },
 
     printAbonoTicket(venta, abonoData, nuevoSaldo) {
         const printWindow = window.open('', '_blank', 'width=320,height=600');
-        const fechaAbono = abonoData.fecha ? new Date(abonoData.fecha.toDate ? abonoData.fecha.toDate() : abonoData.fecha) : DateUtils.getCurrentTimestampElSalvador();
+        let fechaAbono;
+        if (abonoData.fecha && typeof abonoData.fecha.toDate === 'function') {
+            fechaAbono = abonoData.fecha.toDate();
+        } else if (abonoData.fecha instanceof Date) {
+            fechaAbono = abonoData.fecha;
+        } else {
+            fechaAbono = new Date();
+        }
         const fechaFormateada = fechaAbono.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' });
 
         printWindow.document.write(`
@@ -949,7 +946,7 @@ const PrintingService = {
 
     printAccountStatement(equipoData) {
         const printWindow = window.open('', '_blank', 'width=320,height=600');
-        const fechaActual = DateUtils.getCurrentTimestampElSalvador().toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        const fechaActual = (new Date()).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
         // Ordenar facturas por fecha (más antiguas primero)
         const sortedFacturas = [...equipoData.facturas].sort((a, b) => {
