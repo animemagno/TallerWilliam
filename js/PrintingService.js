@@ -584,7 +584,18 @@ const PrintingService = {
     printTicket(saleData) {
         // CORRECCIÓN IMPRESIÓN: Ventana un poco más ancha para evitar cortes laterales
         const printWindow = window.open('', '_blank', 'width=320,height=600');
-        const fecha = saleData.timestamp ? new Date(saleData.timestamp.toDate ? saleData.timestamp.toDate() : saleData.timestamp) : DateUtils.getCurrentTimestampElSalvador();
+
+        // Helper robusto para convertir cualquier tipo de fecha a Date válido
+        const toSafeDate = (val) => {
+            if (!val) return new Date();
+            if (val instanceof Date && !isNaN(val.getTime())) return val;
+            if (typeof val.toDate === 'function') return val.toDate();
+            if (val.seconds) return new Date(val.seconds * 1000);
+            const parsed = new Date(val);
+            return isNaN(parsed.getTime()) ? new Date() : parsed;
+        };
+
+        const fecha = toSafeDate(saleData.timestamp);
         const fechaFormateada = fecha.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' });
 
         const saldoPendiente = saleData.saldoPendiente !== undefined ? saleData.saldoPendiente : saleData.total;
@@ -594,7 +605,7 @@ const PrintingService = {
         let abonosHTML = '';
         if (tieneAbonos) {
             saleData.abonos.forEach(abono => {
-                const fechaAbono = abono.fecha ? new Date(abono.fecha.toDate ? abono.fecha.toDate() : abono.fecha).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' }) : 'N/A';
+                const fechaAbono = toSafeDate(abono.fecha).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' });
                 abonosHTML += `
                     <div style="display: flex; justify-content: space-between; font-size: 20px; margin: 2px 0;">
                         <div>ABONO: $${abono.monto.toFixed(2)} (${fechaAbono})</div>
