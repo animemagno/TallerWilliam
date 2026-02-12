@@ -29,11 +29,6 @@
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <div style="display: flex; align-items: center; gap: 15px;">
                         <h1 style="margin: 0; font-size: 1.5rem;">Taller Willian</h1>
-                        <button onclick="window.location.href='ventas.html'" class="btn btn-secondary btn-small"
-                            title="Volver a versión anterior"
-                            style="padding: 4px 10px; font-size: 0.8rem; background-color: #95a5a6; border: none;">
-                            <i class="fas fa-history"></i> Antigua
-                        </button>
                         <button onclick="UIService.toggleDashboardLayout()" class="btn btn-info btn-small"
                             title="Intercambiar izquierda/derecha"
                             style="padding: 4px 10px; font-size: 0.8rem; border: none;">
@@ -746,15 +741,30 @@
             getCurrentDateElSalvador() {
                 try {
                     // Obtener componentes de fecha seguros para El Salvador
-                    const options = { timeZone: 'America/El_Salvador', year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric' };
+                    // CORRECCIÓN CRÍTICA: hour12: false para usar formato 24h
+                    // Sin esto, 3 PM se guardaba como 3 AM (p.hour="3" ignorando dayPeriod="PM")
+                    const options = {
+                        timeZone: 'America/El_Salvador',
+                        year: 'numeric',
+                        month: 'numeric',
+                        day: 'numeric',
+                        hour: 'numeric',
+                        minute: 'numeric',
+                        second: 'numeric',
+                        hour12: false
+                    };
                     const formatter = new Intl.DateTimeFormat('en-US', options);
                     const parts = formatter.formatToParts(new Date());
 
                     const p = {};
                     parts.forEach(part => p[part.type] = part.value);
 
-                    // Construir fecha local que refleje la hora de SV
-                    return new Date(p.year, p.month - 1, p.day, p.hour, p.minute, p.second);
+                    // Hora en formato 24h: p.hour será "15" para las 3 PM (correcto)
+                    const hour24 = parseInt(p.hour);
+                    // Manejar hora 24 (medianoche) como 0
+                    const finalHour = hour24 === 24 ? 0 : hour24;
+
+                    return new Date(p.year, p.month - 1, p.day, finalHour, p.minute, p.second);
                 } catch (e) {
                     console.warn("Error timezone SV, usando local:", e);
                     return new Date();
@@ -783,14 +793,26 @@
             adjustToElSalvadorTime(date) {
                 if (!date) return this.getCurrentDateElSalvador();
                 try {
-                    const options = { timeZone: 'America/El_Salvador', year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric' };
+                    const options = {
+                        timeZone: 'America/El_Salvador',
+                        year: 'numeric',
+                        month: 'numeric',
+                        day: 'numeric',
+                        hour: 'numeric',
+                        minute: 'numeric',
+                        second: 'numeric',
+                        hour12: false
+                    };
                     const formatter = new Intl.DateTimeFormat('en-US', options);
                     const parts = formatter.formatToParts(date);
 
                     const p = {};
                     parts.forEach(part => p[part.type] = part.value);
 
-                    return new Date(p.year, p.month - 1, p.day, p.hour, p.minute, p.second);
+                    const hour24 = parseInt(p.hour);
+                    const finalHour = hour24 === 24 ? 0 : hour24;
+
+                    return new Date(p.year, p.month - 1, p.day, finalHour, p.minute, p.second);
                 } catch (e) {
                     return date;
                 }
@@ -807,7 +829,59 @@
             },
 
             getCurrentTimestampElSalvador() {
-                return this.getCurrentDateElSalvador();
+                // CORRECCIÓN: Usar serverTimestamp para consistencia con ventas_movil.html
+                return firebase.firestore.FieldValue.serverTimestamp();
+            },
+
+            // Función centralizada para extraer milisegundos de cualquier tipo de timestamp
+            getTimeMs(item) {
+                if (!item) return 0;
+                const ts = item.timestamp;
+                // Firestore Timestamp con método toDate()
+                if (ts && typeof ts.toDate === 'function') {
+                    return ts.toDate().getTime();
+                }
+                // Firestore Timestamp con campo seconds
+                if (ts && ts.seconds) {
+                    return (ts.seconds * 1000) + ((ts.nanoseconds || 0) / 1000000);
+                }
+                // Date object
+                if (ts instanceof Date) {
+                    return ts.getTime();
+                }
+                // String ISO o similar
+                if (ts && typeof ts === 'string') {
+                    const parsed = new Date(ts);
+                    if (!isNaN(parsed.getTime())) return parsed.getTime();
+                }
+                // Número directo (milisegundos)
+                if (ts && typeof ts === 'number') {
+                    return ts;
+                }
+                // Timestamp local temporal (usado cuando serverTimestamp aún no se resuelve)
+                if (item._localTimestamp) {
+                    return item._localTimestamp;
+                }
+                // Si no hay timestamp válido, usar fechaCreacion como fallback
+                if (item.fechaCreacion) {
+                    const fc = item.fechaCreacion;
+                    if (typeof fc.toDate === 'function') return fc.toDate().getTime();
+                    if (fc.seconds) return (fc.seconds * 1000) + ((fc.nanoseconds || 0) / 1000000);
+                    if (fc instanceof Date) return fc.getTime();
+                }
+                // Último recurso: intentar construir desde campo 'date' (YYYY-MM-DD)
+                if (item.date) {
+                    const parts = item.date.split('-');
+                    if (parts.length === 3) {
+                        return new Date(parts[0], parts[1] - 1, parts[2], 23, 59, 59).getTime();
+                    }
+                }
+                return 0; // Sin fecha conocida, va al final
+            },
+
+            // Comparador estándar: más reciente primero (descendente)
+            sortDescByTimestamp(a, b) {
+                return DateUtils.getTimeMs(b) - DateUtils.getTimeMs(a);
             }
         };
 
@@ -3199,11 +3273,7 @@
                     const ventas = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
                     // Ordenar en memoria (descendente por fecha)
-                    return ventas.sort((a, b) => {
-                        const dateA = a.timestamp?.toDate ? a.timestamp.toDate() : (new Date(a.timestamp) || new Date(0));
-                        const dateB = b.timestamp?.toDate ? b.timestamp.toDate() : (new Date(b.timestamp) || new Date(0));
-                        return dateB - dateA;
-                    });
+                    return ventas.sort(DateUtils.sortDescByTimestamp);
                 } catch (error) {
                     console.error("Error cargando historial de equipo:", error);
                     throw error;
@@ -3237,15 +3307,7 @@
                         ...ingresos.map(i => ({ ...i, tipo: i.categoria === 'abono' ? 'abono' : 'ingreso' }))
                     ];
 
-                    return allMovements.sort((a, b) => {
-                        const getTime = (item) => {
-                            if (item.timestamp?.toDate) return item.timestamp.toDate().getTime();
-                            if (item.timestamp?.seconds) return item.timestamp.seconds * 1000;
-                            if (item.timestamp && !isNaN(new Date(item.timestamp).getTime())) return new Date(item.timestamp).getTime();
-                            return Date.now(); // Sin timestamp = recién creado, va primero
-                        };
-                        return getTime(b) - getTime(a);
-                    }).slice(0, limit);
+                    return allMovements.sort(DateUtils.sortDescByTimestamp).slice(0, limit);
                 } catch (error) {
                     console.error("Critical error loading all movements:", error);
                     throw error; // Lanzar error para evitar limpiar el historial
@@ -3269,16 +3331,7 @@
                     let ventas = ventasSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
                     // Ordenar client-side
-                    ventas.sort((a, b) => {
-                        // Primero por fecha (desc)
-                        if (a.date !== b.date) {
-                            return b.date.localeCompare(a.date);
-                        }
-                        // Luego por timestamp (desc)
-                        const timeA = a.timestamp?.toDate ? a.timestamp.toDate() : new Date(a.timestamp);
-                        const timeB = b.timestamp?.toDate ? b.timestamp.toDate() : new Date(b.timestamp);
-                        return timeB - timeA;
-                    });
+                    ventas.sort(DateUtils.sortDescByTimestamp);
 
                     // Filtrar ventas que contengan el producto buscado
                     const resultados = [];
@@ -3339,15 +3392,7 @@
                     const allMovements = [...ventas, ...retiros, ...ingresos];
 
                     // Ordenar client-side por timestamp descendente
-                    return allMovements.sort((a, b) => {
-                        const getTime = (item) => {
-                            if (item.timestamp?.toDate) return item.timestamp.toDate().getTime();
-                            if (item.timestamp?.seconds) return item.timestamp.seconds * 1000;
-                            if (item.timestamp && !isNaN(new Date(item.timestamp).getTime())) return new Date(item.timestamp).getTime();
-                            return Date.now(); // Sin timestamp = recién creado, va primero
-                        };
-                        return getTime(b) - getTime(a);
-                    }).slice(0, limit);
+                    return allMovements.sort(DateUtils.sortDescByTimestamp).slice(0, limit);
                 } catch (error) {
                     console.error("Critical error loading movements by date:", error);
                     return [];
@@ -3370,11 +3415,7 @@
                     let facturas = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
                     // 2. Ordenar por fecha (más antiguas primero)
-                    facturas.sort((a, b) => {
-                        const dateA = a.timestamp?.toDate ? a.timestamp.toDate() : new Date(a.timestamp);
-                        const dateB = b.timestamp?.toDate ? b.timestamp.toDate() : new Date(b.timestamp);
-                        return dateA - dateB;
-                    });
+                    facturas.sort((a, b) => DateUtils.getTimeMs(a) - DateUtils.getTimeMs(b));
 
                     let montoRestante = montoTotal;
                     const batch = AppState.db.batch();
@@ -3400,7 +3441,7 @@
                             const abonoData = {
                                 monto: montoAbonar,
                                 fecha: DateUtils.getCurrentTimestampElSalvador(),
-                                fechaString: DateUtils.getCurrentTimestampElSalvador().toLocaleString('es-ES'),
+                                fechaString: new Date().toLocaleString('es-ES'),
                                 tipo: 'abono_grupal',
                                 grupoId: grupoId,
                                 savedInIngresos: true // Bandera para evitar duplicados en historial
@@ -3467,11 +3508,7 @@
                     if (facturas.length === 0) throw new Error("No se encontraron las facturas seleccionadas");
 
                     // 2. Ordenar por fecha (más antiguas primero)
-                    facturas.sort((a, b) => {
-                        const dateA = a.timestamp?.toDate ? a.timestamp.toDate() : new Date(a.timestamp);
-                        const dateB = b.timestamp?.toDate ? b.timestamp.toDate() : new Date(b.timestamp);
-                        return dateA - dateB;
-                    });
+                    facturas.sort((a, b) => DateUtils.getTimeMs(a) - DateUtils.getTimeMs(b));
 
                     let montoRestante = montoTotal;
                     const batch = AppState.db.batch();
@@ -3497,7 +3534,7 @@
                             const abonoData = {
                                 monto: montoAbonar,
                                 fecha: DateUtils.getCurrentTimestampElSalvador(),
-                                fechaString: DateUtils.getCurrentTimestampElSalvador().toLocaleString('es-ES'),
+                                fechaString: new Date().toLocaleString('es-ES'),
                                 tipo: 'abono_masivo',
                                 savedInIngresos: true // Bandera para evitar duplicados en historial
                             };
@@ -3628,46 +3665,53 @@
             },
 
             handleUpdate(snapshot, type) {
-                let hasChanges = false;
+                try {
+                    let hasChanges = false;
 
-                snapshot.docChanges().forEach(change => {
-                    const docData = { id: change.doc.id, ...change.doc.data() };
+                    snapshot.docChanges().forEach(change => {
+                        const docData = { id: change.doc.id, ...change.doc.data() };
 
-                    // Normalizar tipo
-                    if (type === 'ingreso') {
-                        docData.tipo = docData.categoria === 'abono' ? 'abono' : 'ingreso';
-                    } else {
-                        docData.tipo = type;
-                    }
-
-                    if (change.type === 'added' || change.type === 'modified') {
-                        hasChanges = true;
-                        // Buscar si ya existe
-                        const index = AppState.historial.findIndex(h => h.id === docData.id);
-                        if (index >= 0) {
-                            AppState.historial[index] = docData;
+                        // Normalizar tipo
+                        if (type === 'ingreso') {
+                            docData.tipo = docData.categoria === 'abono' ? 'abono' : 'ingreso';
                         } else {
-                            // Agregar al principio
-                            AppState.historial.unshift(docData);
+                            docData.tipo = type;
                         }
-                    } else if (change.type === 'removed') {
-                        hasChanges = true;
-                        AppState.historial = AppState.historial.filter(h => h.id !== docData.id);
+
+                        // Si el timestamp está pendiente (serverTimestamp aún no resuelto),
+                        // usar la hora local como temporal
+                        if (!docData.timestamp || (docData.timestamp && !docData.timestamp.toDate && !docData.timestamp.seconds)) {
+                            docData._localTimestamp = Date.now();
+                        }
+
+                        if (change.type === 'added' || change.type === 'modified') {
+                            hasChanges = true;
+                            // Buscar si ya existe
+                            const index = AppState.historial.findIndex(h => h.id === docData.id);
+                            if (index >= 0) {
+                                AppState.historial[index] = docData;
+                            } else {
+                                // Agregar al principio
+                                AppState.historial.unshift(docData);
+                            }
+                        } else if (change.type === 'removed') {
+                            hasChanges = true;
+                            AppState.historial = AppState.historial.filter(h => h.id !== docData.id);
+                        }
+                    });
+
+                    if (hasChanges) {
+                        // Reordenar cronológicamente usando la utilidad centralizada
+                        AppState.historial.sort(DateUtils.sortDescByTimestamp);
+
+                        // Actualizar UI
+                        UIService.updateHistorial(AppState.historial);
                     }
-                });
-
-                if (hasChanges) {
-                    // Reordenar cronológicamente (más reciente primero)
-                    const getTime = (item) => {
-                        if (item.timestamp?.toDate) return item.timestamp.toDate().getTime();
-                        if (item.timestamp?.seconds) return item.timestamp.seconds * 1000;
-                        if (item.timestamp && !isNaN(new Date(item.timestamp).getTime())) return new Date(item.timestamp).getTime();
-                        return Date.now(); // Sin timestamp = recién creado, va primero
-                    };
-                    AppState.historial.sort((a, b) => getTime(b) - getTime(a));
-
-                    // Actualizar UI
-                    UIService.updateHistorial(AppState.historial);
+                    // Resetear contador de errores en actualizaciones exitosas
+                    this._errorCount = 0;
+                } catch (error) {
+                    console.error("Error en handleUpdate:", error);
+                    // NO propagar el error para no romper el listener
                 }
             },
 
@@ -4695,7 +4739,7 @@
                     const abonoData = {
                         monto: montoAbono,
                         fecha: DateUtils.getCurrentTimestampElSalvador(),
-                        fechaString: DateUtils.getCurrentTimestampElSalvador().toLocaleString('es-ES')
+                        fechaString: new Date().toLocaleString('es-ES')
                     };
 
                     const saleData = {
@@ -5435,7 +5479,7 @@
                     const abonoData = {
                         monto: monto,
                         fecha: DateUtils.getCurrentTimestampElSalvador(),
-                        fechaString: DateUtils.getCurrentTimestampElSalvador().toLocaleString('es-ES')
+                        fechaString: new Date().toLocaleString('es-ES')
                     };
 
                     await DataService.addAbono(venta.id, abonoData);
