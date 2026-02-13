@@ -135,26 +135,6 @@
 
                     <!-- TAB: HISTORIAL -->
                     <div class="tab-content" id="tab-historial">
-                        <div class="historial-actions">
-                            <div class="filter-buttons">
-                                <button class="filter-btn" data-filter="todo">TODO</button>
-                                <button class="filter-btn active" data-filter="hoy">HOY</button>
-                                <div style="display: flex; align-items: center; gap: 8px; margin-left: 15px;">
-                                    <label for="history-date-filter"
-                                        style="font-size: 0.9rem; color: #555; font-weight: 600;">Fecha:</label>
-                                    <input type="date" id="history-date-filter"
-                                        style="padding: 8px; border: 2px solid #ddd; border-radius: 6px; font-size: 0.9rem;" />
-                                    <button class="btn btn-primary" onclick="UIService.filterHistoryByDate()"
-                                        style="padding: 8px 16px; font-size: 0.9rem;">BUSCAR</button>
-                                </div>
-                            </div>
-                            <div>
-                                <button class="btn btn-info" id="print-historial-btn">
-                                    IMPRIMIR
-                                </button>
-                            </div>
-                        </div>
-
                         <!-- Daily Summary -->
                         <div id="daily-summary-container"
                             style="display: none; background: #e8f4fd; padding: 12px; border-radius: 6px; margin-bottom: 12px; border-left: 4px solid #3498db;">
@@ -170,9 +150,21 @@
                             </div>
                         </div>
 
-                        <!-- Filter by Equipo -->
-                        <div class="form-group">
-                            <input type="text" id="filter-historial" placeholder="Filtrar por número de equipo...">
+                        <!-- Filter by Equipo + Imprimir (con lupa) -->
+                        <div class="form-group" style="display: flex; align-items: center; gap: 8px;">
+                            <div style="position: relative; flex: 1; display: flex;">
+                                <input type="text" id="filter-historial"
+                                    placeholder="Ingresa equipo o presiona ENTER para buscar..."
+                                    style="flex: 1; border-top-right-radius: 0; border-bottom-right-radius: 0;">
+                                <button class="btn btn-secondary" onclick="SalesService.triggerGlobalSearch()"
+                                    title="Buscar en todo el historial"
+                                    style="border-top-left-radius: 0; border-bottom-left-radius: 0; padding: 0 15px;">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                            <button class="btn btn-info" id="print-historial-btn" style="white-space: nowrap;">
+                                IMPRIMIR
+                            </button>
                         </div>
 
                         <div class="history-container">

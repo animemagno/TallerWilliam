@@ -383,7 +383,9 @@ const SalesService = {
     async loadHistorial() {
         try {
             UIService.showLoading(true);
-            const movimientos = await DataService.loadAllMovements(10000);
+            // Cargar solo los movimientos del día actual para evitar timeouts
+            const today = DateUtils.getCurrentDateStringElSalvador();
+            const movimientos = await DataService.loadMovementsByDate(today);
             HistorialService.updateHistorial(movimientos);
         } catch (error) {
             console.error("Error cargando historial:", error);
@@ -640,6 +642,40 @@ const SalesService = {
         try { UIService.showLoading(true); const facturasAfectadas = await DataService.processMultiAbono(facturasIds, montoTotal); await this.loadHistorial(); return facturasAfectadas; }
         catch (error) { console.error("Error en processMultiAbono:", error); throw error; }
         finally { UIService.showLoading(false); }
+    },
+
+    async triggerGlobalSearch() {
+        const filterInput = document.getElementById('filter-historial');
+        const filter = filterInput.value.trim();
+
+        if (filter !== '') {
+            await this.searchGlobal(filter);
+        } else {
+            // Si está vacío, volver a cargar hoy
+            await this.loadHistorial();
+        }
+    },
+
+    async searchGlobal(equipo) {
+        try {
+            UIService.showLoading(true);
+            const resultados = await DataService.searchSalesByEquipo(equipo);
+
+            if (resultados.length === 0) {
+                UIService.showStatus(`No se encontraron ventas para el equipo ${equipo} en todo el historial.`, "info");
+                // Restaurar vista vacía
+                const historialBody = document.getElementById('historial-body');
+                historialBody.innerHTML = `<tr><td colspan="6" class="empty-cart">No se encontraron resultados en el historial global para "${equipo}"</td></tr>`;
+            } else {
+                UIService.showStatus(`Se encontraron ${resultados.length} registros en el historial.`, "success");
+                HistorialService.updateHistorial(resultados);
+            }
+        } catch (error) {
+            console.error("Error en búsqueda global:", error);
+            UIService.showStatus("Error buscando: " + error.message, "error");
+        } finally {
+            UIService.showLoading(false);
+        }
     },
 
     async printCurrentHistorial() {

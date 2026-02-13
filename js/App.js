@@ -157,31 +157,51 @@ const App = {
         document.getElementById('pendiente-btn').addEventListener('click', () => SalesService.processSale('pendiente'));
         document.getElementById('print-historial-btn').addEventListener('click', () => SalesService.printCurrentHistorial());
 
-        document.getElementById('filter-historial').addEventListener('input', (e) => {
+        const filterInput = document.getElementById('filter-historial');
+
+        filterInput.addEventListener('input', (e) => {
             const filter = e.target.value.trim();
-            if (filter === '') { UIService.applyCurrentFilter(); return; }
+            if (filter === '') {
+                AppState.filteredHistorial = AppState.historial;
+                HistorialService.renderHistorial();
+                return;
+            }
+
             const filtered = AppState.historial.filter(movimiento => {
                 if (movimiento.tipo === 'venta') {
                     const equipo = (movimiento.equipoNumber || '').trim();
-                    return equipo === filter;
+                    return equipo.includes(filter);
                 }
                 return false;
             });
-            const historialBody = document.getElementById('historial-body');
+
             if (filtered.length === 0) {
-                historialBody.innerHTML = `<tr><td colspan="6" class="empty-cart">No hay movimientos para el equipo ${filter}</td></tr>`;
+                const historialBody = document.getElementById('historial-body');
+                historialBody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="empty-cart">
+                            <div style="padding: 20px;">
+                                No se encontró el equipo "${filter}" en los registros de hoy.<br>
+                                <span style="font-size: 0.9em; color: #3498db; cursor: pointer; text-decoration: underline;" onclick="SalesService.searchGlobal('${filter}')">
+                                    <i class="fas fa-search"></i> Haz clic aquí o presiona ENTER para buscar en todo el historial
+                                </span>
+                            </div>
+                        </td>
+                    </tr>
+                `;
             } else {
                 AppState.filteredHistorial = filtered;
                 HistorialService.renderHistorial();
             }
         });
 
-        document.querySelectorAll('.filter-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                AppState.currentFilter = e.target.dataset.filter;
-                UIService.updateFilterButtons();
-                UIService.applyCurrentFilter();
-            });
+        filterInput.addEventListener('keypress', async (e) => {
+            if (e.key === 'Enter') {
+                const filter = e.target.value.trim();
+                if (filter) {
+                    await SalesService.searchGlobal(filter);
+                }
+            }
         });
 
         document.getElementById('close-invoice-modal').addEventListener('click', () => ModalService.closeInvoiceModal());

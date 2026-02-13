@@ -185,6 +185,57 @@ const DataService = {
         }
     },
 
+    async searchSalesByEquipo(equipoNumber) {
+        try {
+            if (AppState.firebaseInitialized) {
+                const equipoStr = String(equipoNumber).trim();
+                if (!equipoStr) return [];
+
+                let results = [];
+
+                // 1. Búsqueda como String (sin orderBy para evitar requerir índice compuesto)
+                // Firestore indexa automáticamente campos individuales
+                let snapshot = await AppState.db.collection("VENTAS")
+                    .where("equipoNumber", "==", equipoStr)
+                    .limit(2000)
+                    .get();
+
+                if (!snapshot.empty) {
+                    snapshot.forEach(doc => results.push({ id: doc.id, ...doc.data() }));
+                }
+
+                // 2. Si no hay resultados y es numérico, intentar búsqueda como Number
+                // (Para compatibilidad con registros antiguos que pudieron guardarse como números)
+                if (results.length === 0 && !isNaN(equipoStr)) {
+                    const equipoNum = Number(equipoStr);
+                    snapshot = await AppState.db.collection("VENTAS")
+                        .where("equipoNumber", "==", equipoNum)
+                        .limit(50)
+                        .get();
+
+                    if (!snapshot.empty) {
+                        snapshot.forEach(doc => results.push({ id: doc.id, ...doc.data() }));
+                    }
+                }
+
+                // 3. Ordenar resultados en memoria (más rápido y sin requerir índice complejo)
+                results.sort((a, b) => {
+                    const timeA = a.timestamp ? (a.timestamp.seconds || 0) : 0;
+                    const timeB = b.timestamp ? (b.timestamp.seconds || 0) : 0;
+                    return timeB - timeA; // Descendente (más reciente primero)
+                });
+
+                return results;
+            } else {
+                return [];
+            }
+        } catch (error) {
+            console.error("Error buscando ventas por equipo:", error);
+            UIService.showStatus("Error buscando equipo: " + error.message, "error");
+            return [];
+        }
+    },
+
     async addAbono(invoiceId, abonoData) {
         return await ConcurrencyManager.withLock(async () => {
             if (AppState.firebaseInitialized) {

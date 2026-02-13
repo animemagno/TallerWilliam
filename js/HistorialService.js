@@ -24,44 +24,7 @@ const HistorialService = {
 
     applyCurrentFilter() {
         let filtered = AppState.historial;
-        console.log(`[HistorialService] Aplicando filtro: ${AppState.currentFilter}. Total registros: ${filtered.length}`);
-
-        switch (AppState.currentFilter) {
-            case 'hoy':
-                // Obtener fecha de hoy en formato local YYYY-MM-DD
-                const now = new Date();
-                const today = now.toLocaleDateString('en-CA'); // YYYY-MM-DD
-
-                filtered = filtered.filter(mov => {
-                    // 1. Intentar coincidencia exacta de string
-                    if (mov.date === today) return true;
-                    if (mov.date === DateUtils.getCurrentDateStringElSalvador()) return true;
-
-                    // 2. Intentar parsing de fecha
-                    try {
-                        let movDate = null;
-                        if (mov.timestamp && mov.timestamp.toDate) {
-                            movDate = mov.timestamp.toDate();
-                        } else if (mov.date) {
-                            movDate = new Date(mov.date);
-                        }
-
-                        if (movDate && !isNaN(movDate.getTime())) {
-                            // Comparar solo día/mes/año usando local string
-                            return movDate.toLocaleDateString('en-CA') === today;
-                        }
-                    } catch (e) {
-                        console.warn("Error comparando fechas:", e);
-                    }
-                    return false;
-                });
-                break;
-            case 'todo':
-                // Mostrar todo sin filtrar
-                break;
-        }
-
-        console.log(`[HistorialService] Registros tras filtrado: ${filtered.length}`);
+        console.log(`[HistorialService] Total registros: ${filtered.length}`);
         AppState.filteredHistorial = filtered;
         this.renderHistorial();
     },
