@@ -408,15 +408,18 @@
             background: none;
             border: none;
             cursor: pointer;
-            padding: 6px;
+            padding: 4px;
+            /* Reducido de 6px */
             border-radius: 4px;
             transition: all 0.3s ease;
             margin: 0 2px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 32px;
-            height: 28px;
+            width: 28px;
+            /* Reducido de 32px */
+            height: 24px;
+            /* Reducido de 28px */
         }
 
         .icon-btn:hover {
@@ -509,7 +512,8 @@
 
         .history-table th,
         .history-table td {
-            padding: 12px 15px;
+            padding: 4px 8px;
+            /* Reducido de 6px 10px */
             text-align: left;
             border-bottom: 1px solid #ddd;
             white-space: nowrap;
@@ -517,7 +521,8 @@
 
         .history-table th {
             background: linear-gradient(to right, #2c3e50, #34495e);
-            padding: 12px 15px;
+            padding: 6px 8px;
+            /* Cabecera un poco más alta que celdas */
             text-transform: uppercase;
             font-size: 0.75rem;
             border-bottom: 2px solid #1a252f;
@@ -571,7 +576,8 @@
         .contado-badge {
             background: #d1fae5;
             color: #065f46;
-            padding: 4px 10px;
+            padding: 2px 8px;
+            /* Reducido de 4px 10px */
             border-radius: 20px;
             font-size: 0.7rem;
             font-weight: 700;
@@ -582,7 +588,7 @@
         .pendiente-badge {
             background: #feebc8;
             color: #744210;
-            padding: 4px 10px;
+            padding: 2px 8px;
             border-radius: 20px;
             font-size: 0.7rem;
             font-weight: 700;
@@ -593,7 +599,7 @@
         .abono-badge {
             background: #bee3f8;
             color: #2c5282;
-            padding: 4px 10px;
+            padding: 2px 8px;
             border-radius: 20px;
             font-size: 0.7rem;
             font-weight: 700;
@@ -604,7 +610,7 @@
         .retiro-badge {
             background: #fed7d7;
             color: #822727;
-            padding: 4px 10px;
+            padding: 2px 8px;
             border-radius: 20px;
             font-size: 0.7rem;
             font-weight: 700;
@@ -615,7 +621,7 @@
         .ingreso-badge {
             background: #d1fae5;
             color: #065f46;
-            padding: 4px 10px;
+            padding: 2px 8px;
             border-radius: 20px;
             font-size: 0.7rem;
             font-weight: 700;
@@ -639,12 +645,16 @@
 
         .cliente-equipo {
             font-weight: bold;
+            font-size: 0.85rem;
+            line-height: 1.1;
         }
 
         .cliente-nombre {
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             color: #666;
-            margin-top: 2px;
+            margin-top: 0;
+            /* Eliminado margin-top */
+            line-height: 1.1;
         }
 
         .action-buttons {
@@ -671,10 +681,16 @@
             color: white;
             border: none;
             border-radius: 4px;
-            padding: 6px 8px;
+            padding: 4px 6px;
+            /* Reducido de 6px 8px */
             cursor: pointer;
-            font-size: 0.9rem;
+            font-size: 0.8rem;
+            /* Reducido de 0.9rem */
             transition: all 0.2s ease;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .menu-toggle-btn:hover {
@@ -1637,7 +1653,7 @@
         }
 
         #main-tab-grupos .grupos-container {
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            grid-template-columns: 1fr 1fr;
             padding: 10px;
         }
 
@@ -1803,4 +1819,59 @@
 
         .blink-alert {
             animation: blink-animation 1.5s infinite;
+        }
+
+        /* === MEJORAS DE SCROLL PARA PESTAÑAS FACTURAS Y GRUPOS === */
+        #tab-facturas,
+        #tab-grupos {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+            overflow: hidden;
+            min-height: 0;
+        }
+
+        #tab-facturas.active,
+        #tab-grupos.active {
+            display: flex !important;
+        }
+
+        .facturas-pendientes-container,
+        .grupos-container {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            min-height: 0;
+            padding: 10px;
+            scroll-behavior: smooth;
+        }
+
+        /* Personalización de la barra de desplazamiento para que se vea premium */
+        .facturas-pendientes-container::-webkit-scrollbar,
+        .grupos-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .facturas-pendientes-container::-webkit-scrollbar-track,
+        .grupos-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .facturas-pendientes-container::-webkit-scrollbar-thumb,
+        .grupos-container::-webkit-scrollbar-thumb {
+            background: #3498db;
+            border-radius: 10px;
+        }
+
+        .facturas-pendientes-container::-webkit-scrollbar-thumb:hover,
+        .grupos-container::-webkit-scrollbar-thumb:hover {
+            background: #2980b9;
+        }
+
+        /* El estilo equipos-grid se mantiene flex para conservar la apariencia de la imagen */
+        .equipos-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
         }

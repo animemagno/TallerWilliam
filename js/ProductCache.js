@@ -9,10 +9,11 @@ const ProductCache = {
     },
 
     async initialize() {
-        if (this.isExpired() || this.data.size === 0) {
-            await this.refresh();
+        // CORRECCIÓN: Unificado con el listener para evitar DOBLE carga inicial
+        // El primer onSnapshot ya trae la data inicial completa.
+        if (!this.unsubscribe) {
+            this.setupRealTimeListener();
         }
-        this.setupRealTimeListener();
     },
 
     // CORRECCIÓN 7: Listener en tiempo real para cache automático

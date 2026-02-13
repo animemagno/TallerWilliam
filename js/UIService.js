@@ -89,7 +89,7 @@ const UIService = {
         }
 
         let total = 0;
-        let itemsHTML = '';
+        const itemsHTML = [];
 
         AppState.cart.forEach((item, index) => {
             const itemTotal = item.precio * item.cantidad;
@@ -97,7 +97,7 @@ const UIService = {
 
             const tienePrecioCero = item.precio === 0;
 
-            itemsHTML += `
+            itemsHTML.push(`
                 <div class="cart-item">
                     <div>
                         <input type="number" class="quantity-input" value="${item.cantidad}" 
@@ -115,10 +115,10 @@ const UIService = {
                         </button>
                     </div>
                 </div>
-            `;
+            `);
         });
 
-        cartItems.innerHTML = itemsHTML;
+        cartItems.innerHTML = itemsHTML.join('');
         totalAmount.textContent = `TOTAL: $${total.toFixed(2)}`;
 
         // SCROLL AUTOMÁTICO AL FINAL

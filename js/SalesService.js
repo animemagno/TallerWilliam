@@ -255,7 +255,7 @@ const SalesService = {
             UIService.showStatus(`Venta CONTADO procesada - Factura #${saleData.invoiceNumber}`, "success");
             this.limpiarFormularioVenta();
             await ProductCache.refresh();
-            await this.loadHistorial();
+            // Nota: El historial se actualizará automáticamente vía RealTimeHistoryManager
         } catch (error) {
             UIService.showStatus("Error al procesar venta contado: " + error.message, "error");
             console.error("Error en procesarVentaContado:", error);
@@ -286,7 +286,7 @@ const SalesService = {
             UIService.showStatus(`Venta PENDIENTE procesada - Factura #${saleData.invoiceNumber}`, "success");
             this.limpiarFormularioVenta();
             await ProductCache.refresh();
-            await this.loadHistorial();
+            // El historial se actualizará automáticamente vía RealTimeHistoryManager
         } catch (error) {
             UIService.showStatus("Error al procesar venta pendiente: " + error.message, "error");
             console.error("Error en procesarVentaPendienteSinAbono:", error);
@@ -306,7 +306,12 @@ const SalesService = {
             const invoiceNumber = await this.generateInvoiceNumber();
             const isUnique = await this.verifyInvoiceUnique(invoiceNumber);
             if (!isUnique) { AppState.processingSale = false; UIService.updatePaymentButtonsState(false); UIService.showLoading(false); return; }
-            const abonoData = { monto: montoAbono, fecha: DateUtils.getCurrentTimestampElSalvador(), fechaString: new Date().toLocaleString('es-ES') };
+            const abonoData = {
+                monto: montoAbono,
+                fecha: new Date(), // CORRECCIÓN: NO usar serverTimestamp() dentro de arrays 
+                fechaString: new Date().toLocaleString('es-ES'),
+                _id: 'abono_inicial_' + Date.now()
+            };
             const saleData = {
                 invoiceNumber, equipoNumber: finalEquipo, clientName: finalCliente,
                 products: AppState.cart.map(item => ({ id: item.id, codigo: item.codigo, descripcion: item.descripcion, precio: item.precio, cantidad: item.cantidad })),
@@ -315,14 +320,39 @@ const SalesService = {
                 status: saldoPendiente <= 0 ? 'pagado' : 'pendiente', saldoPendiente: saldoPendiente,
                 abonos: [abonoData], fechaCreacion: DateUtils.getCurrentTimestampElSalvador(), printed: true
             };
-            await DataService.saveSale(saleData);
-            PrintingService.printTicket(saleData);
-            if (montoAbono > 0) PrintingService.printAbonoTicket(saleData, abonoData, saldoPendiente);
+            const docId = await DataService.saveSale(saleData);
+
+            // REGISTRO ADICIONAL: Si hay abono inicial, guardarlo en INGRESOS para que aparezca en el resumen diario
+            if (montoAbono > 0) {
+                const ingresoData = {
+                    monto: montoAbono,
+                    concepto: `Abono Inicial EQUIPO ${finalEquipo} (Factura #${invoiceNumber})`,
+                    categoria: 'abono',
+                    timestamp: DateUtils.getCurrentTimestampElSalvador(),
+                    date: fechaVenta,
+                    invoiceId: docId,
+                    invoiceNumber: invoiceNumber,
+                    clientName: finalCliente,
+                    equipoNumber: finalEquipo,
+                    saldoAnterior: totalVenta,
+                    nuevoSaldo: saldoPendiente,
+                    abonoId: abonoData._id
+                };
+                await AppState.db.collection("INGRESOS").add(ingresoData);
+            }
+
+            // IMPRESIÓN COMBINADA: Un solo popup para evitar bloqueos del navegador
+            if (montoAbono > 0) {
+                PrintingService.printSaleAndAbono(saleData, abonoData, saldoPendiente);
+            } else {
+                PrintingService.printTicket(saleData);
+            }
+
             if (saldoPendiente <= 0) UIService.showStatus(`Venta con abono completo procesada - Factura #${saleData.invoiceNumber}`, "success");
             else UIService.showStatus(`Venta PENDIENTE con abono inicial procesada - Factura #${saleData.invoiceNumber}`, "success");
             this.limpiarFormularioVenta();
             await ProductCache.refresh();
-            await this.loadHistorial();
+            // El historial se actualizará automáticamente vía RealTimeHistoryManager
         } catch (error) {
             UIService.showStatus("Error al procesar venta con abono: " + error.message, "error");
             console.error("Error en procesarVentaPendienteConAbono:", error);

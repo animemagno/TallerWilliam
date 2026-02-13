@@ -169,6 +169,11 @@ const PrintingService = {
         const fechaActual = (new Date()).toLocaleDateString('es-ES');
         const printWindow = window.open('', '_blank', 'width=800,height=600');
 
+        if (!printWindow) {
+            alert("El navegador bloqueó la ventana de impresión de historial. Por favor, permita las ventanas emergentes.");
+            return;
+        }
+
         let reportHTML = `
             <!DOCTYPE html>
             <html>
@@ -585,6 +590,12 @@ const PrintingService = {
         // CORRECCIÓN IMPRESIÓN: Ventana un poco más ancha para evitar cortes laterales
         const printWindow = window.open('', '_blank', 'width=320,height=600');
 
+        if (!printWindow) {
+            alert("El navegador bloqueó la ventana de impresión. Por favor, permita las ventanas emergentes en este sitio para imprimir el ticket.");
+            console.error("Popup blocked for printTicket");
+            return;
+        }
+
         // Helper robusto para convertir cualquier tipo de fecha a Date válido
         const toSafeDate = (val) => {
             if (!val) return new Date();
@@ -747,6 +758,11 @@ const PrintingService = {
 
     printAbonoTicket(venta, abonoData, nuevoSaldo) {
         const printWindow = window.open('', '_blank', 'width=320,height=600');
+        if (!printWindow) {
+            alert("El navegador bloqueó la ventana de impresión de abono. Por favor, permita las ventanas emergentes.");
+            console.error("Popup blocked for printAbonoTicket");
+            return;
+        }
         let fechaAbono;
         if (abonoData.fecha && typeof abonoData.fecha.toDate === 'function') {
             fechaAbono = abonoData.fecha.toDate();
@@ -857,6 +873,10 @@ const PrintingService = {
 
     printRetiroTicket(retiroData) {
         const printWindow = window.open('', '_blank', 'width=320,height=600');
+        if (!printWindow) {
+            alert("El navegador bloqueó la ventana de impresión de retiro. Por favor, permita las ventanas emergentes.");
+            return;
+        }
         const fecha = retiroData.timestamp ? new Date(retiroData.timestamp.toDate ? retiroData.timestamp.toDate() : retiroData.timestamp) : DateUtils.getCurrentTimestampElSalvador();
         const fechaFormateada = fecha.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' });
 
@@ -957,6 +977,10 @@ const PrintingService = {
 
     printAccountStatement(equipoData) {
         const printWindow = window.open('', '_blank', 'width=320,height=600');
+        if (!printWindow) {
+            alert("El navegador bloqueó la ventana de estado de cuenta. Por favor, permita las ventanas emergentes.");
+            return;
+        }
         const fechaActual = (new Date()).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
         // Ordenar facturas por fecha (más antiguas primero)
@@ -1081,5 +1105,109 @@ const PrintingService = {
         };
     },
 
+    printSaleAndAbono(saleData, abonoData, nuevoSaldo) {
+        const printWindow = window.open('', '_blank', 'width=350,height=800');
+        if (!printWindow) {
+            alert("El navegador bloqueó la ventana de impresión. Por favor, permita las ventanas emergentes para imprimir los tickets.");
+            return;
+        }
 
+        const toSafeDate = (val) => {
+            if (!val) return new Date();
+            if (val instanceof Date && !isNaN(val.getTime())) return val;
+            if (typeof val.toDate === 'function') return val.toDate();
+            if (val.seconds) return new Date(val.seconds * 1000);
+            const parsed = new Date(val);
+            return isNaN(parsed.getTime()) ? new Date() : parsed;
+        };
+
+        const fecha = toSafeDate(saleData.timestamp);
+        const fechaFormateada = fecha.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' });
+        const tipoPago = saleData.paymentType === 'pendiente' ? 'PENDIENTE' : 'CONTADO';
+        const saldoPendiente = saleData.saldoPendiente !== undefined ? saleData.saldoPendiente : saleData.total;
+
+        let productosHTML = '';
+        if (saleData.products && saleData.products.length > 0) {
+            saleData.products.forEach(producto => {
+                const descripcion = producto.descripcion.length > 25 ? producto.descripcion.substring(0, 25) + '...' : producto.descripcion;
+                productosHTML += `
+                    <div style="margin: 4px 0;">
+                        <div style="font-size: 16px;">• ${this._escape(descripcion)}</div>
+                        <div style="display: flex; justify-content: space-between; font-size: 18px;">
+                            <div>x${producto.cantidad}</div>
+                            <div>$${(producto.precio * producto.cantidad).toFixed(2)}</div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        const contenido = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <style>
+                    * { color: #000 !important; font-family: 'Courier New', monospace; font-weight: bold; }
+                    body { font-size: 20px; margin: 0; padding: 6px; width: 58mm; background: white; }
+                    .header { text-align: center; margin-bottom: 10px; }
+                    .line { border-bottom: 3px dashed #000; margin: 8px 0; }
+                    .total { font-weight: bold; text-align: center; font-size: 24px; margin: 10px 0; }
+                    .equipo-text { font-size: 30px; font-weight: 900; text-align: center; margin: 5px 0; }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h3 style="margin: 2px 0; font-size: 24px;">TALLER WILLIAN</h3>
+                    <div style="font-size: 16px;">Ticket: ${this._escape(saleData.invoiceNumber)}</div>
+                    <div style="font-size: 16px;">${fechaFormateada}, ${tipoPago}</div>
+                </div>
+
+                <div class="line"></div>
+                ${saleData.clientName !== saleData.equipoNumber ? `<div style="text-align:center; font-size: 16px;">${this._escape(saleData.clientName)}</div>` : ''}
+                <div class="equipo-text">${this._escape(saleData.equipoNumber)}</div>
+                <div class="line"></div>
+
+                <div style="margin: 8px 0;">${productosHTML}</div>
+                <div class="total">TOTAL: $${saleData.total.toFixed(2)}</div>
+                
+                <div style="height: 20px;"></div>
+                <div style="border-bottom: 4px double #000; margin: 10px 0;"></div>
+                
+                <div class="header">
+                    <h3 style="margin: 2px 0; font-size: 22px;">TALLER WILLIAN</h3>
+                    <div style="text-align: center; font-size: 18px; text-decoration: underline;">COMPROBANTE DE ABONO</div>
+                </div>
+
+                <div style="text-align: center; margin: 10px 0;">
+                    <div style="font-size: 18px;">MONTO RECIBIDO</div>
+                    <div style="font-size: 26px;">$${abonoData.monto.toFixed(2)}</div>
+                </div>
+
+                <div style="border: 2px solid #000; padding: 5px; margin: 10px 0;">
+                    <div style="font-size: 16px;">SALDO ANTEROR: $${(nuevoSaldo + abonoData.monto).toFixed(2)}</div>
+                    <div style="font-size: 20px;">NUEVO SALDO: $${nuevoSaldo.toFixed(2)}</div>
+                </div>
+
+                <div style="text-align: center; margin-top: 20px; font-size: 16px;">
+                    GRACIAS POR SU PAGO<br>
+                    ${fechaFormateada}
+                </div>
+            </body>
+            </html>
+        `;
+
+        printWindow.document.open();
+        printWindow.document.write(contenido);
+        printWindow.document.close();
+
+        printWindow.onload = function () {
+            printWindow.document.fonts.ready.then(() => {
+                setTimeout(() => {
+                    printWindow.focus();
+                    printWindow.print();
+                }, 800);
+            });
+        };
+    },
 };

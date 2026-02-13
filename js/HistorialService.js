@@ -10,27 +10,45 @@ const HistorialService = {
     },
 
     updateHistorial(movimientos) {
-        const historialBody = document.getElementById('historial-body');
         AppState.historial = movimientos;
-        AppState.filteredHistorial = movimientos;
 
-        // Ocultar resumen diario si estamos viendo historial general
-        const dailySummary = document.getElementById('daily-summary-container');
-        if (dailySummary) {
-            dailySummary.style.display = 'none';
-        }
-        this.applyCurrentFilter();
+        // Debounce de renderizado para evitar múltiples actualizaciones pesadas en milisegundos
+        if (this._renderTimeout) clearTimeout(this._renderTimeout);
+        this._renderTimeout = setTimeout(() => {
+            AppState.filteredHistorial = AppState.historial;
+
+            // Ocultar resumen diario si estamos viendo historial general
+            const dailySummary = document.getElementById('daily-summary-container');
+            if (dailySummary) {
+                dailySummary.style.display = 'none';
+            }
+            this.applyCurrentFilter();
+        }, 100);
     },
 
     applyCurrentFilter() {
         let filtered = AppState.historial;
-        console.log(`[HistorialService] Total registros: ${filtered.length}`);
+        const filterInput = document.getElementById('filter-historial');
+        const filterText = filterInput ? filterInput.value.trim().toLowerCase() : '';
+
+        if (filterText) {
+            filtered = filtered.filter(mov => {
+                const equipo = (mov.equipoNumber || '').toString().toLowerCase();
+                const cliente = (mov.clientName || '').toLowerCase();
+                const concepto = (mov.concepto || '').toLowerCase();
+                const factura = (mov.invoiceNumber || '').toString().toLowerCase();
+                return equipo.includes(filterText) || cliente.includes(filterText) || concepto.includes(filterText) || factura.includes(filterText);
+            });
+        }
+
         AppState.filteredHistorial = filtered;
         this.renderHistorial();
     },
 
     renderHistorial() {
         const historialBody = document.getElementById('historial-body');
+        if (!historialBody) return;
+
         const movimientos = AppState.filteredHistorial;
 
         if (movimientos.length === 0) {
@@ -42,7 +60,7 @@ const HistorialService = {
             return;
         }
 
-        let historialHTML = '';
+        const historialHTML = [];
 
         movimientos.forEach(movimiento => {
             let fecha = 'N/A';
@@ -92,7 +110,7 @@ const HistorialService = {
             }
 
             if (movimiento.tipo === 'retiro') {
-                historialHTML += `
+                historialHTML.push(`
                     <tr style="background-color: #fff5f5;">
                         <td><strong>RET-${this._escape(movimiento.id.substring(0, 6))}</strong></td>
                         <td>
@@ -125,9 +143,9 @@ const HistorialService = {
                             </div>
                         </td>
                     </tr>
-                `;
+                `);
             } else if (movimiento.tipo === 'ingreso') {
-                historialHTML += `
+                historialHTML.push(`
                     <tr style="background-color: #f0fff4;">
                         <td><strong>ING-${this._escape(movimiento.id.substring(0, 6))}</strong></td>
                         <td>
@@ -160,14 +178,14 @@ const HistorialService = {
                             </div>
                         </td>
                     </tr>
-                `;
+                `);
             } else if (movimiento.tipo === 'abono') {
-                historialHTML += `
+                historialHTML.push(`
                     <tr style="background-color: #f0fff4;">
                         <td><strong>ABO-${this._escape(movimiento.id.substring(0, 6))}</strong></td>
                         <td>
                             <div style="display: flex; align-items: center; gap: 10px;">
-                                <div class="cliente-equipo" style="margin-bottom: 0; font-size: 1.1em; min-width: 30px;">${this._escape(movimiento.equipoNumber) || '-'}</div>
+                                <div class="cliente-equipo" style="margin-bottom: 0; font-size: 0.9em; min-width: 30px;">${this._escape(movimiento.equipoNumber) || '-'}</div>
                                 <div class="cliente-nombre" style="font-size: 0.85em; margin-bottom: 0;">
                                     Abono <a href="#" onclick="event.preventDefault(); SalesService.viewInvoice('${this._escape(movimiento.invoiceId || movimiento.invoiceNumber)}');" style="color: #7f8c8d; text-decoration: underline;">
                                         #${this._escape(movimiento.invoiceNumber)}
@@ -198,7 +216,7 @@ const HistorialService = {
                             </div>
                         </td>
                     </tr>
-                `;
+                `);
             } else {
                 // Es una VENTA
                 const venta = movimiento;
@@ -282,7 +300,7 @@ const HistorialService = {
                 // Si printed es explícitamente false, mostrar alerta
                 const rowClass = venta.printed === false ? 'blink-alert' : '';
 
-                historialHTML += `
+                historialHTML.push(`
                     <tr class="${rowClass}">
                         <td>
                             <a href="#" onclick="event.preventDefault(); SalesService.viewInvoice('${this._escape(venta.id)}');" style="color: #2c3e50; text-decoration: none; font-weight: bold;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">
@@ -306,11 +324,11 @@ const HistorialService = {
                             </div>
                         </td>
                     </tr>
-                `;
+                `);
             }
         });
 
-        historialBody.innerHTML = historialHTML;
+        historialBody.innerHTML = historialHTML.join('');
     },
 
     renderProductSummary(movimientos) {
