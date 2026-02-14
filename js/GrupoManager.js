@@ -191,32 +191,22 @@ window.GrupoManager = {
                 throw new Error("No hay conexión a la base de datos");
             }
 
-            const equiposConFacturas = equiposSeleccionados.filter(equipoNum => {
-                let tieneFacturas = false;
-                this.equiposPendientes.forEach((equipo, key) => {
-                    if (equipo.numero === equipoNum && equipo.total > 0) {
-                        tieneFacturas = true;
-                    }
-                });
-                return tieneFacturas;
-            });
+            // PERMITIR EQUIPOS SIN DEUDA (Eliminado el filtro estricto)
+            // Se guardan tal cual vienen seleccionados
+            const equiposAGuardar = equiposSeleccionados;
 
-            if (equiposConFacturas.length === 0) {
-                throw new Error("Los equipos seleccionados no tienen facturas pendientes");
-            }
-
+            // Calcular total inicial (solo de los que tengan deuda activa)
             let totalGrupo = 0;
-            equiposConFacturas.forEach(equipoNum => {
-                this.equiposPendientes.forEach((equipo, key) => {
-                    if (equipo.numero === equipoNum) {
-                        totalGrupo += equipo.total;
-                    }
-                });
+            equiposAGuardar.forEach(equipoKey => {
+                const equipo = this.equiposPendientes.get(equipoKey);
+                if (equipo) {
+                    totalGrupo += equipo.total;
+                }
             });
 
             const grupoData = {
                 nombre: nombre,
-                equipos: equiposConFacturas,
+                equipos: equiposAGuardar,
                 total: totalGrupo,
                 fechaCreacion: new Date(),
                 activo: true
@@ -232,18 +222,17 @@ window.GrupoManager = {
             this.grupos.set(docRef.id, grupoData);
 
             // Actualizar las facturas con la información del grupo
-            for (const equipoNum of equiposConFacturas) {
-                for (const [key, equipo] of this.equiposPendientes.entries()) {
-                    if (equipo.numero === equipoNum) {
-                        for (const factura of equipo.facturas) {
-                            try {
-                                await AppState.db.collection("VENTAS").doc(factura.id).update({
-                                    grupo: docRef.id,
-                                    grupoNombre: nombre
-                                });
-                            } catch (error) {
-                                console.error(`Error actualizando factura ${factura.id}:`, error);
-                            }
+            for (const equipoKey of equiposAGuardar) {
+                const equipo = this.equiposPendientes.get(equipoKey);
+                if (equipo && equipo.facturas) {
+                    for (const factura of equipo.facturas) {
+                        try {
+                            await AppState.db.collection("VENTAS").doc(factura.id).update({
+                                grupo: docRef.id,
+                                grupoNombre: nombre
+                            });
+                        } catch (error) {
+                            console.error(`Error actualizando factura ${factura.id}:`, error);
                         }
                     }
                 }
@@ -266,28 +255,20 @@ window.GrupoManager = {
                 throw new Error("No hay conexión a la base de datos");
             }
 
-            const equiposConFacturas = equiposSeleccionados.filter(equipoNum => {
-                let tieneFacturas = false;
-                this.equiposPendientes.forEach((equipo, key) => {
-                    if (equipo.numero === equipoNum && equipo.total > 0) {
-                        tieneFacturas = true;
-                    }
-                });
-                return tieneFacturas;
-            });
+            // PERMITIR EQUIPOS SIN DEUDA (Eliminado el filtro estricto)
+            const equiposAGuardar = equiposSeleccionados;
 
             let totalGrupo = 0;
-            equiposConFacturas.forEach(equipoNum => {
-                this.equiposPendientes.forEach((equipo, key) => {
-                    if (equipo.numero === equipoNum) {
-                        totalGrupo += equipo.total;
-                    }
-                });
+            equiposAGuardar.forEach(equipoKey => {
+                const equipo = this.equiposPendientes.get(equipoKey);
+                if (equipo) {
+                    totalGrupo += equipo.total;
+                }
             });
 
             const grupoData = {
                 nombre: nombre,
-                equipos: equiposConFacturas,
+                equipos: equiposAGuardar,
                 total: totalGrupo,
                 fechaActualizacion: new Date()
             };
@@ -304,18 +285,17 @@ window.GrupoManager = {
             }
 
             // Actualizar facturas con el nuevo grupo
-            for (const equipoNum of equiposConFacturas) {
-                for (const [key, equipo] of this.equiposPendientes.entries()) {
-                    if (equipo.numero === equipoNum) {
-                        for (const factura of equipo.facturas) {
-                            try {
-                                await AppState.db.collection("VENTAS").doc(factura.id).update({
-                                    grupo: grupoId,
-                                    grupoNombre: nombre
-                                });
-                            } catch (error) {
-                                console.error(`Error actualizando factura ${factura.id}:`, error);
-                            }
+            for (const equipoKey of equiposAGuardar) {
+                const equipo = this.equiposPendientes.get(equipoKey);
+                if (equipo && equipo.facturas) {
+                    for (const factura of equipo.facturas) {
+                        try {
+                            await AppState.db.collection("VENTAS").doc(factura.id).update({
+                                grupo: grupoId,
+                                grupoNombre: nombre
+                            });
+                        } catch (error) {
+                            console.error(`Error actualizando factura ${factura.id}:`, error);
                         }
                     }
                 }
@@ -324,22 +304,20 @@ window.GrupoManager = {
             // Remover grupo de facturas que ya no están en el grupo
             const grupoOriginal = this.grupos.get(grupoId);
             if (grupoOriginal) {
-                for (const equipoNum of grupoOriginal.equipos) {
-                    if (!equiposConFacturas.includes(equipoNum)) {
-                        for (const [key, equipo] of this.equiposPendientes.entries()) {
-                            if (equipo.numero === equipoNum) {
-                                for (const factura of equipo.facturas) {
-                                    try {
-                                        if (AppState.firebaseInitialized) {
-                                            // CORRECCIÓN 1: Usar firebase.firestore.FieldValue consistentemente
-                                            await AppState.db.collection("VENTAS").doc(factura.id).update({
-                                                grupo: firebase.firestore.FieldValue.delete(),
-                                                grupoNombre: firebase.firestore.FieldValue.delete()
-                                            });
-                                        }
-                                    } catch (error) {
-                                        console.error(`Error removiendo grupo de factura ${factura.id}:`, error);
+                for (const equipoKey of grupoOriginal.equipos) {
+                    if (!equiposAGuardar.includes(equipoKey)) {
+                        const equipo = this.equiposPendientes.get(equipoKey);
+                        if (equipo && equipo.facturas) {
+                            for (const factura of equipo.facturas) {
+                                try {
+                                    if (AppState.firebaseInitialized) {
+                                        await AppState.db.collection("VENTAS").doc(factura.id).update({
+                                            grupo: firebase.firestore.FieldValue.delete(),
+                                            grupoNombre: firebase.firestore.FieldValue.delete()
+                                        });
                                     }
+                                } catch (error) {
+                                    console.error(`Error removiendo grupo de factura ${factura.id}:`, error);
                                 }
                             }
                         }
@@ -1277,64 +1255,85 @@ window.GrupoManager = {
 
         let html = '';
 
-        // Recopilar todos los equipos con deuda
-        const equiposConDeuda = [];
-        this.equiposPendientes.forEach((equipo, key) => {
-            if (equipo.total > 0) {
-                equiposConDeuda.push({
-                    numero: equipo.numero,
-                    total: equipo.total,
-                    cliente: equipo.cliente || null,
-                    facturas: equipo.facturas
+        // ITERAR DEL 1 AL 130 PARA MOSTRAR TODOS LOS LUGARES DISPONIBLES
+        for (let i = 1; i <= 130; i++) {
+            const numeroStr = i.toString();
+
+            // 1. Buscar si hay variantes con deuda para este número (ej: "1-Cedros", "1-Otro")
+            const variantes = [];
+            let existeGenericoConDeuda = false;
+
+            this.equiposPendientes.forEach((equipo, key) => {
+                // Verificar coincidencia de número (flexible para strings/numbers)
+                if (equipo.numero == i) {
+                    // Determinar si es el genérico basado en si NO tiene cliente específico
+                    // o si el cliente se llama "Equipo X"
+                    const esGenerico = !equipo.cliente ||
+                        equipo.cliente.trim() === '' ||
+                        equipo.cliente === `Equipo ${i}`;
+
+                    variantes.push({
+                        key: key,
+                        nombre: equipo.cliente || `Equipo ${i}`,
+                        total: equipo.total,
+                        esGenerico: esGenerico
+                    });
+
+                    // Si encontramos una variante que actúa como genérico (sin nombre especial), marcamos que ya existe
+                    if (esGenerico) existeGenericoConDeuda = true;
+                }
+            });
+
+            // 2. Si NO existe el genérico con deuda, agregarlo como opción vacía ($0)
+            if (!existeGenericoConDeuda) {
+                variantes.unshift({
+                    key: numeroStr, // Clave simple para el genérico
+                    nombre: `Equipo ${i}`, // Nombre por defecto
+                    total: 0,
+                    esGenerico: true
                 });
             }
-        });
 
-        // Ordenar por número de equipo
-        equiposConDeuda.sort((a, b) => {
-            const numA = parseFloat(a.numero) || 0;
-            const numB = parseFloat(b.numero) || 0;
-            return numA - numB;
-        });
+            // 3. Renderizar todas las opciones encontradas para este número
+            variantes.forEach(variant => {
+                const estaSeleccionado = selectedSet.has(variant.key);
+                // Está en otro grupo si la clave exacta está en el set de agrupados
+                const estaEnOtroGrupo = equiposEnGrupos.has(variant.key) &&
+                    (modalType === 'crear' ||
+                        (modalType === 'editar' && this.currentEditingGroup &&
+                            !this.currentEditingGroup.equipos.includes(variant.key)));
 
-        // Generar HTML para cada equipo con deuda
-        equiposConDeuda.forEach(equipo => {
-            const equipoNum = equipo.numero;
-            const estaSeleccionado = selectedSet.has(equipoNum);
-            const estaEnOtroGrupo = equiposEnGrupos.has(equipoNum) &&
-                (modalType === 'crear' ||
-                    (modalType === 'editar' && this.currentEditingGroup &&
-                        !this.currentEditingGroup.equipos.includes(equipoNum)));
+                let estilo = '';
+                let estiloInline = '';
+                let infoExtra = '';
 
-            let estilo = '';
-            let estiloInline = '';
+                if (estaEnOtroGrupo) {
+                    estilo = 'equipo-en-grupo';
+                    estiloInline = 'border-color: #e74c3c; background: #f8d7da; color: #721c24; cursor: not-allowed;';
+                    infoExtra = '<br><small style="color: #e74c3c; font-size: 0.6rem;">EN GRUPO</small>';
+                } else if (variant.total > 0) {
+                    estilo = 'has-facturas';
+                    estiloInline = 'border-color: #27ae60; background: #f0fff0;';
+                }
 
-            if (estaEnOtroGrupo) {
-                estilo = 'equipo-en-grupo';
-                estiloInline = 'border-color: #e74c3c; background: #f8d7da; color: #721c24; cursor: not-allowed;';
-            } else {
-                estilo = 'has-facturas';
-                estiloInline = 'border-color: #27ae60; background: #f0fff0;';
-            }
+                // Mostrar nombre si es una variante específica (ej: Cedros)
+                const labelNombre = (!variant.esGenerico || variant.nombre !== `Equipo ${i}`) ?
+                    `<br><small style="color: #2980b9; font-weight: bold; font-size: 0.7rem;">${variant.nombre}</small>` : '';
 
-            // Mostrar etiqueta de localidad/cliente si existe
-            const etiquetaCliente = equipo.cliente ?
-                `<br><small style="color: #e74c3c; font-size: 0.65rem;">${equipo.cliente}</small>` : '';
-
-            html += `
-                <div class="all-equipo-item ${estilo} ${estaSeleccionado ? 'selected' : ''}" 
-                     onclick="${estaEnOtroGrupo ? '' : `GrupoManager.toggleEquipoSelection('${equipoNum}', '${modalType}')`}"
-                     style="${estiloInline}">
-                    ${equipoNum}
-                    ${etiquetaCliente}
-                    <br><small style="color: #27ae60;">$${equipo.total.toFixed(2)}</small>
-                    ${estaEnOtroGrupo ? '<br><small style="color: #e74c3c; font-size: 0.6rem;">EN GRUPO</small>' : ''}
-                </div>
-            `;
-        });
-
-        if (equiposConDeuda.length === 0) {
-            html = '<div style="text-align: center; color: #999; padding: 20px;">No hay equipos con deuda pendiente</div>';
+                // CORRECCIÓN VISUAL: Asegurar que el número tenga color oscuro siempre, excepto si está seleccionado que podría cambiar por CSS
+                html += `
+                    <div class="all-equipo-item ${estilo} ${estaSeleccionado ? 'selected' : ''}" 
+                         data-id="${variant.key}"
+                         onclick="${estaEnOtroGrupo ? '' : `GrupoManager.toggleEquipoSelection('${variant.key}', '${modalType}')`}"
+                         style="${estiloInline} position: relative;">
+                         <!-- Número grande y visible -->
+                        <span style="font-size: 1.2em; font-weight: 900; color: ${estaSeleccionado ? 'white' : '#2c3e50'}; display: block; margin-bottom: 2px;">${i}</span>
+                        ${labelNombre}
+                        <br><small style="color: ${estaSeleccionado ? '#eee' : (variant.total > 0 ? '#27ae60' : '#95a5a6')}; font-weight: bold;">$${variant.total.toFixed(2)}</small>
+                        ${infoExtra}
+                    </div>
+                `;
+            });
         }
 
         grid.innerHTML = html;
@@ -1351,21 +1350,34 @@ window.GrupoManager = {
             selectedList.innerHTML = '<div style="color: #999; text-align: center; font-size: 0.8rem;">No hay equipos seleccionados</div>';
         } else {
             let badgesHTML = '';
-            const equiposOrdenados = Array.from(selectedSet).sort((a, b) => parseInt(a) - parseInt(b));
+            // Ordenar visualmente
+            const equiposOrdenados = Array.from(selectedSet).sort((a, b) => {
+                // Intentar extraer el número inicial para ordenar
+                const numA = parseInt(a) || 0;
+                const numB = parseInt(b) || 0;
+                return numA - numB;
+            });
 
-            equiposOrdenados.forEach(num => {
-                let equipoEncontrado = null;
-                this.equiposPendientes.forEach((equipo, key) => {
-                    if (equipo.numero === num && equipo.total > 0) {
-                        equipoEncontrado = equipo;
-                    }
-                });
+            equiposOrdenados.forEach(key => {
+                const equipo = this.equiposPendientes.get(key);
+                const nombre = equipo ? (equipo.cliente || key) : `Equipo ${key}`;
+                const total = equipo ? equipo.total : 0;
 
-                if (equipoEncontrado) {
-                    badgesHTML += `<span class="selected-equipo-badge">${num} ($${equipoEncontrado.total.toFixed(2)})</span>`;
+                // CORRECCIÓN: Siempre mostrar el número de equipo en la etiqueta
+                const numeroKey = parseInt(key) || '?';
+                let label = '';
+
+                if (nombre === `Equipo ${numeroKey}`) {
+                    label = `${numeroKey}`;
+                } else if (nombre.startsWith(`${numeroKey} - `) || nombre.startsWith(`${numeroKey}-`)) {
+                    label = nombre;
+                } else if (!isNaN(nombre)) {
+                    label = nombre;
                 } else {
-                    badgesHTML += `<span class="selected-equipo-badge" style="background: #95a5a6;">${num} ($0.00)</span>`;
+                    label = `${numeroKey} - ${nombre}`;
                 }
+
+                badgesHTML += `<span class="selected-equipo-badge">${label} ($${total.toFixed(2)})</span>`;
             });
             selectedList.innerHTML = badgesHTML;
         }
@@ -1419,26 +1431,26 @@ window.GrupoManager = {
         }
     },
 
-    toggleEquipoSelection(equipoNum, modalType = 'crear') {
+    toggleEquipoSelection(equipoKey, modalType = 'crear') {
         const selectedSet = modalType === 'crear' ? AppState.equiposSeleccionados : AppState.equiposEditSeleccionados;
 
-        if (selectedSet.has(equipoNum)) {
-            selectedSet.delete(equipoNum);
+        if (selectedSet.has(equipoKey)) {
+            selectedSet.delete(equipoKey);
         } else {
             if (selectedSet.size >= 130) {
                 UIService.showStatus("Máximo 130 equipos permitidos", "error");
                 return;
             }
-            selectedSet.add(equipoNum);
+            selectedSet.add(equipoKey);
         }
 
         this.actualizarListaSeleccionados(modalType);
 
+        // Actualizar visualmente el item específico usando data-id
         const selector = modalType === 'crear' ? '.all-equipo-item' : '#editar-all-equipos-grid .all-equipo-item';
         document.querySelectorAll(selector).forEach(item => {
-            const num = item.textContent.split('\n')[0].trim();
-            if (num === equipoNum) {
-                if (selectedSet.has(num)) {
+            if (item.dataset.id === equipoKey) {
+                if (selectedSet.has(equipoKey)) {
                     item.classList.add('selected');
                 } else {
                     item.classList.remove('selected');
