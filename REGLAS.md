@@ -11,9 +11,10 @@ Para entender el estado real del proyecto, **SIEMPRE** debes leer estos archivos
 1.  `REGLAS.md`: Estas normas.
 
 ## 2. Flujo de Desarrollo
+*   **(NUEVO) Diálogo Previo Obligatorio:** Antes de escribir cualquier código, **explicar verbalmente** qué cambios se planean hacer. Usar un lenguaje extremadamente simple (nada de tecnicismos como "array", "función", "clase"). Esperar confirmación del usuario antes de proceder.
 *   **Consulta Previa:** Siempre preguntar o comentar "cómo se puede mejorar algo" ANTES de aplicar cambios. No asumir ni actuar por cuenta propia fuera de lo solicitado.
 *   **Commit Controlado:** NUNCA hacer un commit sin preguntar antes. El usuario debe autorizar explícitamente cada guardado en el historial.
-*   **Guardado Completo:** Al proceder con un guardado (commit), siempre se deben incluir **todos** los archivos modificados del proyecto en el repositorio.
+*   **Guardado Completo post-Pruebas:** Una vez que el usuario confirme que las pruebas funcionan correctamente, proceder INMEDIATAMENTE a realizar un guardado (commit + push) en GitHub que incluya **todos** los archivos del proyecto, para asegurar el estado funcional.
 *   **⚠️ IMPORTANTE - Guardado en GitHub:** 
     *   Cuando el usuario dice "guardar", se refiere a **guardar en GitHub** (commit + push), NO solo guardar localmente.
     *   Siempre verificar con `git status` si hay cambios pendientes de subir.
@@ -34,3 +35,37 @@ Para evitar la degradación del código por errores acumulados:
 ## 5. Idioma y Proactividad Técnica
 *   **Idioma Oficial:** Todo el trabajo, comentarios, commits y documentación debe realizarse en **ESPAÑOL**.
 *   **Proactividad Técnica:** El Agente tiene libertad (y deber) de analizar las tareas implementadas y sugerir mejoras lógicas, arquitectónicas o incluso cambios de lenguaje/herramientas si esto facilita el trabajo o mejora la calidad del producto final. No limitarse solo a lo pedido si existe una solución técnica superior.
+
+## 6. Mapa de Estructura del Proyecto (Referencia Rápida)
+
+### 📂 Archivos Principales (Interfaz)
+*   **`ventas.html`**: Panel principal.PC. Maneja carrito, facturas pendientes y grupos.
+*   **`ventas_movil.html`**: Versión móvil (light). Venta rápida.
+*   **`inventario.html`**: Gestión de productos (altas, bajas, stock).
+*   **`analisis_financiero.html`**: Dashboard con gráficas y reportes.
+*   **`control de entrega.html`**: Sistema para marcar entregas.
+
+### 🧠 Lógica de Negocio (`/js`)
+#### Servicios (Logic Core)
+*   **`DataService.js`**: **EL CEREBRO DE DATOS.** Lee/Escribe en Firebase.
+*   **`SalesService.js`**: Carrito de compras y checkout.
+*   **`PrintingService.js`**: Genera tickets y facturas PDF/HTML.
+*   **`UIService.js`**: Controla alertas y modales.
+
+#### Gestores de Módulos
+*   **`GrupoManager.js`**: **CRÍTICO.** Lógica de agrupación de facturas.
+*   **`FacturasTabManager.js`**: Pestaña "Facturas" (sin grupo).
+*   **`GruposTabManager.js`**: Pestaña "Grupos".
+*   **`HistorialService.js`**: Lista de últimas ventas.
+
+#### Utilidades
+*   **`App.js`**: Inicializa la app y Firebase.
+*   **`Config.js`**: Credenciales.
+*   **`ErrorHandler.js`**: Manejo de errores.
+
+### 🔥 Base de Datos (Firestore)
+*   **`VENTAS`**: Colección principal.
+    *   `paymentType`: 'pendiente'/'contado'
+    *   `group`: ID del grupo (si aplica)
+*   **`GRUPOS`**: Definición de grupos.
+*   **`INVENTARIO`**: Catálogo de productos.
