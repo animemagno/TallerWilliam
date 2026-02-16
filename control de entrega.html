@@ -1376,13 +1376,15 @@
         <!-- Pestaña de Registro Rápido -->
         <div class="tab-content active" id="registro-rapido">
             <div class="panel-registro-rapido">
-                <div class="info-periodo-actual" style="display: none !important;">
-                    <h2>Período de Corte Actual</h2>
-                    <div class="fechas-periodo" id="fechas-periodo-actual">
-                        Cargando período...
-                    </div>
-                    <div class="dias-restantes" id="dias-restantes-periodo">
-                        Calculando días restantes...
+                <div class="info-periodo-actual" style="display: block !important;">
+                    <div style="text-align: center;">
+                        <h2 style="margin: 0; font-size: 1.1rem;">Período de Trabajo</h2>
+                        <div class="fechas-periodo" id="fechas-periodo-actual" style="margin: 5px 0;">
+                            Cargando período...
+                        </div>
+                        <div class="dias-restantes" id="dias-restantes-periodo" style="font-size: 0.9rem;">
+                            Calculando días restantes...
+                        </div>
                     </div>
                 </div>
 
@@ -1394,14 +1396,23 @@
                 <div class="calendario-periodo" id="calendario-periodo-container"
                     style="display: none; max-width: 1200px; margin: 0 auto; background: #2d3748; border-radius: 8px;">
                     <div class="header-calendario-simple"
-                        style="display: flex; justify-content: space-between; align-items: center;">
+                        style="display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; background: #2d3748; border-bottom: 1px solid #4a5568; flex-wrap: wrap; gap: 10px;">
                         <button class="btn btn-secondary btn-sm" id="cerrar-calendario" style="margin: 0;">
                             ← Volver
                         </button>
-                        <h3 style="margin: 0; flex: 1; text-align: center;">Calendario del Período:
-                            <span class="nombre-equipo-seleccionado" id="nombre-equipo-calendario"></span>
-                        </h3>
-                        <div style="width: 80px;"></div> <!-- Spacer for alignment -->
+
+                        <div style="flex: 1; text-align: center; min-width: 200px;">
+                            <h3 style="margin: 0; display: inline-block;">
+                                <span class="nombre-equipo-seleccionado" id="nombre-equipo-calendario"></span>
+                            </h3>
+                        </div>
+
+                        <div style="display: flex; align-items: center; gap: 5px;">
+                            <select id="selector-periodo-calendario"
+                                style="padding: 6px; border-radius: 4px; background: #1a202c; color: white; border: 1px solid #4a5568; font-size: 0.85rem; max-width: 150px;">
+                                <!-- Opciones generadas por JS -->
+                            </select>
+                        </div>
                     </div>
 
                     <div class="layout-calendario-rapido" style="display: flex; gap: 20px; padding: 20px;">
@@ -1776,11 +1787,138 @@
                 document.getElementById('fechas-periodo-actual').textContent =
                     `${fechaInicio} al ${fechaFin}`;
 
-                // Calcular días restantes
+                // Calcular días restantes (solo si es el periodo actual real)
                 const msPorDia = 1000 * 60 * 60 * 24;
                 const diasRestantes = Math.ceil((finPeriodo - hoy) / msPorDia);
-                document.getElementById('dias-restantes-periodo').textContent =
-                    `${diasRestantes} días restantes para el cierre del período`;
+
+                const elDiasRestantes = document.getElementById('dias-restantes-periodo');
+
+                // Verificar si estamos viendo el periodo actual cronológico o uno pasado/futuro
+                const esPeriodoActualCronologico = inicioPeriodo <= hoy && hoy <= finPeriodo;
+
+                if (esPeriodoActualCronologico) {
+                    elDiasRestantes.textContent = `${diasRestantes} días restantes para el cierre del período`;
+                    elDiasRestantes.style.color = diasRestantes <= 3 ? '#e53e3e' : '#e2e8f0';
+                } else if (finPeriodo < hoy) {
+                    elDiasRestantes.textContent = "Este período ya finalizó (Histórico)";
+                    elDiasRestantes.style.color = "#f6e05e"; // Amarillo advertencia
+                } else {
+                    elDiasRestantes.textContent = "Este período es futuro";
+                    elDiasRestantes.style.color = "#63b3ed"; // Azul info
+                }
+
+                // Generar opciones para el selector si está vacío
+                const selector = document.getElementById('selector-periodo-calendario');
+                if (selector && selector.options.length === 0) {
+                    generarOpcionesPeriodos(selector);
+                }
+            }
+
+            // Función para generar opciones de periodos (Actual y 5 anteriores)
+            function generarOpcionesPeriodos(selector) {
+                const hoy = new Date();
+                const añoActual = hoy.getFullYear();
+                const mesActual = hoy.getMonth(); // 0-11
+                const diaActual = hoy.getDate();
+
+                // Determinar el inicio del periodo base actual
+                let fechaBase;
+                if (diaActual >= 15) {
+                    fechaBase = new Date(añoActual, mesActual, 15);
+                } else {
+                    fechaBase = new Date(añoActual, mesActual - 1, 15);
+                }
+
+                selector.innerHTML = '';
+
+                // Generar 1 periodo futuro, el actual y 10 pasados
+                for (let i = -1; i < 11; i++) {
+                    // Calcular inicio del periodo iterado (restando meses a la fecha base)
+                    // Nota: restamos 'i' porque queremos ir hacia atrás, pero el loop va incrementando
+                    // Así que: i=-1 (futuro), i=0 (actual), i=1 (pasado 1), etc.
+
+                    const inicio = new Date(fechaBase);
+                    inicio.setMonth(fechaBase.getMonth() - i);
+
+                    const fin = new Date(inicio);
+                    fin.setMonth(inicio.getMonth() + 1);
+                    fin.setDate(14); // El fin es el 14 del siguiente mes relativo
+
+                    const inicioStr = formatoFechaLegible(inicio);
+                    const finStr = formatoFechaLegible(fin);
+                    const valor = `${formatoFechaSQL(inicio)}_a_${formatoFechaSQL(fin)}`;
+
+                    const option = document.createElement('option');
+                    option.value = valor;
+
+                    let etiqueta = `${inicioStr} - ${finStr}`;
+                    if (i === 0) etiqueta += " (Actual)";
+
+                    option.textContent = etiqueta;
+                    selector.appendChild(option);
+
+                    // Seleccionar el actual por defecto
+                    if (i === 0) option.selected = true;
+                }
+
+                // Listener para cambio de periodo
+                selector.addEventListener('change', function () {
+                    cambiarPeriodoActivo(this.value);
+                });
+            }
+
+            function cambiarPeriodoActivo(rangoFechas) {
+                if (!rangoFechas) return;
+
+                const [inicioStr, finStr] = rangoFechas.split('_a_');
+
+                // Actualizar objeto periodoActual global
+                // Importante: necesitamos corregir la zona horaria al crear fechas desde string YYYY-MM-DD
+                const inicioParts = inicioStr.split('-');
+                const finParts = finStr.split('-');
+
+                // Crear fechas usando año, mes (0-indexado), dia para evitar desfases de zona horaria
+                const inicioDate = new Date(inicioParts[0], parseInt(inicioParts[1]) - 1, inicioParts[2]);
+                const finDate = new Date(finParts[0], parseInt(finParts[1]) - 1, finParts[2]);
+
+                periodoActual = {
+                    inicio: inicioDate,
+                    fin: finDate,
+                    inicioStr: inicioStr,
+                    finStr: finStr,
+                    clave: rangoFechas
+                };
+
+                // Actualizar textos en pantalla
+                document.getElementById('fechas-periodo-actual').textContent =
+                    `${formatoFechaLegible(inicioDate)} al ${formatoFechaLegible(finDate)}`;
+
+                // Recalcular estado del periodo (días restantes o finalizado)
+                const hoy = new Date();
+                const elDiasRestantes = document.getElementById('dias-restantes-periodo');
+
+                // Setear horas a 0 para comparación justa de fechas
+                const hoyZero = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
+
+                if (finDate < hoyZero) {
+                    elDiasRestantes.textContent = "VISUALIZANDO PERÍODO HISTÓRICO (CERRADO)";
+                    elDiasRestantes.style.color = "#f6e05e"; // Amarillo
+                } else if (inicioDate > hoyZero) {
+                    elDiasRestantes.textContent = "VISUALIZANDO PERÍODO FUTURO";
+                    elDiasRestantes.style.color = "#63b3ed"; // Azul
+                } else {
+                    const msPorDia = 1000 * 60 * 60 * 24;
+                    const diasRestantes = Math.ceil((finDate - hoy) / msPorDia);
+                    elDiasRestantes.textContent = `${diasRestantes} días restantes para el cierre del período`;
+                    elDiasRestantes.style.color = diasRestantes <= 3 ? '#e53e3e' : '#e2e8f0';
+                }
+
+                // Recargar paneles
+                cargarPanelRegistroRapido();
+                if (equipoSeleccionado) {
+                    // Si hay detalle abierto, recargar calendario
+                    generarCalendarioPeriodo();
+                }
             }
 
             // Función para obtener todos los períodos únicos de los ingresos
