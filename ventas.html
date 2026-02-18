@@ -635,6 +635,28 @@
             </div>
         </div>
 
+        <div id="link-product-modal" class="modal-overlay">
+            <div class="modal-content">
+                <h3 style="margin-bottom: 15px; text-align: center; color: #3498db;">Vincular con Inventario</h3>
+                <p style="font-size: 0.9em; color: #666; margin-bottom: 15px;">
+                    Busque el producto correcto en el inventario para reemplazar el ítem seleccionado.
+                    Se mantendrán el precio y cantidad actuales.
+                </p>
+                <div class="form-group">
+                    <input type="text" id="link-search-input" placeholder="Buscar producto en inventario..."
+                        class="form-control" oninput="SalesService.searchLinkProduct(this.value)">
+                </div>
+                <div id="link-results"
+                    style="max-height: 200px; overflow-y: auto; border: 1px solid #eee; border-radius: 4px;">
+                    <!-- Results go here -->
+                </div>
+                <div style="margin-top: 15px; text-align: right;">
+                    <button class="btn btn-danger"
+                        onclick="document.getElementById('link-product-modal').style.display='none'">CANCELAR</button>
+                </div>
+            </div>
+        </div>
+
         <div id="retiro-modal" class="modal-overlay">
             <div class="modal-content">
                 <h3 style="margin-bottom: 15px; text-align: center; color: #9b59b6;">Registrar Retiro de Caja

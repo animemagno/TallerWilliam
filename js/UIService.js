@@ -110,6 +110,9 @@ const UIService = {
                     </div>
                     <div class="subtotal">$${itemTotal.toFixed(2)}</div>
                     <div class="cart-actions">
+                        <button class="link-item-btn" onclick="SalesService.linkItem(${index})" title="Vincular con Inventario" style="margin-right: 5px; background: #3498db; color: white; border: none; padding: 5px; border-radius: 4px; cursor: pointer;">
+                            <i class="fas fa-link"></i>
+                        </button>
                         <button class="delete-item-btn" onclick="SalesService.removeFromCart(${index})" title="Eliminar producto">
                             <i class="fas fa-trash"></i>
                         </button>

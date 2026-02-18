@@ -416,6 +416,10 @@
                             <div class="stat-label">% MO Global</div>
                             <div class="stat-value" id="total-percent">0%</div>
                         </div>
+                        <div class="stat-card" style="border-left-color: #00b894;">
+                            <div class="stat-label">Ganancia Repuestos (Est.)</div>
+                            <div class="stat-value" id="total-ganancia">$0.00</div>
+                        </div>
                     </div>
 
                     <div style="flex: 1; overflow: hidden; display: flex; flex-direction: column;">
@@ -541,7 +545,9 @@
                                 <thead>
                                     <tr>
                                         <th>Item</th>
-                                        <th>Total</th>
+                                        <th style="text-align: right;">Venta</th>
+                                        <th style="text-align: right;">Costo</th>
+                                        <th style="text-align: right;">Ganancia</th>
                                         <th>Tipo</th>
                                         <th></th>
                                     </tr>
@@ -749,6 +755,7 @@
                         let grandTotal = 0;
                         let grandMO = 0;
                         let grandMat = 0;
+                        let grandProfit = 0;
 
                         snapshot.forEach(doc => {
                             const sale = doc.data();
@@ -757,6 +764,7 @@
                             let invTotal = 0;
                             let invMO = 0;
                             let invMat = 0;
+                            let invProfit = 0;
                             let hasUnclassified = false;
                             let analyzedItems = [];
 
@@ -766,9 +774,42 @@
                                 const lineMO = analysis.manoObra * prod.cantidad;
                                 const lineMat = analysis.material * prod.cantidad;
 
+                                // Fix: Calculate Real Profit using Inventory Cost
+                                let unitCost = 0;
+                                if (analysis.source === 'inventory') {
+                                    // Look up real cost from inventory cache
+                                    let p = null;
+                                    if (prod.id && inventoryCache.has(prod.id)) p = inventoryCache.get(prod.id);
+                                    else if (prod.codigo && inventoryCache.has(prod.codigo)) p = inventoryCache.get(prod.codigo);
+
+                                    if (p) unitCost = Number(p.costo) || 0;
+                                } else {
+                                    // For services/rules, the 'material' value represents the cost (if any)
+                                    unitCost = analysis.material;
+                                }
+
+                                const lineRealCost = unitCost * prod.cantidad;
+                                let lineProfit = 0;
+
+                                // LÓGICA DE GANANCIA:
+                                if (analysis.type === 'servicio') {
+                                    // Servicios: Ganancia es 100% 
+                                    lineProfit = itemTotal - lineRealCost;
+                                } else {
+                                    // NO SERVICIOS (Productos o Mixtos)
+                                    if (unitCost > 0) {
+                                        lineProfit = itemTotal - lineRealCost;
+                                    } else {
+                                        // Si el producto no tiene costo (o no está en inventario), su ganancia ES CERO.
+                                        lineProfit = 0;
+                                    }
+                                }
+
                                 invTotal += itemTotal;
                                 invMO += lineMO;
+                                // invMat sigue sumando para estadísticas de venta bruta de material
                                 invMat += lineMat;
+                                invProfit += lineProfit;
 
                                 if (analysis.source === 'default') hasUnclassified = true;
 
@@ -777,6 +818,8 @@
                                     analysis: analysis,
                                     lineMO,
                                     lineMat,
+                                    lineCost: lineRealCost,
+                                    lineProfit,
                                     itemTotal
                                 });
                             });
@@ -789,6 +832,7 @@
                                 total: invTotal,
                                 mo: invMO,
                                 mat: invMat,
+                                profit: invProfit,
                                 items: analyzedItems,
                                 hasUnclassified
                             });
@@ -796,12 +840,17 @@
                             grandTotal += invTotal;
                             grandMO += invMO;
                             grandMat += invMat;
+                            grandProfit += invProfit;
                         });
 
                         // Update UI Totals
                         document.getElementById('total-ventas').textContent = '$' + grandTotal.toFixed(2);
                         document.getElementById('total-mano-obra').textContent = '$' + grandMO.toFixed(2);
                         document.getElementById('total-materiales').textContent = '$' + grandMat.toFixed(2);
+                        // FIX: El usuario quiere ver SOLO la ganancia de repuestos, sin sumar la mano de obra.
+                        const productProfitOnly = grandProfit - grandMO;
+
+                        document.getElementById('total-ganancia').textContent = '$' + productProfitOnly.toFixed(2);
 
                         const percent = grandTotal > 0 ? (grandMO / grandTotal * 100).toFixed(1) : 0;
                         document.getElementById('total-percent').textContent = percent + '%';
@@ -843,9 +892,47 @@
                                 const lineMO = analysis.manoObra * prod.cantidad;
                                 const lineMat = analysis.material * prod.cantidad;
 
+                                // FIX CRÍTICO: Cálculo de Ganancia Real
+                                // Regla del Usuario: "Si un producto no está en el inventario (Costo 0), mejor NO lo sume a la ganancia"
+
+                                let unitCost = 0;
+                                if (analysis.source === 'inventory') {
+                                    // Buscar costo real en caché
+                                    let p = null;
+                                    if (prod.id && inventoryCache.has(prod.id)) p = inventoryCache.get(prod.id);
+                                    else if (prod.codigo && inventoryCache.has(prod.codigo)) p = inventoryCache.get(prod.codigo);
+
+                                    if (p) unitCost = Number(p.costo) || 0;
+                                } else {
+                                    // Para reglas manuales (mixtas), el 'material' guarda el costo
+                                    unitCost = analysis.material;
+                                }
+
+                                const lineRealCost = unitCost * prod.cantidad;
+                                let lineProfit = 0;
+
+                                // LÓGICA DE GANANCIA:
+                                if (analysis.type === 'servicio') {
+                                    // Servicios: Ganancia es 100% (salvo que tenga costo asignado en regla mixta, pero usualmente es 0)
+                                    lineProfit = itemTotal - lineRealCost;
+                                } else {
+                                    // Productos / Mixtos / Sin Clasificar
+                                    if (unitCost > 0) {
+                                        // Si tenemos costo real, calculamos margen
+                                        lineProfit = itemTotal - lineRealCost;
+                                    } else {
+                                        // Si NO hay costo (no está en inventario o costo es 0), 
+                                        // ASUMIMOS GANANCIA 0 para no inflar el reporte.
+                                        lineProfit = 0;
+                                    }
+                                }
+
                                 invTotal += itemTotal;
                                 invMO += lineMO;
+                                // Nota: invMat sigue sumando la venta proyectada de material para estadísticas, 
+                                // pero no afecta la ganancia neta.
                                 invMat += lineMat;
+
 
                                 if (analysis.source === 'default') hasUnclassified = true;
 
@@ -921,12 +1008,24 @@
                     itemsBody.innerHTML = invoice.items.map(item => {
                         let badgeClass = '';
                         let badgeText = '';
-                        if (item.analysis.source === 'inventory') { badgeClass = 'tag-prod'; badgeText = 'INV'; }
-                        else if (item.analysis.type === 'servicio') { badgeClass = 'tag-serv'; badgeText = 'SERV'; }
-                        else if (item.analysis.type === 'mixto') { badgeClass = 'tag-mix'; badgeText = 'MIXT'; }
-                        else { badgeClass = 'tag-prod'; badgeText = 'PROD'; }
+                        let typeLabel = '';
+
+                        if (item.analysis.source === 'inventory') { badgeClass = 'tag-prod'; badgeText = 'INV'; typeLabel = 'Producto'; }
+                        else if (item.analysis.type === 'servicio') { badgeClass = 'tag-serv'; badgeText = 'SERV'; typeLabel = 'Servicio'; }
+                        else if (item.analysis.type === 'mixto') { badgeClass = 'tag-mix'; badgeText = 'MIXT'; typeLabel = 'Mixto'; }
+                        else { badgeClass = 'tag-prod'; badgeText = 'PROD'; typeLabel = 'Producto'; }
 
                         if (item.analysis.source === 'default') { badgeClass = 'tag-unknown'; badgeText = '?'; }
+
+                        // Lógica de alerta de costo cero
+                        const isService = item.analysis.type === 'servicio';
+                        const isZeroCost = item.lineCost === 0;
+
+                        // Si es producto (o desconocido) y tiene costo 0, es alerta roja
+                        const showCostAlert = !isService && isZeroCost;
+
+                        const costStyle = showCostAlert ? 'color: red; font-weight: bold;' : 'color: #666;';
+                        const costDisplay = showCostAlert ? '$0.00 <i class="fas fa-exclamation-triangle" title="Posible error: Costo es 0"></i>' : `$${item.lineCost.toFixed(2)}`;
 
                         return `
                         <tr>
@@ -934,8 +1033,10 @@
                                 <div>${item.descripcion}</div>
                                 <div style="font-size: 0.75rem; color: #999;">$${item.precio} x ${item.cantidad}</div>
                             </td>
-                            <td>$${item.itemTotal.toFixed(2)}</td>
-                            <td><span class="tag ${badgeClass}">${badgeText}</span></td>
+                            <td style="text-align: right;">$${item.itemTotal.toFixed(2)}</td>
+                            <td style="text-align: right; ${costStyle}">${costDisplay}</td>
+                            <td style="text-align: right; font-weight: bold; color: ${item.lineProfit > 0 ? '#27ae60' : '#e74c3c'}">$${item.lineProfit.toFixed(2)}</td>
+                            <td><span class="tag ${badgeClass}" title="${typeLabel}">${badgeText}</span></td>
                             <td style="text-align: right;">
                                 ${item.analysis.source === 'default' ?
                                 `<button class="btn-sm btn-info" title="Crear Vinculación" onclick="AnalisisService.prepareQuickRule('${item.descripcion.replace(/'/g, "\\'")}')"><i class="fas fa-plus"></i></button>` :

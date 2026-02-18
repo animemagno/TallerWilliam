@@ -390,15 +390,27 @@ const SalesService = {
             if (productosConPrecioCero.length > 0) throw new Error("Hay productos con precio $0.00. Modifique los precios antes de actualizar.");
             const nuevoTotal = AppState.cart.reduce((sum, item) => sum + (item.precio * item.cantidad), 0);
             let nuevoSaldoPendiente = nuevoTotal;
-            if (ventaActual.abonos && ventaActual.abonos.length > 0) {
+
+            // Lógica para preservar el estado CONTADO si el total no cambia
+            if (ventaActual.paymentType === 'contado' && Math.abs(nuevoTotal - ventaActual.total) < 0.01) {
+                nuevoSaldoPendiente = 0;
+            } else if (ventaActual.abonos && ventaActual.abonos.length > 0) {
                 const totalAbonado = ventaActual.abonos.reduce((sum, abono) => sum + abono.monto, 0);
                 nuevoSaldoPendiente = nuevoTotal - totalAbonado;
             }
+
             const saleData = {
                 products: AppState.cart.map(item => ({ id: item.id, codigo: item.codigo, descripcion: item.descripcion, precio: item.precio, cantidad: item.cantidad })),
                 total: nuevoTotal, saldoPendiente: nuevoSaldoPendiente, fechaActualizacion: DateUtils.getCurrentTimestampElSalvador()
             };
-            if (nuevoSaldoPendiente <= 0) { saleData.paymentType = 'contado'; saleData.status = 'pagado'; }
+
+            if (nuevoSaldoPendiente <= 0) {
+                saleData.paymentType = 'contado';
+                saleData.status = 'pagado';
+            } else {
+                saleData.paymentType = 'pendiente';
+                saleData.status = 'pendiente';
+            }
             await DataService.updateSale(invoiceId, saleData);
             UIService.showStatus("Factura actualizada correctamente", "success");
             const ventaActualizada = { ...ventaActual, ...saleData };
@@ -720,5 +732,43 @@ const SalesService = {
         const fechaInput = document.getElementById('fecha-venta');
         if (DateUtils.isFutureDateInElSalvador(today)) fechaInput.classList.add('date-warning');
         else fechaInput.classList.remove('date-warning');
+    },
+
+    linkItem(index) {
+        AppState.currentLinkingIndex = index;
+        document.getElementById('link-search-input').value = '';
+        document.getElementById('link-results').innerHTML = '';
+        document.getElementById('link-product-modal').style.display = 'block';
+        document.getElementById('link-search-input').focus();
+    },
+
+    searchLinkProduct(query) {
+        if (!query) { document.getElementById('link-results').innerHTML = ''; return; }
+        const results = ProductCache.search(query);
+        const container = document.getElementById('link-results');
+        container.innerHTML = '';
+        results.forEach(product => {
+            const div = document.createElement('div');
+            div.className = 'search-dropdown-item';
+            div.style.borderBottom = '1px solid #eee';
+            div.innerHTML = `<strong>${product.descripcion}</strong> <span style='font-size:0.8em; color:#666'>(${product.codigo})</span> $${(product.precio || 0).toFixed(2)}`;
+            div.onclick = () => this.selectLinkedProduct(product);
+            container.appendChild(div);
+        });
+    },
+
+    selectLinkedProduct(product) {
+        if (AppState.currentLinkingIndex === null) return;
+        const index = AppState.currentLinkingIndex;
+        const item = AppState.cart[index];
+        // Actualizar solo identidad, mantener precios y cantidades de la venta original
+        item.id = product.id;
+        item.codigo = product.codigo;
+        item.descripcion = product.descripcion;
+
+        UIService.updateCartDisplay();
+        document.getElementById('link-product-modal').style.display = 'none';
+        AppState.currentLinkingIndex = null;
+        UIService.showStatus("Producto vinculado correctamente con el inventario", "success");
     }
 };

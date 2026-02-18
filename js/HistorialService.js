@@ -260,6 +260,9 @@ const HistorialService = {
                                 <div class="action-dropdown-item" onclick="SalesService.reprintInvoice('${this._escape(venta.id)}')">
                                     <i class="fas fa-print"></i> Reimprimir
                                 </div>
+                                <div class="action-dropdown-item" onclick="SalesService.editInvoice('${this._escape(venta.id)}')">
+                                    <i class="fas fa-edit"></i> Editar
+                                </div>
                                 <div class="action-dropdown-item delete-item" onclick="SalesService.deleteInvoice('${this._escape(venta.id)}')">
                                     <i class="fas fa-trash"></i> Eliminar
                                 </div>
