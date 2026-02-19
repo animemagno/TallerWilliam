@@ -201,7 +201,7 @@ const DataService = {
                     .get();
 
                 if (!snapshot.empty) {
-                    snapshot.forEach(doc => results.push({ id: doc.id, ...doc.data() }));
+                    snapshot.forEach(doc => results.push({ id: doc.id, ...doc.data(), tipo: 'venta' }));
                 }
 
                 // 2. Si no hay resultados y es numérico, intentar búsqueda como Number
@@ -214,7 +214,7 @@ const DataService = {
                         .get();
 
                     if (!snapshot.empty) {
-                        snapshot.forEach(doc => results.push({ id: doc.id, ...doc.data() }));
+                        snapshot.forEach(doc => results.push({ id: doc.id, ...doc.data(), tipo: 'venta' }));
                     }
                 }
 

@@ -31,7 +31,7 @@
         }
 
         .container {
-            max-width: 1300px;
+            max-width: 98%;
             margin: 0 auto;
         }
 
@@ -46,54 +46,12 @@
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
         }
 
-        h1,
-        h2,
-        h3 {
-            margin: 0;
-        }
-
-        h1 {
-            color: var(--primary);
-            font-size: 1.5rem;
-        }
-
-        .btn {
-            padding: 8px 15px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: 0.2s;
-        }
-
-        .btn-sm {
-            padding: 4px 8px;
-            font-size: 0.8rem;
-        }
-
-        .btn-primary {
-            background: var(--primary);
-            color: white;
-        }
-
-        .btn-secondary {
-            background: #95a5a6;
-            color: white;
-        }
-
-        .btn-success {
-            background: var(--success);
-            color: white;
-        }
-
-        .btn-info {
-            background: var(--info);
-            color: white;
-        }
+        /* ... existing styles ... */
 
         .grid-layout {
             display: grid;
-            grid-template-columns: 1fr 380px;
+            grid-template-columns: 1fr 420px;
+            /* Slight increase for detail panel */
             gap: 20px;
         }
 
@@ -588,6 +546,7 @@
                                 <option value="servicio">Servicio (100% MO)</option>
                                 <option value="producto">Producto (100% Mat)</option>
                                 <option value="mixto">Mixto (Costo Fijo)</option>
+                                <option value="fraccionado">Omitir (No calcular G/C)</option>
                             </select>
 
                             <div id="qr-cost-container" style="display: none; margin-bottom: 8px;">
@@ -714,8 +673,13 @@
 
                     // 1. Producto de Inventario Real
                     if (item.id && inventoryCache.has(item.id)) {
-                        // El usuario quiere ver VENTA de productos vs SERVICIOS.
-                        // No desglosamos ganancia aquí, sino Venta Total de Repuesto.
+                        // REVISIÓN: Si existe una regla de "Omitir" (fraccionado), debe tener prioridad sobre el inventario.
+                        for (const rule of rulesCache) {
+                            if (desc.includes(rule.keyword) && rule.type === 'fraccionado') {
+                                return { type: 'fraccionado', source: 'rule', ruleKeyword: rule.keyword, ruleId: rule.id, manoObra: 0, material: item.precio, isFraction: true };
+                            }
+                        }
+                        // Si no hay orden de omitir, usamos el inventario
                         return { type: 'producto', manoObra: 0, material: item.precio, source: 'inventory' };
                     }
 
@@ -728,6 +692,8 @@
                                 return { ...result, manoObra: item.precio, material: 0 };
                             } else if (rule.type === 'producto') {
                                 return { ...result, manoObra: 0, material: item.precio };
+                            } else if (rule.type === 'fraccionado') {
+                                return { ...result, manoObra: 0, material: item.precio, isFraction: true };
                             } else if (rule.type === 'mixto') {
                                 const matCost = rule.cost;
                                 const mo = Math.max(0, item.precio - matCost);
@@ -795,6 +761,12 @@
                                 if (analysis.type === 'servicio') {
                                     // Servicios: Ganancia es 100% 
                                     lineProfit = itemTotal - lineRealCost;
+                                } else if (analysis.type === 'fraccionado' || analysis.isFraction) {
+                                    lineProfit = 0;
+                                    unitCost = 0;
+                                    // Ojo: lineRealCost ya se calculó arriba como unitCost * cantidad, 
+                                    // pero si unitCost era analysis.material (precio venta), habría dado negativo.
+                                    // Forzamos lineProfit 0.
                                 } else {
                                     // NO SERVICIOS (Productos o Mixtos)
                                     if (unitCost > 0) {
@@ -915,6 +887,9 @@
                                 if (analysis.type === 'servicio') {
                                     // Servicios: Ganancia es 100% (salvo que tenga costo asignado en regla mixta, pero usualmente es 0)
                                     lineProfit = itemTotal - lineRealCost;
+                                } else if (analysis.type === 'fraccionado' || analysis.isFraction) {
+                                    lineProfit = 0;
+                                    unitCost = 0;
                                 } else {
                                     // Productos / Mixtos / Sin Clasificar
                                     if (unitCost > 0) {
@@ -1012,6 +987,7 @@
 
                         if (item.analysis.source === 'inventory') { badgeClass = 'tag-prod'; badgeText = 'INV'; typeLabel = 'Producto'; }
                         else if (item.analysis.type === 'servicio') { badgeClass = 'tag-serv'; badgeText = 'SERV'; typeLabel = 'Servicio'; }
+                        else if (item.analysis.type === 'fraccionado') { badgeClass = 'tag-mix'; badgeText = 'OMIT'; typeLabel = 'Omitido del Análisis'; }
                         else if (item.analysis.type === 'mixto') { badgeClass = 'tag-mix'; badgeText = 'MIXT'; typeLabel = 'Mixto'; }
                         else { badgeClass = 'tag-prod'; badgeText = 'PROD'; typeLabel = 'Producto'; }
 
@@ -1019,10 +995,11 @@
 
                         // Lógica de alerta de costo cero
                         const isService = item.analysis.type === 'servicio';
+                        const isFraction = item.analysis.type === 'fraccionado';
                         const isZeroCost = item.lineCost === 0;
 
-                        // Si es producto (o desconocido) y tiene costo 0, es alerta roja
-                        const showCostAlert = !isService && isZeroCost;
+                        // Si es producto (o desconocido) y tiene costo 0, es alerta roja (EXCEPTO FRACCIONADO)
+                        const showCostAlert = !isService && !isFraction && isZeroCost;
 
                         const costStyle = showCostAlert ? 'color: red; font-weight: bold;' : 'color: #666;';
                         const costDisplay = showCostAlert ? '$0.00 <i class="fas fa-exclamation-triangle" title="Posible error: Costo es 0"></i>' : `$${item.lineCost.toFixed(2)}`;
@@ -1040,9 +1017,11 @@
                             <td style="text-align: right;">
                                 ${item.analysis.source === 'default' ?
                                 `<button class="btn-sm btn-info" title="Crear Vinculación" onclick="AnalisisService.prepareQuickRule('${item.descripcion.replace(/'/g, "\\'")}')"><i class="fas fa-plus"></i></button>` :
-                                item.analysis.source === 'rule' ?
-                                    `<button class="btn-sm btn-secondary" title="Editar Regla: ${item.analysis.ruleKeyword}" onclick="AnalisisService.prepareQuickRule('${item.analysis.ruleKeyword}', '${item.analysis.ruleId}')"><i class="fas fa-edit"></i></button>` :
-                                    '<span style="color:#27ae60"><i class="fas fa-check"></i> INV</span>'
+                                item.analysis.source === 'inventory' ?
+                                    `<button class="btn-sm btn-secondary" title="Crear Excepción/Regla" onclick="AnalisisService.prepareQuickRule('${item.descripcion.replace(/'/g, "\\'")}', null)"><i class="fas fa-cog"></i> INV</button>` :
+                                    item.analysis.source === 'rule' ?
+                                        `<button class="btn-sm btn-secondary" title="Editar Regla: ${item.analysis.ruleKeyword}" onclick="AnalisisService.prepareQuickRule('${item.analysis.ruleKeyword}', '${item.analysis.ruleId}')"><i class="fas fa-edit"></i> RULE</button>` :
+                                        '<span style="color:#27ae60"><i class="fas fa-check"></i> OK</span>'
                             }
                             </td>
                         </tr>
