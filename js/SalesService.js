@@ -196,41 +196,114 @@ const SalesService = {
             content.innerHTML = `<div class="empty-state"><i class="fas fa-history"></i><div>No hay registros previos para el equipo ${equipo}</div></div>`;
             return;
         }
-        let html = '<div style="display: flex; flex-direction: column; gap: 8px;">';
+
+        // Calcular resumen
+        let totalGeneral = 0;
+        historial.forEach(v => totalGeneral += (v.total || 0));
+
+        let html = `
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-bottom: 16px;">
+                <div style="background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%); padding: 12px 10px; border-radius: 10px; text-align: center; color: white;">
+                    <i class="fas fa-file-invoice" style="font-size: 1rem; margin-bottom: 4px; display: block; opacity: 0.8;"></i>
+                    <div style="font-size: 1.3rem; font-weight: 800;">${historial.length}</div>
+                    <div style="font-size: 0.7rem; opacity: 0.85;">Registros</div>
+                </div>
+                <div style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); padding: 12px 10px; border-radius: 10px; text-align: center; color: white;">
+                    <i class="fas fa-dollar-sign" style="font-size: 1rem; margin-bottom: 4px; display: block; opacity: 0.8;"></i>
+                    <div style="font-size: 1.3rem; font-weight: 800;">$${totalGeneral.toFixed(2)}</div>
+                    <div style="font-size: 0.7rem; opacity: 0.85;">Total Histórico</div>
+                </div>
+            </div>
+
+            <h4 style="color: #2c3e50; font-size: 0.95rem; margin: 0 0 12px 0; padding-bottom: 8px; border-bottom: 2px solid #ecf0f1; display: flex; align-items: center; gap: 8px;">
+                <i class="fas fa-list-alt" style="color: #3498db;"></i> Historial Completo
+            </h4>
+        `;
+
         historial.forEach(venta => {
-            const fecha = venta.timestamp ? new Date(venta.timestamp.toDate ? venta.timestamp.toDate() : venta.timestamp).toLocaleString() : 'N/A';
-            const total = venta.total || 0;
+            // Detección de aceite
             let tieneCaja = false, tieneAceite = false;
             if (venta.products) {
                 const matchStr = venta.products.map(p => p.descripcion).join(' ').toLowerCase();
                 if (matchStr.includes('caja') || matchStr.includes('transmision') || matchStr.includes('transmisión')) tieneCaja = true;
                 if (matchStr.includes('aceite') || matchStr.includes('motor')) tieneAceite = true;
             }
-            let cardStyle = "border-left: 5px solid #bdc3c7;";
-            let icon = "fas fa-wrench";
-            if (tieneCaja) { cardStyle = "border-left: 5px solid #e74c3c; background-color: #fadbd8;"; icon = "fas fa-cogs"; }
-            else if (tieneAceite) { cardStyle = "border-left: 5px solid #27ae60; background-color: #d5f5e3;"; icon = "fas fa-oil-can"; }
-            let productosHTML = '<ul style="margin: 5px 0; padding-left: 20px; font-size: 0.9rem; color: #555;">';
+
+            let borderStyle = '1px solid #e8e8e8';
+            let bgFactura = 'white';
+            let iconoServicio = '';
+
+            if (tieneCaja) {
+                borderStyle = '3px solid #e74c3c';
+                bgFactura = '#fff5f5';
+                iconoServicio = '<span style="background: #e74c3c; color: white; font-size: 0.65rem; padding: 2px 6px; border-radius: 10px; font-weight: 600; margin-left: 8px;">🔧 CAJA</span>';
+            } else if (tieneAceite) {
+                borderStyle = '3px solid #27ae60';
+                bgFactura = '#f0fff4';
+                iconoServicio = '<span style="background: #27ae60; color: white; font-size: 0.65rem; padding: 2px 6px; border-radius: 10px; font-weight: 600; margin-left: 8px;">🛢️ ACEITE</span>';
+            }
+
+            const fechaFactura = venta.timestamp ?
+                new Date(venta.timestamp.toDate ? venta.timestamp.toDate() : venta.timestamp).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })
+                : 'N/A';
+
+            // Tabla de productos
+            let productosHTML = '';
             if (venta.products && venta.products.length > 0) {
-                venta.products.forEach(p => { productosHTML += `<li>${p.cantidad}x ${p.descripcion}</li>`; });
-            } else { productosHTML += '<li>Sin detalles</li>'; }
-            productosHTML += '</ul>';
+                let filasProductos = '';
+                venta.products.forEach((producto, pIdx) => {
+                    filasProductos += `
+                        <tr style="background: ${pIdx % 2 === 0 ? '#fafbfc' : 'white'};">
+                            <td style="padding: 5px 8px; text-align: center; font-weight: 600; color: #2c3e50; border-bottom: 1px solid #f0f0f0;">${producto.cantidad}</td>
+                            <td style="padding: 5px 8px; color: #555; border-bottom: 1px solid #f0f0f0;">
+                                <i class="fas fa-wrench" style="color: #bdc3c7; font-size: 0.65rem; margin-right: 4px;"></i>${producto.descripcion}
+                            </td>
+                            <td style="padding: 5px 8px; text-align: right; color: #7f8c8d; border-bottom: 1px solid #f0f0f0;">$${(producto.precio || 0).toFixed(2)}</td>
+                            <td style="padding: 5px 8px; text-align: right; font-weight: 600; color: #2c3e50; border-bottom: 1px solid #f0f0f0;">$${((producto.precio || 0) * producto.cantidad).toFixed(2)}</td>
+                        </tr>
+                    `;
+                });
+                productosHTML = `
+                    <table style="width: 100%; border-collapse: collapse; font-size: 0.8rem;">
+                        <thead>
+                            <tr style="background: linear-gradient(135deg, #2c3e50, #34495e);">
+                                <th style="padding: 6px 8px; text-align: center; color: white; font-size: 0.72rem; font-weight: 600; width: 45px;">CANT.</th>
+                                <th style="padding: 6px 8px; text-align: left; color: white; font-size: 0.72rem; font-weight: 600;">DESCRIPCIÓN</th>
+                                <th style="padding: 6px 8px; text-align: right; color: white; font-size: 0.72rem; font-weight: 600; width: 70px;">P. UNIT.</th>
+                                <th style="padding: 6px 8px; text-align: right; color: white; font-size: 0.72rem; font-weight: 600; width: 70px;">TOTAL</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${filasProductos}
+                        </tbody>
+                    </table>
+                `;
+            }
+
             const detailId = `detail-${venta.id}`;
+
             html += `
-                <div onclick="document.getElementById('${detailId}').style.display = document.getElementById('${detailId}').style.display === 'none' ? 'block' : 'none'" 
-                     style="border: 1px solid #ddd; ${cardStyle} border-radius: 4px; padding: 10px; cursor: pointer; transition: transform 0.1s; box-shadow: 0 1px 2px rgba(0,0,0,0.1);">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <div style="font-weight: bold; color: #2c3e50; display:flex; align-items:center; gap:8px"><i class="${icon}"></i> ${fecha}</div>
-                        <div style="font-size: 0.8rem; color: #7f8c8d;">#${venta.invoiceNumber} <i class="fas fa-chevron-down"></i></div>
+                <div style="background: ${bgFactura}; border-radius: 8px; margin: 8px 0; overflow: hidden; border: ${borderStyle}; box-shadow: 0 1px 3px rgba(0,0,0,0.04); cursor: pointer;"
+                     onclick="document.getElementById('${detailId}').style.display = document.getElementById('${detailId}').style.display === 'none' ? 'block' : 'none'">
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-bottom: 1px solid #e0e0e0;">
+                        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                            <i class="fas fa-file-invoice" style="color: #3498db; font-size: 0.9rem;"></i>
+                            <span style="font-weight: 700; color: #2c3e50; font-size: 0.9rem;">${venta.invoiceNumber || 'N/A'}</span>
+                            ${iconoServicio}
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <span style="color: #7f8c8d; font-size: 0.78rem;"><i class="fas fa-calendar-alt" style="margin-right: 3px;"></i>${fechaFactura}</span>
+                            <span style="font-weight: 700; color: #2c3e50; font-size: 0.95rem;">$${(venta.total || 0).toFixed(2)}</span>
+                            <i class="fas fa-chevron-down" style="color: #bdc3c7; font-size: 0.7rem;"></i>
+                        </div>
                     </div>
-                    <div id="${detailId}" style="display: none; margin-top: 10px; border-top: 1px dashed #ccc; padding-top: 8px;">
-                        <div style="font-weight:600; font-size: 0.85rem; color: #34495e; margin-bottom:4px">Trabajos Realizados:</div>
+                    <div id="${detailId}" style="display: none; padding: 0;">
                         ${productosHTML}
-                        <div style="text-align: right; font-weight: bold; font-size: 0.9rem; margin-top: 5px;">Total: $${total.toFixed(2)}</div>
                     </div>
-                </div>`;
+                </div>
+            `;
         });
-        html += '</div>';
+
         content.innerHTML = html;
     },
 
@@ -441,24 +514,140 @@ const SalesService = {
         let venta;
         try { venta = await DataService.getSaleById(invoiceId); } catch (error) { venta = AppState.historial.find(v => v.id === invoiceId && v.tipo === 'venta'); }
         if (!venta) return;
-        let productosList = '';
+
+        // Tabla de productos
+        let productosHTML = '';
         if (venta.products && venta.products.length > 0) {
-            venta.products.forEach(p => {
-                const precioTotal = p.precio * p.cantidad;
-                productosList += `<div style="display: flex; justify-content: space-between; font-size: 0.9em; margin-bottom: 5px; border-bottom: 1px dotted #eee; padding-bottom: 2px;"><div style="display: flex; gap: 10px;"><span style="font-weight: bold; min-width: 20px; text-align: center; color: #34495e;">${p.cantidad}</span><span style="color: #2c3e50;">${p.descripcion}</span></div><span style="font-weight: bold; color: #555;">$${precioTotal.toFixed(2)}</span></div>`;
+            let filasProductos = '';
+            venta.products.forEach((producto, pIdx) => {
+                filasProductos += `
+                    <tr style="background: ${pIdx % 2 === 0 ? '#fafbfc' : 'white'};">
+                        <td style="padding: 5px 8px; text-align: center; font-weight: 600; color: #2c3e50; border-bottom: 1px solid #f0f0f0;">${producto.cantidad}</td>
+                        <td style="padding: 5px 8px; color: #555; border-bottom: 1px solid #f0f0f0;">
+                            <i class="fas fa-wrench" style="color: #bdc3c7; font-size: 0.65rem; margin-right: 4px;"></i>${producto.descripcion}
+                        </td>
+                        <td style="padding: 5px 8px; text-align: right; color: #7f8c8d; border-bottom: 1px solid #f0f0f0;">$${producto.precio.toFixed(2)}</td>
+                        <td style="padding: 5px 8px; text-align: right; font-weight: 600; color: #2c3e50; border-bottom: 1px solid #f0f0f0;">$${(producto.precio * producto.cantidad).toFixed(2)}</td>
+                    </tr>
+                `;
             });
-        } else { productosList = '<div style="color: #999; font-style: italic;">Sin productos detallados</div>'; }
-        let abonosSection = '';
-        if (venta.abonos && venta.abonos.length > 0) {
-            abonosSection = `<div style="margin-top: 15px; background: #f9f9f9; padding: 10px; border-radius: 4px; border: 1px solid #eee;"><h5 style="margin-bottom: 8px; color: #34495e; font-size: 0.9em;">Historial de Abonos:</h5>${venta.abonos.map(a => `<div style="display: flex; justify-content: space-between; font-size: 0.85em; color: #666; margin-bottom: 3px;"><span>${a.fecha ? new Date(a.fecha.toDate ? a.fecha.toDate() : a.fecha).toLocaleString('es-ES') : '-'}</span><span style="font-weight: bold; color: #27ae60;">+$${a.monto.toFixed(2)}</span></div>`).join('')}</div>`;
+            productosHTML = `
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.8rem;">
+                    <thead>
+                        <tr style="background: linear-gradient(135deg, #2c3e50, #34495e);">
+                            <th style="padding: 6px 8px; text-align: center; color: white; font-size: 0.72rem; font-weight: 600; width: 45px;">CANT.</th>
+                            <th style="padding: 6px 8px; text-align: left; color: white; font-size: 0.72rem; font-weight: 600;">DESCRIPCIÓN</th>
+                            <th style="padding: 6px 8px; text-align: right; color: white; font-size: 0.72rem; font-weight: 600; width: 70px;">P. UNIT.</th>
+                            <th style="padding: 6px 8px; text-align: right; color: white; font-size: 0.72rem; font-weight: 600; width: 70px;">TOTAL</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${filasProductos}
+                    </tbody>
+                </table>
+            `;
+        } else {
+            productosHTML = '<div style="color: #999; font-style: italic; padding: 10px; text-align: center;">Sin productos detallados</div>';
         }
+
+        // Detección de aceite
+        let tieneCaja = false, tieneAceite = false;
+        if (venta.products && venta.products.length > 0) {
+            const matchStr = venta.products.map(p => p.descripcion).join(' ').toLowerCase();
+            if (matchStr.includes('caja') || matchStr.includes('transmision')) tieneCaja = true;
+            if (matchStr.includes('aceite') || matchStr.includes('motor')) tieneAceite = true;
+        }
+
+        let borderStyle = '1px solid #e8e8e8';
+        let bgFactura = 'white';
+        let iconoServicio = '';
+
+        if (tieneCaja) {
+            borderStyle = '3px solid #e74c3c';
+            bgFactura = '#fff5f5';
+            iconoServicio = '<span style="background: #e74c3c; color: white; font-size: 0.65rem; padding: 2px 6px; border-radius: 10px; font-weight: 600; margin-left: 8px;">🔧 CAJA</span>';
+        } else if (tieneAceite) {
+            borderStyle = '3px solid #27ae60';
+            bgFactura = '#f0fff4';
+            iconoServicio = '<span style="background: #27ae60; color: white; font-size: 0.65rem; padding: 2px 6px; border-radius: 10px; font-weight: 600; margin-left: 8px;">🛢️ ACEITE</span>';
+        }
+
+        // Abonos
         const saldoPendiente = venta.saldoPendiente !== undefined ? venta.saldoPendiente : venta.total;
         const totalAbonado = venta.total - saldoPendiente;
-        const fecha = venta.timestamp ? new Date(venta.timestamp.toDate ? venta.timestamp.toDate() : venta.timestamp).toLocaleString('es-ES') : 'N/A';
+        const fecha = venta.timestamp ? new Date(venta.timestamp.toDate ? venta.timestamp.toDate() : venta.timestamp).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A';
+
         let estadoTexto = 'PENDIENTE', estadoColor = '#e74c3c';
         if (venta.paymentType === 'contado') { estadoTexto = 'CONTADO'; estadoColor = '#27ae60'; }
         else if (saldoPendiente <= 0) { estadoTexto = 'PAGADO'; estadoColor = '#27ae60'; }
-        const modalContent = `<div class="invoice-detail-view" style="font-family: 'Segoe UI', sans-serif;"><div style="text-align: center; margin-bottom: 20px;"><h3 style="color: #2c3e50; font-weight: bold; margin-bottom: 5px;"><i class="fas fa-tools"></i> Equipo ${venta.equipoNumber || 'N/A'}</h3></div><div style="background: #f8f9fa; padding: 15px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border: 1px solid #e9ecef; flex-wrap: wrap; gap: 10px;"><div style="text-align: center; flex: 1;"><div style="color: #7f8c8d; font-size: 0.85em; font-weight: bold; text-transform: uppercase;">CLIENTE</div><div style="font-weight: bold; color: #2c3e50;">${venta.clientName || 'Cliente General'}</div></div><div style="height: 30px; width: 1px; background: #ddd;"></div><div style="text-align: center; flex: 1;"><div style="color: #7f8c8d; font-size: 0.85em; font-weight: bold; text-transform: uppercase;">ESTADO</div><div style="font-weight: bold; color: ${estadoColor};">${estadoTexto}</div></div><div style="height: 30px; width: 1px; background: #ddd;"></div><div style="text-align: center; flex: 1;"><div style="color: #7f8c8d; font-size: 0.85em; font-weight: bold; text-transform: uppercase;">TOTAL ${estadoTexto === 'PENDIENTE' ? 'PENDIENTE' : 'PAGADO'}</div><div style="font-weight: bold; color: ${estadoColor}; font-size: 1.1em;">$${saldoPendiente.toFixed(2)}</div></div></div><div style="overflow-x: auto;"><table style="width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid #dfe6e9; border-radius: 6px; overflow: hidden;"><thead style="background-color: #34495e; color: white;"><tr><th style="padding: 12px; text-align: left; font-weight: 500;">Factura</th><th style="padding: 12px; text-align: left; font-weight: 500;">Productos</th><th style="padding: 12px; text-align: right; font-weight: 500;">Total</th><th style="padding: 12px; text-align: right; font-weight: 500;">Abonos</th><th style="padding: 12px; text-align: right; font-weight: 500;">Saldo</th></tr></thead><tbody><tr style="background-color: white;"><td style="padding: 15px; vertical-align: top; border-bottom: 1px solid #eee;"><div style="font-weight: bold; color: #2c3e50; font-size: 1.1em;">#${venta.invoiceNumber}</div><div style="font-size: 0.85em; color: #95a5a6; margin-top: 4px;">${fecha}</div></td><td style="padding: 15px; vertical-align: top; border-bottom: 1px solid #eee; width: 40%;">${productosList}</td><td style="padding: 15px; text-align: right; vertical-align: top; border-bottom: 1px solid #eee;"><div style="font-weight: bold; font-size: 1.1em;">$${venta.total.toFixed(2)}</div></td><td style="padding: 15px; text-align: right; vertical-align: top; border-bottom: 1px solid #eee;"><div style="color: #636e72;">${totalAbonado > 0 ? '$' + totalAbonado.toFixed(2) : '-'}</div></td><td style="padding: 15px; text-align: right; vertical-align: top; border-bottom: 1px solid #eee;"><div style="font-weight: bold; font-size: 1.2em; color: ${estadoColor};">$${saldoPendiente.toFixed(2)}</div></td></tr></tbody></table></div>${abonosSection}<div style="display: flex; gap: 10px; margin-top: 20px;">${saldoPendiente > 0 ? `<button onclick="SalesService.registrarAbono('${venta.id}'); ModalService.closeInvoiceModal();" style="flex: 1; padding: 12px; background-color: #f39c12; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; transition: background 0.2s;"><i class="fas fa-money-bill-wave"></i> ABONAR</button>` : ''}<button onclick="SalesService.reprintInvoice('${venta.id}')" style="flex: 1; padding: 12px; background-color: #27ae60; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; transition: background 0.2s;"><i class="fas fa-print"></i> IMPRIMIR</button></div></div>`;
+
+        let abonosHTML = '';
+        if (venta.abonos && venta.abonos.length > 0) {
+            const abonado = venta.abonos.reduce((sum, a) => sum + a.monto, 0);
+            let detalleAbonos = venta.abonos.map(a => {
+                const fechaAbono = a.fecha ? new Date(a.fecha.toDate ? a.fecha.toDate() : a.fecha).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' }) : 'N/A';
+                return `<span style="font-size: 0.75rem; color: #27ae60;">+$${a.monto.toFixed(2)} (${fechaAbono})</span>`;
+            }).join(' · ');
+            abonosHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: #e8f8f5; border-top: 1px solid #d5f5e3; font-size: 0.8rem; flex-wrap: wrap; gap: 4px;">
+                    <div><i class="fas fa-coins" style="color: #27ae60; margin-right: 4px;"></i> Abonado: $${abonado.toFixed(2)} <span style="color: #95a5a6; margin-left: 4px;">${detalleAbonos}</span></div>
+                    <span style="font-weight: 700; color: #e74c3c;">Pendiente: $${saldoPendiente.toFixed(2)}</span>
+                </div>
+            `;
+        }
+
+        const modalContent = `
+            <div class="invoice-detail-view" style="font-family: 'Segoe UI', sans-serif;">
+                <div style="text-align: center; padding: 16px 0 12px 0; border-bottom: 3px solid #3498db; margin-bottom: 16px;">
+                    <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 2px; color: #95a5a6; margin-bottom: 4px;">Detalle de Factura</div>
+                    <h2 style="margin: 0; color: #2c3e50; font-size: 1.5rem; font-weight: 800;">
+                        <i class="fas fa-motorcycle" style="margin-right: 8px;"></i>Equipo ${venta.equipoNumber || 'N/A'}
+                    </h2>
+                    <div style="color: #7f8c8d; font-size: 0.85rem; margin-top: 4px;">${venta.clientName || 'Cliente General'}</div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 10px; margin-bottom: 18px;">
+                    <div style="background: linear-gradient(135deg, ${estadoColor === '#27ae60' ? '#27ae60, #229954' : '#e74c3c, #c0392b'}); padding: 14px 10px; border-radius: 10px; text-align: center; color: white;">
+                        <i class="fas fa-${estadoTexto === 'PENDIENTE' ? 'clock' : 'check-circle'}" style="font-size: 1.2rem; margin-bottom: 4px; display: block; opacity: 0.8;"></i>
+                        <div style="font-size: 1rem; font-weight: 800;">${estadoTexto}</div>
+                        <div style="font-size: 0.7rem; opacity: 0.85;">Estado</div>
+                    </div>
+                    <div style="background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%); padding: 14px 10px; border-radius: 10px; text-align: center; color: white;">
+                        <i class="fas fa-dollar-sign" style="font-size: 1.2rem; margin-bottom: 4px; display: block; opacity: 0.8;"></i>
+                        <div style="font-size: 1.2rem; font-weight: 800;">$${venta.total.toFixed(2)}</div>
+                        <div style="font-size: 0.7rem; opacity: 0.85;">Total</div>
+                    </div>
+                    <div style="background: linear-gradient(135deg, #e67e22 0%, #d35400 100%); padding: 14px 10px; border-radius: 10px; text-align: center; color: white;">
+                        <i class="fas fa-exclamation-triangle" style="font-size: 1.2rem; margin-bottom: 4px; display: block; opacity: 0.8;"></i>
+                        <div style="font-size: 1.2rem; font-weight: 800;">$${saldoPendiente.toFixed(2)}</div>
+                        <div style="font-size: 0.7rem; opacity: 0.85;">Pendiente</div>
+                    </div>
+                </div>
+
+                <div style="background: ${bgFactura}; border-radius: 8px; margin: 8px 0; overflow: hidden; border: ${borderStyle}; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-bottom: 1px solid #e0e0e0;">
+                        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                            <i class="fas fa-file-invoice" style="color: #3498db; font-size: 0.9rem;"></i>
+                            <span style="font-weight: 700; color: #2c3e50; font-size: 0.9rem;">#${venta.invoiceNumber}</span>
+                            ${iconoServicio}
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <span style="color: #7f8c8d; font-size: 0.78rem;"><i class="fas fa-calendar-alt" style="margin-right: 3px;"></i>${fecha}</span>
+                            <span style="font-weight: 700; color: #2c3e50; font-size: 0.95rem;">$${venta.total.toFixed(2)}</span>
+                        </div>
+                    </div>
+                    <div style="padding: 0;">
+                        ${productosHTML}
+                    </div>
+                    ${abonosHTML}
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    ${saldoPendiente > 0 ? `<button onclick="SalesService.registrarAbono('${venta.id}'); ModalService.closeInvoiceModal();" style="flex: 1; padding: 12px; background: linear-gradient(135deg, #f39c12, #e67e22); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.9rem;"><i class="fas fa-money-bill-wave"></i> ABONAR</button>` : ''}
+                    <button onclick="SalesService.reprintInvoice('${venta.id}')" style="flex: 1; padding: 12px; background: linear-gradient(135deg, #27ae60, #229954); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.9rem;"><i class="fas fa-print"></i> IMPRIMIR</button>
+                </div>
+            </div>
+        `;
         UIService.showInvoiceModal(modalContent);
     },
 
@@ -701,16 +890,54 @@ const SalesService = {
         }
     },
 
-    async searchGlobal(equipo) {
+    // Auto-completar con TAB: "12" → "12 - Equipo 12" y buscar
+    initSearchAutocomplete() {
+        const filterInput = document.getElementById('filter-historial');
+        if (!filterInput) return;
+
+        filterInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Tab') {
+                const val = filterInput.value.trim();
+                // Solo auto-completar si es un número puro
+                if (/^\d+$/.test(val)) {
+                    e.preventDefault();
+                    const completed = `${val} - Equipo ${val}`;
+                    filterInput.value = completed;
+                    // Disparar búsqueda global automáticamente
+                    SalesService.searchGlobal(completed);
+                }
+            }
+        });
+    },
+
+    async searchGlobal(queryStr) {
         try {
             UIService.showLoading(true);
-            const resultados = await DataService.searchSalesByEquipo(equipo);
+
+            let equipoNumber = queryStr;
+            let clientFilter = null;
+
+            // Detectar formato "12 - Tejute" o "12 - Equipo 12"
+            const dashMatch = queryStr.match(/^(\d+)\s*-\s*(.+)$/);
+            if (dashMatch) {
+                equipoNumber = dashMatch[1].trim();
+                clientFilter = dashMatch[2].trim().toLowerCase();
+            }
+
+            let resultados = await DataService.searchSalesByEquipo(equipoNumber);
+
+            // Filtrar por cliente si se especificó
+            if (clientFilter && resultados.length > 0) {
+                resultados = resultados.filter(r => {
+                    const clientName = (r.clientName || '').toLowerCase();
+                    return clientName.includes(clientFilter);
+                });
+            }
 
             if (resultados.length === 0) {
-                UIService.showStatus(`No se encontraron ventas para el equipo ${equipo} en todo el historial.`, "info");
-                // Restaurar vista vacía
+                UIService.showStatus(`No se encontraron ventas para "${queryStr}" en todo el historial.`, "info");
                 const historialBody = document.getElementById('historial-body');
-                historialBody.innerHTML = `<tr><td colspan="6" class="empty-cart">No se encontraron resultados en el historial global para "${equipo}"</td></tr>`;
+                historialBody.innerHTML = `<tr><td colspan="6" class="empty-cart">No se encontraron resultados en el historial global para "${queryStr}"</td></tr>`;
             } else {
                 UIService.showStatus(`Se encontraron ${resultados.length} registros en el historial.`, "success");
                 HistorialService.updateHistorial(resultados);

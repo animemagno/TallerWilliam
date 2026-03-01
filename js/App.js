@@ -156,6 +156,7 @@ const App = {
         document.getElementById('contado-btn').addEventListener('click', () => SalesService.processSale('contado'));
         document.getElementById('pendiente-btn').addEventListener('click', () => SalesService.processSale('pendiente'));
         document.getElementById('print-historial-btn').addEventListener('click', () => SalesService.printCurrentHistorial());
+        SalesService.initSearchAutocomplete();
 
         const filterInput = document.getElementById('filter-historial');
 
@@ -167,10 +168,24 @@ const App = {
                 return;
             }
 
+            // Detectar formato "12 - Cliente"
+            let equipoFilter = filter;
+            let clientFilter = null;
+            const dashMatch = filter.match(/^(\d+)\s*-\s*(.+)$/);
+            if (dashMatch) {
+                equipoFilter = dashMatch[1].trim();
+                clientFilter = dashMatch[2].trim().toLowerCase();
+            }
+
             const filtered = AppState.historial.filter(movimiento => {
                 if (movimiento.tipo === 'venta') {
                     const equipo = (movimiento.equipoNumber || '').trim();
-                    return equipo.includes(filter);
+                    if (!equipo.includes(equipoFilter)) return false;
+                    if (clientFilter) {
+                        const cliente = (movimiento.clientName || '').toLowerCase();
+                        if (!cliente.includes(clientFilter)) return false;
+                    }
+                    return true;
                 }
                 return false;
             });
@@ -181,7 +196,7 @@ const App = {
                     <tr>
                         <td colspan="6" class="empty-cart">
                             <div style="padding: 20px;">
-                                No se encontró el equipo "${filter}" en los registros de hoy.<br>
+                                No se encontró "${filter}" en los registros de hoy.<br>
                                 <span style="font-size: 0.9em; color: #3498db; cursor: pointer; text-decoration: underline;" onclick="SalesService.searchGlobal('${filter}')">
                                     <i class="fas fa-search"></i> Haz clic aquí o presiona ENTER para buscar en todo el historial
                                 </span>

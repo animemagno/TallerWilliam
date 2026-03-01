@@ -32,12 +32,28 @@ const HistorialService = {
         const filterText = filterInput ? filterInput.value.trim().toLowerCase() : '';
 
         if (filterText) {
+            // Detectar formato "12 - Cliente"
+            let equipoFilter = filterText;
+            let clientFilter = null;
+            const dashMatch = filterText.match(/^(\d+)\s*-\s*(.+)$/);
+            if (dashMatch) {
+                equipoFilter = dashMatch[1].trim();
+                clientFilter = dashMatch[2].trim().toLowerCase();
+            }
+
             filtered = filtered.filter(mov => {
                 const equipo = (mov.equipoNumber || '').toString().toLowerCase();
                 const cliente = (mov.clientName || '').toLowerCase();
                 const concepto = (mov.concepto || '').toLowerCase();
                 const factura = (mov.invoiceNumber || '').toString().toLowerCase();
-                return equipo.includes(filterText) || cliente.includes(filterText) || concepto.includes(filterText) || factura.includes(filterText);
+
+                if (clientFilter) {
+                    // Búsqueda con formato "equipo - cliente"
+                    return equipo.includes(equipoFilter) && cliente.includes(clientFilter);
+                } else {
+                    // Búsqueda simple
+                    return equipo.includes(filterText) || cliente.includes(filterText) || concepto.includes(filterText) || factura.includes(filterText);
+                }
             });
         }
 
@@ -246,11 +262,31 @@ const HistorialService = {
                     }
                 }
 
+                // Detección de aceite para color de fila
+                let tieneCaja = false, tieneAceite = false;
+                if (venta.products && venta.products.length > 0) {
+                    const matchStr = venta.products.map(p => p.descripcion).join(' ').toLowerCase();
+                    if (matchStr.includes('caja') || matchStr.includes('transmision')) tieneCaja = true;
+                    if (matchStr.includes('aceite') || matchStr.includes('motor')) tieneAceite = true;
+                }
+
+                let aceiteStyle = '';
+                let aceiteIndicator = '';
+                if (tieneCaja) {
+                    aceiteStyle = 'border-left: 4px solid #e74c3c; background-color: #fff5f5;';
+                    aceiteIndicator = '<span style="background:#e74c3c;color:white;font-size:0.6rem;padding:1px 5px;border-radius:8px;font-weight:600;margin-left:4px;">CAJA</span>';
+                } else if (tieneAceite) {
+                    aceiteStyle = 'border-left: 4px solid #27ae60; background-color: #f0fff4;';
+                    aceiteIndicator = '<span style="background:#27ae60;color:white;font-size:0.6rem;padding:1px 5px;border-radius:8px;font-weight:600;margin-left:4px;">ACEITE</span>';
+                }
+
                 let botonesHTML = '';
+                const detailRowId = `inline-detail-${this._escape(venta.id)}`;
+
                 if (estadoReal === 'contado' || estadoReal === 'pagado') {
                     botonesHTML = `
-                        <button class="icon-btn btn-view" onclick="SalesService.viewInvoice('${this._escape(venta.id)}')" title="Ver factura">
-                            <i class="fas fa-eye"></i>
+                        <button class="icon-btn btn-view" onclick="HistorialService.toggleInlineDetail('${this._escape(venta.id)}')" title="Ver detalles">
+                            <i class="fas fa-chevron-down"></i>
                         </button>
                         <div class="action-menu-wrapper">
                             <button class="menu-toggle-btn" onclick="UIService.toggleActionMenu(this)" title="Más acciones">
@@ -271,8 +307,8 @@ const HistorialService = {
                     `;
                 } else {
                     botonesHTML = `
-                        <button class="icon-btn btn-view" onclick="SalesService.viewInvoice('${this._escape(venta.id)}')" title="Ver factura">
-                            <i class="fas fa-eye"></i>
+                        <button class="icon-btn btn-view" onclick="HistorialService.toggleInlineDetail('${this._escape(venta.id)}')" title="Ver detalles">
+                            <i class="fas fa-chevron-down"></i>
                         </button>
                         <div class="action-menu-wrapper">
                             <button class="menu-toggle-btn" onclick="UIService.toggleActionMenu(this)" title="Más acciones">
@@ -299,17 +335,74 @@ const HistorialService = {
                     `;
                 }
 
+                // Generar tabla de productos inline
+                let productosInlineHTML = '';
+                if (venta.products && venta.products.length > 0) {
+                    let filasProductos = '';
+                    venta.products.forEach((producto, pIdx) => {
+                        filasProductos += `
+                            <tr style="background: ${pIdx % 2 === 0 ? '#fafbfc' : 'white'};">
+                                <td style="padding: 5px 8px; text-align: center; font-weight: 600; color: #2c3e50; border-bottom: 1px solid #f0f0f0;">${producto.cantidad}</td>
+                                <td style="padding: 5px 8px; color: #555; border-bottom: 1px solid #f0f0f0;">
+                                    <i class="fas fa-wrench" style="color: #bdc3c7; font-size: 0.65rem; margin-right: 4px;"></i>${this._escape(producto.descripcion)}
+                                </td>
+                                <td style="padding: 5px 8px; text-align: right; color: #7f8c8d; border-bottom: 1px solid #f0f0f0;">$${(producto.precio || 0).toFixed(2)}</td>
+                                <td style="padding: 5px 8px; text-align: right; font-weight: 600; color: #2c3e50; border-bottom: 1px solid #f0f0f0;">$${((producto.precio || 0) * producto.cantidad).toFixed(2)}</td>
+                            </tr>
+                        `;
+                    });
+                    productosInlineHTML = `
+                        <table style="width: 100%; border-collapse: collapse; font-size: 0.8rem;">
+                            <thead>
+                                <tr style="background: linear-gradient(135deg, #2c3e50, #34495e);">
+                                    <th style="padding: 6px 8px; text-align: center; color: white; font-size: 0.72rem; font-weight: 600; width: 45px;">CANT.</th>
+                                    <th style="padding: 6px 8px; text-align: left; color: white; font-size: 0.72rem; font-weight: 600;">DESCRIPCIÓN</th>
+                                    <th style="padding: 6px 8px; text-align: right; color: white; font-size: 0.72rem; font-weight: 600; width: 70px;">P. UNIT.</th>
+                                    <th style="padding: 6px 8px; text-align: right; color: white; font-size: 0.72rem; font-weight: 600; width: 70px;">TOTAL</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${filasProductos}
+                            </tbody>
+                        </table>
+                    `;
+                }
+
+                // Abonos inline
+                let abonosInlineHTML = '';
+                if (venta.abonos && venta.abonos.length > 0) {
+                    const totalAbonado = venta.abonos.reduce((sum, a) => sum + a.monto, 0);
+                    let detalleAbonos = venta.abonos.map(a => {
+                        const fechaAbono = a.fecha ? new Date(a.fecha.toDate ? a.fecha.toDate() : a.fecha).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' }) : 'N/A';
+                        return `<span style="font-size: 0.75rem; color: #27ae60;">+$${a.monto.toFixed(2)} (${fechaAbono})</span>`;
+                    }).join(' · ');
+                    abonosInlineHTML = `
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: #e8f8f5; border-top: 1px solid #d5f5e3; font-size: 0.8rem; flex-wrap: wrap; gap: 4px;">
+                            <div><i class="fas fa-coins" style="color: #27ae60; margin-right: 4px;"></i> Abonado: $${totalAbonado.toFixed(2)} <span style="color: #95a5a6; margin-left: 4px;">${detalleAbonos}</span></div>
+                            <span style="font-weight: 700; color: #e74c3c;">Pendiente: $${saldoPendiente.toFixed(2)}</span>
+                        </div>
+                    `;
+                }
+
+                // Botones de acción inline
+                let accionesInlineHTML = `
+                    <div style="display: flex; gap: 8px; padding: 10px 12px; justify-content: flex-end; border-top: 1px solid #eee;">
+                        ${estadoReal === 'pendiente' ? `<button onclick="SalesService.registrarAbono('${this._escape(venta.id)}')" style="padding: 6px 14px; background: linear-gradient(135deg, #f39c12, #e67e22); color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 0.8rem;"><i class="fas fa-money-bill-wave"></i> Abonar</button>` : ''}
+                        <button onclick="SalesService.reprintInvoice('${this._escape(venta.id)}')" style="padding: 6px 14px; background: linear-gradient(135deg, #27ae60, #229954); color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 0.8rem;"><i class="fas fa-print"></i> Imprimir</button>
+                    </div>
+                `;
 
                 // Si printed es explícitamente false, mostrar alerta
                 const rowClass = venta.printed === false ? 'blink-alert' : '';
 
                 historialHTML.push(`
-                    <tr class="${rowClass}">
+                    <tr class="${rowClass}" style="${aceiteStyle} cursor: pointer;" onclick="HistorialService.toggleInlineDetail('${this._escape(venta.id)}')">
                         <td>
-                            <a href="#" onclick="event.preventDefault(); SalesService.viewInvoice('${this._escape(venta.id)}');" style="color: #2c3e50; text-decoration: none; font-weight: bold;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">
+                            <span style="color: #2c3e50; font-weight: bold;">
                                 #${this._escape(venta.invoiceNumber)}
                                 ${venta.printed === false ? ' <i class="fas fa-exclamation-circle" style="color:#e74c3c; font-size: 1.2em;" title="Nueva sin imprimir"></i>' : ''}
-                            </a>
+                            </span>
+                            ${aceiteIndicator}
                         </td>
                         <td>
                             <div class="cliente-equipo">${this._escape(venta.equipoNumber) || '-'}</div>
@@ -321,9 +414,18 @@ const HistorialService = {
                         </td>
                         <td><span class="${tipoClass}">${tipoTexto}</span></td>
                         <td>${fecha}</td>
-                        <td>
+                        <td onclick="event.stopPropagation();">
                             <div class="action-buttons historial-actions-container">
                                 ${botonesHTML}
+                            </div>
+                        </td>
+                    </tr>
+                    <tr id="${detailRowId}" style="display: none;">
+                        <td colspan="6" style="padding: 0; border: none;">
+                            <div style="background: white; border: 1px solid #e0e0e0; border-top: none; border-radius: 0 0 8px 8px; overflow: hidden; margin: 0 4px 8px 4px; box-shadow: 0 2px 6px rgba(0,0,0,0.06);">
+                                ${productosInlineHTML}
+                                ${abonosInlineHTML}
+                                ${accionesInlineHTML}
                             </div>
                         </td>
                     </tr>
@@ -332,6 +434,22 @@ const HistorialService = {
         });
 
         historialBody.innerHTML = historialHTML.join('');
+    },
+
+    toggleInlineDetail(ventaId) {
+        const row = document.getElementById(`inline-detail-${ventaId}`);
+        if (!row) return;
+        const isVisible = row.style.display !== 'none';
+        row.style.display = isVisible ? 'none' : 'table-row';
+
+        // Toggle chevron icon
+        const mainRow = row.previousElementSibling;
+        if (mainRow) {
+            const chevron = mainRow.querySelector('.btn-view i');
+            if (chevron) {
+                chevron.className = isVisible ? 'fas fa-chevron-down' : 'fas fa-chevron-up';
+            }
+        }
     },
 
     renderProductSummary(movimientos) {
