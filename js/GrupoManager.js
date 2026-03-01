@@ -70,17 +70,19 @@ window.GrupoManager = {
                 // No usar caché porque los saldos cambian con abonos
                 let nuevoTotal = 0;
 
-                for (const equipoNum of grupo.equipos) {
-                    let equipoEncontrado = this.equiposPendientes.get(equipoNum);
+                for (const equipoKey of grupo.equipos) {
+                    // 1. Buscar por clave exacta (ej: "65-Cedros" o "65-Equipo 65")
+                    let equipoEncontrado = this.equiposPendientes.get(equipoKey);
 
-                    // FALLBACK INTELIGENTE: Si no se encuentra con la clave simple (solo número),
-                    // intentar con la convención "Numero-Equipo Numero" que es el nombre por defecto.
-                    // Esto recupera los totales de los grupos existentes sin mezclar clientes externos.
+                    // 2. Fallback: si la clave es solo un número (grupos antiguos),
+                    //    buscar todas las variantes de ese número
                     if (!equipoEncontrado) {
-                        equipoEncontrado = this.equiposPendientes.get(`${equipoNum}-Equipo ${equipoNum}`);
-                    }
-
-                    if (equipoEncontrado && equipoEncontrado.total > 0) {
+                        this.equiposPendientes.forEach((equipo, key) => {
+                            if (String(equipo.numero) === String(equipoKey) && equipo.total > 0) {
+                                nuevoTotal += equipo.total;
+                            }
+                        });
+                    } else if (equipoEncontrado.total > 0) {
                         nuevoTotal += equipoEncontrado.total;
                     }
                 }
@@ -781,18 +783,32 @@ window.GrupoManager = {
 
                 // Recopilar todas las facturas del grupo y ordenarlas por fecha (más antiguas primero)
                 const facturas = [];
-                for (const equipoNum of grupo.equipos) {
-                    this.equiposPendientes.forEach((equipo, key) => {
-                        if (equipo.numero === equipoNum && equipo.facturas) {
-                            equipo.facturas.forEach(f => {
-                                facturas.push({
-                                    id: f.id,
-                                    timestamp: f.timestamp,
-                                    saldoPendiente: f.saldoPendiente !== undefined ? f.saldoPendiente : f.total
-                                });
+                for (const equipoKey of grupo.equipos) {
+                    // 1. Buscar por clave exacta
+                    let equipoEncontrado = this.equiposPendientes.get(equipoKey);
+
+                    if (equipoEncontrado && equipoEncontrado.facturas) {
+                        equipoEncontrado.facturas.forEach(f => {
+                            facturas.push({
+                                id: f.id,
+                                timestamp: f.timestamp,
+                                saldoPendiente: f.saldoPendiente !== undefined ? f.saldoPendiente : f.total
                             });
-                        }
-                    });
+                        });
+                    } else if (!equipoEncontrado) {
+                        // 2. Fallback para grupos antiguos: buscar por número
+                        this.equiposPendientes.forEach((equipo, key) => {
+                            if (String(equipo.numero) === String(equipoKey) && equipo.facturas) {
+                                equipo.facturas.forEach(f => {
+                                    facturas.push({
+                                        id: f.id,
+                                        timestamp: f.timestamp,
+                                        saldoPendiente: f.saldoPendiente !== undefined ? f.saldoPendiente : f.total
+                                    });
+                                });
+                            }
+                        });
+                    }
                 }
 
                 if (facturas.length === 0) {
@@ -911,20 +927,28 @@ window.GrupoManager = {
         let cantidadFacturas = 0;
         let tieneAbonos = false;
 
-        for (const equipoNum of grupo.equipos) {
-            let equipoEncontrado = null;
-            this.equiposPendientes.forEach((equipo, key) => {
-                if (equipo.numero === equipoNum && equipo.total > 0) {
-                    equipoEncontrado = equipo;
-                }
-            });
+        for (const equipoKey of grupo.equipos) {
+            // 1. Buscar por clave exacta
+            let equipoEncontrado = this.equiposPendientes.get(equipoKey);
 
-            if (equipoEncontrado) {
-                totalGeneral += equipoEncontrado.total;
-                cantidadFacturas += equipoEncontrado.facturas.length;
+            // 2. Fallback para grupos antiguos: buscar por número
+            const equiposCoincidentes = [];
+            if (equipoEncontrado && equipoEncontrado.total > 0) {
+                equiposCoincidentes.push(equipoEncontrado);
+            } else if (!equipoEncontrado) {
+                this.equiposPendientes.forEach((equipo, key) => {
+                    if (String(equipo.numero) === String(equipoKey) && equipo.total > 0) {
+                        equiposCoincidentes.push(equipo);
+                    }
+                });
+            }
+
+            for (const equipo of equiposCoincidentes) {
+                totalGeneral += equipo.total;
+                cantidadFacturas += equipo.facturas.length;
 
                 let facturasHTML = '';
-                equipoEncontrado.facturas.forEach(factura => {
+                equipo.facturas.forEach(factura => {
                     const saldoPendiente = factura.saldoPendiente !== undefined ? factura.saldoPendiente : factura.total;
                     totalPendiente += saldoPendiente;
 
@@ -958,9 +982,9 @@ window.GrupoManager = {
 
                 equiposHTML += `
                     <div class="grupo-detalle-equipo">
-                        <h4>Equipo ${equipoEncontrado.numero} - ${equipoEncontrado.cliente}</h4>
-                        <div><strong>Total:</strong> $${equipoEncontrado.total.toFixed(2)}</div>
-                        <div><strong>Facturas:</strong> ${equipoEncontrado.facturas.length}</div>
+                        <h4>Equipo ${equipo.numero} - ${equipo.cliente}</h4>
+                        <div><strong>Total:</strong> $${equipo.total.toFixed(2)}</div>
+                        <div><strong>Facturas:</strong> ${equipo.facturas.length}</div>
                         ${facturasHTML}
                     </div>
                 `;
@@ -989,15 +1013,20 @@ window.GrupoManager = {
         const grupo = this.currentGrupoDetalle;
         if (!grupo) return;
 
-        for (const equipoNum of grupo.equipos) {
-            let equipoEncontrado = null;
-            this.equiposPendientes.forEach((equipo, key) => {
-                if (equipo.numero === equipoNum && equipo.total > 0) {
-                    equipoEncontrado = equipo;
-                }
-            });
+        for (const equipoKey of grupo.equipos) {
+            // 1. Buscar por clave exacta
+            let equipoEncontrado = this.equiposPendientes.get(equipoKey);
 
-            if (equipoEncontrado) {
+            // 2. Fallback para grupos antiguos
+            if (!equipoEncontrado) {
+                this.equiposPendientes.forEach((equipo, key) => {
+                    if (String(equipo.numero) === String(equipoKey) && equipo.total > 0) {
+                        equipoEncontrado = equipo;
+                    }
+                });
+            }
+
+            if (equipoEncontrado && equipoEncontrado.total > 0) {
                 equipoEncontrado.facturas.forEach(factura => {
                     this.imprimirTicketFactura(factura, equipoEncontrado);
                 });
@@ -1178,20 +1207,31 @@ window.GrupoManager = {
             // Recopilar equipos del grupo
             let equiposHTML = '';
             let totalGrupo = 0;
+            let filaIndex = 0;
 
-            for (const equipoNum of grupo.equipos) {
-                let equipoEncontrado = null;
-                this.equiposPendientes.forEach((equipo, key) => {
-                    if (equipo.numero === equipoNum && equipo.total > 0) {
-                        equipoEncontrado = equipo;
-                    }
-                });
+            for (const equipoKey of grupo.equipos) {
+                // 1. Buscar por clave exacta
+                let equipoEncontrado = this.equiposPendientes.get(equipoKey);
 
-                if (equipoEncontrado) {
+                // 2. Fallback para grupos antiguos: buscar por número
+                if (!equipoEncontrado) {
+                    this.equiposPendientes.forEach((equipo, key) => {
+                        if (String(equipo.numero) === String(equipoKey) && equipo.total > 0) {
+                            equipoEncontrado = equipo;
+                        }
+                    });
+                }
+
+                if (equipoEncontrado && equipoEncontrado.total > 0) {
                     totalGrupo += equipoEncontrado.total;
+                    const bgColor = filaIndex % 2 === 0 ? 'white' : '#f9f9f9';
+                    filaIndex++;
+                    const nombreEquipo = equipoEncontrado.cliente && equipoEncontrado.cliente !== `Equipo ${equipoEncontrado.numero}`
+                        ? `Equipo ${equipoEncontrado.numero} - ${equipoEncontrado.cliente}`
+                        : `Equipo ${equipoEncontrado.numero}`;
                     equiposHTML += `
-                        <div style="display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #ddd; background: ${equiposHTML ? '#f9f9f9' : 'white'};">
-                            <div style="font-weight: bold; color: #2c3e50; font-size: 16px;">Equipo ${equipoEncontrado.numero}</div>
+                        <div style="display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #ddd; background: ${bgColor};">
+                            <div style="font-weight: bold; color: #2c3e50; font-size: 16px;">${nombreEquipo}</div>
                             <div style="font-weight: bold; color: #e74c3c; font-size: 16px;">$${equipoEncontrado.total.toFixed(2)}</div>
                         </div>
                     `;

@@ -15,38 +15,50 @@ GrupoManager.showGroupPaymentModal = function (grupoId) {
         minute: '2-digit'
     });
 
-    // Recopilar equipos y generar HTML
+    // Recopilar equipos: primero por clave exacta, luego por número como respaldo
     let equiposHTML = '';
-    let totalGrupo = 0;
+    let totalGrupoReal = 0;
     let contador = 0;
 
-    for (const equipoNum of grupo.equipos) {
-        let equipoEncontrado = this.equiposPendientes.get(equipoNum);
-
-        // Falback para llaves compuestas
-        if (!equipoEncontrado) {
-            equipoEncontrado = this.equiposPendientes.get(`${equipoNum}-Equipo ${equipoNum}`);
-        }
+    for (const equipoKey of grupo.equipos) {
+        // 1. Buscar por clave exacta (ej: "65-Cedros", "65-Equipo 65")
+        let equipoEncontrado = this.equiposPendientes.get(equipoKey);
 
         if (equipoEncontrado && equipoEncontrado.total > 0) {
-            totalGrupo += equipoEncontrado.total;
+            // Encontrado por clave exacta
+            totalGrupoReal += equipoEncontrado.total;
             const bgColor = contador % 2 === 0 ? '#f9f9f9' : 'white';
             equiposHTML += `
                 <div style="display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #ddd; background: ${bgColor};">
-                    <div style="font-weight: bold; color: #2c3e50; font-size: 16px;">Equipo ${equipoEncontrado.numero}</div>
+                    <div style="font-weight: bold; color: #2c3e50; font-size: 16px;">${equipoEncontrado.numero} - ${equipoEncontrado.cliente || 'Equipo ' + equipoEncontrado.numero}</div>
                     <div style="font-weight: bold; color: #e74c3c; font-size: 16px;">$${equipoEncontrado.total.toFixed(2)}</div>
                 </div>
             `;
             contador++;
+        } else if (!equipoEncontrado) {
+            // 2. Fallback para grupos antiguos: buscar por número
+            this.equiposPendientes.forEach((equipo, key) => {
+                if (String(equipo.numero) === String(equipoKey) && equipo.total > 0) {
+                    totalGrupoReal += equipo.total;
+                    const bgColor = contador % 2 === 0 ? '#f9f9f9' : 'white';
+                    equiposHTML += `
+                        <div style="display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #ddd; background: ${bgColor};">
+                            <div style="font-weight: bold; color: #2c3e50; font-size: 16px;">${equipo.numero} - ${equipo.cliente || 'Equipo ' + equipo.numero}</div>
+                            <div style="font-weight: bold; color: #e74c3c; font-size: 16px;">$${equipo.total.toFixed(2)}</div>
+                        </div>
+                    `;
+                    contador++;
+                }
+            });
         }
     }
 
     // Actualizar lista de equipos y total
     document.getElementById('bulk-abono-equipos-list').innerHTML = equiposHTML || '<div style="text-align: center; color: #999;">No hay equipos con saldo</div>';
-    document.getElementById('bulk-abono-total').textContent = `$${totalGrupo.toFixed(2)}`;
+    document.getElementById('bulk-abono-total').textContent = `$${totalGrupoReal.toFixed(2)}`;
 
-    // Guardar el total en el modal para cálculos
-    modal.dataset.totalGrupo = totalGrupo;
+    // Guardar el total REAL en el modal para cálculos
+    modal.dataset.totalGrupo = totalGrupoReal;
     modal.dataset.grupoId = grupoId;
 
     // Limpiar campo de monto y ocultar saldo restante
@@ -67,38 +79,51 @@ GrupoManager.showGroupPaymentModal = function (grupoId) {
             return;
         }
 
-        if (monto > totalGrupo) {
-            UIService.showStatus("El monto no puede ser mayor al total del grupo", "error");
-            processBtn.disabled = false;
-            return;
-        }
-
         try {
             UIService.showLoading(true);
 
-            // Recopilar todas las facturas del grupo y ordenarlas por fecha (más antiguas primero)
+            // Recopilar TODAS las facturas: primero por clave exacta, luego por número
             const facturas = [];
-            for (const equipoNum of grupo.equipos) {
-                let equipo = GrupoManager.equiposPendientes.get(equipoNum);
+            for (const equipoKey of grupo.equipos) {
+                let equipoExacto = GrupoManager.equiposPendientes.get(equipoKey);
 
-                // Fallback para procesamiento de pagos
-                if (!equipo) {
-                    equipo = GrupoManager.equiposPendientes.get(`${equipoNum}-Equipo ${equipoNum}`);
-                }
-
-                if (equipo && equipo.facturas) {
-                    equipo.facturas.forEach(f => {
+                if (equipoExacto && equipoExacto.facturas) {
+                    // Encontrado por clave exacta
+                    equipoExacto.facturas.forEach(f => {
                         facturas.push({
                             id: f.id,
                             timestamp: f.timestamp,
                             saldoPendiente: f.saldoPendiente !== undefined ? f.saldoPendiente : f.total
                         });
                     });
+                } else if (!equipoExacto) {
+                    // Fallback para grupos antiguos: buscar por número
+                    GrupoManager.equiposPendientes.forEach((equipo, key) => {
+                        if (String(equipo.numero) === String(equipoKey) && equipo.facturas) {
+                            equipo.facturas.forEach(f => {
+                                facturas.push({
+                                    id: f.id,
+                                    timestamp: f.timestamp,
+                                    saldoPendiente: f.saldoPendiente !== undefined ? f.saldoPendiente : f.total
+                                });
+                            });
+                        }
+                    });
                 }
             }
 
             if (facturas.length === 0) {
                 throw new Error("El grupo no tiene facturas pendientes");
+            }
+
+            // Calcular el saldo pendiente REAL sumando los saldos de cada factura
+            const saldoRealTotal = facturas.reduce((sum, f) => sum + f.saldoPendiente, 0);
+
+            if (monto > saldoRealTotal) {
+                UIService.showStatus(`El monto ($${monto.toFixed(2)}) no puede ser mayor al saldo pendiente ($${saldoRealTotal.toFixed(2)})`, "error");
+                processBtn.disabled = false;
+                UIService.showLoading(false);
+                return;
             }
 
             // Ordenar por fecha (más antiguas primero)
@@ -160,7 +185,7 @@ GrupoManager.calcularSaldoRestante = function () {
     const saldoRestanteElement = document.getElementById('saldo-restante');
 
     if (monto > 0) {
-        const saldoRestante = Math.max(0, totalGrupo - monto); // Asegurar que nunca sea negativo
+        const saldoRestante = Math.max(0, totalGrupo - monto);
         saldoRestanteElement.textContent = `$${saldoRestante.toFixed(2)}`;
         saldoRestanteElement.style.color = saldoRestante > 0 ? '#e74c3c' : '#27ae60';
         saldoRestanteContainer.style.display = 'block';

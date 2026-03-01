@@ -21,42 +21,55 @@ window.GruposTabManager = {
         gruposOrdenados.forEach(grupo => {
             let equiposHTML = '';
 
-            grupo.equipos.forEach(equipoNum => {
-                let equipoEncontrado = GrupoManager.equiposPendientes.get(equipoNum);
-
-                // FALLBACK VISUAL: Si no se encuentra con clave simple, intentar con la compuesta por defecto
-                if (!equipoEncontrado) {
-                    equipoEncontrado = GrupoManager.equiposPendientes.get(`${equipoNum}-Equipo ${equipoNum}`);
-                }
+            grupo.equipos.forEach(equipoKey => {
+                // 1. Buscar por clave exacta
+                let equipoEncontrado = GrupoManager.equiposPendientes.get(equipoKey);
 
                 if (equipoEncontrado && equipoEncontrado.total > 0) {
                     equiposHTML += `
-                        <div class="grupo-equipo-item" onclick="GrupoManager.mostrarDetalleEquipo('${equipoEncontrado.numero}')"> <!-- Usar numero para mantener compatibilidad en click -->
+                        <div class="grupo-equipo-item" onclick="GrupoManager.mostrarDetalleEquipo('${equipoEncontrado.numero}')">
                             <div class="grupo-equipo-number">${equipoEncontrado.numero}</div>
                             <div class="grupo-equipo-total">$${equipoEncontrado.total.toFixed(2)}</div>
                         </div>
                     `;
+                } else if (!equipoEncontrado) {
+                    // 2. Fallback para grupos antiguos: buscar por número
+                    GrupoManager.equiposPendientes.forEach((equipo, key) => {
+                        if (String(equipo.numero) === String(equipoKey) && equipo.total > 0) {
+                            equiposHTML += `
+                                <div class="grupo-equipo-item" onclick="GrupoManager.mostrarDetalleEquipo('${equipo.numero}')">
+                                    <div class="grupo-equipo-number">${equipo.numero}</div>
+                                    <div class="grupo-equipo-total">$${equipo.total.toFixed(2)}</div>
+                                </div>
+                            `;
+                        }
+                    });
                 }
             });
 
             html += `
                 <div class="grupo-card">
-                    <div class="grupo-actions">
-                        <button class="grupo-action-btn btn-detalle-grupo" onclick="GrupoManager.mostrarDetalleGrupoCompleto('${grupo.id}')" title="Ver detalles">
-                            <i class="fas fa-eye"></i>
+                    <div class="grupo-menu-wrapper">
+                        <button class="grupo-menu-toggle" onclick="event.stopPropagation(); GruposTabManager.toggleGrupoMenu('${grupo.id}')" title="Opciones">
+                            <i class="fas fa-ellipsis-v"></i>
                         </button>
-                        <button class="grupo-action-btn btn-edit-grupo" onclick="GrupoManager.editarGrupo('${grupo.id}')" title="Editar grupo">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="grupo-action-btn btn-info" onclick="GrupoManager.showGroupPaymentModal('${grupo.id}')" title="Abonar a Grupo" style="background-color: #17a2b8; color: white;">
-                            <i class="fas fa-money-bill-wave"></i>
-                        </button>
-                        <button class="grupo-action-btn btn-success" onclick="GrupoManager.capturarImagenGrupo('${grupo.id}')" title="Capturar imagen" style="background-color: #28a745; color: white;">
-                            <i class="fas fa-camera"></i>
-                        </button>
-                        <button class="grupo-action-btn btn-delete-grupo" onclick="GrupoManager.solicitarEliminarGrupo('${grupo.id}')" title="Eliminar grupo">
-                            <i class="fas fa-trash"></i>
-                        </button>
+                        <div class="grupo-dropdown" id="grupo-dropdown-${grupo.id}">
+                            <div class="grupo-dropdown-item" onclick="GrupoManager.mostrarDetalleGrupoCompleto('${grupo.id}'); GruposTabManager.closeAllMenus();">
+                                <i class="fas fa-eye" style="color: #3498db;"></i> Ver Detalles
+                            </div>
+                            <div class="grupo-dropdown-item" onclick="GrupoManager.editarGrupo('${grupo.id}'); GruposTabManager.closeAllMenus();">
+                                <i class="fas fa-edit" style="color: #27ae60;"></i> Editar
+                            </div>
+                            <div class="grupo-dropdown-item" onclick="GrupoManager.showGroupPaymentModal('${grupo.id}'); GruposTabManager.closeAllMenus();">
+                                <i class="fas fa-money-bill-wave" style="color: #17a2b8;"></i> Abonar
+                            </div>
+                            <div class="grupo-dropdown-item" onclick="GrupoManager.capturarImagenGrupo('${grupo.id}'); GruposTabManager.closeAllMenus();">
+                                <i class="fas fa-camera" style="color: #28a745;"></i> Capturar
+                            </div>
+                            <div class="grupo-dropdown-item delete-item" onclick="GrupoManager.solicitarEliminarGrupo('${grupo.id}'); GruposTabManager.closeAllMenus();">
+                                <i class="fas fa-trash"></i> Eliminar
+                            </div>
+                        </div>
                     </div>
                     <div class="grupo-header">
                         <div class="grupo-name">${grupo.nombre}</div>
@@ -72,5 +85,33 @@ window.GruposTabManager = {
         });
 
         container.innerHTML = html;
+    },
+
+    toggleGrupoMenu(grupoId) {
+        const dropdown = document.getElementById(`grupo-dropdown-${grupoId}`);
+        const isOpen = dropdown.classList.contains('show');
+
+        // Cerrar todos los menús abiertos primero
+        this.closeAllMenus();
+
+        // Si no estaba abierto, abrirlo
+        if (!isOpen) {
+            dropdown.classList.add('show');
+        }
+    },
+
+    closeAllMenus() {
+        document.querySelectorAll('.grupo-dropdown.show').forEach(d => {
+            d.classList.remove('show');
+        });
     }
 };
+
+// Cerrar menús al hacer clic fuera
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('.grupo-menu-wrapper')) {
+        if (typeof GruposTabManager !== 'undefined') {
+            GruposTabManager.closeAllMenus();
+        }
+    }
+});
