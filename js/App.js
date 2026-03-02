@@ -72,6 +72,7 @@ const App = {
     setupUI() {
         SalesService.setTodayDate();
         UIService.setupTabs();
+        PrintingService.initPrinterButton();
     },
 
     async loadInitialData() {
