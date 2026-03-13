@@ -1027,17 +1027,26 @@
                     return;
                 }
 
+                const qtyStr = prompt(`Ingrese cantidad para "${description}":`, "1");
+                if (qtyStr === null) return;
+
+                const cantidad = parseFloat(qtyStr);
+                if (isNaN(cantidad) || cantidad <= 0) {
+                    alert("Cantidad inválida");
+                    return;
+                }
+
                 const manualId = 'MANUAL-' + Date.now();
                 this.state.carrito.push({
                     id: manualId,
                     descripcion: description,
                     precio: price,
-                    cantidad: 1,
+                    cantidad: cantidad,
                     codigo: 'MANUAL'
                 });
 
                 this.saveCart();
-                this.showToast(`Agregado: ${description}`);
+                this.showToast(`Agregado: ${cantidad}x ${description}`);
                 this.clearSearch();
             },
 
@@ -1046,20 +1055,30 @@
                 const item = this.state.inventarioCache.find(i => i.id === itemId);
                 if (!item) return;
 
+                const qtyStr = prompt(`Ingrese cantidad para "${item.descripcion}":`, "1");
+                if (qtyStr === null) return;
+
+                const cantidad = parseFloat(qtyStr);
+                if (isNaN(cantidad) || cantidad <= 0) {
+                    alert("Cantidad inválida");
+                    return;
+                }
+
                 const existing = this.state.carrito.find(p => p.id === itemId);
                 if (existing) {
-                    existing.cantidad++;
+                    existing.cantidad += cantidad;
                 } else {
                     this.state.carrito.push({
                         id: item.id,
                         descripcion: item.descripcion,
                         precio: item.precio || 0,
-                        cantidad: 1,
+                        cantidad: cantidad,
                         codigo: item.codigo || ''
                     });
                 }
                 this.saveCart();
-                this.showToast(`Agregado: ${item.descripcion}`);
+                this.showToast(`Agregado: ${cantidad}x ${item.descripcion}`);
+                this.clearSearch();
             },
 
             removeFromCart(idx) {
@@ -1179,11 +1198,11 @@
                     // Limpiar
                     this.state.carrito = [];
                     this.saveCart();
+                    document.getElementById('input-equipo').value = '';
+                    document.getElementById('input-grupo').value = '';
                     this.state.tempEquipo = '';
                     this.state.tempGrupo = '';
                     this.saveTempData();
-                    document.getElementById('input-equipo').value = '';
-                    document.getElementById('input-grupo').value = '';
 
                     this.switchTab('historial'); // Ver lo creado
                     this.updateBadge();
