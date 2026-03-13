@@ -637,6 +637,22 @@
             </div>
         </div>
 
+        <!-- MODAL NÚMERO (CANTIDAD/PRECIO) -->
+        <div id="modal-cantidad" class="modal-overlay hidden">
+            <div class="modal-content" style="max-width: 300px; padding: 20px; align-items: center;">
+                <h3 id="modal-cantidad-titulo" style="margin: 0 0 15px 0; font-size: 1.1rem; text-align: center; color: var(--text-primary);">Cantidad</h3>
+                <div style="display: flex; align-items: center; width: 100%; background: var(--bg-body); border: 2px solid var(--accent-color); border-radius: 10px; padding: 0 10px; margin-bottom: 20px;">
+                    <span id="modal-cantidad-prefijo" style="color: var(--text-secondary); font-size: 1.2rem; font-weight: bold;"></span>
+                    <input type="number" id="input-cantidad-modal" step="any"
+                        style="flex: 1; border: none; text-align: center; font-size: 1.5rem; padding: 12px 10px; background: transparent; color: white; outline: none; -moz-appearance: textfield;">
+                </div>
+                <div style="display: flex; gap: 10px; width: 100%;">
+                    <button id="btn-cancel-cantidad" class="btn-action" style="background: var(--bg-body); margin-bottom: 0;">Cancelar</button>
+                    <button id="btn-confirm-cantidad" class="success-btn" style="margin-bottom: 0;">Aceptar</button>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <!-- Bottom Navigation -->
@@ -862,7 +878,58 @@
                 inventarioCache: [],
                 tempEquipo: localStorage.getItem('tw_temp_equipo') || '',
                 tempGrupo: localStorage.getItem('tw_temp_grupo') || '',
-                editingSaleId: null // ID si estamos editando
+                editingSaleId: localStorage.getItem('tw_editing_sale_id') || null // ID si estamos editando
+            },
+
+            async pedirNumero(titulo, tipo = 'cantidad') {
+                return new Promise((resolve) => {
+                    const modal = document.getElementById('modal-cantidad');
+                    const input = document.getElementById('input-cantidad-modal');
+                    const tituloEl = document.getElementById('modal-cantidad-titulo');
+                    const prefijoEl = document.getElementById('modal-cantidad-prefijo');
+
+                    tituloEl.innerText = titulo;
+                    if (tipo === 'precio') {
+                        prefijoEl.innerText = '$';
+                        input.value = "0";
+                    } else {
+                        prefijoEl.innerText = 'x';
+                        input.value = "1";
+                    }
+
+                    modal.classList.remove('hidden');
+
+                    setTimeout(() => {
+                        input.focus();
+                        input.select();
+                    }, 100);
+
+                    const btnConfirm = document.getElementById('btn-confirm-cantidad');
+                    const btnCancel = document.getElementById('btn-cancel-cantidad');
+
+                    const handleConfirm = () => {
+                        const val = parseFloat(input.value);
+                        cerrarYResolver(isNaN(val) || val < 0 ? null : val);
+                    };
+
+                    const handleCancel = () => cerrarYResolver(null);
+
+                    const handleEnter = (e) => {
+                        if (e.key === 'Enter') handleConfirm();
+                    };
+
+                    btnConfirm.onclick = handleConfirm;
+                    btnCancel.onclick = handleCancel;
+                    input.onkeydown = handleEnter;
+
+                    const cerrarYResolver = (resultado) => {
+                        modal.classList.add('hidden');
+                        btnConfirm.onclick = null;
+                        btnCancel.onclick = null;
+                        input.onkeydown = null;
+                        resolve(resultado);
+                    };
+                });
             },
 
             init() {
@@ -1017,24 +1084,12 @@
                 container.innerHTML = html;
             },
 
-            addManualItem(description) {
-                const priceStr = prompt(`Ingrese precio para "${description}":`, "0.00");
-                if (priceStr === null) return; // Cancelado
+            async addManualItem(description) {
+                const price = await this.pedirNumero(`Precio: ${description}`, 'precio');
+                if (price === null) return; // Cancelado
 
-                const price = parseFloat(priceStr);
-                if (isNaN(price) || price < 0) {
-                    alert("Precio inválido");
-                    return;
-                }
-
-                const qtyStr = prompt(`Ingrese cantidad para "${description}":`, "1");
-                if (qtyStr === null) return;
-
-                const cantidad = parseFloat(qtyStr);
-                if (isNaN(cantidad) || cantidad <= 0) {
-                    alert("Cantidad inválida");
-                    return;
-                }
+                const cantidad = await this.pedirNumero(`Cantidad: ${description}`, 'cantidad');
+                if (cantidad === null || cantidad <= 0) return;
 
                 const manualId = 'MANUAL-' + Date.now();
                 this.state.carrito.push({
@@ -1051,18 +1106,12 @@
             },
 
             // --- CARRITO ---
-            addToCart(itemId) {
+            async addToCart(itemId) {
                 const item = this.state.inventarioCache.find(i => i.id === itemId);
                 if (!item) return;
 
-                const qtyStr = prompt(`Ingrese cantidad para "${item.descripcion}":`, "1");
-                if (qtyStr === null) return;
-
-                const cantidad = parseFloat(qtyStr);
-                if (isNaN(cantidad) || cantidad <= 0) {
-                    alert("Cantidad inválida");
-                    return;
-                }
+                const cantidad = await this.pedirNumero(`Añadir: ${item.descripcion}`, 'cantidad');
+                if (cantidad === null || cantidad <= 0) return;
 
                 const existing = this.state.carrito.find(p => p.id === itemId);
                 if (existing) {
@@ -1117,8 +1166,9 @@
                 // MODO EDICION BAR
                 const summaryDiv = document.querySelector('.cart-summary h2') || document.querySelector('#view-carrito h2');
                 if (this.state.editingSaleId) {
-                    summaryDiv.innerHTML = `Editando Venta <span style="font-size:0.8em; color:var(--accent-color)">#MODO_EDICIÓN</span>`;
-                    summaryDiv.style.color = 'var(--accent-color)';
+                    summaryDiv.innerHTML = `Editando <span style="font-size:0.8em; color:var(--accent-color)">#EDICIÓN</span> 
+                        <button onclick="App.cancelarEdicion()" style="background:var(--danger-color);border:none;color:white;padding:4px 8px;border-radius:6px;font-size:0.75rem;margin-left:10px;cursor:pointer"><i class="fas fa-times"></i> Cancelar</button>`;
+                    summaryDiv.style.color = 'var(--text-primary)';
                 } else {
                     summaryDiv.innerHTML = 'Pedido Actual';
                     summaryDiv.style.color = 'var(--text-primary)';
@@ -1190,6 +1240,7 @@
                         await SalesService.updateSale(this.state.editingSaleId, ventaData);
                         this.showToast('Venta Actualizada ✅');
                         this.state.editingSaleId = null;
+                        localStorage.removeItem('tw_editing_sale_id');
                     } else {
                         await SalesService.procesarVentaPendiente(ventaData);
                         this.showToast('Venta Creada como PENDIENTE ✅');
@@ -1418,6 +1469,7 @@
                     const data = doc.data();
 
                     this.state.editingSaleId = saleId;
+                    localStorage.setItem('tw_editing_sale_id', saleId);
                     this.state.carrito = data.products || [];
                     this.state.tempEquipo = data.equipoNumber;
 
@@ -1437,6 +1489,21 @@
                     this.switchTab('carrito');
                     this.showToast("Modo Edición Activado ✏️");
                 });
+            },
+
+            cancelarEdicion() {
+                if (!confirm("¿Cancelar la edición y vaciar el carrito actual?")) return;
+                this.state.editingSaleId = null;
+                localStorage.removeItem('tw_editing_sale_id');
+                this.state.carrito = [];
+                this.saveCart();
+                this.state.tempEquipo = '';
+                this.state.tempGrupo = '';
+                this.saveTempData();
+                document.getElementById('input-equipo').value = '';
+                document.getElementById('input-grupo').value = '';
+                this.switchTab('historial');
+                this.showToast("Edición Cancelada");
             },
 
             showToast(msg, type = 'info') {
