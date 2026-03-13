@@ -638,13 +638,13 @@
         </div>
 
         <!-- MODAL NÚMERO (CANTIDAD/PRECIO) -->
-        <div id="modal-cantidad" class="modal-overlay hidden">
+        <div id="modal-cantidad" class="modal-overlay hidden" style="align-items: flex-start; padding-top: 15vh;">
             <div class="modal-content" style="max-width: 300px; padding: 20px; align-items: center;">
                 <h3 id="modal-cantidad-titulo" style="margin: 0 0 15px 0; font-size: 1.1rem; text-align: center; color: var(--text-primary);">Cantidad</h3>
                 <div style="display: flex; align-items: center; width: 100%; background: var(--bg-body); border: 2px solid var(--accent-color); border-radius: 10px; padding: 0 10px; margin-bottom: 20px;">
                     <span id="modal-cantidad-prefijo" style="color: var(--text-secondary); font-size: 1.2rem; font-weight: bold;"></span>
                     <input type="number" id="input-cantidad-modal" step="any"
-                        style="flex: 1; border: none; text-align: center; font-size: 1.5rem; padding: 12px 10px; background: transparent; color: white; outline: none; -moz-appearance: textfield;">
+                        style="flex: 1; border: none; text-align: center; font-size: 1.5rem; padding: 12px 10px; background: transparent; color: white; outline: none; -moz-appearance: textfield; appearance: textfield;">
                 </div>
                 <div style="display: flex; gap: 10px; width: 100%;">
                     <button id="btn-cancel-cantidad" class="btn-action" style="background: var(--bg-body); margin-bottom: 0;">Cancelar</button>
@@ -652,6 +652,22 @@
                 </div>
             </div>
         </div>
+
+        <!-- MODAL CONFIRMACIÓN -->
+        <div id="modal-confirmacion" class="modal-overlay hidden" style="align-items: flex-start; padding-top: 20vh;">
+            <div class="modal-content" style="max-width: 320px; padding: 25px 20px; align-items: center; text-align: center;">
+                <div style="width: 50px; height: 50px; border-radius: 50%; background: rgba(59, 130, 246, 0.1); display: flex; align-items: center; justify-content: center; margin-bottom: 15px;">
+                    <i class="fas fa-question-circle" style="font-size: 2rem; color: var(--accent-color);"></i>
+                </div>
+                <h3 style="margin: 0 0 10px 0; font-size: 1.2rem; color: var(--text-primary);">Confirmación</h3>
+                <p id="modal-confirmacion-msg" style="margin: 0 0 20px 0; color: var(--text-secondary); font-size: 0.95rem; line-height: 1.4;"></p>
+                <div style="display: flex; gap: 10px; width: 100%;">
+                    <button id="btn-cancel-confirm" class="btn-action" style="background: var(--bg-body); margin-bottom: 0; flex: 1;">Cancelar</button>
+                    <button id="btn-accept-confirm" class="success-btn" style="margin-bottom: 0; flex: 1;">Aceptar</button>
+                </div>
+            </div>
+        </div>
+
 
     </div>
 
@@ -929,6 +945,28 @@
                         input.onkeydown = null;
                         resolve(resultado);
                     };
+                });
+            },
+
+            async pedirConfirmacion(mensaje) {
+                return new Promise((resolve) => {
+                    const modal = document.getElementById('modal-confirmacion');
+                    const msgEl = document.getElementById('modal-confirmacion-msg');
+                    const btnConfirm = document.getElementById('btn-accept-confirm');
+                    const btnCancel = document.getElementById('btn-cancel-confirm');
+
+                    msgEl.innerText = mensaje;
+                    modal.classList.remove('hidden');
+
+                    const cerrarYResolver = (resultado) => {
+                        modal.classList.add('hidden');
+                        btnConfirm.onclick = null;
+                        btnCancel.onclick = null;
+                        resolve(resultado);
+                    };
+
+                    btnConfirm.onclick = () => cerrarYResolver(true);
+                    btnCancel.onclick = () => cerrarYResolver(false);
                 });
             },
 
@@ -1220,7 +1258,8 @@
 
                 // PREGUNTA CLAVE
                 const action = this.state.editingSaleId ? "ACTUALIZAR" : "CREAR";
-                if (!confirm(`¿${action} venta para Equipo ${equipo}? Total: $${total.toFixed(2)}`)) return;
+                const confirmado = await this.pedirConfirmacion(`¿${action} venta para Equipo ${equipo}?\nTotal Estimado: $${total.toFixed(2)}`);
+                if (!confirmado) return;
 
                 const btn = document.querySelector('.success-btn');
                 const originalText = btn.innerHTML;
@@ -1491,8 +1530,10 @@
                 });
             },
 
-            cancelarEdicion() {
-                if (!confirm("¿Cancelar la edición y vaciar el carrito actual?")) return;
+            async cancelarEdicion() {
+                const confirmado = await this.pedirConfirmacion("¿Deseas cancelar la edición y vaciar el carrito actual?");
+                if (!confirmado) return;
+                
                 this.state.editingSaleId = null;
                 localStorage.removeItem('tw_editing_sale_id');
                 this.state.carrito = [];
