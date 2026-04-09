@@ -938,12 +938,15 @@
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             transition: all 0.3s ease;
             position: relative;
+            z-index: 1;
         }
 
-        .grupo-card:hover {
+        .grupo-card:hover,
+        .grupo-card:has(.grupo-dropdown.show) {
             transform: translateY(-2px);
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
             border-color: #2980b9;
+            z-index: 50;
         }
 
         .grupo-header {
@@ -1904,4 +1907,161 @@
             display: flex;
             flex-wrap: wrap;
             gap: 10px;
+        }
+
+        /* =========================================
+           ESTILOS PARA DISEÑO MODAL DE ABONO MASIVO (Floating Cards)
+           ========================================= */
+        .modal-opt2 {
+            border-radius: 16px;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            background: white;
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+        
+        .modal-opt2-header {
+            grid-column: 1 / -1;
+            text-align: left;
+            border-bottom: 2px solid #f1f2f6;
+            padding-bottom: 15px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+        }
+
+        .modal-opt2-left {
+            background: #f1f2f6;
+            border-radius: 12px;
+            padding: 15px;
+            max-height: 280px;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        /* Eliminado ::before para arreglar sobreposición */
+
+        .opt2-item {
+            background: white;
+            border-radius: 8px;
+            padding: 10px 15px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            border-left: 4px solid #3498db;
+        }
+        .opt2-item .name { font-weight: 600; color: #2f3542; }
+        .opt2-item .amount { font-weight: 800; color: #ff4757; }
+
+        .modal-opt2-right {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            overflow-y: auto;
+            max-height: 100%;
+            padding-right: 5px;
+        }
+
+        .opt2-total-box {
+            text-align: center;
+            padding: 15px;
+            background: linear-gradient(135deg, #2f3542 0%, #57606f 100%);
+            border-radius: 16px;
+            color: white;
+            box-shadow: 0 10px 20px rgba(47, 53, 66, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .opt2-total-box::after {
+            content: '$';
+            position: absolute;
+            top: -20px;
+            right: 10px;
+            font-size: 150px;
+            opacity: 0.05;
+            line-height: 1;
+        }
+
+        .opt2-total-box p { margin: 0; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: #ced6e0; }
+        .opt2-total-box h3 { margin: 5px 0 0 0; font-size: 32px; font-weight: 900; }
+
+        .opt2-input-wrapper { margin-top: 15px; }
+        .opt2-input-wrapper label { display: block; font-weight: 700; color: #2f3542; margin-bottom: 5px; font-size: 14px; }
+        
+        .opt2-input-field {
+            position: relative;
+        }
+
+        .opt2-input-field::before {
+            content: '$';
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 24px;
+            color: #747d8c;
+            font-weight: bold;
+        }
+
+        .opt2-input-wrapper input {
+            width: 100%;
+            padding: 12px 12px 12px 40px;
+            border: 2px solid #dfe4ea;
+            border-radius: 8px;
+            font-size: 24px;
+            font-weight: 800;
+            color: #2f3542;
+            transition: all 0.3s;
+            box-sizing: border-box;
+            background: #fafbfc;
+        }
+
+        .opt2-input-wrapper input:focus {
+            border-color: #1e90ff;
+            background: white;
+            box-shadow: 0 0 0 4px rgba(30, 144, 255, 0.1);
+            outline: none;
+        }
+
+        .opt2-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .opt2-btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 800;
+            font-size: 14px;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+
+        .opt2-btn.cancel {
+            background: white;
+            color: #ff4757;
+            border: 2px solid #ff4757;
+        }
+        .opt2-btn.cancel:hover { background: #fff0f1; }
+
+        .opt2-btn.submit {
+            background: #2ed573;
+            color: white;
+            box-shadow: 0 8px 15px rgba(46, 213, 115, 0.3);
+        }
+        .opt2-btn.submit:hover { transform: translateY(-3px); box-shadow: 0 12px 20px rgba(46, 213, 115, 0.4); }
+
+        @media (max-width: 768px) {
+            .modal-opt2 {
+                grid-template-columns: 1fr;
+            }
         }

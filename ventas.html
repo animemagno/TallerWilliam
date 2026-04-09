@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 
 <head>
@@ -10,7 +10,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="css/ventas_styles.css?v=4">
+    <link rel="stylesheet" href="css/ventas_styles.css?v=9">
 </head>
 
 <body>
@@ -593,50 +593,50 @@
         </div>
 
         <div id="bulk-abono-modal" class="modal-overlay">
-            <div class="modal-content" style="max-width: 500px;">
-                <div style="text-align: center; margin-bottom: 20px;">
-                    <h2 style="margin: 0; color: #2c3e50; font-size: 24px;">TALLER WILLIAN</h2>
-                    <h3 id="bulk-abono-grupo-nombre" style="margin: 5px 0 0 0; color: #3498db; font-size: 20px;"></h3>
-                    <div id="bulk-abono-fecha" style="color: #7f8c8d; font-size: 14px; margin-top: 5px;"></div>
-                </div>
-
-                <!-- Información contextual para facturas seleccionadas -->
-                <div id="bulk-abono-info"
-                    style="background: #e8f4fd; padding: 12px; border-radius: 6px; margin-bottom: 15px; font-size: 14px; color: #2c3e50; display: none;">
-                </div>
-
-                <div style="border: 2px solid #3498db; border-radius: 8px; padding: 15px; margin-bottom: 15px;">
-                    <div id="bulk-abono-equipos-list" style="max-height: 200px; overflow-y: auto;"></div>
-
-                    <div
-                        style="background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%); color: white; padding: 15px; border-radius: 8px; text-align: center; margin-top: 15px;">
-                        <div style="font-size: 14px; margin-bottom: 5px;">TOTAL DEL GRUPO</div>
-                        <div id="bulk-abono-total" style="font-size: 28px; font-weight: bold;">$0.00</div>
+            <div class="modal-content" style="max-width: 850px; background: transparent; padding: 0; box-shadow: none;">
+                <div class="modal-opt2">
+                    <div class="modal-opt2-header">
+                        <div>
+                            <h2 style="margin: 0; font-size: 28px; color: #2f3542; font-weight: 800;">Grupo: <span id="bulk-abono-grupo-nombre"></span></h2>
+                            <div id="bulk-abono-fecha" style="color: #a4b0be; font-size: 14px; margin-top: 5px;"></div>
+                        </div>
+                        <div style="background: #3498db; color: white; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold;">Abono Masivo</div>
                     </div>
-                </div>
-
-                <div class="form-group">
-                    <label for="monto-bulk-abono" style="font-weight: bold; color: #2c3e50;">Monto a Abonar:</label>
-                    <input type="number" id="monto-bulk-abono" step="0.01" min="0.01" placeholder="0.00"
-                        style="font-size: 1.3rem; text-align: center; font-weight: bold; padding: 12px; border: 2px solid #3498db; border-radius: 6px;"
-                        oninput="GrupoManager.calcularSaldoRestante()">
-                </div>
-
-                <div id="saldo-restante-container"
-                    style="background: #e8f4fd; padding: 15px; border-radius: 8px; margin-bottom: 15px; text-align: center; display: none;">
-                    <div style="font-size: 14px; color: #2c3e50; margin-bottom: 5px;">SALDO RESTANTE</div>
-                    <div id="saldo-restante" style="font-size: 24px; font-weight: bold; color: #27ae60;">$0.00</div>
-                </div>
-
-                <div style="display: flex; gap: 10px; margin-top: 15px;">
-                    <button class="btn btn-success" id="process-bulk-abono-btn"
-                        style="flex: 1; font-size: 1.1rem; padding: 12px;">
-                        <i class="fas fa-check-circle"></i> ABONAR
-                    </button>
-                    <button class="btn btn-danger" id="close-bulk-abono-modal"
-                        style="flex: 1; font-size: 1.1rem; padding: 12px;">
-                        <i class="fas fa-times-circle"></i> CANCELAR
-                    </button>
+        
+                    <div id="bulk-abono-info" style="display:none; grid-column: 1 / -1; background: #e8f4fd; padding: 12px; border-radius: 6px; font-size: 14px; color: #2c3e50;"></div>
+        
+                    <!-- Columna Izquierda: Tarjetas -->
+                    <div class="modal-opt2-left" id="bulk-abono-left-col">
+                        <div id="bulk-abono-equipos-list-wrapper">
+                            <div id="bulk-abono-equipos-list"></div>
+                        </div>
+                    </div>
+        
+                    <!-- Columna Derecha: Formulario de Impacto -->
+                    <div class="modal-opt2-right">
+                        <div class="opt2-total-box">
+                            <p>Deuda Total del Grupo</p>
+                            <h3 id="bulk-abono-total">0.00</h3>
+                        </div>
+        
+                        <div class="opt2-input-wrapper">
+                            <label>¿Cuánto vas a abonar hoy?</label>
+                            <div class="opt2-input-field">
+                                <input type="number" id="monto-bulk-abono" step="0.01" min="0.01" placeholder="0.00" oninput="GrupoManager.calcularSaldoRestante()">
+                            </div>
+                        </div>
+        
+                        <!-- SALDO RESTANTE -->
+                        <div id="saldo-restante-container" style="background: #fffafa; border: 1px dashed #ff4757; padding: 12px; border-radius: 12px; margin-top: 15px; text-align: center; display: none;">
+                            <span style="font-size: 12px; font-weight: bold; color: #747d8c; text-transform: uppercase;">Saldo Pendiente</span>
+                            <div id="saldo-restante" style="font-size: 24px; font-weight: 800; color: #ff4757;">$0.00</div>
+                        </div>
+        
+                        <div class="opt2-actions">
+                            <button id="close-bulk-abono-modal" class="opt2-btn cancel">⊗ CERRAR</button>
+                            <button id="process-bulk-abono-btn" class="opt2-btn submit">✓ PROCESAR ABONO</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

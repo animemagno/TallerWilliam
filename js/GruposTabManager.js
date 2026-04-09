@@ -27,23 +27,11 @@ window.GruposTabManager = {
 
                 if (equipoEncontrado && equipoEncontrado.total > 0) {
                     equiposHTML += `
-                        <div class="grupo-equipo-item" onclick="GrupoManager.mostrarDetalleEquipo('${equipoEncontrado.numero}')">
+                        <div class="grupo-equipo-item" onclick="GrupoManager.mostrarDetalleEquipo('${equipoKey.replace(/'/g, "\\'")}')">
                             <div class="grupo-equipo-number">${equipoEncontrado.numero}</div>
                             <div class="grupo-equipo-total">$${equipoEncontrado.total.toFixed(2)}</div>
                         </div>
                     `;
-                } else if (!equipoEncontrado) {
-                    // 2. Fallback para grupos antiguos: buscar por número
-                    GrupoManager.equiposPendientes.forEach((equipo, key) => {
-                        if (String(equipo.numero) === String(equipoKey) && equipo.total > 0) {
-                            equiposHTML += `
-                                <div class="grupo-equipo-item" onclick="GrupoManager.mostrarDetalleEquipo('${equipo.numero}')">
-                                    <div class="grupo-equipo-number">${equipo.numero}</div>
-                                    <div class="grupo-equipo-total">$${equipo.total.toFixed(2)}</div>
-                                </div>
-                            `;
-                        }
-                    });
                 }
             });
 

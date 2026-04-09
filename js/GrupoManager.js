@@ -74,15 +74,7 @@ window.GrupoManager = {
                     // 1. Buscar por clave exacta (ej: "65-Cedros" o "65-Equipo 65")
                     let equipoEncontrado = this.equiposPendientes.get(equipoKey);
 
-                    // 2. Fallback: si la clave es solo un número (grupos antiguos),
-                    //    buscar todas las variantes de ese número
-                    if (!equipoEncontrado) {
-                        this.equiposPendientes.forEach((equipo, key) => {
-                            if (String(equipo.numero) === String(equipoKey) && equipo.total > 0) {
-                                nuevoTotal += equipo.total;
-                            }
-                        });
-                    } else if (equipoEncontrado.total > 0) {
+                    if (equipoEncontrado && equipoEncontrado.total > 0) {
                         nuevoTotal += equipoEncontrado.total;
                     }
                 }
@@ -608,7 +600,8 @@ window.GrupoManager = {
                 if (factura.products && factura.products.length > 0) {
                     const matchStr = factura.products.map(p => p.descripcion).join(' ').toLowerCase();
                     if (matchStr.includes('caja') || matchStr.includes('transmision')) tieneCaja = true;
-                    if (matchStr.includes('aceite') || matchStr.includes('motor')) tieneAceite = true;
+                    const frasesAceite = ['cambio de aceite', 'cambio de aceite de caja', 'cambio de aceite de motor y caja'];
+                    if (frasesAceite.some(frase => matchStr.includes(frase))) tieneAceite = true;
                 }
 
                 let borderStyle = '1px solid #e8e8e8';
@@ -736,7 +729,7 @@ window.GrupoManager = {
         document.getElementById('bulk-abono-grupo-nombre').textContent = '';
         document.getElementById('bulk-abono-fecha').textContent = '';
         document.getElementById('bulk-abono-equipos-list').innerHTML = '';
-        document.getElementById('bulk-abono-equipos-list').parentElement.style.display = 'none';
+        document.getElementById('bulk-abono-left-col').style.display = 'none';
 
         document.getElementById('monto-bulk-abono').value = '';
         modal.style.display = 'block';
@@ -829,19 +822,6 @@ window.GrupoManager = {
                                 timestamp: f.timestamp,
                                 saldoPendiente: f.saldoPendiente !== undefined ? f.saldoPendiente : f.total
                             });
-                        });
-                    } else if (!equipoEncontrado) {
-                        // 2. Fallback para grupos antiguos: buscar por número
-                        this.equiposPendientes.forEach((equipo, key) => {
-                            if (String(equipo.numero) === String(equipoKey) && equipo.facturas) {
-                                equipo.facturas.forEach(f => {
-                                    facturas.push({
-                                        id: f.id,
-                                        timestamp: f.timestamp,
-                                        saldoPendiente: f.saldoPendiente !== undefined ? f.saldoPendiente : f.total
-                                    });
-                                });
-                            }
                         });
                     }
                 }
@@ -971,12 +951,6 @@ window.GrupoManager = {
             const equiposCoincidentes = [];
             if (equipoEncontrado && equipoEncontrado.total > 0) {
                 equiposCoincidentes.push(equipoEncontrado);
-            } else if (!equipoEncontrado) {
-                this.equiposPendientes.forEach((equipo, key) => {
-                    if (String(equipo.numero) === String(equipoKey) && equipo.total > 0) {
-                        equiposCoincidentes.push(equipo);
-                    }
-                });
             }
 
             for (const equipo of equiposCoincidentes) {
@@ -1048,7 +1022,8 @@ window.GrupoManager = {
                     if (factura.products && factura.products.length > 0) {
                         const matchStr = factura.products.map(p => p.descripcion).join(' ').toLowerCase();
                         if (matchStr.includes('caja') || matchStr.includes('transmision')) tieneCaja = true;
-                        if (matchStr.includes('aceite') || matchStr.includes('motor')) tieneAceite = true;
+                        const frasesAceite = ['cambio de aceite', 'cambio de aceite de caja', 'cambio de aceite de motor y caja'];
+                        if (frasesAceite.some(frase => matchStr.includes(frase))) tieneAceite = true;
                     }
 
                     let borderStyle = '1px solid #e8e8e8';
@@ -1168,14 +1143,7 @@ window.GrupoManager = {
             // 1. Buscar por clave exacta
             let equipoEncontrado = this.equiposPendientes.get(equipoKey);
 
-            // 2. Fallback para grupos antiguos
-            if (!equipoEncontrado) {
-                this.equiposPendientes.forEach((equipo, key) => {
-                    if (String(equipo.numero) === String(equipoKey) && equipo.total > 0) {
-                        equipoEncontrado = equipo;
-                    }
-                });
-            }
+            // Fallback eliminado: exigimos coincidencia exacta.
 
             if (equipoEncontrado && equipoEncontrado.total > 0) {
                 equipoEncontrado.facturas.forEach(factura => {
@@ -1364,14 +1332,7 @@ window.GrupoManager = {
                 // 1. Buscar por clave exacta
                 let equipoEncontrado = this.equiposPendientes.get(equipoKey);
 
-                // 2. Fallback para grupos antiguos: buscar por número
-                if (!equipoEncontrado) {
-                    this.equiposPendientes.forEach((equipo, key) => {
-                        if (String(equipo.numero) === String(equipoKey) && equipo.total > 0) {
-                            equipoEncontrado = equipo;
-                        }
-                    });
-                }
+                // Fallback eliminado: exigimos coincidencia exacta.
 
                 if (equipoEncontrado && equipoEncontrado.total > 0) {
                     totalGrupo += equipoEncontrado.total;
@@ -1568,7 +1529,7 @@ window.GrupoManager = {
                     label = `${numeroKey} - ${nombre}`;
                 }
 
-                badgesHTML += `<span class="selected-equipo-badge">${label} ($${total.toFixed(2)})</span>`;
+                badgesHTML += `<span class="selected-equipo-badge" style="cursor: pointer; display: inline-flex; align-items: center; gap: 4px;" onclick="GrupoManager.toggleEquipoSelection('${key}', '${modalType}')" title="Clic para remover">${label} ($${total.toFixed(2)}) <i class="fas fa-times" style="font-size: 0.8em; opacity: 0.8;"></i></span>`;
             });
             selectedList.innerHTML = badgesHTML;
         }
@@ -1641,10 +1602,22 @@ window.GrupoManager = {
         const selector = modalType === 'crear' ? '.all-equipo-item' : '#editar-all-equipos-grid .all-equipo-item';
         document.querySelectorAll(selector).forEach(item => {
             if (item.dataset.id === equipoKey) {
+                const spanNum = item.querySelector('span');
+                const smalls = item.querySelectorAll('small');
+                const lastSmall = smalls.length > 0 ? smalls[smalls.length - 1] : null;
+
                 if (selectedSet.has(equipoKey)) {
                     item.classList.add('selected');
+                    item.style.setProperty('background', '#3498db', 'important');
+                    item.style.setProperty('border-color', '#2980b9', 'important');
+                    if (spanNum) spanNum.style.setProperty('color', 'white', 'important');
+                    if (lastSmall) lastSmall.style.setProperty('color', '#eee', 'important');
                 } else {
                     item.classList.remove('selected');
+                    item.style.removeProperty('background');
+                    item.style.removeProperty('border-color');
+                    if (spanNum) spanNum.style.removeProperty('color');
+                    if (lastSmall) lastSmall.style.removeProperty('color');
                 }
             }
         });

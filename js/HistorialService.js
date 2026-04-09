@@ -267,7 +267,8 @@ const HistorialService = {
                 if (venta.products && venta.products.length > 0) {
                     const matchStr = venta.products.map(p => p.descripcion).join(' ').toLowerCase();
                     if (matchStr.includes('caja') || matchStr.includes('transmision')) tieneCaja = true;
-                    if (matchStr.includes('aceite') || matchStr.includes('motor')) tieneAceite = true;
+                    const frasesAceite = ['cambio de aceite', 'cambio de aceite de caja', 'cambio de aceite de motor y caja'];
+                    if (frasesAceite.some(frase => matchStr.includes(frase))) tieneAceite = true;
                 }
 
                 let aceiteStyle = '';

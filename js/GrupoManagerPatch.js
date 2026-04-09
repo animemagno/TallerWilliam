@@ -15,47 +15,31 @@ GrupoManager.showGroupPaymentModal = function (grupoId) {
         minute: '2-digit'
     });
 
-    // Recopilar equipos: primero por clave exacta, luego por número como respaldo
-    let equiposHTML = '';
+    // Update Info displays
+    document.getElementById('bulk-abono-info').style.display = 'none';
+    document.getElementById('bulk-abono-left-col').style.display = 'block';
+
+    // Recopilar equipos: solo por clave exacta
+    let equiposHTML = '<div style="font-weight: 800; color: #747d8c; margin-bottom: 12px; font-size: 13px; text-transform: uppercase; padding-left: 5px;">Equipos en Grupo</div>';
     let totalGrupoReal = 0;
-    let contador = 0;
 
     for (const equipoKey of grupo.equipos) {
-        // 1. Buscar por clave exacta (ej: "65-Cedros", "65-Equipo 65")
         let equipoEncontrado = this.equiposPendientes.get(equipoKey);
 
         if (equipoEncontrado && equipoEncontrado.total > 0) {
-            // Encontrado por clave exacta
             totalGrupoReal += equipoEncontrado.total;
-            const bgColor = contador % 2 === 0 ? '#f9f9f9' : 'white';
             equiposHTML += `
-                <div style="display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #ddd; background: ${bgColor};">
-                    <div style="font-weight: bold; color: #2c3e50; font-size: 16px;">${equipoEncontrado.numero} - ${equipoEncontrado.cliente || 'Equipo ' + equipoEncontrado.numero}</div>
-                    <div style="font-weight: bold; color: #e74c3c; font-size: 16px;">$${equipoEncontrado.total.toFixed(2)}</div>
+                <div class="opt2-item">
+                    <div class="name">${equipoEncontrado.numero} - ${equipoEncontrado.cliente || 'Equipo ' + equipoEncontrado.numero}</div>
+                    <div class="amount">$${equipoEncontrado.total.toFixed(2)}</div>
                 </div>
             `;
-            contador++;
-        } else if (!equipoEncontrado) {
-            // 2. Fallback para grupos antiguos: buscar por número
-            this.equiposPendientes.forEach((equipo, key) => {
-                if (String(equipo.numero) === String(equipoKey) && equipo.total > 0) {
-                    totalGrupoReal += equipo.total;
-                    const bgColor = contador % 2 === 0 ? '#f9f9f9' : 'white';
-                    equiposHTML += `
-                        <div style="display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #ddd; background: ${bgColor};">
-                            <div style="font-weight: bold; color: #2c3e50; font-size: 16px;">${equipo.numero} - ${equipo.cliente || 'Equipo ' + equipo.numero}</div>
-                            <div style="font-weight: bold; color: #e74c3c; font-size: 16px;">$${equipo.total.toFixed(2)}</div>
-                        </div>
-                    `;
-                    contador++;
-                }
-            });
         }
     }
 
     // Actualizar lista de equipos y total
     document.getElementById('bulk-abono-equipos-list').innerHTML = equiposHTML || '<div style="text-align: center; color: #999;">No hay equipos con saldo</div>';
-    document.getElementById('bulk-abono-total').textContent = `$${totalGrupoReal.toFixed(2)}`;
+    document.getElementById('bulk-abono-total').textContent = totalGrupoReal.toFixed(2);
 
     // Guardar el total REAL en el modal para cálculos
     modal.dataset.totalGrupo = totalGrupoReal;
@@ -95,19 +79,6 @@ GrupoManager.showGroupPaymentModal = function (grupoId) {
                             timestamp: f.timestamp,
                             saldoPendiente: f.saldoPendiente !== undefined ? f.saldoPendiente : f.total
                         });
-                    });
-                } else if (!equipoExacto) {
-                    // Fallback para grupos antiguos: buscar por número
-                    GrupoManager.equiposPendientes.forEach((equipo, key) => {
-                        if (String(equipo.numero) === String(equipoKey) && equipo.facturas) {
-                            equipo.facturas.forEach(f => {
-                                facturas.push({
-                                    id: f.id,
-                                    timestamp: f.timestamp,
-                                    saldoPendiente: f.saldoPendiente !== undefined ? f.saldoPendiente : f.total
-                                });
-                            });
-                        }
                     });
                 }
             }
