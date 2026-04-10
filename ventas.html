@@ -484,7 +484,10 @@
 
         <!-- Modales existentes -->
         <div class="modal-overlay" id="detalle-modal">
-            <div class="modal-content">
+            <div class="modal-content" style="position: relative;">
+                <button onclick="document.getElementById('detalle-modal').style.display='none'"
+                    style="position: sticky; top: 0; float: right; z-index: 10; background: #e74c3c; color: white; border: none; width: 32px; height: 32px; border-radius: 50%; font-size: 16px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center;"
+                    title="Cerrar">✕</button>
                 <div id="detalle-modal-content"></div>
                 <div style="display: flex; gap: 10px; margin-top: 15px;">
                     <button class="btn btn-success" id="imprimir-detalle-modal" style="flex: 1;">
@@ -577,17 +580,26 @@
         </div>
 
         <div id="abono-modal" class="modal-overlay">
-            <div class="modal-content">
-                <h3 style="margin-bottom: 15px; text-align: center;">Registrar Abono</h3>
+            <div class="modal-content" style="max-width: 450px;">
+                <h3 style="margin-bottom: 15px; text-align: center; color: #2f3542; font-weight: 800;">Registrar Abono</h3>
                 <div id="abono-modal-content"></div>
-                <div class="form-group">
-                    <label for="monto-abono">Monto del Abono:</label>
-                    <input type="number" id="monto-abono" step="0.01" min="0.01" placeholder="0.00">
+                
+                <div class="opt2-input-wrapper">
+                    <label>¿Cuánto vas a abonar hoy?</label>
+                    <div class="opt2-input-field">
+                        <input type="number" id="monto-abono" step="0.01" min="0.01" placeholder="0.00" oninput="SalesService.calcularSaldoRestanteIndividual()">
+                    </div>
                 </div>
-                <div style="display: flex; gap: 10px; margin-top: 15px;">
-                    <button class="btn btn-success" id="process-abono-btn" style="flex: 1;">PROCESAR
-                        ABONO</button>
-                    <button class="btn btn-danger" id="close-abono-modal" style="flex: 1;">CANCELAR</button>
+
+                <!-- SALDO RESTANTE -->
+                <div id="single-abono-saldo-restante-container" style="background: #fffafa; border: 1px dashed #ff4757; padding: 12px; border-radius: 12px; margin-top: 15px; text-align: center; display: none;">
+                    <span style="font-size: 12px; font-weight: bold; color: #747d8c; text-transform: uppercase;">Nuevo Saldo Pendiente</span>
+                    <div id="single-abono-saldo-restante" style="font-size: 24px; font-weight: 800; color: #ff4757;">$0.00</div>
+                </div>
+
+                <div class="opt2-actions" style="margin-top: 20px;">
+                    <button class="opt2-btn cancel" id="close-abono-modal">⊗ CERRAR</button>
+                    <button class="opt2-btn submit" id="process-abono-btn">✓ PROCESAR ABONO</button>
                 </div>
             </div>
         </div>

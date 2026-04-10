@@ -46,9 +46,11 @@ GrupoManager.showGroupPaymentModal = function (grupoId) {
     modal.dataset.totalGrupo = totalGrupoReal;
     modal.dataset.grupoId = grupoId;
 
-    // Limpiar campo de monto y ocultar saldo restante
+    // Limpiar campo de monto y mostrar saldo restante con total completo
     document.getElementById('monto-bulk-abono').value = '';
-    document.getElementById('saldo-restante-container').style.display = 'none';
+    document.getElementById('saldo-restante-container').style.display = 'block';
+    document.getElementById('saldo-restante').textContent = `$${totalGrupoReal.toFixed(2)}`;
+    document.getElementById('saldo-restante').style.color = '#e74c3c';
 
     modal.style.display = 'block';
 
@@ -156,12 +158,8 @@ GrupoManager.calcularSaldoRestante = function () {
     const saldoRestanteContainer = document.getElementById('saldo-restante-container');
     const saldoRestanteElement = document.getElementById('saldo-restante');
 
-    if (monto > 0) {
-        const saldoRestante = Math.max(0, totalGrupo - monto);
-        saldoRestanteElement.textContent = `$${saldoRestante.toFixed(2)}`;
-        saldoRestanteElement.style.color = saldoRestante > 0 ? '#e74c3c' : '#27ae60';
-        saldoRestanteContainer.style.display = 'block';
-    } else {
-        saldoRestanteContainer.style.display = 'none';
-    }
+    const saldoRestante = Math.max(0, totalGrupo - monto);
+    saldoRestanteElement.textContent = `$${saldoRestante.toFixed(2)}`;
+    saldoRestanteElement.style.color = saldoRestante > 0 ? '#e74c3c' : '#27ae60';
+    saldoRestanteContainer.style.display = 'block';
 };

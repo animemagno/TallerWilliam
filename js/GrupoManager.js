@@ -771,7 +771,28 @@ window.GrupoManager = {
         document.getElementById('bulk-abono-left-col').style.display = 'none';
         document.querySelector('.modal-opt2').classList.add('single-column');
 
+        // Calcular el total pendiente de las facturas seleccionadas
+        let totalSeleccionado = 0;
+        for (const invoiceId of AppState.selectedInvoicesForPayment) {
+            // Buscar en equiposPendientes (fuente real de datos)
+            for (const [, equipo] of this.equiposPendientes) {
+                const factura = equipo.facturas.find(f => f.id === invoiceId);
+                if (factura) {
+                    const saldo = factura.saldoPendiente !== undefined ? factura.saldoPendiente : factura.total;
+                    totalSeleccionado += saldo;
+                    break;
+                }
+            }
+        }
+
+        // Mostrar el total en el cuadro oscuro y guardarlo para el calculador
+        document.getElementById('bulk-abono-total').textContent = totalSeleccionado.toFixed(2);
+        modal.dataset.totalGrupo = totalSeleccionado;
+
         document.getElementById('monto-bulk-abono').value = '';
+        document.getElementById('saldo-restante-container').style.display = 'block';
+        document.getElementById('saldo-restante').textContent = `$${totalSeleccionado.toFixed(2)}`;
+        document.getElementById('saldo-restante').style.color = '#e74c3c';
         modal.style.display = 'block';
 
         // Configurar el botón para procesar facturas seleccionadas

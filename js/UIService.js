@@ -371,6 +371,17 @@ const UIService = {
         document.getElementById('abono-modal-content').innerHTML = content;
         document.getElementById('abono-modal').style.display = 'block';
         document.getElementById('monto-abono').value = '';
+        
+        // Mostrar el calculador con saldo completo
+        const saldoContainer = document.getElementById('single-abono-saldo-restante-container');
+        const saldoElement = document.getElementById('single-abono-saldo-restante');
+        if (saldoContainer && saldoElement) {
+            const saldoInicial = document.getElementById('abono-modal').dataset.saldoPendiente || '0';
+            saldoElement.textContent = `$${parseFloat(saldoInicial).toFixed(2)}`;
+            saldoElement.style.color = '#e74c3c';
+            saldoContainer.style.display = 'block';
+        }
+        
         document.getElementById('monto-abono').focus();
     },
 

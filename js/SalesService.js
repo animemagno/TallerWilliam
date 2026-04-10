@@ -797,8 +797,42 @@ const SalesService = {
         if (!venta) return;
         AppState.currentAbonoInvoice = venta;
         const saldoPendiente = venta.saldoPendiente !== undefined ? venta.saldoPendiente : venta.total;
-        const modalContent = `<div class="invoice-details"><strong>Factura:</strong> ${venta.invoiceNumber}<br><strong>Grupo:</strong> ${venta.clientName}<br><strong>Total:</strong> $${venta.total.toFixed(2)}<br><strong>Saldo Pendiente:</strong> $${saldoPendiente.toFixed(2)}</div>`;
+        
+        // Estilo premium similar a Abono Masivo
+        const modalContent = `
+            <div class="opt2-total-box" style="margin-bottom: 20px;">
+                <p>Deuda de Factura #${venta.invoiceNumber}</p>
+                <h3>${saldoPendiente.toFixed(2)}</h3>
+            </div>
+            <div style="font-size: 0.9rem; color: #747d8c; margin-bottom: 15px; text-align: center;">
+                <strong>Equipo:</strong> ${venta.equipoNumber || '-'} | <strong>Cliente:</strong> ${venta.clientName || '-'}
+            </div>
+        `;
+        
+        const modal = document.getElementById('abono-modal');
+        modal.dataset.saldoPendiente = saldoPendiente; // Guardar para calcular en tiempo real
+        
         UIService.showAbonoModal(modalContent);
+    },
+
+    calcularSaldoRestanteIndividual() {
+        const modal = document.getElementById('abono-modal');
+        const saldoPendiente = parseFloat(modal.dataset.saldoPendiente) || 0;
+        const montoInput = document.getElementById('monto-abono');
+        const monto = parseFloat(montoInput.value) || 0;
+
+        const saldoRestanteContainer = document.getElementById('single-abono-saldo-restante-container');
+        const saldoRestanteElement = document.getElementById('single-abono-saldo-restante');
+
+        if (monto > 0) {
+            const saldoRestante = Math.max(0, saldoPendiente - monto);
+            saldoRestanteElement.textContent = `$${saldoRestante.toFixed(2)}`;
+            saldoRestanteElement.style.color = saldoRestante > 0 ? '#e74c3c' : '#27ae60';
+        } else {
+            saldoRestanteElement.textContent = `$${saldoPendiente.toFixed(2)}`;
+            saldoRestanteElement.style.color = '#e74c3c';
+        }
+        saldoRestanteContainer.style.display = 'block';
     },
 
     async processAbono() {
