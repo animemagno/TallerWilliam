@@ -53,6 +53,26 @@ window.GrupoManager = {
         }
     },
 
+    // NUEVO: Función auxiliar para buscar equipo con su lógica de fallback
+    getEquipoData(equipoKey) {
+        // 1. Buscar por clave exacta
+        let equipo = this.equiposPendientes.get(equipoKey);
+        
+        // 2. Búsqueda inteligente (NO DESTRUCTIVA) enfocada SOLO en variaciones vacías vs "Equipo X"
+        // Si el grupo pide "95", pero la factura se guardó como "95-Equipo 95"
+        if (!equipo && !equipoKey.includes('-')) {
+            equipo = this.equiposPendientes.get(`${equipoKey}-Equipo ${equipoKey}`);
+        }
+        
+        // 3. Inverso: Si el grupo pide "95-Equipo 95" pero la factura vieja se guardó como "95"
+        if (!equipo && equipoKey.includes('-Equipo ')) {
+            const numeroSolo = equipoKey.split('-')[0];
+            equipo = this.equiposPendientes.get(numeroSolo);
+        }
+
+        return equipo;
+    },
+
     // CORRECCIÓN 5: Función optimizada para actualizar totales
     async actualizarTotalesGrupos(force = false) {
         try {
@@ -69,13 +89,17 @@ window.GrupoManager = {
                 // CORRECCIÓN: Siempre recalcular el total desde equiposPendientes
                 // No usar caché porque los saldos cambian con abonos
                 let nuevoTotal = 0;
+                let processedEquipos = new Set(); // Evitar doble suma
 
                 for (const equipoKey of grupo.equipos) {
-                    // 1. Buscar por clave exacta (ej: "65-Cedros" o "65-Equipo 65")
-                    let equipoEncontrado = this.equiposPendientes.get(equipoKey);
+                    // 1. Buscar por clave exacta o fallback
+                    let equipoEncontrado = this.getEquipoData(equipoKey);
 
                     if (equipoEncontrado && equipoEncontrado.total > 0) {
-                        nuevoTotal += equipoEncontrado.total;
+                        if (!processedEquipos.has(equipoEncontrado)) {
+                            processedEquipos.add(equipoEncontrado);
+                            nuevoTotal += equipoEncontrado.total;
+                        }
                     }
                 }
 
@@ -134,8 +158,8 @@ window.GrupoManager = {
             snapshot.forEach(doc => {
                 const venta = doc.data();
                 const equipo = venta.equipoNumber;
-                const cliente = venta.clientName || '';
-
+                let cliente = venta.clientName || '';
+                
                 let saldoPendiente = venta.total || 0;
                 if (venta.abonos && venta.abonos.length > 0) {
                     const totalAbonado = venta.abonos.reduce((sum, abono) => sum + abono.monto, 0);
@@ -422,6 +446,21 @@ window.GrupoManager = {
         });
 
         return equiposEnGrupos;
+    },
+
+    getGrupoDeEquipo(key, numeroCorto) {
+        let result = null;
+        this.grupos.forEach(grupo => {
+            if (grupo.equipos.includes(key)) {
+                result = { id: grupo.id, nombre: grupo.nombre };
+            } else if (numeroCorto && grupo.equipos.includes(numeroCorto.toString())) {
+                // Fallback para nombres por defecto / legacy
+                if (key === `${numeroCorto}-Equipo ${numeroCorto}` || key === numeroCorto.toString()) {
+                    result = { id: grupo.id, nombre: grupo.nombre };
+                }
+            }
+        });
+        return result;
     },
 
     updateUI() {
@@ -730,6 +769,7 @@ window.GrupoManager = {
         document.getElementById('bulk-abono-fecha').textContent = '';
         document.getElementById('bulk-abono-equipos-list').innerHTML = '';
         document.getElementById('bulk-abono-left-col').style.display = 'none';
+        document.querySelector('.modal-opt2').classList.add('single-column');
 
         document.getElementById('monto-bulk-abono').value = '';
         modal.style.display = 'block';
@@ -1328,13 +1368,14 @@ window.GrupoManager = {
             let totalGrupo = 0;
             let filaIndex = 0;
 
+            let procesadosVisual = new Set();
             for (const equipoKey of grupo.equipos) {
-                // 1. Buscar por clave exacta
-                let equipoEncontrado = this.equiposPendientes.get(equipoKey);
-
-                // Fallback eliminado: exigimos coincidencia exacta.
+                // 1. Buscar por clave exacta o fallback
+                let equipoEncontrado = this.getEquipoData(equipoKey);
 
                 if (equipoEncontrado && equipoEncontrado.total > 0) {
+                    if (!procesadosVisual.has(equipoEncontrado)) {
+                        procesadosVisual.add(equipoEncontrado);
                     totalGrupo += equipoEncontrado.total;
                     const bgColor = filaIndex % 2 === 0 ? 'white' : '#f9f9f9';
                     filaIndex++;
@@ -1347,6 +1388,7 @@ window.GrupoManager = {
                             <div style="font-weight: bold; color: #e74c3c; font-size: 16px;">$${equipoEncontrado.total.toFixed(2)}</div>
                         </div>
                     `;
+                    }
                 }
             }
 

@@ -1922,6 +1922,10 @@
             max-height: 85vh;
             overflow-y: auto;
         }
+
+        .modal-opt2.single-column {
+            grid-template-columns: 1fr;
+        }
         
         .modal-opt2-header {
             grid-column: 1 / -1;

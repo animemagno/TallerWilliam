@@ -20,18 +20,22 @@ window.GruposTabManager = {
         let html = '';
         gruposOrdenados.forEach(grupo => {
             let equiposHTML = '';
+            let procesadosVisual = new Set(); // Evitar duplicar tarjetas
 
             grupo.equipos.forEach(equipoKey => {
                 // 1. Buscar por clave exacta
-                let equipoEncontrado = GrupoManager.equiposPendientes.get(equipoKey);
+                let equipoEncontrado = GrupoManager.getEquipoData ? GrupoManager.getEquipoData(equipoKey) : GrupoManager.equiposPendientes.get(equipoKey);
 
                 if (equipoEncontrado && equipoEncontrado.total > 0) {
-                    equiposHTML += `
-                        <div class="grupo-equipo-item" onclick="GrupoManager.mostrarDetalleEquipo('${equipoKey.replace(/'/g, "\\'")}')">
-                            <div class="grupo-equipo-number">${equipoEncontrado.numero}</div>
-                            <div class="grupo-equipo-total">$${equipoEncontrado.total.toFixed(2)}</div>
-                        </div>
-                    `;
+                    if (!procesadosVisual.has(equipoEncontrado)) {
+                        procesadosVisual.add(equipoEncontrado);
+                        equiposHTML += `
+                            <div class="grupo-equipo-item" onclick="GrupoManager.mostrarDetalleEquipo('${equipoKey.replace(/'/g, "\\'")}')">
+                                <div class="grupo-equipo-number">${equipoEncontrado.numero}</div>
+                                <div class="grupo-equipo-total">$${equipoEncontrado.total.toFixed(2)}</div>
+                            </div>
+                        `;
+                    }
                 }
             });
 

@@ -35,6 +35,17 @@ const DataService = {
                     throw new Error(`La factura ${saleData.invoiceNumber} ya existe`);
                 }
 
+                // NUEVO: Verificar si este equipo ya pertenece a un grupo para asignarlo automáticamente a la nueva factura.
+                if (window.GrupoManager) {
+                    const key = saleData.clientName ? `${saleData.equipoNumber}-${saleData.clientName}` : String(saleData.equipoNumber);
+                    const grupoDestino = GrupoManager.getGrupoDeEquipo(key, saleData.equipoNumber);
+                    if (grupoDestino) {
+                        saleData.grupo = grupoDestino.id;
+                        saleData.grupoNombre = grupoDestino.nombre;
+                        console.log(`Asignando nueva factura al grupo existente: ${grupoDestino.nombre}`);
+                    }
+                }
+
                 const docRef = await ErrorHandler.withRetry(
                     () => AppState.db.collection("VENTAS").add(saleData),
                     3,
@@ -111,6 +122,21 @@ const DataService = {
     async updateSale(saleId, saleData) {
         return await ConcurrencyManager.withLock(async () => {
             if (AppState.firebaseInitialized) {
+                
+                // NUEVO: Verificar grupo también al actualizar (por si cambió de cliente o equipo, o pasó a pendiente)
+                if (window.GrupoManager && saleData.paymentType === 'pendiente' && saleData.equipoNumber) {
+                    const key = saleData.clientName ? `${saleData.equipoNumber}-${saleData.clientName}` : String(saleData.equipoNumber);
+                    const grupoDestino = GrupoManager.getGrupoDeEquipo(key, saleData.equipoNumber);
+                    if (grupoDestino) {
+                        saleData.grupo = grupoDestino.id;
+                        saleData.grupoNombre = grupoDestino.nombre;
+                    } else {
+                        // Si no pertenece a grupo, asegurarse de limpiar campos para evitar inconsistencias
+                        saleData.grupo = firebase.firestore.FieldValue.delete();
+                        saleData.grupoNombre = firebase.firestore.FieldValue.delete();
+                    }
+                }
+
                 await ErrorHandler.withRetry(
                     () => AppState.db.collection("VENTAS").doc(saleId).update(saleData),
                     3,

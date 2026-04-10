@@ -18,6 +18,7 @@ GrupoManager.showGroupPaymentModal = function (grupoId) {
     // Update Info displays
     document.getElementById('bulk-abono-info').style.display = 'none';
     document.getElementById('bulk-abono-left-col').style.display = 'block';
+    document.querySelector('.modal-opt2').classList.remove('single-column');
 
     // Recopilar equipos: solo por clave exacta
     let equiposHTML = '<div style="font-weight: 800; color: #747d8c; margin-bottom: 12px; font-size: 13px; text-transform: uppercase; padding-left: 5px;">Equipos en Grupo</div>';
