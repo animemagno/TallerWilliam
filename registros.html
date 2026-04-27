@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Salidas - Taller William</title>
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+    
+    <!-- SheetJS for Excel parsing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- CSS Base from the project -->
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #34495e;
+            --accent-color: #e67e22;
+            --success-color: #27ae60;
+            --danger-color: #e74c3c;
+            --bg-color: #f4f6f8;
+            --card-bg: #ffffff;
+            --text-main: #333333;
+            --text-muted: #7f8c8d;
+            --border-radius: 8px;
+            --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            padding: 20px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            background: var(--card-bg);
+            padding: 15px 20px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+        }
+
+        .header h1 {
+            color: var(--primary-color);
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-buttons a {
+            text-decoration: none;
+            color: white;
+            background: var(--secondary-color);
+            padding: 8px 15px;
+            border-radius: 4px;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+
+        .nav-buttons a:hover {
+            background: var(--primary-color);
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 900px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            box-shadow: var(--box-shadow);
+        }
+
+        .card-title {
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--bg-color);
+            font-size: 18px;
+        }
+
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: var(--secondary-color);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 2px rgba(230, 126, 34, 0.2);
+        }
+
+        .btn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: opacity 0.3s;
+            width: 100%;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        .btn-primary { background: var(--accent-color); color: white; }
+        .btn-success { background: var(--success-color); color: white; }
+        .btn-danger { background: var(--danger-color); color: white; }
+
+        /* Table Styles */
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        th {
+            background-color: var(--bg-color);
+            color: var(--secondary-color);
+            font-weight: 600;
+        }
+
+        tr:hover {
+            background-color: #f9f9f9;
+        }
+
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .status-pending { background: #ffeaa7; color: #d35400; }
+        .status-invoiced { background: #55efc4; color: #00b894; }
+
+        .excel-upload-wrapper {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px dashed #ccc;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-input-wrapper input[type=file] {
+            font-size: 100px;
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        /* Loading Overlay */
+        #loading-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(255,255,255,0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--accent-color);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .filters {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .excel-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 10px;
+        }
+        .excel-table th {
+            background-color: var(--secondary-color);
+            color: white;
+            padding: 10px;
+            text-align: left;
+            font-size: 14px;
+        }
+        .excel-table td {
+            border: 1px solid #ddd;
+            padding: 0;
+        }
+        .excel-table .cell-input {
+            border: none;
+            border-radius: 0;
+            width: 100%;
+            padding: 10px;
+            background-color: transparent;
+            font-size: 15px;
+        }
+        .excel-table .cell-input:focus {
+            background-color: #fffde7;
+            outline: 2px solid var(--accent-color);
+            outline-offset: -2px;
+        }
+
+        /* Success Flash Animation */
+        @keyframes flashSuccess {
+            0% { background-color: rgba(39, 174, 96, 0.3); }
+            100% { background-color: transparent; }
+        }
+        .flash-success {
+            animation: flashSuccess 1s ease-out;
+        }
+        
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-muted);
+        }
+        .empty-state i {
+            font-size: 40px;
+            color: #ddd;
+            margin-bottom: 10px;
+        }
+
+        /* Botones de Fechas (Sidebar) */
+        .date-btn {
+            background: none;
+            border: 1px solid #eee;
+            padding: 12px 15px;
+            text-align: left;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 15px;
+            color: var(--secondary-color);
+            transition: all 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .date-btn:hover {
+            background-color: var(--bg-color);
+        }
+        .date-btn.active {
+            background-color: var(--accent-color);
+            color: white;
+            border-color: var(--accent-color);
+            font-weight: bold;
+        }
+        .date-btn .badge {
+            background: rgba(0,0,0,0.1);
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+
+        /* Inner Tabs para Resumen */
+        .inner-tabs {
+            display: flex;
+            gap: 20px;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 15px;
+        }
+        .inner-tab-btn {
+            background: none;
+            border: none;
+            padding: 8px 5px;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-muted);
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -1px;
+            transition: all 0.3s;
+        }
+        .inner-tab-btn:hover {
+            color: var(--secondary-color);
+        }
+        .inner-tab-btn.active {
+            color: var(--primary-color);
+            border-bottom: 3px solid var(--primary-color);
+        }
+        .inner-tab-content {
+            display: none;
+            animation: fadeIn 0.2s;
+        }
+        .inner-tab-content.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Tabs Principales */
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #ddd;
+            padding-bottom: 0;
+            overflow-x: auto;
+        }
+        .tab-btn {
+            background: none;
+            border: none;
+            padding: 12px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            color: var(--text-muted);
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+            transition: all 0.3s;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .tab-btn:hover {
+            color: var(--primary-color);
+        }
+        .tab-btn.active {
+            color: var(--accent-color);
+            border-bottom: 3px solid var(--accent-color);
+        }
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="loading-overlay">
+        <div class="spinner"></div>
+    </div>
+
+    <div class="header">
+        <h1><i class="fas fa-clipboard-list"></i> Registro de Salidas</h1>
+        <div class="nav-buttons">
+            <a href="index.html"><i class="fas fa-home"></i> Menú Principal</a>
+        </div>
+    </div>
+    <div class="container" style="display: flex; flex-direction: column;">
+        
+        <!-- Tabs Nav -->
+        <div class="tabs">
+            <button class="tab-btn active" onclick="RegistrosApp.switchTab('tab-manual', this)"><i class="fas fa-keyboard"></i> Entrada Rápida</button>
+            <button class="tab-btn" onclick="RegistrosApp.switchTab('tab-registros', this)"><i class="fas fa-list"></i> Últimos Registros</button>
+            <button class="tab-btn" onclick="RegistrosApp.switchTab('tab-facturacion', this)"><i class="fas fa-file-invoice"></i> Generar Factura</button>
+            <button class="tab-btn" onclick="RegistrosApp.switchTab('tab-excel', this)"><i class="fas fa-file-excel"></i> Carga Masiva</button>
+        </div>
+
+        <!-- Tab 1: Manual Entry Split -->
+        <div class="tab-content active" id="tab-manual">
+            <div style="display: grid; grid-template-columns: 400px 1fr; gap: 20px; align-items: stretch;">
+                
+                <!-- Left: Formulario -->
+                <div class="card" style="display: flex; flex-direction: column;">
+                    <h2 class="card-title"><i class="fas fa-barcode"></i> Ingreso de Producto</h2>
+                    <div class="form-group" style="margin-bottom: 20px;">
+                        <label for="global-fecha" style="font-weight: bold; color: var(--secondary-color);">Fecha del Registro</label>
+                        <input type="date" id="global-fecha" class="form-control" required style="border: 2px solid var(--primary-color);">
+                    </div>
+                    
+                    <form id="fast-entry-form">
+                        <div class="form-group">
+                            <label>Producto (Código o Descripción)</label>
+                            <input type="text" id="fast-producto" class="form-control" placeholder="Escanea o escribe..." required autocomplete="off">
+                        </div>
+                        <div class="form-group" style="display: flex; gap: 10px;">
+                            <div style="flex: 1;">
+                                <label>Cant.</label>
+                                <input type="number" id="fast-cantidad" class="form-control" value="1" min="1" required>
+                            </div>
+                            <div style="flex: 2;">
+                                <label>Cuenta (Opcional)</label>
+                                <input type="text" id="fast-cuenta" class="form-control" placeholder="Mayorista...">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Observación (Opcional)</label>
+                            <input type="text" id="fast-observacion" class="form-control" placeholder="Detalles extra...">
+                        </div>
+                        <button type="submit" class="btn" style="background-color: var(--secondary-color); color: white; width: 100%; margin-top: auto; padding: 12px;">
+                            <i class="fas fa-arrow-right"></i> Agregar a la Tabla
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Right: Tabla Tipo Excel (Lista Pendiente) -->
+                <div class="card" style="display: flex; flex-direction: column;">
+                    <div class="inner-tabs">
+                        <button class="inner-tab-btn active" onclick="RegistrosApp.switchInnerTab('lista', this)">
+                            <i class="fas fa-list-ul"></i> Tabla de Registros a Guardar
+                        </button>
+                        <button class="inner-tab-btn" onclick="RegistrosApp.switchInnerTab('resumen', this)">
+                            <i class="fas fa-chart-pie"></i> Resumen Dinámico
+                        </button>
+                    </div>
+                    
+                    <div id="inner-tab-lista" class="inner-tab-content active" style="flex-grow: 1;">
+                        <div class="table-responsive" style="flex-grow: 1; min-height: 250px; border: 1px solid #ddd; border-radius: 4px; border-bottom: none;">
+                            <table class="excel-table" style="margin-bottom: 0;">
+                                <thead>
+                                <tr>
+                                    <th style="width: 70px;">Cant.</th>
+                                    <th>Descripción / Producto</th>
+                                    <th style="width: 150px;">Cuenta</th>
+                                    <th style="width: 200px;">Observación</th>
+                                    <th style="width: 50px;"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="fast-entry-tbody">
+                                <tr id="empty-state-row">
+                                    <td colspan="5">
+                                        <div class="empty-state">
+                                            <i class="fas fa-box-open"></i>
+                                            <p>No hay productos en la lista.</p>
+                                            <p style="font-size: 13px;">Agrega productos desde el formulario para comenzar.</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="inner-tab-resumen" class="inner-tab-content" style="flex-grow: 1;">
+                    <div class="table-responsive" style="flex-grow: 1; min-height: 250px; border: 1px solid #ddd; border-radius: 4px;">
+                        <table class="excel-table" style="margin-bottom: 0;">
+                            <thead>
+                                <tr>
+                                    <th>Descripción / Producto</th>
+                                    <th style="width: 120px;">Cantidad Total</th>
+                                </tr>
+                            </thead>
+                            <tbody id="resumen-tbody">
+                                <tr id="resumen-empty-state">
+                                    <td colspan="2">
+                                        <div class="empty-state">
+                                            <i class="fas fa-chart-bar"></i>
+                                            <p>El resumen aparecerá aquí.</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee;">
+                        <div style="font-size: 18px; font-weight: bold; color: var(--primary-color);">
+                            <i class="fas fa-cubes"></i> Total de Artículos: <span id="total-items">0</span>
+                        </div>
+                        <button class="btn btn-primary" style="width: auto; padding: 12px 25px; font-size: 18px;" onclick="RegistrosApp.saveFastEntries()">
+                            <i class="fas fa-save"></i> Guardar Todo en Base de Datos
+                        </button>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+
+        <!-- Tab 2: Últimos Registros -->
+        <div class="tab-content" id="tab-registros">
+            <div style="display: grid; grid-template-columns: 250px 1fr; gap: 20px; align-items: stretch;">
+                
+                <!-- Left: Dates List -->
+                <div class="card" style="display: flex; flex-direction: column;">
+                    <h2 class="card-title" style="font-size: 16px;"><i class="fas fa-calendar-alt"></i> Días con Registros</h2>
+                    <div id="dates-list" style="flex-grow: 1; overflow-y: auto; max-height: 600px; display: flex; flex-direction: column; gap: 5px;">
+                        <!-- JS will inject date buttons here -->
+                    </div>
+                </div>
+
+                <!-- Right: Records Table -->
+                <div class="card" style="display: flex; flex-direction: column;">
+                    <h2 class="card-title" id="selected-date-title"><i class="fas fa-list"></i> Historial del Día</h2>
+                    
+                    <div class="filters" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <div style="display: flex; gap: 10px; flex: 1;">
+                            <input type="text" id="search-registro" class="form-control" placeholder="Buscar producto o cuenta en este día..." style="max-width: 400px;">
+                        </div>
+                        <button class="btn btn-danger" style="width: auto; margin-left: 10px;" onclick="RegistrosApp.deleteAllRegistros()">
+                            <i class="fas fa-trash-alt"></i> Borrar Todo
+                        </button>
+                    </div>
+
+                    <div class="table-responsive" style="flex-grow: 1; min-height: 400px; border: 1px solid #ddd; border-radius: 4px;">
+                        <table id="registros-table" class="excel-table" style="margin-bottom: 0;">
+                            <thead>
+                                <tr>
+                                    <th style="width: 60px;">Cant.</th>
+                                    <th>Producto</th>
+                                    <th>Cuenta</th>
+                                    <th>Observación</th>
+                                    <th>Estado</th>
+                                    <th style="width: 60px;">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody id="registros-tbody">
+                                <!-- Los datos se llenarán desde JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 3: Facturación (3 Columns) -->
+        <div class="tab-content" id="tab-facturacion">
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1.2fr; gap: 15px; align-items: stretch;">
+                
+                <!-- Tarjeta 1: Listado Pendiente -->
+                <div class="card" style="display: flex; flex-direction: column; padding: 15px;">
+                    <h2 class="card-title" style="font-size: 15px;"><i class="fas fa-list-ol"></i> 1. Todos los Registros</h2>
+                    <p style="font-size: 12px; color: #666; margin-bottom: 10px;">Orden de ingreso. Arrastra a la factura.</p>
+                    <div class="table-responsive" style="flex-grow: 1; max-height: 500px; border: 1px solid #eee;">
+                        <table class="excel-table" style="font-size: 13px;">
+                            <thead>
+                                <tr>
+                                    <th style="width: 80px;">Fecha</th>
+                                    <th style="width: 50px;">Cant.</th>
+                                    <th>Producto</th>
+                                </tr>
+                            </thead>
+                            <tbody id="fact-listado-tbody">
+                                <!-- JS inserts draggable rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Tarjeta 2: Resumen Pendiente -->
+                <div class="card" style="display: flex; flex-direction: column; padding: 15px;">
+                    <h2 class="card-title" style="font-size: 15px;"><i class="fas fa-layer-group"></i> 2. Resumen Agrupado</h2>
+                    <p style="font-size: 12px; color: #666; margin-bottom: 10px;">Totales por producto. Arrastra a la factura.</p>
+                    <div class="table-responsive" style="flex-grow: 1; max-height: 500px; border: 1px solid #eee;">
+                        <table class="excel-table" style="font-size: 13px;">
+                            <thead>
+                                <tr>
+                                    <th>Producto</th>
+                                    <th style="width: 60px;">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody id="fact-resumen-tbody">
+                                <!-- JS inserts draggable rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Tarjeta 3: La Factura (Dropzone) -->
+                <div class="card" style="display: flex; flex-direction: column; padding: 15px; border: 2px dashed #bdc3c7; background-color: #fafbfc; transition: all 0.3s;" id="factura-dropzone" ondragover="RegistrosApp.allowDrop(event)" ondragleave="RegistrosApp.dragLeave(event)" ondrop="RegistrosApp.dropToFactura(event)">
+                    <h2 class="card-title" style="font-size: 16px; color: var(--primary-color);"><i class="fas fa-file-invoice-dollar"></i> 3. Factura en Construcción</h2>
+                    
+                    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                        <input type="text" id="factura-cliente" class="form-control" placeholder="Cliente o Cuenta..." style="padding: 8px;">
+                        <input type="text" id="factura-numero" class="form-control" placeholder="N° Factura..." style="max-width: 120px; padding: 8px;">
+                    </div>
+
+                    <div class="table-responsive" style="flex-grow: 1; min-height: 350px; border: 1px solid #ddd; background: white;">
+                        <table class="excel-table" style="margin-bottom: 0;">
+                            <thead>
+                                <tr>
+                                    <th style="width: 60px;">Cant.</th>
+                                    <th>Producto Facturado</th>
+                                    <th style="width: 40px;"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="factura-tbody">
+                                <tr id="factura-empty-state">
+                                    <td colspan="3" style="text-align: center; padding: 40px 20px; color: #aaa;">
+                                        <i class="fas fa-hand-holding-box" style="font-size: 30px; margin-bottom: 10px;"></i>
+                                        <br>Arrastra los productos aquí para agregarlos a la factura
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <button class="btn btn-success" style="width: 100%; margin-top: 15px; padding: 12px; font-size: 16px;">
+                        <i class="fas fa-check-circle"></i> Procesar y Descontar
+                    </button>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Tab 4: Carga Masiva (Excel) -->
+        <div class="card tab-content" id="tab-excel" style="max-width: 500px; margin: 0 auto; width: 100%;">
+            <div class="excel-upload-wrapper" style="margin-top: 0; padding-top: 0; border: none;">
+                <h2 class="card-title"><i class="fas fa-file-excel"></i> Carga Masiva (Excel)</h2>
+                <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 10px;">
+                    Columnas: A (Fecha), B (Cantidad), C (Descripción), D (Cuenta). 
+                    Las fechas en blanco se autocompletan con la del día anterior.
+                </p>
+                <div class="file-input-wrapper">
+                    <button class="btn btn-success" style="width: 100%; padding: 15px; font-size: 18px;">
+                        <i class="fas fa-upload"></i> Subir Archivo Excel
+                    </button>
+                    <input type="file" id="excel-file" accept=".xlsx, .xls">
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Cargar Configuración y Lógica -->
+    <script>
+        // Asegurar que firebase esté disponible globalmente
+        window.firebase = window.firebase || {};
+        var firebase = window.firebase;
+    </script>
+    <script src="js/Config.js"></script>
+    <script src="js/RegistrosApp.js"></script>
+</body>
+
+</html>
