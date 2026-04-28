@@ -18,7 +18,13 @@ const RegistrosApp = {
             }
             this.db = window.firebase.firestore();
             this.registrosRef = this.db.collection('REGISTROS_SALIDA');
+            this.preciosRef = this.db.collection('PRECIOS_REGISTROS');
+            this.MAX_FACTURA_ITEMS = 14;
+            this.facturaTipo = null;
 
+            this.allRegistros = []; // Todos los registros
+            this.facturaItems = []; // Items en la factura (drag & drop)
+            
             this.setupUI();
             this.setupEventListeners();
             this.listenToRegistros();
@@ -400,35 +406,41 @@ const RegistrosApp = {
         const pendientes = this.allRegistros.filter(r => r.estado === 'pendiente');
         pendientes.sort((a, b) => a.fecha.localeCompare(b.fecha));
 
-        // Calcular cuánto ya se asignó a la factura por producto (summary) y por id (single)
-        const facturadoPorId = {};
+        // Unificar todo el descuento por producto (sincronización entre tarjetas)
         const facturadoPorProducto = {};
         this.facturaItems.forEach(item => {
-            if (item.type === 'single' && item.originalId) {
-                facturadoPorId[item.originalId] = (facturadoPorId[item.originalId] || 0) + item.cantidadFacturar;
-            } else if (item.type === 'summary') {
-                facturadoPorProducto[item.producto] = (facturadoPorProducto[item.producto] || 0) + item.cantidadFacturar;
-            }
+            facturadoPorProducto[item.producto] = (facturadoPorProducto[item.producto] || 0) + item.cantidadFacturar;
         });
 
-        listadoTbody.innerHTML = '';
+        // Calcular los totales originales por producto
         let resumenMap = {};
+        pendientes.forEach(reg => {
+            resumenMap[reg.producto] = (resumenMap[reg.producto] || 0) + reg.cantidad;
+        });
+
+        // Copia para ir descontando de la Tarjeta 1 (FIFO)
+        const aDescontarTarjeta1 = { ...facturadoPorProducto };
+
+        listadoTbody.innerHTML = '';
         let hasVisible = false;
 
         // 1. Llenar Tarjeta 1 (Listado Completo)
         pendientes.forEach(reg => {
-            const asignadoSingle = facturadoPorId[reg.id] || 0;
-            const restante = reg.cantidad - asignadoSingle;
-
-            // Acumular para Tarjeta 2 usando cantidad original
-            if (resumenMap[reg.producto]) {
-                resumenMap[reg.producto] += reg.cantidad;
-            } else {
-                resumenMap[reg.producto] = reg.cantidad;
+            let cantidadDisponible = reg.cantidad;
+            
+            // Descontar usando FIFO (lo más antiguo primero)
+            if (aDescontarTarjeta1[reg.producto] > 0) {
+                if (aDescontarTarjeta1[reg.producto] >= cantidadDisponible) {
+                    aDescontarTarjeta1[reg.producto] -= cantidadDisponible;
+                    cantidadDisponible = 0;
+                } else {
+                    cantidadDisponible -= aDescontarTarjeta1[reg.producto];
+                    aDescontarTarjeta1[reg.producto] = 0;
+                }
             }
 
             // Si ya está completamente asignado, no mostrar en Tarjeta 1
-            if (restante <= 0) return;
+            if (cantidadDisponible <= 0) return;
 
             hasVisible = true;
             const tr = document.createElement('tr');
@@ -436,14 +448,15 @@ const RegistrosApp = {
             tr.style.cursor = 'grab';
             
             tr.ondragstart = (e) => {
-                const data = { type: 'single', id: reg.id, producto: reg.producto, max: reg.cantidad };
+                // Se envía el producto y el máximo original para la factura
+                const data = { type: 'summary', producto: reg.producto, max: resumenMap[reg.producto] };
                 e.dataTransfer.setData('text/plain', JSON.stringify(data));
                 e.dataTransfer.effectAllowed = 'copy';
             };
             
             tr.innerHTML = `
                 <td>${this.formatDate(reg.fecha)}</td>
-                <td><strong>${restante}</strong></td>
+                <td><strong>${cantidadDisponible}</strong></td>
                 <td>${reg.producto}</td>
             `;
             listadoTbody.appendChild(tr);
@@ -453,7 +466,7 @@ const RegistrosApp = {
             listadoTbody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:20px; color:#999;">Todos los registros fueron asignados a la factura.</td></tr>';
         }
 
-        // 2. Llenar Tarjeta 2 (Resumen Agrupado, restando lo facturado por summary)
+        // 2. Llenar Tarjeta 2 (Resumen Agrupado)
         resumenTbody.innerHTML = '';
         let hasResumen = false;
         
@@ -491,9 +504,12 @@ const RegistrosApp = {
     },
 
     allowDrop(e) {
+        if (this.facturaItems.length >= this.MAX_FACTURA_ITEMS) {
+            e.dataTransfer.dropEffect = 'none';
+            return;
+        }
         e.preventDefault();
-        e.currentTarget.style.backgroundColor = '#e8f4f8';
-        e.currentTarget.style.borderColor = 'var(--primary-color)';
+        document.getElementById('factura-dropzone').style.backgroundColor = '#ecf0f1';
     },
 
     dragLeave(e) {
@@ -503,8 +519,7 @@ const RegistrosApp = {
 
     dropToFactura(e) {
         e.preventDefault();
-        e.currentTarget.style.backgroundColor = '#fafbfc';
-        e.currentTarget.style.borderColor = '#bdc3c7';
+        document.getElementById('factura-dropzone').style.backgroundColor = '#fafbfc';
         
         const dataStr = e.dataTransfer.getData('text/plain');
         if (!dataStr) return;
@@ -518,6 +533,12 @@ const RegistrosApp = {
                 existingItem = this.facturaItems.find(item => item.type === 'single' && item.originalId === data.id);
             } else {
                 existingItem = this.facturaItems.find(item => item.type === 'summary' && item.producto === data.producto);
+            }
+
+            if (!existingItem && this.facturaItems.length >= this.MAX_FACTURA_ITEMS) {
+                alert("La factura ha alcanzado el límite de 14 productos.");
+                this.renderFactura(); // Restablecer colores
+                return;
             }
 
             if (existingItem) {
@@ -546,7 +567,15 @@ const RegistrosApp = {
 
     renderFactura() {
         const tbody = document.getElementById('factura-tbody');
+        const dropzone = document.getElementById('factura-dropzone');
         if (!tbody) return;
+
+        if (this.facturaItems.length >= this.MAX_FACTURA_ITEMS) {
+            dropzone.classList.add('factura-full');
+        } else {
+            dropzone.classList.remove('factura-full');
+            dropzone.style.backgroundColor = '#fafbfc'; // Restaurar default
+        }
 
         tbody.innerHTML = '';
 
@@ -735,11 +764,171 @@ const RegistrosApp = {
         }
     },
 
-    formatDate(dateString) {
-        if (!dateString) return '';
-        const parts = dateString.split('-');
-        if (parts.length !== 3) return dateString;
-        return `${parts[2]}/${parts[1]}/${parts[0]}`; // DD/MM/YYYY
+    formatDate(dateStr) {
+        if (!dateStr) return '';
+        const parts = dateStr.split('-');
+        if (parts.length === 3) {
+            return `${parts[2]}/${parts[1]}/${parts[0]}`;
+        }
+        return dateStr;
+    },
+
+    // ==========================================
+    // MODAL DE FACTURACIÓN Y PRECIOS
+    // ==========================================
+    async openProcessModal() {
+        if (this.facturaItems.length === 0) {
+            alert("Agrega al menos un producto a la factura antes de procesar.");
+            return;
+        }
+        
+        this.facturaTipo = null;
+        document.getElementById('opt-factura-repuestos').style.borderColor = '#ddd';
+        document.getElementById('opt-factura-repuestos').style.backgroundColor = 'transparent';
+        document.getElementById('opt-factura-normal').style.borderColor = '#ddd';
+        document.getElementById('opt-factura-normal').style.backgroundColor = 'transparent';
+        document.getElementById('invoice-prices-section').style.display = 'none';
+        
+        document.getElementById('modal-procesar-factura').style.display = 'flex';
+    },
+
+    async selectInvoiceType(tipo) {
+        this.facturaTipo = tipo;
+        
+        const optR = document.getElementById('opt-factura-repuestos');
+        const optN = document.getElementById('opt-factura-normal');
+        
+        if (tipo === 'repuestos') {
+            optR.style.borderColor = 'var(--accent-color)';
+            optR.style.backgroundColor = '#fff3e0';
+            optN.style.borderColor = '#ddd';
+            optN.style.backgroundColor = 'transparent';
+        } else {
+            optN.style.borderColor = 'var(--primary-color)';
+            optN.style.backgroundColor = '#e8f4f8';
+            optR.style.borderColor = '#ddd';
+            optR.style.backgroundColor = 'transparent';
+        }
+
+        document.getElementById('invoice-prices-section').style.display = 'block';
+        await this.loadPreciosYRenderizar();
+    },
+
+    async loadPreciosYRenderizar() {
+        const tbody = document.getElementById('invoice-prices-tbody');
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;"><div class="spinner" style="margin: 20px auto; border-top-color: var(--primary-color);"></div><p>Cargando precios...</p></td></tr>';
+
+        for (let item of this.facturaItems) {
+            // Limpiamos el nombre para usarlo como ID en Firebase (evitar barras)
+            const safeId = item.producto.replace(/\//g, '-').trim();
+            item.precioUnitario = 0;
+            item.vinculoId = null;
+
+            try {
+                const doc = await this.preciosRef.doc(safeId).get();
+                if (doc.exists) {
+                    const data = doc.data();
+                    item.precioUnitario = this.facturaTipo === 'repuestos' ? (data.precioRepuestos || 0) : (data.precioNormal || 0);
+                    if (data.vinculoId) item.vinculoId = data.vinculoId;
+                } else if (window.DataService) {
+                    // Si no está en memoria local, buscar en DataService (INVENTARIO)
+                    const results = await DataService.searchProducts(item.producto);
+                    if (results && results.length > 0) {
+                        const bestMatch = results[0];
+                        // Asumimos un precio base, el usuario puede modificarlo
+                        item.precioUnitario = bestMatch.precio || 0;
+                        item.vinculoId = bestMatch.id;
+                    }
+                }
+            } catch (e) {
+                console.error("Error buscando precio para", item.producto, e);
+            }
+        }
+
+        this.renderInvoicePrices();
+    },
+
+    renderInvoicePrices() {
+        const tbody = document.getElementById('invoice-prices-tbody');
+        tbody.innerHTML = '';
+        
+        this.facturaItems.forEach((item, index) => {
+            const total = item.cantidadFacturar * item.precioUnitario;
+            
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><strong>${item.cantidadFacturar}</strong></td>
+                <td style="font-size: 13px; font-weight: 500;">${item.producto}</td>
+                <td>
+                    <button class="btn" style="background: #eee; color: #555; padding: 5px 10px; font-size: 12px; border: 1px solid #ccc; width: 100%;">
+                        <i class="fas fa-link"></i> ${item.vinculoId ? 'Vinculado' : 'Vincular (Próximamente)'}
+                    </button>
+                </td>
+                <td>
+                    <input type="number" class="form-control" step="0.01" min="0" value="${item.precioUnitario.toFixed(2)}"
+                        onchange="RegistrosApp.updateItemPrice(${index}, this.value)" style="width: 100px; padding: 6px; font-size: 14px;">
+                </td>
+                <td style="font-weight: bold; font-size: 15px;">$<span id="inv-total-${index}">${total.toFixed(2)}</span></td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        this.updateInvoiceGrandTotal();
+    },
+
+    updateItemPrice(index, newVal) {
+        const val = parseFloat(newVal) || 0;
+        this.facturaItems[index].precioUnitario = val;
+        const total = val * this.facturaItems[index].cantidadFacturar;
+        document.getElementById(`inv-total-${index}`).innerText = total.toFixed(2);
+        this.updateInvoiceGrandTotal();
+    },
+
+    updateInvoiceGrandTotal() {
+        const grandTotal = this.facturaItems.reduce((sum, item) => sum + (item.cantidadFacturar * item.precioUnitario), 0);
+        document.getElementById('invoice-grand-total').innerText = grandTotal.toFixed(2);
+    },
+
+    async finalizeInvoice() {
+        try {
+            document.getElementById('loading-overlay').style.display = 'flex';
+            const batch = this.db.batch();
+            
+            // Guardar o actualizar la memoria de precios
+            this.facturaItems.forEach(item => {
+                const safeId = item.producto.replace(/\//g, '-').trim();
+                const realDocRef = this.preciosRef.doc(safeId);
+                
+                const updateData = {};
+                if (this.facturaTipo === 'repuestos') {
+                    updateData.precioRepuestos = item.precioUnitario;
+                } else {
+                    updateData.precioNormal = item.precioUnitario;
+                }
+                if (item.vinculoId) {
+                    updateData.vinculoId = item.vinculoId;
+                }
+                
+                batch.set(realDocRef, updateData, { merge: true });
+            });
+
+            // AQUÍ: Descontar los registros reales. 
+            // Esto tomará los registros pendientes más antiguos y los pasará a estado "facturado"
+            // (La lógica de descontado físico en base de datos la agregaremos en el siguiente paso para asegurar precisión).
+            
+            await batch.commit();
+
+            document.getElementById('loading-overlay').style.display = 'none';
+            alert("¡Precios guardados en memoria!");
+            
+            // Siguiente paso: Confirmar con el usuario cómo se crea la venta
+            document.getElementById('modal-procesar-factura').style.display = 'none';
+            
+        } catch (error) {
+            document.getElementById('loading-overlay').style.display = 'none';
+            console.error("Error al procesar", error);
+            alert("Error al procesar la factura: " + error.message);
+        }
     },
 
     showLoading(show) {
