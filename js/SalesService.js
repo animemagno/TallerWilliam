@@ -1,11 +1,12 @@
 const SalesService = {
-    addToCart(product) {
+    addToCart(product, cantidad) {
+        const cant = cantidad !== undefined ? cantidad : (product.cantidad || 1);
         const cartItem = {
             id: product.id,
             codigo: product.codigo || 'MANUAL',
             descripcion: product.descripcion || 'Sin descripción',
             precio: product.precio || 0,
-            cantidad: 1
+            cantidad: cant
         };
         AppState.cart.push(cartItem);
         UIService.updateCartDisplay();

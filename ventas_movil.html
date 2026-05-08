@@ -806,7 +806,8 @@
                         saldoPendiente: newData.total, // Se asume reinicio de saldo al editar monto total
                         equipoNumber: newData.equipoNumber,
                         clientName: newData.clientName,
-                        fechaActualizacion: DateUtils.getCurrentTimestampElSalvador()
+                        fechaActualizacion: DateUtils.getCurrentTimestampElSalvador(),
+                        printed: false // Reactivar aviso de impresión al editar desde móvil
                     };
 
                     await db.collection("VENTAS").doc(saleId).update(updateData);

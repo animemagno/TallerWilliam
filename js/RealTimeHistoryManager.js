@@ -23,6 +23,38 @@ const RealTimeHistoryManager = {
                     err => console.error("Error en listener ventas:", err))
         );
 
+        // Listener adicional: todas las ventas con printed === false (sin importar fecha)
+        // Garantiza que el aviso persiste hasta que se imprima, aunque sea de días anteriores.
+        this.unsubscribes.push(
+            db.collection("VENTAS")
+                .where("printed", "==", false)
+                .onSnapshot(snapshot => {
+                    snapshot.docChanges().forEach(change => {
+                        const docData = { id: change.doc.id, ...change.doc.data(), tipo: 'venta' };
+                        // Solo procesar si NO es del día de hoy (las de hoy ya las maneja el listener anterior)
+                        if (docData.date === today) return;
+
+                        if (change.type === 'added' || change.type === 'modified') {
+                            const index = AppState.historial.findIndex(h => h.id === docData.id);
+                            if (index >= 0) {
+                                AppState.historial[index] = docData;
+                            } else {
+                                AppState.historial.push(docData);
+                            }
+                        } else if (change.type === 'removed') {
+                            AppState.historial = AppState.historial.filter(h => h.id !== docData.id);
+                        }
+                    });
+                    // Re-ordenar y re-renderizar
+                    AppState.historial.sort((a, b) => {
+                        const dateA = a.timestamp ? (a.timestamp.toDate ? a.timestamp.toDate() : new Date(a.timestamp)) : new Date(0);
+                        const dateB = b.timestamp ? (b.timestamp.toDate ? b.timestamp.toDate() : new Date(b.timestamp)) : new Date(0);
+                        return dateB - dateA;
+                    });
+                    HistorialService.updateHistorial(AppState.historial);
+                }, err => console.error("Error en listener printed=false:", err))
+        );
+
         // Escuchar Ingresos de Hoy (incluye Abonos)
         this.unsubscribes.push(
             db.collection("INGRESOS")

@@ -170,7 +170,8 @@
             transition: background-color 0.2s;
         }
 
-        .search-dropdown-item:hover {
+        .search-dropdown-item:hover,
+        .search-dropdown-item.focused {
             background-color: #3498db;
             color: white;
         }
