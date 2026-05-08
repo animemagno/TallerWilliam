@@ -328,6 +328,13 @@ const SalesService = {
             await DataService.saveSale(saleData);
             PrintingService.printTicket(saleData);
             UIService.showStatus(`Venta CONTADO procesada - Factura #${saleData.invoiceNumber}`, "success");
+            
+            // Registrar próximo cambio si aplica
+            const cambioTipo = document.getElementById('servicio-cambio-tipo') ? document.getElementById('servicio-cambio-tipo').value : 'NINGUNO';
+            if (cambioTipo !== 'NINGUNO') {
+                await this.registrarProximoCambioAutomatico(finalEquipo, fechaVenta, cambioTipo);
+            }
+
             this.limpiarFormularioVenta();
             await ProductCache.refresh();
             // Nota: El historial se actualizará automáticamente vía RealTimeHistoryManager
@@ -359,6 +366,13 @@ const SalesService = {
             await DataService.saveSale(saleData);
             PrintingService.printTicket(saleData);
             UIService.showStatus(`Venta PENDIENTE procesada - Factura #${saleData.invoiceNumber}`, "success");
+            
+            // Registrar próximo cambio si aplica
+            const cambioTipo = document.getElementById('servicio-cambio-tipo') ? document.getElementById('servicio-cambio-tipo').value : 'NINGUNO';
+            if (cambioTipo !== 'NINGUNO') {
+                await this.registrarProximoCambioAutomatico(finalEquipo, fechaVenta, cambioTipo);
+            }
+
             this.limpiarFormularioVenta();
             await ProductCache.refresh();
             // El historial se actualizará automáticamente vía RealTimeHistoryManager
@@ -425,6 +439,13 @@ const SalesService = {
 
             if (saldoPendiente <= 0) UIService.showStatus(`Venta con abono completo procesada - Factura #${saleData.invoiceNumber}`, "success");
             else UIService.showStatus(`Venta PENDIENTE con abono inicial procesada - Factura #${saleData.invoiceNumber}`, "success");
+            
+            // Registrar próximo cambio si aplica
+            const cambioTipo = document.getElementById('servicio-cambio-tipo') ? document.getElementById('servicio-cambio-tipo').value : 'NINGUNO';
+            if (cambioTipo !== 'NINGUNO') {
+                await this.registrarProximoCambioAutomatico(finalEquipo, fechaVenta, cambioTipo);
+            }
+
             this.limpiarFormularioVenta();
             await ProductCache.refresh();
             // El historial se actualizará automáticamente vía RealTimeHistoryManager
@@ -1037,5 +1058,30 @@ const SalesService = {
         document.getElementById('link-product-modal').style.display = 'none';
         AppState.currentLinkingIndex = null;
         UIService.showStatus("Producto vinculado correctamente con el inventario", "success");
+    },
+
+    async registrarProximoCambioAutomatico(equipoNumber, fechaVenta, tipo) {
+        try {
+            const config = await DataService.getEquipmentConfig(equipoNumber);
+            const intervalo = config.intervaloDias || 20;
+
+            const baseDate = new Date(fechaVenta + 'T00:00:00');
+            baseDate.setDate(baseDate.getDate() + intervalo);
+            
+            const yyyy = baseDate.getFullYear();
+            const mm = String(baseDate.getMonth() + 1).padStart(2, '0');
+            const dd = String(baseDate.getDate()).padStart(2, '0');
+            const proximaFecha = `${yyyy}-${mm}-${dd}`;
+
+            await DataService.saveEquipmentConfig(equipoNumber, {
+                intervaloDias: intervalo,
+                proximoCambioFecha: proximaFecha,
+                proximoCambioTipo: tipo
+            });
+
+            console.log(`[SalesService] Próximo cambio de ${tipo} programado para el equipo ${equipoNumber} el día ${proximaFecha}`);
+        } catch (error) {
+            console.error("Error registrando próximo cambio automático:", error);
+        }
     }
 };

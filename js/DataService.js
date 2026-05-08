@@ -1050,5 +1050,54 @@ const DataService = {
             UIService.showStatus("Error reparando saldos: " + error.message, "error");
             throw error;
         }
+    },
+
+    async getEquipmentConfig(equipoNumber) {
+        try {
+            if (!AppState.firebaseInitialized) {
+                return { intervaloDias: 20, proximoCambioFecha: null, proximoCambioTipo: null };
+            }
+            const doc = await AppState.db.collection("EQUIPOS_CONFIG").doc(String(equipoNumber)).get();
+            if (doc.exists) {
+                const data = doc.data();
+                return {
+                    intervaloDias: data.intervaloDias !== undefined ? data.intervaloDias : 20,
+                    proximoCambioFecha: data.proximoCambioFecha || null,
+                    proximoCambioTipo: data.proximoCambioTipo || null
+                };
+            }
+        } catch (e) {
+            console.error("Error obteniendo config de equipo:", e);
+        }
+        return { intervaloDias: 20, proximoCambioFecha: null, proximoCambioTipo: null };
+    },
+
+    async saveEquipmentConfig(equipoNumber, config) {
+        try {
+            if (!AppState.firebaseInitialized) return;
+            const docRef = AppState.db.collection("EQUIPOS_CONFIG").doc(String(equipoNumber));
+            const dataToSave = {};
+            
+            if (config.intervaloDias !== undefined) {
+                if (Number(config.intervaloDias) !== 20) {
+                    dataToSave.intervaloDias = Number(config.intervaloDias);
+                } else {
+                    dataToSave.intervaloDias = firebase.firestore.FieldValue.delete();
+                }
+            }
+            
+            if (config.proximoCambioFecha !== undefined) {
+                dataToSave.proximoCambioFecha = config.proximoCambioFecha;
+            }
+            
+            if (config.proximoCambioTipo !== undefined) {
+                dataToSave.proximoCambioTipo = config.proximoCambioTipo;
+            }
+            
+            await docRef.set(dataToSave, { merge: true });
+        } catch (e) {
+            console.error("Error guardando config de equipo:", e);
+            throw e;
+        }
     }
 };
