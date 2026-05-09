@@ -126,7 +126,7 @@ const SalesService = {
         const cliente = document.getElementById('cliente').value.trim();
         const fechaVenta = document.getElementById('fecha-venta').value;
         try {
-            this.validateSaleData(equipo, cliente, fechaVenta);
+            SalesService.validateSaleData(equipo, cliente, fechaVenta);
             const finalCliente = cliente || `Equipo ${equipo}`;
             const finalEquipo = equipo || '0000';
             const totalVenta = AppState.cart.reduce((sum, item) => sum + (item.precio * item.cantidad), 0);
@@ -138,7 +138,7 @@ const SalesService = {
             // Preguntar de forma automática y asíncrona por próximo cambio si hay equipo ingresado
             AppState.currentCheckoutCambioTipo = 'NINGUNO';
             if (equipo && equipo !== '' && equipo !== '0000') {
-                AppState.currentCheckoutCambioTipo = await this.solicitarTipoCambio(equipo);
+                AppState.currentCheckoutCambioTipo = await SalesService.solicitarTipoCambio(equipo);
             }
 
             AppState.processingSale = true;
@@ -149,11 +149,11 @@ const SalesService = {
             if (contadoBtn) contadoBtn.disabled = true;
             if (pendienteBtn) pendienteBtn.disabled = true;
             if (paymentType === 'contado') {
-                await this.procesarVentaContado(equipo, cliente, fechaVenta, totalVenta);
+                await SalesService.procesarVentaContado(equipo, cliente, fechaVenta, totalVenta);
                 return;
             }
             if (paymentType === 'pendiente') {
-                this.mostrarConfirmacionAbono(equipo, cliente, totalVenta, fechaVenta);
+                SalesService.mostrarConfirmacionAbono(equipo, cliente, totalVenta, fechaVenta);
                 return;
             }
         } catch (error) {
