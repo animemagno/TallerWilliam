@@ -25,19 +25,6 @@ window.FacturasTabManager = {
 
             html += `
                 <div class="equipo-card" onclick="GrupoManager.mostrarDetalleEquipo('${key}')" style="position: relative;">
-                    <div class="equipo-menu-wrapper" style="position: absolute; right: 10px; top: 10px; z-index: 5;">
-                        <button class="equipo-menu-toggle" onclick="event.stopPropagation(); FacturasTabManager.toggleEquipoMenu('${key}')" title="Opciones" style="background: none; border: none; color: #7f8c8d; cursor: pointer; padding: 4px; font-size: 1.1rem; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; transition: background 0.2s;">
-                            <i class="fas fa-ellipsis-v"></i>
-                        </button>
-                        <div class="equipo-dropdown" id="equipo-dropdown-${key}" style="display: none; position: absolute; right: 0; top: 32px; background: white; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); border: 1px solid #eee; z-index: 100; min-width: 220px; overflow: hidden; padding: 4px 0;">
-                            <div class="equipo-dropdown-item" onclick="event.stopPropagation(); FacturasTabManager.abrirConfiguracionCambio('${equipo.numero}'); FacturasTabManager.closeAllMenus();" style="padding: 10px 14px; font-size: 0.85rem; color: #2c3e50; cursor: pointer; display: flex; align-items: center; gap: 10px; font-weight: 500; transition: background 0.15s; text-align: left;">
-                                <i class="fas fa-oil-can" style="color: #f39c12; width: 16px;"></i> Próximo Cambio Aceite/Caja
-                            </div>
-                            <div class="equipo-dropdown-item" onclick="event.stopPropagation(); GrupoManager.mostrarDetalleEquipo('${key}'); FacturasTabManager.closeAllMenus();" style="padding: 10px 14px; font-size: 0.85rem; color: #2c3e50; cursor: pointer; display: flex; align-items: center; gap: 10px; font-weight: 500; transition: background 0.15s; text-align: left;">
-                                <i class="fas fa-eye" style="color: #3498db; width: 16px;"></i> Ver Detalles
-                            </div>
-                        </div>
-                    </div>
                     <div class="equipo-number">${equipo.numero}</div>
                     ${mostrarNombre ? `<div class="equipo-nombre">${equipo.cliente}</div>` : ''}
                     <div class="equipo-total" style="margin-top: auto;">$${equipo.total.toFixed(2)}</div>
