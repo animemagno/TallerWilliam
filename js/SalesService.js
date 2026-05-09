@@ -18,12 +18,21 @@ const SalesService = {
             UIService.showStatus("Ingrese una descripción para el producto", "error");
             return;
         }
+        
+        const cantidadStr = prompt(`Ingrese la cantidad para "${descripcion}":`, "1");
+        if (cantidadStr === null) return; // Cancelado por el usuario
+        const cantidad = parseInt(cantidadStr) || 1;
+        if (cantidad < 1) {
+            UIService.showStatus("La cantidad debe ser al menos 1", "error");
+            return;
+        }
+
         this.addToCart({
             id: 'manual-' + Date.now(),
             codigo: 'MANUAL',
             descripcion: descripcion,
             precio: 0,
-            cantidad: 1
+            cantidad: cantidad
         });
     },
 
