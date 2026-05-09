@@ -134,6 +134,13 @@ const SalesService = {
                 const confirmacion = confirm(`¿Está seguro de guardar esta venta por $${totalVenta.toFixed(2)}?`);
                 if (!confirmacion) return;
             }
+
+            // Preguntar de forma automática y asíncrona por próximo cambio si hay equipo ingresado
+            AppState.currentCheckoutCambioTipo = 'NINGUNO';
+            if (equipo && equipo !== '' && equipo !== '0000') {
+                AppState.currentCheckoutCambioTipo = await this.solicitarTipoCambio(equipo);
+            }
+
             AppState.processingSale = true;
             UIService.updatePaymentButtonsState(true);
             UIService.showLoading(true);
@@ -330,7 +337,7 @@ const SalesService = {
             UIService.showStatus(`Venta CONTADO procesada - Factura #${saleData.invoiceNumber}`, "success");
             
             // Registrar próximo cambio si aplica
-            const cambioTipo = document.getElementById('servicio-cambio-tipo') ? document.getElementById('servicio-cambio-tipo').value : 'NINGUNO';
+            const cambioTipo = AppState.currentCheckoutCambioTipo || 'NINGUNO';
             if (cambioTipo !== 'NINGUNO') {
                 await this.registrarProximoCambioAutomatico(finalEquipo, fechaVenta, cambioTipo);
             }
@@ -368,7 +375,7 @@ const SalesService = {
             UIService.showStatus(`Venta PENDIENTE procesada - Factura #${saleData.invoiceNumber}`, "success");
             
             // Registrar próximo cambio si aplica
-            const cambioTipo = document.getElementById('servicio-cambio-tipo') ? document.getElementById('servicio-cambio-tipo').value : 'NINGUNO';
+            const cambioTipo = AppState.currentCheckoutCambioTipo || 'NINGUNO';
             if (cambioTipo !== 'NINGUNO') {
                 await this.registrarProximoCambioAutomatico(finalEquipo, fechaVenta, cambioTipo);
             }
@@ -441,7 +448,7 @@ const SalesService = {
             else UIService.showStatus(`Venta PENDIENTE con abono inicial procesada - Factura #${saleData.invoiceNumber}`, "success");
             
             // Registrar próximo cambio si aplica
-            const cambioTipo = document.getElementById('servicio-cambio-tipo') ? document.getElementById('servicio-cambio-tipo').value : 'NINGUNO';
+            const cambioTipo = AppState.currentCheckoutCambioTipo || 'NINGUNO';
             if (cambioTipo !== 'NINGUNO') {
                 await this.registrarProximoCambioAutomatico(finalEquipo, fechaVenta, cambioTipo);
             }
@@ -1083,5 +1090,48 @@ const SalesService = {
         } catch (error) {
             console.error("Error registrando próximo cambio automático:", error);
         }
+    },
+
+    async solicitarTipoCambio(equipoNumber) {
+        return new Promise((resolve) => {
+            const modal = document.getElementById('checkout-cambio-modal');
+            if (!modal) {
+                console.warn("[SalesService] No se encontró el modal #checkout-cambio-modal.");
+                resolve('NINGUNO');
+                return;
+            }
+
+            document.getElementById('checkout-cambio-equipo').textContent = `Equipo ${equipoNumber}`;
+            modal.style.display = 'block';
+
+            const btnAceite = document.getElementById('checkout-btn-aceite');
+            const btnCaja = document.getElementById('checkout-btn-caja');
+            const btnNinguno = document.getElementById('checkout-btn-ninguno');
+
+            // Clonar los botones para remover cualquier listener anterior
+            const newBtnAceite = btnAceite.cloneNode(true);
+            const newBtnCaja = btnCaja.cloneNode(true);
+            const newBtnNinguno = btnNinguno.cloneNode(true);
+
+            btnAceite.parentNode.replaceChild(newBtnAceite, btnAceite);
+            btnCaja.parentNode.replaceChild(newBtnCaja, btnCaja);
+            btnNinguno.parentNode.replaceChild(newBtnNinguno, btnNinguno);
+
+            // Agregar los listeners de clicks que resuelven la promesa
+            newBtnAceite.addEventListener('click', () => {
+                modal.style.display = 'none';
+                resolve('ACEITE');
+            });
+
+            newBtnCaja.addEventListener('click', () => {
+                modal.style.display = 'none';
+                resolve('CAJA');
+            });
+
+            newBtnNinguno.addEventListener('click', () => {
+                modal.style.display = 'none';
+                resolve('NINGUNO');
+            });
+        });
     }
 };
