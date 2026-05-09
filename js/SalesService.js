@@ -135,10 +135,10 @@ const SalesService = {
                 if (!confirmacion) return;
             }
 
-            // Preguntar de forma automática y asíncrona por próximo cambio si hay equipo ingresado
+            // Detectar automáticamente el tipo de próximo cambio si hay equipo ingresado
             AppState.currentCheckoutCambioTipo = 'NINGUNO';
             if (equipo && equipo !== '' && equipo !== '0000') {
-                AppState.currentCheckoutCambioTipo = await SalesService.solicitarTipoCambio(equipo);
+                AppState.currentCheckoutCambioTipo = SalesService.detectarTipoCambioAutomatico(AppState.cart);
             }
 
             AppState.processingSale = true;
@@ -1092,46 +1092,26 @@ const SalesService = {
         }
     },
 
-    async solicitarTipoCambio(equipoNumber) {
-        return new Promise((resolve) => {
-            const modal = document.getElementById('checkout-cambio-modal');
-            if (!modal) {
-                console.warn("[SalesService] No se encontró el modal #checkout-cambio-modal.");
-                resolve('NINGUNO');
-                return;
-            }
+    detectarTipoCambioAutomatico(cartItems) {
+        if (!cartItems || cartItems.length === 0) return 'NINGUNO';
 
-            document.getElementById('checkout-cambio-equipo').textContent = `Equipo ${equipoNumber}`;
-            modal.style.display = 'block';
+        const fullText = cartItems.map(item => (item.descripcion || '').toLowerCase()).join(' | ');
 
-            const btnAceite = document.getElementById('checkout-btn-aceite');
-            const btnCaja = document.getElementById('checkout-btn-caja');
-            const btnNinguno = document.getElementById('checkout-btn-ninguno');
+        // 1. Detección de Caja ("cambio de caja")
+        if (fullText.includes('cambio de caja')) {
+            return 'CAJA';
+        }
 
-            // Clonar los botones para remover cualquier listener anterior
-            const newBtnAceite = btnAceite.cloneNode(true);
-            const newBtnCaja = btnCaja.cloneNode(true);
-            const newBtnNinguno = btnNinguno.cloneNode(true);
+        // 2. Detección de Aceite ("cambio de aceite" o "cambio de motor")
+        if (
+            fullText.includes('cambio de aceite') ||
+            fullText.includes('cambio de motor') ||
+            fullText.includes('cambio aceite') ||
+            fullText.includes('cambio motor')
+        ) {
+            return 'ACEITE';
+        }
 
-            btnAceite.parentNode.replaceChild(newBtnAceite, btnAceite);
-            btnCaja.parentNode.replaceChild(newBtnCaja, btnCaja);
-            btnNinguno.parentNode.replaceChild(newBtnNinguno, btnNinguno);
-
-            // Agregar los listeners de clicks que resuelven la promesa
-            newBtnAceite.addEventListener('click', () => {
-                modal.style.display = 'none';
-                resolve('ACEITE');
-            });
-
-            newBtnCaja.addEventListener('click', () => {
-                modal.style.display = 'none';
-                resolve('CAJA');
-            });
-
-            newBtnNinguno.addEventListener('click', () => {
-                modal.style.display = 'none';
-                resolve('NINGUNO');
-            });
-        });
+        return 'NINGUNO';
     }
 };
