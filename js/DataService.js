@@ -35,6 +35,17 @@ const DataService = {
                     throw new Error(`La factura ${saleData.invoiceNumber} ya existe`);
                 }
 
+                // NUEVO: Verificar si este equipo ya pertenece a un grupo para asignarlo automáticamente a la nueva factura.
+                if (window.GrupoManager) {
+                    const key = saleData.clientName ? `${saleData.equipoNumber}-${saleData.clientName}` : String(saleData.equipoNumber);
+                    const grupoDestino = GrupoManager.getGrupoDeEquipo(key, saleData.equipoNumber);
+                    if (grupoDestino) {
+                        saleData.grupo = grupoDestino.id;
+                        saleData.grupoNombre = grupoDestino.nombre;
+                        console.log(`Asignando nueva factura al grupo existente: ${grupoDestino.nombre}`);
+                    }
+                }
+
                 const docRef = await ErrorHandler.withRetry(
                     () => AppState.db.collection("VENTAS").add(saleData),
                     3,
@@ -111,6 +122,21 @@ const DataService = {
     async updateSale(saleId, saleData) {
         return await ConcurrencyManager.withLock(async () => {
             if (AppState.firebaseInitialized) {
+                
+                // NUEVO: Verificar grupo también al actualizar (por si cambió de cliente o equipo, o pasó a pendiente)
+                if (window.GrupoManager && saleData.paymentType === 'pendiente' && saleData.equipoNumber) {
+                    const key = saleData.clientName ? `${saleData.equipoNumber}-${saleData.clientName}` : String(saleData.equipoNumber);
+                    const grupoDestino = GrupoManager.getGrupoDeEquipo(key, saleData.equipoNumber);
+                    if (grupoDestino) {
+                        saleData.grupo = grupoDestino.id;
+                        saleData.grupoNombre = grupoDestino.nombre;
+                    } else {
+                        // Si no pertenece a grupo, asegurarse de limpiar campos para evitar inconsistencias
+                        saleData.grupo = firebase.firestore.FieldValue.delete();
+                        saleData.grupoNombre = firebase.firestore.FieldValue.delete();
+                    }
+                }
+
                 await ErrorHandler.withRetry(
                     () => AppState.db.collection("VENTAS").doc(saleId).update(saleData),
                     3,
@@ -1023,6 +1049,55 @@ const DataService = {
             console.error("Error reparando saldos:", error);
             UIService.showStatus("Error reparando saldos: " + error.message, "error");
             throw error;
+        }
+    },
+
+    async getEquipmentConfig(equipoNumber) {
+        try {
+            if (!AppState.firebaseInitialized) {
+                return { intervaloDias: 20, proximoCambioFecha: null, proximoCambioTipo: null };
+            }
+            const doc = await AppState.db.collection("EQUIPOS_CONFIG").doc(String(equipoNumber)).get();
+            if (doc.exists) {
+                const data = doc.data();
+                return {
+                    intervaloDias: data.intervaloDias !== undefined ? data.intervaloDias : 20,
+                    proximoCambioFecha: data.proximoCambioFecha || null,
+                    proximoCambioTipo: data.proximoCambioTipo || null
+                };
+            }
+        } catch (e) {
+            console.error("Error obteniendo config de equipo:", e);
+        }
+        return { intervaloDias: 20, proximoCambioFecha: null, proximoCambioTipo: null };
+    },
+
+    async saveEquipmentConfig(equipoNumber, config) {
+        try {
+            if (!AppState.firebaseInitialized) return;
+            const docRef = AppState.db.collection("EQUIPOS_CONFIG").doc(String(equipoNumber));
+            const dataToSave = {};
+            
+            if (config.intervaloDias !== undefined) {
+                if (Number(config.intervaloDias) !== 20) {
+                    dataToSave.intervaloDias = Number(config.intervaloDias);
+                } else {
+                    dataToSave.intervaloDias = firebase.firestore.FieldValue.delete();
+                }
+            }
+            
+            if (config.proximoCambioFecha !== undefined) {
+                dataToSave.proximoCambioFecha = config.proximoCambioFecha;
+            }
+            
+            if (config.proximoCambioTipo !== undefined) {
+                dataToSave.proximoCambioTipo = config.proximoCambioTipo;
+            }
+            
+            await docRef.set(dataToSave, { merge: true });
+        } catch (e) {
+            console.error("Error guardando config de equipo:", e);
+            throw e;
         }
     }
 };

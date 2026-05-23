@@ -156,7 +156,14 @@ const UIService = {
                     </div>
                 `;
                 item.addEventListener('click', () => {
-                    SalesService.addToCart(product);
+                    const cantidadStr = prompt(`Ingrese la cantidad para "${product.descripcion || 'este producto'}":`, "1");
+                    if (cantidadStr === null) return; // Cancelado por el usuario
+                    const cantidad = parseInt(cantidadStr) || 1;
+                    if (cantidad < 1) {
+                        UIService.showStatus("La cantidad debe ser al menos 1", "error");
+                        return;
+                    }
+                    SalesService.addToCart(product, cantidad);
                     dropdown.style.display = 'none';
                     document.getElementById('buscar-producto').value = '';
                 });
@@ -371,6 +378,17 @@ const UIService = {
         document.getElementById('abono-modal-content').innerHTML = content;
         document.getElementById('abono-modal').style.display = 'block';
         document.getElementById('monto-abono').value = '';
+        
+        // Mostrar el calculador con saldo completo
+        const saldoContainer = document.getElementById('single-abono-saldo-restante-container');
+        const saldoElement = document.getElementById('single-abono-saldo-restante');
+        if (saldoContainer && saldoElement) {
+            const saldoInicial = document.getElementById('abono-modal').dataset.saldoPendiente || '0';
+            saldoElement.textContent = `$${parseFloat(saldoInicial).toFixed(2)}`;
+            saldoElement.style.color = '#e74c3c';
+            saldoContainer.style.display = 'block';
+        }
+        
         document.getElementById('monto-abono').focus();
     },
 

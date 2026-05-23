@@ -637,6 +637,38 @@
             </div>
         </div>
 
+        <!-- MODAL NÚMERO (CANTIDAD/PRECIO) -->
+        <div id="modal-cantidad" class="modal-overlay hidden" style="align-items: flex-start; padding-top: 15vh;">
+            <div class="modal-content" style="max-width: 300px; padding: 20px; align-items: center;">
+                <h3 id="modal-cantidad-titulo" style="margin: 0 0 15px 0; font-size: 1.1rem; text-align: center; color: var(--text-primary);">Cantidad</h3>
+                <div style="display: flex; align-items: center; width: 100%; background: var(--bg-body); border: 2px solid var(--accent-color); border-radius: 10px; padding: 0 10px; margin-bottom: 20px;">
+                    <span id="modal-cantidad-prefijo" style="color: var(--text-secondary); font-size: 1.2rem; font-weight: bold;"></span>
+                    <input type="number" id="input-cantidad-modal" step="any"
+                        style="flex: 1; border: none; text-align: center; font-size: 1.5rem; padding: 12px 10px; background: transparent; color: white; outline: none; -moz-appearance: textfield; appearance: textfield;">
+                </div>
+                <div style="display: flex; gap: 10px; width: 100%;">
+                    <button id="btn-cancel-cantidad" class="btn-action" style="background: var(--bg-body); margin-bottom: 0;">Cancelar</button>
+                    <button id="btn-confirm-cantidad" class="success-btn" style="margin-bottom: 0;">Aceptar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL CONFIRMACIÓN -->
+        <div id="modal-confirmacion" class="modal-overlay hidden" style="align-items: flex-start; padding-top: 20vh;">
+            <div class="modal-content" style="max-width: 320px; padding: 25px 20px; align-items: center; text-align: center;">
+                <div style="width: 50px; height: 50px; border-radius: 50%; background: rgba(59, 130, 246, 0.1); display: flex; align-items: center; justify-content: center; margin-bottom: 15px;">
+                    <i class="fas fa-question-circle" style="font-size: 2rem; color: var(--accent-color);"></i>
+                </div>
+                <h3 style="margin: 0 0 10px 0; font-size: 1.2rem; color: var(--text-primary);">Confirmación</h3>
+                <p id="modal-confirmacion-msg" style="margin: 0 0 20px 0; color: var(--text-secondary); font-size: 0.95rem; line-height: 1.4;"></p>
+                <div style="display: flex; gap: 10px; width: 100%;">
+                    <button id="btn-cancel-confirm" class="btn-action" style="background: var(--bg-body); margin-bottom: 0; flex: 1;">Cancelar</button>
+                    <button id="btn-accept-confirm" class="success-btn" style="margin-bottom: 0; flex: 1;">Aceptar</button>
+                </div>
+            </div>
+        </div>
+
+
     </div>
 
     <!-- Bottom Navigation -->
@@ -774,7 +806,8 @@
                         saldoPendiente: newData.total, // Se asume reinicio de saldo al editar monto total
                         equipoNumber: newData.equipoNumber,
                         clientName: newData.clientName,
-                        fechaActualizacion: DateUtils.getCurrentTimestampElSalvador()
+                        fechaActualizacion: DateUtils.getCurrentTimestampElSalvador(),
+                        printed: false // Reactivar aviso de impresión al editar desde móvil
                     };
 
                     await db.collection("VENTAS").doc(saleId).update(updateData);
@@ -862,7 +895,80 @@
                 inventarioCache: [],
                 tempEquipo: localStorage.getItem('tw_temp_equipo') || '',
                 tempGrupo: localStorage.getItem('tw_temp_grupo') || '',
-                editingSaleId: null // ID si estamos editando
+                editingSaleId: localStorage.getItem('tw_editing_sale_id') || null // ID si estamos editando
+            },
+
+            async pedirNumero(titulo, tipo = 'cantidad') {
+                return new Promise((resolve) => {
+                    const modal = document.getElementById('modal-cantidad');
+                    const input = document.getElementById('input-cantidad-modal');
+                    const tituloEl = document.getElementById('modal-cantidad-titulo');
+                    const prefijoEl = document.getElementById('modal-cantidad-prefijo');
+
+                    tituloEl.innerText = titulo;
+                    if (tipo === 'precio') {
+                        prefijoEl.innerText = '$';
+                        input.value = "0";
+                    } else {
+                        prefijoEl.innerText = 'x';
+                        input.value = "1";
+                    }
+
+                    modal.classList.remove('hidden');
+
+                    setTimeout(() => {
+                        input.focus();
+                        input.select();
+                    }, 100);
+
+                    const btnConfirm = document.getElementById('btn-confirm-cantidad');
+                    const btnCancel = document.getElementById('btn-cancel-cantidad');
+
+                    const handleConfirm = () => {
+                        const val = parseFloat(input.value);
+                        cerrarYResolver(isNaN(val) || val < 0 ? null : val);
+                    };
+
+                    const handleCancel = () => cerrarYResolver(null);
+
+                    const handleEnter = (e) => {
+                        if (e.key === 'Enter') handleConfirm();
+                    };
+
+                    btnConfirm.onclick = handleConfirm;
+                    btnCancel.onclick = handleCancel;
+                    input.onkeydown = handleEnter;
+
+                    const cerrarYResolver = (resultado) => {
+                        modal.classList.add('hidden');
+                        btnConfirm.onclick = null;
+                        btnCancel.onclick = null;
+                        input.onkeydown = null;
+                        resolve(resultado);
+                    };
+                });
+            },
+
+            async pedirConfirmacion(mensaje) {
+                return new Promise((resolve) => {
+                    const modal = document.getElementById('modal-confirmacion');
+                    const msgEl = document.getElementById('modal-confirmacion-msg');
+                    const btnConfirm = document.getElementById('btn-accept-confirm');
+                    const btnCancel = document.getElementById('btn-cancel-confirm');
+
+                    msgEl.innerText = mensaje;
+                    modal.classList.remove('hidden');
+
+                    const cerrarYResolver = (resultado) => {
+                        modal.classList.add('hidden');
+                        btnConfirm.onclick = null;
+                        btnCancel.onclick = null;
+                        resolve(resultado);
+                    };
+
+                    btnConfirm.onclick = () => cerrarYResolver(true);
+                    btnCancel.onclick = () => cerrarYResolver(false);
+                });
             },
 
             init() {
@@ -1017,77 +1123,58 @@
                 container.innerHTML = html;
             },
 
-            addManualItem(description) {
-                // Limpiar el buscador visualmente antes de las preguntas
-                const searchInput = document.getElementById('input-busqueda');
-                if (searchInput) {
-                    searchInput.value = '';
-                    this.handleSearch('');
+            async addManualItem(description) {
+                const cantidad = await this.pedirNumero(`Cantidad: ${description}`, 'cantidad');
+                if (cantidad === null || cantidad <= 0) {
+                    const searchInput = document.getElementById('input-busqueda');
+                    if (searchInput) searchInput.focus();
+                    return;
                 }
 
-                setTimeout(() => {
-                    // 1. Pedir cantidad
-                    const cantStr = prompt(`Ingrese la cantidad para "${description}":`, "1");
-                    if (cantStr === null) {
-                        if (searchInput) searchInput.focus();
-                        return;
-                    }
-
-                    const quantity = parseInt(cantStr);
-                    if (isNaN(quantity) || quantity <= 0) {
-                        alert("Cantidad inválida");
-                        if (searchInput) searchInput.focus();
-                        return;
-                    }
-
-                    // 2. Pedir precio
-                    const priceStr = prompt(`Ingrese precio unitario para "${description}":`, "0.00");
-                    if (priceStr === null) {
-                        if (searchInput) searchInput.focus();
-                        return;
-                    }
-
-                    const price = parseFloat(priceStr);
-                    if (isNaN(price) || price < 0) {
-                        alert("Precio inválido");
-                        if (searchInput) searchInput.focus();
-                        return;
-                    }
-
-                    const manualId = 'MANUAL-' + Date.now();
-                    this.state.carrito.push({
-                        id: manualId,
-                        descripcion: description,
-                        precio: price,
-                        cantidad: quantity,
-                        codigo: 'MANUAL'
-                    });
-
-                    this.saveCart();
-                    this.showToast(`Agregado: ${description}`);
+                const price = await this.pedirNumero(`Precio: ${description}`, 'precio');
+                if (price === null) {
+                    const searchInput = document.getElementById('input-busqueda');
                     if (searchInput) searchInput.focus();
-                }, 50);
+                    return; // Cancelado
+                }
+
+                const manualId = 'MANUAL-' + Date.now();
+                this.state.carrito.push({
+                    id: manualId,
+                    descripcion: description,
+                    precio: price,
+                    cantidad: cantidad,
+                    codigo: 'MANUAL'
+                });
+
+                this.saveCart();
+                this.showToast(`Agregado: ${cantidad}x ${description}`);
+                this.clearSearch();
             },
 
             // --- CARRITO ---
-            addToCart(itemId) {
+            async addToCart(itemId) {
                 const item = this.state.inventarioCache.find(i => i.id === itemId);
                 if (!item) return;
 
+                const cantidad = await this.pedirNumero(`Añadir: ${item.descripcion}`, 'cantidad');
+                if (cantidad === null || cantidad <= 0) return;
+
                 const existing = this.state.carrito.find(p => p.id === itemId);
                 if (existing) {
-                    existing.cantidad++;
+                    existing.cantidad += cantidad;
                 } else {
                     this.state.carrito.push({
                         id: item.id,
                         descripcion: item.descripcion,
                         precio: item.precio || 0,
-                        cantidad: 1,
+                        cantidad: cantidad,
                         codigo: item.codigo || ''
                     });
                 }
                 this.saveCart();
-                this.showToast(`Agregado: ${item.descripcion}`);
+                this.showToast(`Agregado: ${cantidad}x ${item.descripcion}`);
+                this.clearSearch();
             },
 
             removeFromCart(idx) {
@@ -1126,8 +1213,9 @@
                 // MODO EDICION BAR
                 const summaryDiv = document.querySelector('.cart-summary h2') || document.querySelector('#view-carrito h2');
                 if (this.state.editingSaleId) {
-                    summaryDiv.innerHTML = `Editando Venta <span style="font-size:0.8em; color:var(--accent-color)">#MODO_EDICIÓN</span>`;
-                    summaryDiv.style.color = 'var(--accent-color)';
+                    summaryDiv.innerHTML = `Editando <span style="font-size:0.8em; color:var(--accent-color)">#EDICIÓN</span> 
+                        <button onclick="App.cancelarEdicion()" style="background:var(--danger-color);border:none;color:white;padding:4px 8px;border-radius:6px;font-size:0.75rem;margin-left:10px;cursor:pointer"><i class="fas fa-times"></i> Cancelar</button>`;
+                    summaryDiv.style.color = 'var(--text-primary)';
                 } else {
                     summaryDiv.innerHTML = 'Pedido Actual';
                     summaryDiv.style.color = 'var(--text-primary)';
@@ -1179,7 +1267,8 @@
 
                 // PREGUNTA CLAVE
                 const action = this.state.editingSaleId ? "ACTUALIZAR" : "CREAR";
-                if (!confirm(`¿${action} venta para Equipo ${equipo}? Total: $${total.toFixed(2)}`)) return;
+                const confirmado = await this.pedirConfirmacion(`¿${action} venta para Equipo ${equipo}?\nTotal Estimado: $${total.toFixed(2)}`);
+                if (!confirmado) return;
 
                 const btn = document.querySelector('.success-btn');
                 const originalText = btn.innerHTML;
@@ -1199,6 +1288,7 @@
                         await SalesService.updateSale(this.state.editingSaleId, ventaData);
                         this.showToast('Venta Actualizada ✅');
                         this.state.editingSaleId = null;
+                        localStorage.removeItem('tw_editing_sale_id');
                     } else {
                         await SalesService.procesarVentaPendiente(ventaData);
                         this.showToast('Venta Creada como PENDIENTE ✅');
@@ -1207,11 +1297,11 @@
                     // Limpiar
                     this.state.carrito = [];
                     this.saveCart();
+                    document.getElementById('input-equipo').value = '';
+                    document.getElementById('input-grupo').value = '';
                     this.state.tempEquipo = '';
                     this.state.tempGrupo = '';
                     this.saveTempData();
-                    document.getElementById('input-equipo').value = '';
-                    document.getElementById('input-grupo').value = '';
 
                     this.switchTab('historial'); // Ver lo creado
                     this.updateBadge();
@@ -1427,6 +1517,7 @@
                     const data = doc.data();
 
                     this.state.editingSaleId = saleId;
+                    localStorage.setItem('tw_editing_sale_id', saleId);
                     this.state.carrito = data.products || [];
                     this.state.tempEquipo = data.equipoNumber;
 
@@ -1446,6 +1537,23 @@
                     this.switchTab('carrito');
                     this.showToast("Modo Edición Activado ✏️");
                 });
+            },
+
+            async cancelarEdicion() {
+                const confirmado = await this.pedirConfirmacion("¿Deseas cancelar la edición y vaciar el carrito actual?");
+                if (!confirmado) return;
+                
+                this.state.editingSaleId = null;
+                localStorage.removeItem('tw_editing_sale_id');
+                this.state.carrito = [];
+                this.saveCart();
+                this.state.tempEquipo = '';
+                this.state.tempGrupo = '';
+                this.saveTempData();
+                document.getElementById('input-equipo').value = '';
+                document.getElementById('input-grupo').value = '';
+                this.switchTab('historial');
+                this.showToast("Edición Cancelada");
             },
 
             showToast(msg, type = 'info') {

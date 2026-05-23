@@ -24,10 +24,10 @@ window.FacturasTabManager = {
             const mostrarNombre = equipo.cliente && !equipo.cliente.startsWith('Equipo ');
 
             html += `
-                <div class="equipo-card" onclick="GrupoManager.mostrarDetalleEquipo('${key}')">
+                <div class="equipo-card" onclick="GrupoManager.mostrarDetalleEquipo('${key}')" style="position: relative;">
                     <div class="equipo-number">${equipo.numero}</div>
                     ${mostrarNombre ? `<div class="equipo-nombre">${equipo.cliente}</div>` : ''}
-                    <div class="equipo-total">$${equipo.total.toFixed(2)}</div>
+                    <div class="equipo-total" style="margin-top: auto;">$${equipo.total.toFixed(2)}</div>
                 </div>
             `;
         });
@@ -200,5 +200,117 @@ window.FacturasTabManager = {
             </html>
         `);
         printWindow.document.close();
+    },
+
+    toggleEquipoMenu(equipoKey) {
+        const dropdown = document.getElementById(`equipo-dropdown-${equipoKey}`);
+        const isOpen = dropdown.style.display === 'block';
+
+        // Cerrar todos los de equipos primero
+        this.closeAllMenus();
+
+        // Si no estaba abierto, abrirlo
+        if (!isOpen) {
+            dropdown.style.display = 'block';
+        }
+    },
+
+    closeAllMenus() {
+        document.querySelectorAll('.equipo-dropdown').forEach(d => {
+            d.style.display = 'none';
+        });
+    },
+
+    async abrirConfiguracionCambio(equipoNumber) {
+        try {
+            this.activeConfigEquipo = equipoNumber;
+            document.getElementById('proximo-cambio-sub').textContent = `Equipo ${equipoNumber}`;
+            UIService.showLoading(true);
+            
+            // Cargar configuración de Firestore
+            const config = await DataService.getEquipmentConfig(equipoNumber);
+            
+            // Llenar campos
+            document.getElementById('config-cambio-intervalo').value = config.intervaloDias || 20;
+            document.getElementById('config-cambio-tipo').value = config.proximoCambioTipo || 'ACEITE';
+            
+            if (config.proximoCambioFecha) {
+                document.getElementById('config-cambio-fecha').value = config.proximoCambioFecha;
+            } else {
+                // Autocalcular desde hoy
+                const intervalo = config.intervaloDias || 20;
+                const baseDate = new Date();
+                baseDate.setDate(baseDate.getDate() + intervalo);
+                const yyyy = baseDate.getFullYear();
+                const mm = String(baseDate.getMonth() + 1).padStart(2, '0');
+                const dd = String(baseDate.getDate()).padStart(2, '0');
+                document.getElementById('config-cambio-fecha').value = `${yyyy}-${mm}-${dd}`;
+            }
+            
+            UIService.showLoading(false);
+            document.getElementById('proximo-cambio-modal').style.display = 'block';
+        } catch (error) {
+            UIService.showLoading(false);
+            console.error("Error abriendo config de cambio:", error);
+            UIService.showStatus("Error al cargar la configuración: " + error.message, "error");
+        }
+    },
+
+    actualizarFechaCalculada() {
+        const intervalo = parseInt(document.getElementById('config-cambio-intervalo').value) || 20;
+        const baseDate = new Date();
+        baseDate.setDate(baseDate.getDate() + intervalo);
+        const yyyy = baseDate.getFullYear();
+        const mm = String(baseDate.getMonth() + 1).padStart(2, '0');
+        const dd = String(baseDate.getDate()).padStart(2, '0');
+        document.getElementById('config-cambio-fecha').value = `${yyyy}-${mm}-${dd}`;
+    },
+
+    async guardarConfiguracionCambio() {
+        try {
+            const equipoNumber = this.activeConfigEquipo;
+            if (!equipoNumber) return;
+            
+            const intervalo = parseInt(document.getElementById('config-cambio-intervalo').value) || 20;
+            const tipo = document.getElementById('config-cambio-tipo').value;
+            const fecha = document.getElementById('config-cambio-fecha').value;
+            
+            if (!fecha) {
+                UIService.showStatus("Seleccione una fecha para el cambio", "error");
+                return;
+            }
+            
+            UIService.showLoading(true);
+            
+            await DataService.saveEquipmentConfig(equipoNumber, {
+                intervaloDias: intervalo,
+                proximoCambioFecha: fecha,
+                proximoCambioTipo: tipo
+            });
+            
+            UIService.showLoading(false);
+            document.getElementById('proximo-cambio-modal').style.display = 'none';
+            UIService.showStatus(`Configuración guardada para el equipo ${equipoNumber}`, "success");
+            
+            // Si el modal de grupo está abierto, refrescarlo
+            if (this.activeGroupConfigId) {
+                if (typeof GruposTabManager !== 'undefined' && GruposTabManager.abrirConfiguracionCambioGrupo) {
+                    await GruposTabManager.abrirConfiguracionCambioGrupo(this.activeGroupConfigId);
+                }
+            }
+        } catch (error) {
+            UIService.showLoading(false);
+            console.error("Error guardando config de cambio:", error);
+            UIService.showStatus("Error al guardar: " + error.message, "error");
+        }
     }
 };
+
+// Cerrar menús al hacer clic fuera
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('.equipo-menu-wrapper')) {
+        if (typeof FacturasTabManager !== 'undefined' && FacturasTabManager.closeAllMenus) {
+            FacturasTabManager.closeAllMenus();
+        }
+    }
+});

@@ -72,6 +72,7 @@ const App = {
     setupUI() {
         SalesService.setTodayDate();
         UIService.setupTabs();
+        PrintingService.initPrinterButton();
     },
 
     async loadInitialData() {
@@ -113,34 +114,166 @@ const App = {
         });
 
         const searchInput = document.getElementById('buscar-producto');
+        const dropdown = document.getElementById('search-dropdown');
         let searchTimeout;
+        let currentFocus = -1;
+
         searchInput.addEventListener('input', (e) => {
             clearTimeout(searchTimeout);
             const query = e.target.value.trim();
             if (query.length < 2) {
-                document.getElementById('search-dropdown').style.display = 'none';
+                dropdown.style.display = 'none';
                 return;
             }
             searchTimeout = setTimeout(async () => {
                 try {
                     AppState.searchResults = await DataService.searchProducts(query);
                     UIService.showSearchResults(AppState.searchResults);
+                    currentFocus = -1; // Restablecer el foco al realizar una nueva búsqueda
                 } catch (error) {
-                    document.getElementById('search-dropdown').style.display = 'none';
+                    dropdown.style.display = 'none';
                 }
             }, 500);
         });
 
-        searchInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                const query = searchInput.value.trim();
-                if (query) {
-                    SalesService.addManualProduct(query);
-                    searchInput.value = '';
+        searchInput.addEventListener('keydown', (e) => {
+            const items = dropdown.getElementsByClassName('search-dropdown-item');
+            
+            if (dropdown.style.display === 'none' || items.length === 0) {
+                if (e.key === 'Enter') {
+                    const query = searchInput.value.trim();
+                    if (query) {
+                        handleProductSelectionOrManual(query);
+                    }
                 }
-                document.getElementById('search-dropdown').style.display = 'none';
+                return;
+            }
+
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                currentFocus++;
+                addActive(items);
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                currentFocus--;
+                addActive(items);
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                if (currentFocus > -1 && items[currentFocus]) {
+                    items[currentFocus].click();
+                } else {
+                    const query = searchInput.value.trim();
+                    if (query) {
+                        handleProductSelectionOrManual(query);
+                    } else {
+                        dropdown.style.display = 'none';
+                    }
+                }
+            } else if (e.key === 'Escape') {
+                dropdown.style.display = 'none';
             }
         });
+
+        function findProductByBarcode(rawQuery) {
+            if (!rawQuery) return null;
+            const queryClean = rawQuery.trim().toLowerCase();
+            
+            // 1. Limpiar sufijos extra del código QR/barra (ej. "AN131032'1" -> "AN131032")
+            const cleanCode = queryClean.includes("'") ? queryClean.split("'")[0] : queryClean;
+            if (!cleanCode) return null;
+
+            console.log("[Escaner] Buscando código:", cleanCode, "(Original:", rawQuery + ")");
+
+            // Función auxiliar para comparar códigos ignorando ceros a la izquierda
+            const compareCodes = (code1, code2) => {
+                if (code1 === undefined || code1 === null || code2 === undefined || code2 === null) return false;
+                const c1 = String(code1).toLowerCase().replace(/^0+/, '').trim();
+                const c2 = String(code2).toLowerCase().replace(/^0+/, '').trim();
+                return (c1 || "0") === (c2 || "0");
+            };
+
+            let matchedProduct = null;
+
+            // 2. Buscar en ProductCache
+            if (window.ProductCache && ProductCache.data) {
+                console.log("[Escaner] Tamaño de base de datos local:", ProductCache.data.size);
+                ProductCache.data.forEach((product, id) => {
+                    if (matchedProduct) return;
+
+                    // Convertir códigos y descripciones a String de forma segura para evitar fallas si son números
+                    const prodCodigoStr = product.codigo !== undefined && product.codigo !== null ? String(product.codigo).trim() : '';
+                    const prodDescStr = product.descripcion !== undefined && product.descripcion !== null ? String(product.descripcion).trim() : '';
+
+                    // Separar códigos por si el producto tiene múltiples códigos cargados
+                    const mainCodes = prodCodigoStr ? prodCodigoStr.toLowerCase().split(/[\s,-]+/) : [];
+                    
+                    const matchMain = mainCodes.some(c => compareCodes(c, cleanCode));
+                    const matchDesc = prodDescStr && compareCodes(prodDescStr, cleanCode);
+                    
+                    // También buscar en aliases y codigosProveedor de forma segura por si existen
+                    const aliases = Array.isArray(product.aliases) ? product.aliases : [];
+                    const matchAlias = aliases.some(a => compareCodes(a, cleanCode));
+                    
+                    const codigosProv = Array.isArray(product.codigosProveedor) ? product.codigosProveedor : [];
+                    const matchProv = codigosProv.some(c => compareCodes(c, cleanCode));
+
+                    if (matchMain || matchDesc || matchAlias || matchProv) {
+                        matchedProduct = product;
+                        console.log("[Escaner] Coincidencia encontrada:", product.descripcion, "| Código:", product.codigo);
+                    }
+                });
+            } else {
+                console.warn("[Escaner] ProductCache no está inicializado o no contiene datos.");
+            }
+
+            if (!matchedProduct) {
+                console.log("[Escaner] No se encontró ninguna coincidencia en la base de datos.");
+            }
+
+            return matchedProduct;
+        }
+
+        function handleProductSelectionOrManual(query) {
+            const matchedProduct = findProductByBarcode(query);
+            if (matchedProduct) {
+                dropdown.style.display = 'none';
+                searchInput.value = '';
+                
+                // Usamos un retraso de 50ms para evitar que el Enter físico del lector
+                // se transfiera y envíe automáticamente el prompt de cantidad.
+                setTimeout(() => {
+                    const cantidadStr = prompt(`Ingrese la cantidad para "${matchedProduct.descripcion || 'este producto'}":`, "1");
+                    if (cantidadStr !== null) {
+                        const cantidad = parseInt(cantidadStr) || 1;
+                        if (cantidad < 1) {
+                            UIService.showStatus("La cantidad debe ser al menos 1", "error");
+                        } else {
+                            SalesService.addToCart(matchedProduct, cantidad);
+                        }
+                    }
+                    searchInput.focus();
+                }, 50);
+            } else {
+                SalesService.addManualProduct(query);
+                searchInput.value = '';
+                dropdown.style.display = 'none';
+            }
+        }
+
+        function addActive(items) {
+            if (!items) return false;
+            removeActive(items);
+            if (currentFocus >= items.length) currentFocus = 0;
+            if (currentFocus < 0) currentFocus = items.length - 1;
+            items[currentFocus].classList.add('focused');
+            items[currentFocus].scrollIntoView({ block: 'nearest' });
+        }
+
+        function removeActive(items) {
+            for (let i = 0; i < items.length; i++) {
+                items[i].classList.remove('focused');
+            }
+        }
 
         document.getElementById('equipo').addEventListener('input', (e) => {
             e.target.value = e.target.value.replace(/[^0-9]/g, '');
@@ -156,6 +289,7 @@ const App = {
         document.getElementById('contado-btn').addEventListener('click', () => SalesService.processSale('contado'));
         document.getElementById('pendiente-btn').addEventListener('click', () => SalesService.processSale('pendiente'));
         document.getElementById('print-historial-btn').addEventListener('click', () => SalesService.printCurrentHistorial());
+        SalesService.initSearchAutocomplete();
 
         const filterInput = document.getElementById('filter-historial');
 
@@ -167,10 +301,24 @@ const App = {
                 return;
             }
 
+            // Detectar formato "12 - Cliente"
+            let equipoFilter = filter;
+            let clientFilter = null;
+            const dashMatch = filter.match(/^(\d+)\s*-\s*(.+)$/);
+            if (dashMatch) {
+                equipoFilter = dashMatch[1].trim();
+                clientFilter = dashMatch[2].trim().toLowerCase();
+            }
+
             const filtered = AppState.historial.filter(movimiento => {
                 if (movimiento.tipo === 'venta') {
                     const equipo = (movimiento.equipoNumber || '').trim();
-                    return equipo.includes(filter);
+                    if (!equipo.includes(equipoFilter)) return false;
+                    if (clientFilter) {
+                        const cliente = (movimiento.clientName || '').toLowerCase();
+                        if (!cliente.includes(clientFilter)) return false;
+                    }
+                    return true;
                 }
                 return false;
             });
@@ -181,7 +329,7 @@ const App = {
                     <tr>
                         <td colspan="6" class="empty-cart">
                             <div style="padding: 20px;">
-                                No se encontró el equipo "${filter}" en los registros de hoy.<br>
+                                No se encontró "${filter}" en los registros de hoy.<br>
                                 <span style="font-size: 0.9em; color: #3498db; cursor: pointer; text-decoration: underline;" onclick="SalesService.searchGlobal('${filter}')">
                                     <i class="fas fa-search"></i> Haz clic aquí o presiona ENTER para buscar en todo el historial
                                 </span>

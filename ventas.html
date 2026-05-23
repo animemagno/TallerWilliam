@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 
 <head>
@@ -10,7 +10,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="css/ventas_styles.css?v=4">
+    <link rel="stylesheet" href="css/ventas_styles.css?v=9">
 </head>
 
 <body>
@@ -48,6 +48,12 @@
                         <button class="btn btn-small retiro-btn" onclick="UIService.showRetiroModal()"
                             title="Registrar retiro de caja">
                             <i class="fas fa-hand-holding-usd"></i> <span class="desktop-only">RETIRO</span>
+                        </button>
+                        <button class="btn btn-small" id="printer-size-btn"
+                            onclick="PrintingService.togglePrinterSize()"
+                            title="Cambiar tamaño de impresora"
+                            style="background: #ecf0f1; color: #2c3e50; border: 2px solid #bdc3c7; font-weight: bold; padding: 4px 10px; font-size: 0.8rem;">
+                            <i class="fas fa-print"></i> <span class="printer-size-label">57mm</span>
                         </button>
                     </div>
                 </div>
@@ -154,7 +160,7 @@
                         <div class="form-group" style="display: flex; align-items: center; gap: 8px;">
                             <div style="position: relative; flex: 1; display: flex;">
                                 <input type="text" id="filter-historial"
-                                    placeholder="Ingresa equipo o presiona ENTER para buscar..."
+                                    placeholder="Equipo (TAB=local) o 12 - Cliente..."
                                     style="flex: 1; border-top-right-radius: 0; border-bottom-right-radius: 0;">
                                 <button class="btn btn-secondary" onclick="SalesService.triggerGlobalSearch()"
                                     title="Buscar en todo el historial"
@@ -231,6 +237,7 @@
                             </button>
                         </div>
                     </div>
+                    
                 </div>
                 <div
                     style="margin-top: 15px; text-align: center; padding-top: 10px; border-top: 1px dashed #ddd; display: flex; flex-direction: column; gap: 10px;">
@@ -478,7 +485,10 @@
 
         <!-- Modales existentes -->
         <div class="modal-overlay" id="detalle-modal">
-            <div class="modal-content">
+            <div class="modal-content" style="position: relative;">
+                <button onclick="document.getElementById('detalle-modal').style.display='none'"
+                    style="position: sticky; top: 0; float: right; z-index: 10; background: #e74c3c; color: white; border: none; width: 32px; height: 32px; border-radius: 50%; font-size: 16px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center;"
+                    title="Cerrar">✕</button>
                 <div id="detalle-modal-content"></div>
                 <div style="display: flex; gap: 10px; margin-top: 15px;">
                     <button class="btn btn-success" id="imprimir-detalle-modal" style="flex: 1;">
@@ -571,66 +581,75 @@
         </div>
 
         <div id="abono-modal" class="modal-overlay">
-            <div class="modal-content">
-                <h3 style="margin-bottom: 15px; text-align: center;">Registrar Abono</h3>
+            <div class="modal-content" style="max-width: 450px;">
+                <h3 style="margin-bottom: 15px; text-align: center; color: #2f3542; font-weight: 800;">Registrar Abono</h3>
                 <div id="abono-modal-content"></div>
-                <div class="form-group">
-                    <label for="monto-abono">Monto del Abono:</label>
-                    <input type="number" id="monto-abono" step="0.01" min="0.01" placeholder="0.00">
+                
+                <div class="opt2-input-wrapper">
+                    <label>¿Cuánto vas a abonar hoy?</label>
+                    <div class="opt2-input-field">
+                        <input type="number" id="monto-abono" step="0.01" min="0.01" placeholder="0.00" oninput="SalesService.calcularSaldoRestanteIndividual()">
+                    </div>
                 </div>
-                <div style="display: flex; gap: 10px; margin-top: 15px;">
-                    <button class="btn btn-success" id="process-abono-btn" style="flex: 1;">PROCESAR
-                        ABONO</button>
-                    <button class="btn btn-danger" id="close-abono-modal" style="flex: 1;">CANCELAR</button>
+
+                <!-- SALDO RESTANTE -->
+                <div id="single-abono-saldo-restante-container" style="background: #fffafa; border: 1px dashed #ff4757; padding: 12px; border-radius: 12px; margin-top: 15px; text-align: center; display: none;">
+                    <span style="font-size: 12px; font-weight: bold; color: #747d8c; text-transform: uppercase;">Nuevo Saldo Pendiente</span>
+                    <div id="single-abono-saldo-restante" style="font-size: 24px; font-weight: 800; color: #ff4757;">$0.00</div>
+                </div>
+
+                <div class="opt2-actions" style="margin-top: 20px;">
+                    <button class="opt2-btn cancel" id="close-abono-modal">⊗ CERRAR</button>
+                    <button class="opt2-btn submit" id="process-abono-btn">✓ PROCESAR ABONO</button>
                 </div>
             </div>
         </div>
 
         <div id="bulk-abono-modal" class="modal-overlay">
-            <div class="modal-content" style="max-width: 500px;">
-                <div style="text-align: center; margin-bottom: 20px;">
-                    <h2 style="margin: 0; color: #2c3e50; font-size: 24px;">TALLER WILLIAN</h2>
-                    <h3 id="bulk-abono-grupo-nombre" style="margin: 5px 0 0 0; color: #3498db; font-size: 20px;"></h3>
-                    <div id="bulk-abono-fecha" style="color: #7f8c8d; font-size: 14px; margin-top: 5px;"></div>
-                </div>
-
-                <!-- Información contextual para facturas seleccionadas -->
-                <div id="bulk-abono-info"
-                    style="background: #e8f4fd; padding: 12px; border-radius: 6px; margin-bottom: 15px; font-size: 14px; color: #2c3e50; display: none;">
-                </div>
-
-                <div style="border: 2px solid #3498db; border-radius: 8px; padding: 15px; margin-bottom: 15px;">
-                    <div id="bulk-abono-equipos-list" style="max-height: 200px; overflow-y: auto;"></div>
-
-                    <div
-                        style="background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%); color: white; padding: 15px; border-radius: 8px; text-align: center; margin-top: 15px;">
-                        <div style="font-size: 14px; margin-bottom: 5px;">TOTAL DEL GRUPO</div>
-                        <div id="bulk-abono-total" style="font-size: 28px; font-weight: bold;">$0.00</div>
+            <div class="modal-content" style="max-width: 850px; background: transparent; padding: 0; box-shadow: none;">
+                <div class="modal-opt2">
+                    <div class="modal-opt2-header">
+                        <div>
+                            <h2 style="margin: 0; font-size: 28px; color: #2f3542; font-weight: 800;">Grupo: <span id="bulk-abono-grupo-nombre"></span></h2>
+                            <div id="bulk-abono-fecha" style="color: #a4b0be; font-size: 14px; margin-top: 5px;"></div>
+                        </div>
+                        <div style="background: #3498db; color: white; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold;">Abono Masivo</div>
                     </div>
-                </div>
-
-                <div class="form-group">
-                    <label for="monto-bulk-abono" style="font-weight: bold; color: #2c3e50;">Monto a Abonar:</label>
-                    <input type="number" id="monto-bulk-abono" step="0.01" min="0.01" placeholder="0.00"
-                        style="font-size: 1.3rem; text-align: center; font-weight: bold; padding: 12px; border: 2px solid #3498db; border-radius: 6px;"
-                        oninput="GrupoManager.calcularSaldoRestante()">
-                </div>
-
-                <div id="saldo-restante-container"
-                    style="background: #e8f4fd; padding: 15px; border-radius: 8px; margin-bottom: 15px; text-align: center; display: none;">
-                    <div style="font-size: 14px; color: #2c3e50; margin-bottom: 5px;">SALDO RESTANTE</div>
-                    <div id="saldo-restante" style="font-size: 24px; font-weight: bold; color: #27ae60;">$0.00</div>
-                </div>
-
-                <div style="display: flex; gap: 10px; margin-top: 15px;">
-                    <button class="btn btn-success" id="process-bulk-abono-btn"
-                        style="flex: 1; font-size: 1.1rem; padding: 12px;">
-                        <i class="fas fa-check-circle"></i> ABONAR
-                    </button>
-                    <button class="btn btn-danger" id="close-bulk-abono-modal"
-                        style="flex: 1; font-size: 1.1rem; padding: 12px;">
-                        <i class="fas fa-times-circle"></i> CANCELAR
-                    </button>
+        
+                    <div id="bulk-abono-info" style="display:none; grid-column: 1 / -1; background: #e8f4fd; padding: 12px; border-radius: 6px; font-size: 14px; color: #2c3e50;"></div>
+        
+                    <!-- Columna Izquierda: Tarjetas -->
+                    <div class="modal-opt2-left" id="bulk-abono-left-col">
+                        <div id="bulk-abono-equipos-list-wrapper">
+                            <div id="bulk-abono-equipos-list"></div>
+                        </div>
+                    </div>
+        
+                    <!-- Columna Derecha: Formulario de Impacto -->
+                    <div class="modal-opt2-right">
+                        <div class="opt2-total-box">
+                            <p>Deuda Total del Grupo</p>
+                            <h3 id="bulk-abono-total">0.00</h3>
+                        </div>
+        
+                        <div class="opt2-input-wrapper">
+                            <label>¿Cuánto vas a abonar hoy?</label>
+                            <div class="opt2-input-field">
+                                <input type="number" id="monto-bulk-abono" step="0.01" min="0.01" placeholder="0.00" oninput="GrupoManager.calcularSaldoRestante()">
+                            </div>
+                        </div>
+        
+                        <!-- SALDO RESTANTE -->
+                        <div id="saldo-restante-container" style="background: #fffafa; border: 1px dashed #ff4757; padding: 12px; border-radius: 12px; margin-top: 15px; text-align: center; display: none;">
+                            <span style="font-size: 12px; font-weight: bold; color: #747d8c; text-transform: uppercase;">Saldo Pendiente</span>
+                            <div id="saldo-restante" style="font-size: 24px; font-weight: 800; color: #ff4757;">$0.00</div>
+                        </div>
+        
+                        <div class="opt2-actions">
+                            <button id="close-bulk-abono-modal" class="opt2-btn cancel">⊗ CERRAR</button>
+                            <button id="process-bulk-abono-btn" class="opt2-btn submit">✓ PROCESAR ABONO</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -691,6 +710,80 @@
                     <button class="btn btn-danger" id="close-retiro-modal" style="flex: 1;">CANCELAR</button>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE CONFIGURACIÓN DE PRÓXIMO CAMBIO -->
+    <div id="proximo-cambio-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content" style="max-width: 450px; background: white; padding: 25px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.15);">
+            <div style="text-align: center; margin-bottom: 20px;">
+                <div style="font-size: 2.5rem; color: #f39c12; margin-bottom: 10px;">
+                    <i class="fas fa-oil-can"></i>
+                </div>
+                <h3 style="margin: 0; color: #2c3e50; font-size: 1.4rem; font-weight: 800;">Próximo Cambio</h3>
+                <div id="proximo-cambio-sub" style="color: #7f8c8d; font-size: 0.9rem; margin-top: 5px; font-weight: 500;">Equipo --</div>
+            </div>
+
+            <!-- Input para Intervalo de Días -->
+            <div class="form-group" style="margin-bottom: 15px;">
+                <label style="font-weight: 600; color: #34495e; font-size: 0.9rem; display: block; margin-bottom: 5px; text-align: left;">Días para Cambio de Aceite (Intervalo)</label>
+                <div style="display: flex; gap: 10px; align-items: center; margin-top: 5px;">
+                    <input type="number" id="config-cambio-intervalo" value="20" min="1" max="365" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-size: 1rem; font-weight: bold; text-align: center;" oninput="FacturasTabManager.actualizarFechaCalculada()">
+                    <span style="font-size: 0.9rem; color: #7f8c8d; font-weight: bold; white-space: nowrap;">días</span>
+                </div>
+                <small style="color: #95a5a6; display: block; margin-top: 4px; font-size: 0.75rem; text-align: left;">Por defecto son 20 días. Solo se guardará en base de datos si se modifica o personaliza.</small>
+            </div>
+
+            <!-- Selector de Tipo de Cambio -->
+            <div class="form-group" style="margin-bottom: 15px;">
+                <label style="font-weight: 600; color: #34495e; font-size: 0.9rem; display: block; margin-bottom: 5px; text-align: left;">Tipo de Próximo Cambio Programado</label>
+                <select id="config-cambio-tipo" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-size: 0.9rem; font-weight: 500; margin-top: 5px;" onchange="FacturasTabManager.actualizarFechaCalculada()">
+                    <option value="ACEITE">🛢️ Cambio de Aceite / Motor</option>
+                    <option value="CAJA">⚙️ Cambio de Caja / Transmisión</option>
+                </select>
+            </div>
+
+            <!-- Fecha Programada -->
+            <div class="form-group" style="margin-bottom: 20px; background: #f8f9fa; padding: 12px; border-radius: 10px; border: 1px solid #ecf0f1;">
+                <label style="font-weight: 600; color: #34495e; font-size: 0.9rem; display: block; margin-bottom: 5px; text-align: left;">Fecha Programada del Próximo Cambio</label>
+                <input type="date" id="config-cambio-fecha" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-size: 1rem; font-weight: bold; text-align: center; margin-top: 5px; background: white;">
+                <small style="color: #7f8c8d; display: block; margin-top: 4px; font-size: 0.75rem; text-align: center;">Calculado automáticamente pero puedes modificarlo manualmente.</small>
+            </div>
+
+            <!-- Botones de Acción -->
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="btn btn-success" id="btn-guardar-config-cambio" style="flex: 1; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 0.9rem; border: none; cursor: pointer; background: #27ae60; color: white;" onclick="FacturasTabManager.guardarConfiguracionCambio()">
+                    <i class="fas fa-save"></i> GUARDAR
+                </button>
+                <button class="btn btn-danger" style="flex: 1; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 0.9rem; border: none; cursor: pointer; background: #e74c3c; color: white;" onclick="document.getElementById('proximo-cambio-modal').style.display = 'none'">
+                    CANCELAR
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE CONFIGURACIÓN DE PRÓXIMOS CAMBIOS PARA GRUPOS -->
+    <div id="proximos-cambios-grupo-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content" style="max-width: 600px; background: white; padding: 25px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.15);">
+            <div style="text-align: center; margin-bottom: 20px; border-bottom: 2px solid #ecf0f1; padding-bottom: 15px;">
+                <div style="font-size: 2.5rem; color: #8e44ad; margin-bottom: 10px;">
+                    <i class="fas fa-motorcycle"></i>
+                </div>
+                <h3 style="margin: 0; color: #2c3e50; font-size: 1.4rem; font-weight: 800;">Próximos Cambios del Grupo</h3>
+                <div id="proximos-cambios-grupo-sub" style="color: #7f8c8d; font-size: 0.9rem; margin-top: 5px; font-weight: 500;">Grupo: --</div>
+            </div>
+
+            <!-- Lista de Equipos con sus Estados de Cambio -->
+            <div id="proximos-cambios-grupo-lista" style="max-height: 350px; overflow-y: auto; margin-bottom: 20px; padding: 5px;">
+                <!-- Se rellena dinámicamente -->
+            </div>
+
+             <!-- Botón Cerrar -->
+             <div style="text-align: right;">
+                 <button class="btn btn-secondary" style="padding: 10px 24px; border-radius: 8px; font-weight: bold; cursor: pointer; border: none; background: #718096; color: white;" onclick="document.getElementById('proximos-cambios-grupo-modal').style.display = 'none'; if(typeof FacturasTabManager !== 'undefined') FacturasTabManager.activeGroupConfigId = null;">
+                     CERRAR
+                 </button>
+             </div>
         </div>
     </div>
 

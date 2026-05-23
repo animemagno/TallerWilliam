@@ -53,6 +53,26 @@ window.GrupoManager = {
         }
     },
 
+    // NUEVO: Función auxiliar para buscar equipo con su lógica de fallback
+    getEquipoData(equipoKey) {
+        // 1. Buscar por clave exacta
+        let equipo = this.equiposPendientes.get(equipoKey);
+        
+        // 2. Búsqueda inteligente (NO DESTRUCTIVA) enfocada SOLO en variaciones vacías vs "Equipo X"
+        // Si el grupo pide "95", pero la factura se guardó como "95-Equipo 95"
+        if (!equipo && !equipoKey.includes('-')) {
+            equipo = this.equiposPendientes.get(`${equipoKey}-Equipo ${equipoKey}`);
+        }
+        
+        // 3. Inverso: Si el grupo pide "95-Equipo 95" pero la factura vieja se guardó como "95"
+        if (!equipo && equipoKey.includes('-Equipo ')) {
+            const numeroSolo = equipoKey.split('-')[0];
+            equipo = this.equiposPendientes.get(numeroSolo);
+        }
+
+        return equipo;
+    },
+
     // CORRECCIÓN 5: Función optimizada para actualizar totales
     async actualizarTotalesGrupos(force = false) {
         try {
@@ -69,19 +89,17 @@ window.GrupoManager = {
                 // CORRECCIÓN: Siempre recalcular el total desde equiposPendientes
                 // No usar caché porque los saldos cambian con abonos
                 let nuevoTotal = 0;
+                let processedEquipos = new Set(); // Evitar doble suma
 
-                for (const equipoNum of grupo.equipos) {
-                    let equipoEncontrado = this.equiposPendientes.get(equipoNum);
-
-                    // FALLBACK INTELIGENTE: Si no se encuentra con la clave simple (solo número),
-                    // intentar con la convención "Numero-Equipo Numero" que es el nombre por defecto.
-                    // Esto recupera los totales de los grupos existentes sin mezclar clientes externos.
-                    if (!equipoEncontrado) {
-                        equipoEncontrado = this.equiposPendientes.get(`${equipoNum}-Equipo ${equipoNum}`);
-                    }
+                for (const equipoKey of grupo.equipos) {
+                    // 1. Buscar por clave exacta o fallback
+                    let equipoEncontrado = this.getEquipoData(equipoKey);
 
                     if (equipoEncontrado && equipoEncontrado.total > 0) {
-                        nuevoTotal += equipoEncontrado.total;
+                        if (!processedEquipos.has(equipoEncontrado)) {
+                            processedEquipos.add(equipoEncontrado);
+                            nuevoTotal += equipoEncontrado.total;
+                        }
                     }
                 }
 
@@ -140,8 +158,8 @@ window.GrupoManager = {
             snapshot.forEach(doc => {
                 const venta = doc.data();
                 const equipo = venta.equipoNumber;
-                const cliente = venta.clientName || '';
-
+                let cliente = venta.clientName || '';
+                
                 let saldoPendiente = venta.total || 0;
                 if (venta.abonos && venta.abonos.length > 0) {
                     const totalAbonado = venta.abonos.reduce((sum, abono) => sum + abono.monto, 0);
@@ -430,6 +448,21 @@ window.GrupoManager = {
         return equiposEnGrupos;
     },
 
+    getGrupoDeEquipo(key, numeroCorto) {
+        let result = null;
+        this.grupos.forEach(grupo => {
+            if (grupo.equipos.includes(key)) {
+                result = { id: grupo.id, nombre: grupo.nombre };
+            } else if (numeroCorto && grupo.equipos.includes(numeroCorto.toString())) {
+                // Fallback para nombres por defecto / legacy
+                if (key === `${numeroCorto}-Equipo ${numeroCorto}` || key === numeroCorto.toString()) {
+                    result = { id: grupo.id, nombre: grupo.nombre };
+                }
+            }
+        });
+        return result;
+    },
+
     updateUI() {
         if (window.FacturasTabManager) {
             FacturasTabManager.renderEquiposIndividuales();
@@ -527,7 +560,6 @@ window.GrupoManager = {
         let equipo = this.equiposPendientes.get(key);
 
         // FALLBACK PARA CLIC EN DETALLES:
-        // Si el click viene de un grupo antiguo (token "65"), buscar la clave compuesta ("65-Equipo 65")
         if (!equipo) {
             equipo = this.equiposPendientes.get(`${key}-Equipo ${key}`);
         }
@@ -535,6 +567,9 @@ window.GrupoManager = {
         AppState.selectedInvoicesForPayment = new Set();
 
         let facturasHTML = '';
+        let cantidadFacturas = 0;
+        let totalPendiente = 0;
+
         if (equipo) {
             // Ordenar facturas por fecha (las más antiguas primero)
             const sortedFacturas = [...equipo.facturas].sort((a, b) => {
@@ -543,122 +578,156 @@ window.GrupoManager = {
                 return dateA - dateB;
             });
 
-            facturasHTML = `
-                <div style="overflow-x: auto;">
-                    <table style="width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px;">
-                        <thead>
-                            <tr style="background-color: #2c3e50; color: white;">
-                                <th style="padding: 10px; text-align: center; width: 40px;">
-                                    <i class="fas fa-check-square"></i>
-                                </th>
-                                <th style="padding: 10px; text-align: left;">Factura</th>
-                                <th style="padding: 10px; text-align: left;">Productos</th>
-                                <th style="padding: 10px; text-align: right;">Total</th>
-                                <th style="padding: 10px; text-align: right;">Abonos</th>
-                                <th style="padding: 10px; text-align: right;">Saldo</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-            `;
+            cantidadFacturas = sortedFacturas.length;
 
             sortedFacturas.forEach((factura, index) => {
+                const saldoPendiente = factura.saldoPendiente !== undefined ? factura.saldoPendiente : factura.total;
+                totalPendiente += saldoPendiente;
+                const tieneAbonos = factura.abonos && factura.abonos.length > 0;
+
+                // Tabla de productos
                 let productosHTML = '';
                 if (factura.products && factura.products.length > 0) {
-                    productosHTML = `<table style="width: 100%; font-size: 12px; border-collapse: collapse;">`;
-                    factura.products.forEach(producto => {
-                        const totalProducto = (producto.precio * producto.cantidad).toFixed(2);
-                        productosHTML += `
-                            <tr>
-                                <td style="width: 35px; text-align: center; vertical-align: top; color: #2c3e50; font-weight: bold; padding: 2px;">
-                                    ${producto.cantidad}
+                    let filasProductos = '';
+                    factura.products.forEach((producto, pIdx) => {
+                        filasProductos += `
+                            <tr style="background: ${pIdx % 2 === 0 ? '#fafbfc' : 'white'};">
+                                <td style="padding: 5px 8px; text-align: center; font-weight: 600; color: #2c3e50; border-bottom: 1px solid #f0f0f0;">${producto.cantidad}</td>
+                                <td style="padding: 5px 8px; color: #555; border-bottom: 1px solid #f0f0f0;">
+                                    <i class="fas fa-wrench" style="color: #bdc3c7; font-size: 0.65rem; margin-right: 4px;"></i>${producto.descripcion}
                                 </td>
-                                <td style="vertical-align: top; padding: 2px;">
-                                    ${producto.descripcion}
-                                </td>
-                                <td style="text-align: right; vertical-align: top; font-weight: bold; color: #555; padding: 2px; width: 60px;">
-                                    $${totalProducto}
-                                </td>
+                                <td style="padding: 5px 8px; text-align: right; color: #7f8c8d; border-bottom: 1px solid #f0f0f0;">$${producto.precio.toFixed(2)}</td>
+                                <td style="padding: 5px 8px; text-align: right; font-weight: 600; color: #2c3e50; border-bottom: 1px solid #f0f0f0;">$${(producto.precio * producto.cantidad).toFixed(2)}</td>
                             </tr>
                         `;
                     });
-                    productosHTML += `</table>`;
+                    productosHTML = `
+                        <table style="width: 100%; border-collapse: collapse; font-size: 0.8rem;">
+                            <thead>
+                                <tr style="background: linear-gradient(135deg, #2c3e50, #34495e);">
+                                    <th style="padding: 6px 8px; text-align: center; color: white; font-size: 0.72rem; font-weight: 600; width: 45px;">CANT.</th>
+                                    <th style="padding: 6px 8px; text-align: left; color: white; font-size: 0.72rem; font-weight: 600;">DESCRIPCIÓN</th>
+                                    <th style="padding: 6px 8px; text-align: right; color: white; font-size: 0.72rem; font-weight: 600; width: 70px;">P. UNIT.</th>
+                                    <th style="padding: 6px 8px; text-align: right; color: white; font-size: 0.72rem; font-weight: 600; width: 70px;">TOTAL</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${filasProductos}
+                            </tbody>
+                        </table>
+                    `;
                 }
-                const saldoPendiente = factura.saldoPendiente !== undefined ? factura.saldoPendiente : factura.total;
-                const tieneAbonos = factura.abonos && factura.abonos.length > 0;
 
-                let abonosHTML = '-';
+                // Abonos info
+                let abonosHTML = '';
                 if (tieneAbonos) {
-                    abonosHTML = '';
-                    factura.abonos.forEach(abono => {
-                        const fechaAbono = abono.fecha ? new Date(abono.fecha.toDate ? abono.fecha.toDate() : abono.fecha).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' }) : 'N/A';
-                        abonosHTML += `
-                            <div style="font-size: 11px; color: #27ae60;">
-                                +$${abono.monto.toFixed(2)} (${fechaAbono})
-                            </div>
-                        `;
-                    });
+                    const totalAbonado = factura.abonos.reduce((sum, a) => sum + a.monto, 0);
+                    let detalleAbonos = factura.abonos.map(a => {
+                        const fechaAbono = a.fecha ? new Date(a.fecha.toDate ? a.fecha.toDate() : a.fecha).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' }) : 'N/A';
+                        return `<span style="font-size: 0.75rem; color: #27ae60;">+$${a.monto.toFixed(2)} (${fechaAbono})</span>`;
+                    }).join(' · ');
+                    abonosHTML = `
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: #e8f8f5; border-top: 1px solid #d5f5e3; font-size: 0.8rem; flex-wrap: wrap; gap: 4px;">
+                            <div><i class="fas fa-coins" style="color: #27ae60; margin-right: 4px;"></i> Abonado: $${totalAbonado.toFixed(2)} <span style="color: #95a5a6; margin-left: 4px;">${detalleAbonos}</span></div>
+                            <span style="font-weight: 700; color: #e74c3c;">Pendiente: $${saldoPendiente.toFixed(2)}</span>
+                        </div>
+                    `;
                 }
 
-                const rowStyle = index % 2 === 0 ? 'background-color: #f9f9f9;' : 'background-color: #ffffff;';
+                // Detección de aceite
+                let tieneCaja = false, tieneAceite = false;
+                if (factura.products && factura.products.length > 0) {
+                    const matchStr = factura.products.map(p => p.descripcion).join(' ').toLowerCase();
+                    if (matchStr.includes('caja') || matchStr.includes('transmision')) tieneCaja = true;
+                    const frasesAceite = ['cambio de aceite', 'cambio de aceite de caja', 'cambio de aceite de motor y caja'];
+                    if (frasesAceite.some(frase => matchStr.includes(frase))) tieneAceite = true;
+                }
+
+                let borderStyle = '1px solid #e8e8e8';
+                let bgFactura = 'white';
+                let iconoServicio = '';
+
+                if (tieneCaja) {
+                    borderStyle = '3px solid #e74c3c';
+                    bgFactura = '#fff5f5';
+                    iconoServicio = '<span style="background: #e74c3c; color: white; font-size: 0.65rem; padding: 2px 6px; border-radius: 10px; font-weight: 600; margin-left: 8px;">🔧 CAJA</span>';
+                } else if (tieneAceite) {
+                    borderStyle = '3px solid #27ae60';
+                    bgFactura = '#f0fff4';
+                    iconoServicio = '<span style="background: #27ae60; color: white; font-size: 0.65rem; padding: 2px 6px; border-radius: 10px; font-weight: 600; margin-left: 8px;">🛢️ ACEITE</span>';
+                }
+
+                const fechaFactura = factura.timestamp ?
+                    new Date(factura.timestamp.toDate ? factura.timestamp.toDate() : factura.timestamp).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })
+                    : 'N/A';
 
                 facturasHTML += `
-                    <tr style="${rowStyle} border-bottom: 1px solid #ddd;">
-                        <td style="padding: 8px; text-align: center;">
-                            <input type="checkbox" class="invoice-checkbox" data-id="${factura.id}" 
-                                   onchange="GrupoManager.toggleInvoiceSelection('${factura.id}')" 
-                                   style="width: 18px; height: 18px; cursor: pointer;">
-                        </td>
-                        <td style="padding: 8px; font-weight: bold; color: #2c3e50;">
-                            #${factura.invoiceNumber}
-                            <div style="font-size: 11px; color: #95a5a6; font-weight: normal;">
-                                ${factura.timestamp ? new Date(factura.timestamp.toDate ? factura.timestamp.toDate() : factura.timestamp).toLocaleDateString('es-ES') : ''}
+                    <div style="background: ${bgFactura}; border-radius: 8px; margin: 8px 0; overflow: hidden; border: ${borderStyle}; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-bottom: 1px solid #e0e0e0;">
+                            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                <input type="checkbox" class="invoice-checkbox" data-id="${factura.id}" 
+                                       onchange="GrupoManager.toggleInvoiceSelection('${factura.id}')" 
+                                       style="width: 18px; height: 18px; cursor: pointer;">
+                                <i class="fas fa-file-invoice" style="color: #3498db; font-size: 0.9rem;"></i>
+                                <span style="font-weight: 700; color: #2c3e50; font-size: 0.9rem;">${factura.invoiceNumber}</span>
+                                ${iconoServicio}
                             </div>
-                        </td>
-                        <td style="padding: 8px;">
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <span style="color: #7f8c8d; font-size: 0.78rem;"><i class="fas fa-calendar-alt" style="margin-right: 3px;"></i>${fechaFactura}</span>
+                                <span style="font-weight: 700; color: #2c3e50; font-size: 0.95rem;">$${factura.total.toFixed(2)}</span>
+                            </div>
+                        </div>
+                        <div style="padding: 0;">
                             ${productosHTML}
-                        </td>
-                        <td style="padding: 8px; text-align: right; font-weight: bold;">
-                            $${factura.total.toFixed(2)}
-                        </td>
-                        <td style="padding: 8px; text-align: right;">
-                            ${abonosHTML}
-                        </td>
-                        <td style="padding: 8px; text-align: right; font-weight: bold; color: #e74c3c;">
-                            $${saldoPendiente.toFixed(2)}
-                        </td>
-                    </tr>
+                        </div>
+                        ${abonosHTML}
+                    </div>
                 `;
             });
-
-            facturasHTML += `
-                        </tbody>
-                    </table>
-                </div>
-            `;
         }
 
-        const modalContent = `
-            <h3 style="margin-bottom: 15px; text-align: center; color: #2c3e50;">
-                <i class="fas fa-tools"></i> Equipo ${equipo.numero}
-            </h3>
+        const nombreEquipo = equipo && equipo.cliente && equipo.cliente !== `Equipo ${equipo.numero}`
+            ? `${equipo.numero} - ${equipo.cliente}`
+            : `Equipo ${equipo ? equipo.numero : key}`;
 
-            <div class="detalle-equipo" style="background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #e9ecef; display: flex; justify-content: space-around; flex-wrap: wrap; gap: 10px;">
-                <div><strong><i class="fas fa-user"></i> Cliente:</strong> ${equipo.cliente}</div>
-                <div><strong><i class="fas fa-file-invoice-dollar"></i> Facturas:</strong> ${equipo ? equipo.facturas.length : 0}</div>
-                <div style="font-size: 1.1em; color: #e74c3c;"><strong><i class="fas fa-money-bill-wave"></i> Total Pendiente:</strong> $${equipo ? equipo.total.toFixed(2) : '0.00'}</div>
+        const tieneAbonosGlobal = totalPendiente !== (equipo ? equipo.total : 0);
+
+        const modalContent = `
+            <div style="text-align: center; padding: 16px 0 12px 0; border-bottom: 3px solid #3498db; margin-bottom: 16px;">
+                <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 2px; color: #95a5a6; margin-bottom: 4px;">Detalle del Equipo</div>
+                <h2 style="margin: 0; color: #2c3e50; font-size: 1.5rem; font-weight: 800;"><i class="fas fa-motorcycle" style="margin-right: 8px;"></i>${nombreEquipo}</h2>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-bottom: 18px;">
+                <div style="background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%); padding: 14px 10px; border-radius: 10px; text-align: center; color: white;">
+                    <i class="fas fa-file-invoice" style="font-size: 1.2rem; margin-bottom: 4px; display: block; opacity: 0.8;"></i>
+                    <div style="font-size: 1.4rem; font-weight: 800;">${cantidadFacturas}</div>
+                    <div style="font-size: 0.7rem; opacity: 0.85;">Facturas</div>
+                </div>
+                <div style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); padding: 14px 10px; border-radius: 10px; text-align: center; color: white;">
+                    <i class="fas fa-dollar-sign" style="font-size: 1.2rem; margin-bottom: 4px; display: block; opacity: 0.8;"></i>
+                    <div style="font-size: 1.4rem; font-weight: 800;">$${equipo ? equipo.total.toFixed(2) : '0.00'}</div>
+                    <div style="font-size: 0.7rem; opacity: 0.85;">Total</div>
+                </div>
+                <div style="background: linear-gradient(135deg, #e67e22 0%, #d35400 100%); padding: 14px 10px; border-radius: 10px; text-align: center; color: white;">
+                    <i class="fas fa-exclamation-triangle" style="font-size: 1.2rem; margin-bottom: 4px; display: block; opacity: 0.8;"></i>
+                    <div style="font-size: 1.4rem; font-weight: 800;">$${totalPendiente.toFixed(2)}</div>
+                    <div style="font-size: 0.7rem; opacity: 0.85;">Pendiente</div>
+                </div>
             </div>
             
-            <div style="margin: 15px 0; text-align: right;">
+            <div style="margin: 12px 0; text-align: right;">
                 <button class="btn btn-info" id="pay-selected-btn" onclick="GrupoManager.showBulkPaymentModal()" style="display: none; background-color: #3498db; border: none; padding: 8px 15px; border-radius: 5px; color: white; font-weight: bold; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
                     <i class="fas fa-check-circle"></i> ABONAR SELECCIONADAS
                 </button>
             </div>
 
-            <div class="grupo-facturas">
-                ${facturasHTML || '<p style="text-align: center; padding: 20px; color: #7f8c8d;">No hay facturas pendientes para este equipo</p>'}
+            <div style="margin-bottom: 10px;">
+                <h4 style="color: #2c3e50; font-size: 0.95rem; margin: 0 0 12px 0; padding-bottom: 8px; border-bottom: 2px solid #ecf0f1; display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-list-alt" style="color: #3498db;"></i> Facturas Pendientes
+                </h4>
+                ${facturasHTML || '<p style="text-align: center; color: #999; padding: 20px;">No hay facturas pendientes para este equipo</p>'}
             </div>
-            
-
         `;
 
         document.getElementById('detalle-modal-content').innerHTML = modalContent;
@@ -699,9 +768,31 @@ window.GrupoManager = {
         document.getElementById('bulk-abono-grupo-nombre').textContent = '';
         document.getElementById('bulk-abono-fecha').textContent = '';
         document.getElementById('bulk-abono-equipos-list').innerHTML = '';
-        document.getElementById('bulk-abono-equipos-list').parentElement.style.display = 'none';
+        document.getElementById('bulk-abono-left-col').style.display = 'none';
+        document.querySelector('.modal-opt2').classList.add('single-column');
+
+        // Calcular el total pendiente de las facturas seleccionadas
+        let totalSeleccionado = 0;
+        for (const invoiceId of AppState.selectedInvoicesForPayment) {
+            // Buscar en equiposPendientes (fuente real de datos)
+            for (const [, equipo] of this.equiposPendientes) {
+                const factura = equipo.facturas.find(f => f.id === invoiceId);
+                if (factura) {
+                    const saldo = factura.saldoPendiente !== undefined ? factura.saldoPendiente : factura.total;
+                    totalSeleccionado += saldo;
+                    break;
+                }
+            }
+        }
+
+        // Mostrar el total en el cuadro oscuro y guardarlo para el calculador
+        document.getElementById('bulk-abono-total').textContent = totalSeleccionado.toFixed(2);
+        modal.dataset.totalGrupo = totalSeleccionado;
 
         document.getElementById('monto-bulk-abono').value = '';
+        document.getElementById('saldo-restante-container').style.display = 'block';
+        document.getElementById('saldo-restante').textContent = `$${totalSeleccionado.toFixed(2)}`;
+        document.getElementById('saldo-restante').style.color = '#e74c3c';
         modal.style.display = 'block';
 
         // Configurar el botón para procesar facturas seleccionadas
@@ -781,18 +872,19 @@ window.GrupoManager = {
 
                 // Recopilar todas las facturas del grupo y ordenarlas por fecha (más antiguas primero)
                 const facturas = [];
-                for (const equipoNum of grupo.equipos) {
-                    this.equiposPendientes.forEach((equipo, key) => {
-                        if (equipo.numero === equipoNum && equipo.facturas) {
-                            equipo.facturas.forEach(f => {
-                                facturas.push({
-                                    id: f.id,
-                                    timestamp: f.timestamp,
-                                    saldoPendiente: f.saldoPendiente !== undefined ? f.saldoPendiente : f.total
-                                });
+                for (const equipoKey of grupo.equipos) {
+                    // 1. Buscar por clave exacta
+                    let equipoEncontrado = this.equiposPendientes.get(equipoKey);
+
+                    if (equipoEncontrado && equipoEncontrado.facturas) {
+                        equipoEncontrado.facturas.forEach(f => {
+                            facturas.push({
+                                id: f.id,
+                                timestamp: f.timestamp,
+                                saldoPendiente: f.saldoPendiente !== undefined ? f.saldoPendiente : f.total
                             });
-                        }
-                    });
+                        });
+                    }
                 }
 
                 if (facturas.length === 0) {
@@ -909,22 +1001,26 @@ window.GrupoManager = {
         let totalGeneral = 0;
         let totalPendiente = 0;
         let cantidadFacturas = 0;
+        let cantidadEquiposConDeuda = 0;
         let tieneAbonos = false;
 
-        for (const equipoNum of grupo.equipos) {
-            let equipoEncontrado = null;
-            this.equiposPendientes.forEach((equipo, key) => {
-                if (equipo.numero === equipoNum && equipo.total > 0) {
-                    equipoEncontrado = equipo;
-                }
-            });
+        for (const equipoKey of grupo.equipos) {
+            // 1. Buscar por clave exacta
+            let equipoEncontrado = this.equiposPendientes.get(equipoKey);
 
-            if (equipoEncontrado) {
-                totalGeneral += equipoEncontrado.total;
-                cantidadFacturas += equipoEncontrado.facturas.length;
+            // 2. Fallback para grupos antiguos: buscar por número
+            const equiposCoincidentes = [];
+            if (equipoEncontrado && equipoEncontrado.total > 0) {
+                equiposCoincidentes.push(equipoEncontrado);
+            }
+
+            for (const equipo of equiposCoincidentes) {
+                totalGeneral += equipo.total;
+                cantidadFacturas += equipo.facturas.length;
+                cantidadEquiposConDeuda++;
 
                 let facturasHTML = '';
-                equipoEncontrado.facturas.forEach(factura => {
+                equipo.facturas.forEach((factura, idx) => {
                     const saldoPendiente = factura.saldoPendiente !== undefined ? factura.saldoPendiente : factura.total;
                     totalPendiente += saldoPendiente;
 
@@ -934,50 +1030,165 @@ window.GrupoManager = {
 
                     let productosHTML = '';
                     if (factura.products && factura.products.length > 0) {
-                        factura.products.forEach(producto => {
-                            productosHTML += `
-                                <div class="producto-item">
-                                    <div>${producto.descripcion} x${producto.cantidad}</div>
-                                    <div>$${(producto.precio * producto.cantidad).toFixed(2)}</div>
-                                </div>
+                        let filasProductos = '';
+                        factura.products.forEach((producto, pIdx) => {
+                            filasProductos += `
+                                <tr style="background: ${pIdx % 2 === 0 ? '#fafbfc' : 'white'};">
+                                    <td style="padding: 5px 8px; text-align: center; font-weight: 600; color: #2c3e50; border-bottom: 1px solid #f0f0f0;">${producto.cantidad}</td>
+                                    <td style="padding: 5px 8px; color: #555; border-bottom: 1px solid #f0f0f0;">
+                                        <i class="fas fa-wrench" style="color: #bdc3c7; font-size: 0.65rem; margin-right: 4px;"></i>${producto.descripcion}
+                                    </td>
+                                    <td style="padding: 5px 8px; text-align: right; color: #7f8c8d; border-bottom: 1px solid #f0f0f0;">$${producto.precio.toFixed(2)}</td>
+                                    <td style="padding: 5px 8px; text-align: right; font-weight: 600; color: #2c3e50; border-bottom: 1px solid #f0f0f0;">$${(producto.precio * producto.cantidad).toFixed(2)}</td>
+                                </tr>
                             `;
                         });
+                        productosHTML = `
+                            <table style="width: 100%; border-collapse: collapse; font-size: 0.8rem;">
+                                <thead>
+                                    <tr style="background: linear-gradient(135deg, #2c3e50, #34495e);">
+                                        <th style="padding: 6px 8px; text-align: center; color: white; font-size: 0.72rem; font-weight: 600; width: 45px;">CANT.</th>
+                                        <th style="padding: 6px 8px; text-align: left; color: white; font-size: 0.72rem; font-weight: 600;">DESCRIPCIÓN</th>
+                                        <th style="padding: 6px 8px; text-align: right; color: white; font-size: 0.72rem; font-weight: 600; width: 70px;">P. UNIT.</th>
+                                        <th style="padding: 6px 8px; text-align: right; color: white; font-size: 0.72rem; font-weight: 600; width: 70px;">TOTAL</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${filasProductos}
+                                </tbody>
+                            </table>
+                        `;
+                    }
+
+                    // Calcular abonos info
+                    let abonosHTML = '';
+                    if (factura.abonos && factura.abonos.length > 0) {
+                        const totalAbonado = factura.abonos.reduce((sum, a) => sum + a.monto, 0);
+                        abonosHTML = `
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px; padding: 6px 10px; background: #e8f8f5; border-radius: 4px; font-size: 0.8rem;">
+                                <span style="color: #27ae60;"><i class="fas fa-coins" style="margin-right: 4px;"></i> Abonado: $${totalAbonado.toFixed(2)}</span>
+                                <span style="font-weight: 700; color: #e74c3c;">Pendiente: $${saldoPendiente.toFixed(2)}</span>
+                            </div>
+                        `;
+                    }
+
+                    const fechaFactura = factura.timestamp ?
+                        new Date(factura.timestamp.toDate ? factura.timestamp.toDate() : factura.timestamp).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })
+                        : 'N/A';
+
+                    // Análisis de contenido para resaltar cambios de aceite
+                    let tieneCaja = false;
+                    let tieneAceite = false;
+
+                    if (factura.products && factura.products.length > 0) {
+                        const matchStr = factura.products.map(p => p.descripcion).join(' ').toLowerCase();
+                        if (matchStr.includes('caja') || matchStr.includes('transmision')) tieneCaja = true;
+                        const frasesAceite = ['cambio de aceite', 'cambio de aceite de caja', 'cambio de aceite de motor y caja'];
+                        if (frasesAceite.some(frase => matchStr.includes(frase))) tieneAceite = true;
+                    }
+
+                    let borderStyle = '1px solid #e8e8e8';
+                    let bgFactura = 'white';
+                    let iconoServicio = '';
+
+                    if (tieneCaja) {
+                        borderStyle = '3px solid #e74c3c';
+                        bgFactura = '#fff5f5';
+                        iconoServicio = '<span style="background: #e74c3c; color: white; font-size: 0.65rem; padding: 2px 6px; border-radius: 10px; font-weight: 600; margin-left: 8px;">🔧 CAJA</span>';
+                    } else if (tieneAceite) {
+                        borderStyle = '3px solid #27ae60';
+                        bgFactura = '#f0fff4';
+                        iconoServicio = '<span style="background: #27ae60; color: white; font-size: 0.65rem; padding: 2px 6px; border-radius: 10px; font-weight: 600; margin-left: 8px;">🛢️ ACEITE</span>';
                     }
 
                     facturasHTML += `
-                        <div class="grupo-detalle-factura">
-                            <div><strong>Factura:</strong> ${factura.invoiceNumber}</div>
-                            <div><strong>Fecha:</strong> ${new Date(factura.timestamp.toDate ? factura.timestamp.toDate() : factura.timestamp).toLocaleDateString('es-ES')}</div>
-                            <div><strong>Total:</strong> $${factura.total.toFixed(2)}</div>
-                            ${factura.abonos && factura.abonos.length > 0 ? `<div><strong>Saldo Pendiente:</strong> $${saldoPendiente.toFixed(2)}</div>` : ''}
-                            <div><strong>Productos:</strong></div>
-                            ${productosHTML}
+                        <div style="background: ${bgFactura}; border-radius: 8px; margin: 8px 0; overflow: hidden; border: ${borderStyle}; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-bottom: 1px solid #e0e0e0;">
+                                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                    <i class="fas fa-file-invoice" style="color: #3498db; font-size: 0.9rem;"></i>
+                                    <span style="font-weight: 700; color: #2c3e50; font-size: 0.9rem;">${factura.invoiceNumber}</span>
+                                    ${iconoServicio}
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <span style="color: #7f8c8d; font-size: 0.78rem;"><i class="fas fa-calendar-alt" style="margin-right: 3px;"></i>${fechaFactura}</span>
+                                    <span style="font-weight: 700; color: #2c3e50; font-size: 0.95rem;">$${factura.total.toFixed(2)}</span>
+                                </div>
+                            </div>
+                            <div style="padding: 0;">
+                                ${productosHTML}
+                            </div>
+                            ${abonosHTML}
                         </div>
                     `;
                 });
 
+                const nombreEquipo = equipo.cliente && equipo.cliente !== `Equipo ${equipo.numero}`
+                    ? `${equipo.numero} - ${equipo.cliente}`
+                    : `Equipo ${equipo.numero}`;
+
                 equiposHTML += `
-                    <div class="grupo-detalle-equipo">
-                        <h4>Equipo ${equipoEncontrado.numero} - ${equipoEncontrado.cliente}</h4>
-                        <div><strong>Total:</strong> $${equipoEncontrado.total.toFixed(2)}</div>
-                        <div><strong>Facturas:</strong> ${equipoEncontrado.facturas.length}</div>
-                        ${facturasHTML}
+                    <div style="margin-bottom: 16px; border-radius: 10px; overflow: hidden; border: 1px solid #d5e8f5; box-shadow: 0 2px 6px rgba(52,152,219,0.08);">
+                        <div style="background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%); padding: 12px 16px; display: flex; justify-content: space-between; align-items: center;">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <div style="background: rgba(255,255,255,0.2); width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                                    <i class="fas fa-motorcycle" style="color: white; font-size: 1rem;"></i>
+                                </div>
+                                <div>
+                                    <div style="font-weight: 700; color: white; font-size: 1rem;">${nombreEquipo}</div>
+                                    <div style="color: rgba(255,255,255,0.7); font-size: 0.75rem;">${equipo.facturas.length} factura${equipo.facturas.length > 1 ? 's' : ''}</div>
+                                </div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="font-weight: 800; color: #e74c3c; font-size: 1.15rem; background: rgba(255,255,255,0.95); padding: 4px 12px; border-radius: 20px;">$${equipo.total.toFixed(2)}</div>
+                            </div>
+                        </div>
+                        <div style="padding: 10px 12px; background: #fafbfc;">
+                            ${facturasHTML}
+                        </div>
                     </div>
                 `;
             }
         }
 
+        const fechaHoy = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
+
         const modalContent = `
-            <h3 style="margin-bottom: 15px; text-align: center;">${grupo.nombre} - Detalles Completos</h3>
-            <div class="grupo-resumen">
-                <div><strong>Total del Grupo:</strong> $${totalGeneral.toFixed(2)}</div>
-                ${tieneAbonos ? `<div><strong>Saldo Pendiente:</strong> $${totalPendiente.toFixed(2)}</div>` : ''}
-                <div><strong>Número de Equipos:</strong> ${grupo.equipos.length}</div>
-                <div><strong>Total de Facturas:</strong> ${cantidadFacturas}</div>
+            <div style="text-align: center; padding: 16px 0 12px 0; border-bottom: 3px solid #3498db; margin-bottom: 16px;">
+                <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 2px; color: #95a5a6; margin-bottom: 4px;">Detalles del Grupo</div>
+                <h2 style="margin: 0; color: #2c3e50; font-size: 1.5rem; font-weight: 800;">${grupo.nombre}</h2>
+                <div style="color: #7f8c8d; font-size: 0.8rem; margin-top: 4px;"><i class="fas fa-calendar"></i> ${fechaHoy}</div>
             </div>
-            <div class="grupo-facturas">
-                <h4>Detalles por Equipo:</h4>
-                ${equiposHTML || '<p>No hay equipos con facturas pendientes en este grupo</p>'}
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-bottom: 18px;">
+                <div style="background: linear-gradient(135deg, #3498db 0%, #2980b9 100%); padding: 14px 10px; border-radius: 10px; text-align: center; color: white;">
+                    <i class="fas fa-users" style="font-size: 1.2rem; margin-bottom: 4px; display: block; opacity: 0.8;"></i>
+                    <div style="font-size: 1.4rem; font-weight: 800;">${cantidadEquiposConDeuda}</div>
+                    <div style="font-size: 0.7rem; opacity: 0.85;">Equipos</div>
+                </div>
+                <div style="background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%); padding: 14px 10px; border-radius: 10px; text-align: center; color: white;">
+                    <i class="fas fa-file-invoice" style="font-size: 1.2rem; margin-bottom: 4px; display: block; opacity: 0.8;"></i>
+                    <div style="font-size: 1.4rem; font-weight: 800;">${cantidadFacturas}</div>
+                    <div style="font-size: 0.7rem; opacity: 0.85;">Facturas</div>
+                </div>
+                <div style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); padding: 14px 10px; border-radius: 10px; text-align: center; color: white;">
+                    <i class="fas fa-dollar-sign" style="font-size: 1.2rem; margin-bottom: 4px; display: block; opacity: 0.8;"></i>
+                    <div style="font-size: 1.4rem; font-weight: 800;">$${totalGeneral.toFixed(2)}</div>
+                    <div style="font-size: 0.7rem; opacity: 0.85;">${tieneAbonos ? 'Total Original' : 'Total'}</div>
+                </div>
+                ${tieneAbonos ? `
+                <div style="background: linear-gradient(135deg, #e67e22 0%, #d35400 100%); padding: 14px 10px; border-radius: 10px; text-align: center; color: white;">
+                    <i class="fas fa-exclamation-triangle" style="font-size: 1.2rem; margin-bottom: 4px; display: block; opacity: 0.8;"></i>
+                    <div style="font-size: 1.4rem; font-weight: 800;">$${totalPendiente.toFixed(2)}</div>
+                    <div style="font-size: 0.7rem; opacity: 0.85;">Pendiente</div>
+                </div>
+                ` : ''}
+            </div>
+
+            <div style="margin-bottom: 10px;">
+                <h4 style="color: #2c3e50; font-size: 0.95rem; margin: 0 0 12px 0; padding-bottom: 8px; border-bottom: 2px solid #ecf0f1; display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-list-alt" style="color: #3498db;"></i> Desglose por Equipo
+                </h4>
+                ${equiposHTML || '<p style="text-align: center; color: #999; padding: 20px;">No hay equipos con facturas pendientes en este grupo</p>'}
             </div>
         `;
 
@@ -989,15 +1200,13 @@ window.GrupoManager = {
         const grupo = this.currentGrupoDetalle;
         if (!grupo) return;
 
-        for (const equipoNum of grupo.equipos) {
-            let equipoEncontrado = null;
-            this.equiposPendientes.forEach((equipo, key) => {
-                if (equipo.numero === equipoNum && equipo.total > 0) {
-                    equipoEncontrado = equipo;
-                }
-            });
+        for (const equipoKey of grupo.equipos) {
+            // 1. Buscar por clave exacta
+            let equipoEncontrado = this.equiposPendientes.get(equipoKey);
 
-            if (equipoEncontrado) {
+            // Fallback eliminado: exigimos coincidencia exacta.
+
+            if (equipoEncontrado && equipoEncontrado.total > 0) {
                 equipoEncontrado.facturas.forEach(factura => {
                     this.imprimirTicketFactura(factura, equipoEncontrado);
                 });
@@ -1178,23 +1387,29 @@ window.GrupoManager = {
             // Recopilar equipos del grupo
             let equiposHTML = '';
             let totalGrupo = 0;
+            let filaIndex = 0;
 
-            for (const equipoNum of grupo.equipos) {
-                let equipoEncontrado = null;
-                this.equiposPendientes.forEach((equipo, key) => {
-                    if (equipo.numero === equipoNum && equipo.total > 0) {
-                        equipoEncontrado = equipo;
-                    }
-                });
+            let procesadosVisual = new Set();
+            for (const equipoKey of grupo.equipos) {
+                // 1. Buscar por clave exacta o fallback
+                let equipoEncontrado = this.getEquipoData(equipoKey);
 
-                if (equipoEncontrado) {
+                if (equipoEncontrado && equipoEncontrado.total > 0) {
+                    if (!procesadosVisual.has(equipoEncontrado)) {
+                        procesadosVisual.add(equipoEncontrado);
                     totalGrupo += equipoEncontrado.total;
+                    const bgColor = filaIndex % 2 === 0 ? 'white' : '#f9f9f9';
+                    filaIndex++;
+                    const nombreEquipo = equipoEncontrado.cliente && equipoEncontrado.cliente !== `Equipo ${equipoEncontrado.numero}`
+                        ? `Equipo ${equipoEncontrado.numero} - ${equipoEncontrado.cliente}`
+                        : `Equipo ${equipoEncontrado.numero}`;
                     equiposHTML += `
-                        <div style="display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #ddd; background: ${equiposHTML ? '#f9f9f9' : 'white'};">
-                            <div style="font-weight: bold; color: #2c3e50; font-size: 16px;">Equipo ${equipoEncontrado.numero}</div>
+                        <div style="display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #ddd; background: ${bgColor};">
+                            <div style="font-weight: bold; color: #2c3e50; font-size: 16px;">${nombreEquipo}</div>
                             <div style="font-weight: bold; color: #e74c3c; font-size: 16px;">$${equipoEncontrado.total.toFixed(2)}</div>
                         </div>
                     `;
+                    }
                 }
             }
 
@@ -1377,7 +1592,7 @@ window.GrupoManager = {
                     label = `${numeroKey} - ${nombre}`;
                 }
 
-                badgesHTML += `<span class="selected-equipo-badge">${label} ($${total.toFixed(2)})</span>`;
+                badgesHTML += `<span class="selected-equipo-badge" style="cursor: pointer; display: inline-flex; align-items: center; gap: 4px;" onclick="GrupoManager.toggleEquipoSelection('${key}', '${modalType}')" title="Clic para remover">${label} ($${total.toFixed(2)}) <i class="fas fa-times" style="font-size: 0.8em; opacity: 0.8;"></i></span>`;
             });
             selectedList.innerHTML = badgesHTML;
         }
@@ -1450,10 +1665,22 @@ window.GrupoManager = {
         const selector = modalType === 'crear' ? '.all-equipo-item' : '#editar-all-equipos-grid .all-equipo-item';
         document.querySelectorAll(selector).forEach(item => {
             if (item.dataset.id === equipoKey) {
+                const spanNum = item.querySelector('span');
+                const smalls = item.querySelectorAll('small');
+                const lastSmall = smalls.length > 0 ? smalls[smalls.length - 1] : null;
+
                 if (selectedSet.has(equipoKey)) {
                     item.classList.add('selected');
+                    item.style.setProperty('background', '#3498db', 'important');
+                    item.style.setProperty('border-color', '#2980b9', 'important');
+                    if (spanNum) spanNum.style.setProperty('color', 'white', 'important');
+                    if (lastSmall) lastSmall.style.setProperty('color', '#eee', 'important');
                 } else {
                     item.classList.remove('selected');
+                    item.style.removeProperty('background');
+                    item.style.removeProperty('border-color');
+                    if (spanNum) spanNum.style.removeProperty('color');
+                    if (lastSmall) lastSmall.style.removeProperty('color');
                 }
             }
         });

@@ -9,6 +9,72 @@ const PrintingService = {
             .replace(/'/g, "&#039;");
     },
 
+    // ==========================================
+    // CONFIGURACIÓN DE TAMAÑO DE IMPRESORA
+    // ==========================================
+    _getPrinterSize() {
+        return localStorage.getItem('ticketPrinterSize') || '57';
+    },
+
+    setPrinterSize(size) {
+        localStorage.setItem('ticketPrinterSize', size);
+        const btn = document.getElementById('printer-size-btn');
+        if (btn) {
+            const label = btn.querySelector('.printer-size-label');
+            if (label) label.textContent = size + 'mm';
+            if (size === '80') {
+                btn.style.background = '#2980b9';
+                btn.style.color = 'white';
+                btn.style.borderColor = '#2471a3';
+            } else {
+                btn.style.background = '#ecf0f1';
+                btn.style.color = '#2c3e50';
+                btn.style.borderColor = '#bdc3c7';
+            }
+        }
+    },
+
+    togglePrinterSize() {
+        const current = this._getPrinterSize();
+        const nuevo = current === '57' ? '80' : '57';
+        this.setPrinterSize(nuevo);
+    },
+
+    initPrinterButton() {
+        this.setPrinterSize(this._getPrinterSize());
+    },
+
+    // Escala un valor px segun la impresora (0.85x para 80mm - un poco más grande que antes)
+    _px(base) {
+        return Math.round(base * (this._getPrinterSize() === '80' ? 0.85 : 1)) + 'px';
+    },
+
+    _ticketWidth() {
+        return this._getPrinterSize() === '80' ? '80mm' : '58mm';
+    },
+
+    _winW() {
+        return this._getPrinterSize() === '80' ? 450 : 320;
+    },
+
+    _ticketCSS(extras) {
+        return `
+            * { color: #000 !important; text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased; }
+            body { font-family: 'Courier New', monospace; font-size: ${this._px(22)}; margin: 0; padding: 6px; width: ${this._ticketWidth()}; font-weight: bold; background: white; }
+            .header { text-align: center; margin-bottom: 12px; }
+            .line { border-bottom: ${this._px(3)} dashed #000; margin: 4px 0; }
+            .total { font-weight: bold; text-align: center; margin-top: 12px; font-size: ${this._px(24)}; }
+            .footer { text-align: center; margin-top: 12px; font-size: ${this._px(18)}; font-weight: bold; }
+            .small-text { font-size: ${this._px(18)}; }
+            .medium-text { font-size: ${this._px(20)}; }
+            .large-text { font-size: ${this._px(26)}; }
+            .equipo-text { font-size: ${this._px(32)}; font-weight: 900; margin: 5px 0; }
+            .thank-you { text-align: center; margin-top: 15px; font-weight: bold; font-size: ${this._px(20)}; }
+            .saldo-info { background: #fff; border: 2px solid #000; padding: 8px; margin: 8px 0; font-size: ${this._px(18)}; }
+            ${extras || ''}
+        `;
+    },
+
     printBalanceHistory(reportData) {
         try {
             if (!reportData || !reportData.movimientos) {
@@ -587,8 +653,7 @@ const PrintingService = {
     },
 
     printTicket(saleData) {
-        // CORRECCIÓN IMPRESIÓN: Ventana un poco más ancha para evitar cortes laterales
-        const printWindow = window.open('', '_blank', 'width=320,height=600');
+        const printWindow = window.open('', '_blank', `width=${this._winW()},height=600`);
 
         if (!printWindow) {
             alert("El navegador bloqueó la ventana de impresión. Por favor, permita las ventanas emergentes en este sitio para imprimir el ticket.");
@@ -618,7 +683,7 @@ const PrintingService = {
             saleData.abonos.forEach(abono => {
                 const fechaAbono = toSafeDate(abono.fecha).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' });
                 abonosHTML += `
-                    <div style="display: flex; justify-content: space-between; font-size: 20px; margin: 2px 0;">
+                    <div style="display: flex; justify-content: space-between; font-size: ${this._px(20)}; margin: 2px 0;">
                         <div>ABONO: $${abono.monto.toFixed(2)} (${fechaAbono})</div>
                     </div>
                 `;
@@ -631,13 +696,13 @@ const PrintingService = {
                 const descripcion = producto.descripcion.length > 25 ? producto.descripcion.substring(0, 25) + '...' : producto.descripcion;
                 productosHTML += `
                     <div style="margin: 4px 0;">
-                        <div style="font-size: 16px;">• ${this._escape(descripcion)}</div>
-                        <div style="display: flex; justify-content: space-between; font-size: 18px;">
+                        <div style="font-size: ${this._px(16)};">• ${this._escape(descripcion)}</div>
+                        <div style="display: flex; justify-content: space-between; font-size: ${this._px(18)};">
                             <div>x${producto.cantidad}</div>
                             <div>$${(producto.precio * producto.cantidad).toFixed(2)}</div>
                         </div>
                     </div>
-                    <div style="border-bottom: 3px solid #000; margin: 2px 0;"></div>
+                    <div style="border-bottom: ${this._px(3)} solid #000; margin: 2px 0;"></div>
                 `;
             });
         }
@@ -648,44 +713,11 @@ const PrintingService = {
             <head>
                 <meta charset="UTF-8">
                 <title>Ticket #${this._escape(saleData.invoiceNumber)}</title>
-                <style>
-                    /* CORRECCIÓN IMPRESIÓN: Forzar negro puro y renderizado óptimo */
-                    * {
-                        color: #000 !important;
-                        text-rendering: optimizeLegibility;
-                        -webkit-font-smoothing: antialiased;
-                    }
-                    body { 
-                        font-family: 'Courier New', monospace; 
-                        font-size: 22px; 
-                        margin: 0; 
-                        padding: 6px;
-                        width: 58mm;
-                        font-weight: bold;
-                        background: white; /* Asegurar fondo blanco */
-                    }
-                    .header { text-align: center; margin-bottom: 12px; }
-                    /* Líneas más gruesas y negras para evitar difuminado */
-                    .line { border-bottom: 3px dashed #000; margin: 4px 0; }
-                    .total { font-weight: bold; text-align: center; margin-top: 12px; font-size: 24px; }
-                    .footer { text-align: center; margin-top: 12px; font-size: 18px; font-weight: bold; }
-                    .small-text { font-size: 18px; }
-                    .medium-text { font-size: 20px; }
-                    .large-text { font-size: 26px; }
-                    .equipo-text { font-size: 32px; font-weight: 900; margin: 5px 0; }
-                    .thank-you { text-align: center; margin-top: 15px; font-weight: bold; font-size: 20px; }
-                    .saldo-info {
-                        background: #fff; /* Quitar fondo gris para impresión térmica */
-                        border: 2px solid #000; /* Borde negro en lugar de fondo gris */
-                        padding: 8px;
-                        margin: 8px 0;
-                        font-size: 18px;
-                    }
-                </style>
+                <style>${this._ticketCSS()}</style>
             </head>
             <body>
                 <div class="header">
-                    <h3 style="margin: 2px 0; font-size: 26px;">TALLER WILLIAN</h3>
+                    <h3 style="margin: 2px 0; font-size: ${this._px(26)};">TALLER WILLIAN</h3>
                     <div class="small-text">Factura: ${this._escape(saleData.invoiceNumber)}</div>
                     <div class="small-text">${fechaFormateada}, ${tipoPago}</div>
                 </div>
@@ -757,7 +789,7 @@ const PrintingService = {
     },
 
     printAbonoTicket(venta, abonoData, nuevoSaldo) {
-        const printWindow = window.open('', '_blank', 'width=320,height=600');
+        const printWindow = window.open('', '_blank', `width=${this._winW()},height=600`);
         if (!printWindow) {
             alert("El navegador bloqueó la ventana de impresión de abono. Por favor, permita las ventanas emergentes.");
             console.error("Popup blocked for printAbonoTicket");
@@ -779,48 +811,11 @@ const PrintingService = {
             <head>
                 <meta charset="UTF-8">
                 <title>Abono #${this._escape(venta.invoiceNumber)}</title>
-                <style>
-                    /* CORRECCIÓN IMPRESIÓN: Forzar negro puro */
-                    * {
-                        color: #000 !important;
-                        text-rendering: optimizeLegibility;
-                        -webkit-font-smoothing: antialiased;
-                    }
-                    body { 
-                        font-family: 'Courier New', monospace; 
-                        font-size: 22px; 
-                        margin: 0; 
-                        padding: 6px;
-                        width: 58mm;
-                        font-weight: bold;
-                        background: white;
-                    }
-                    .header { text-align: center; margin-bottom: 12px; }
-                    .line { border-bottom: 3px dashed #000; margin: 4px 0; }
-                    .abono-detail { 
-                        margin: 8px 0;
-                        font-size: 20px;
-                    }
-                    .total { font-weight: bold; text-align: center; margin-top: 12px; font-size: 24px; }
-                    .footer { text-align: center; margin-top: 12px; font-size: 18px; font-weight: bold; }
-                    .small-text { font-size: 18px; }
-                    .medium-text { font-size: 20px; }
-                    .large-text { font-size: 26px; }
-                    .equipo-text { font-size: 32px; font-weight: 900; margin: 5px 0; }
-                    .thank-you { text-align: center; margin-top: 15px; font-weight: bold; font-size: 20px; }
-                    .saldo-info {
-                        background: #fff;
-                        border: 2px solid #000;
-                        padding: 8px;
-                        margin: 8px 0;
-                        border-radius: 4px;
-                        font-size: 18px;
-                    }
-                </style>
+                <style>${this._ticketCSS('.abono-detail { margin: 8px 0; font-size: ' + this._px(20) + '; } .saldo-info { border-radius: 4px; }')}</style>
             </head>
             <body>
                 <div class="header">
-                    <h3 style="margin: 2px 0; font-size: 26px;">TALLER WILLIAN</h3>
+                    <h3 style="margin: 2px 0; font-size: ${this._px(26)};">TALLER WILLIAN</h3>
                     <div class="small-text">COMPROBANTE DE ABONO</div>
                     <div class="small-text">${fechaFormateada}</div>
                 </div>
@@ -838,10 +833,10 @@ const PrintingService = {
                 <div class="line"></div>
                 
                 <div class="abono-detail">
-                    <div style="text-align: center; font-size: 24px; margin: 10px 0;">
+                    <div style="text-align: center; font-size: ${this._px(24)}; margin: 10px 0;">
                         MONTO DEL ABONO
                     </div>
-                    <div style="text-align: center; font-size: 28px; font-weight: bold;">
+                    <div style="text-align: center; font-size: ${this._px(28)}; font-weight: bold;">
                         $${abonoData.monto.toFixed(2)}
                     </div>
                 </div>
@@ -872,7 +867,7 @@ const PrintingService = {
     },
 
     printRetiroTicket(retiroData) {
-        const printWindow = window.open('', '_blank', 'width=320,height=600');
+        const printWindow = window.open('', '_blank', `width=${this._winW()},height=600`);
         if (!printWindow) {
             alert("El navegador bloqueó la ventana de impresión de retiro. Por favor, permita las ventanas emergentes.");
             return;
@@ -893,38 +888,11 @@ const PrintingService = {
             <head>
                 <meta charset="UTF-8">
                 <title>Retiro de Fondos</title>
-                <style>
-                    /* CORRECCIÓN IMPRESIÓN: Forzar negro puro */
-                    * {
-                        color: #000 !important;
-                        text-rendering: optimizeLegibility;
-                        -webkit-font-smoothing: antialiased;
-                    }
-                    body { 
-                        font-family: 'Courier New', monospace; 
-                        font-size: 22px; 
-                        margin: 0; 
-                        padding: 6px;
-                        width: 58mm;
-                        font-weight: bold;
-                        background: white;
-                    }
-                    .header { text-align: center; margin-bottom: 12px; }
-                    .line { border-bottom: 3px dashed #000; margin: 4px 0; }
-                    .retiro-detail { 
-                        margin: 8px 0;
-                        font-size: 20px;
-                    }
-                    .total { font-weight: bold; text-align: center; margin-top: 12px; font-size: 24px; }
-                    .footer { text-align: center; margin-top: 12px; font-size: 18px; font-weight: bold; }
-                    .small-text { font-size: 18px; }
-                    .medium-text { font-size: 20px; }
-                    .large-text { font-size: 26px; }
-                </style>
+                <style>${this._ticketCSS('.retiro-detail { margin: 8px 0; font-size: ' + this._px(20) + '; }')}</style>
             </head>
             <body>
                 <div class="header">
-                    <h3 style="margin: 2px 0; font-size: 26px;">TALLER WILLIAN</h3>
+                    <h3 style="margin: 2px 0; font-size: ${this._px(26)};">TALLER WILLIAN</h3>
                     <div class="small-text">COMPROBANTE DE RETIRO</div>
                     <div class="small-text">${fechaFormateada}</div>
                 </div>
@@ -943,10 +911,10 @@ const PrintingService = {
                 <div class="line"></div>
                 
                 <div class="retiro-detail">
-                    <div style="text-align: center; font-size: 24px; margin: 10px 0;">
+                    <div style="text-align: center; font-size: ${this._px(24)}; margin: 10px 0;">
                         MONTO RETIRADO
                     </div>
-                    <div style="text-align: center; font-size: 28px; font-weight: bold;">
+                    <div style="text-align: center; font-size: ${this._px(28)}; font-weight: bold;">
                         $${Math.abs(retiroData.monto).toFixed(2)}
                     </div>
                 </div>
@@ -976,7 +944,7 @@ const PrintingService = {
     },
 
     printAccountStatement(equipoData) {
-        const printWindow = window.open('', '_blank', 'width=320,height=600');
+        const printWindow = window.open('', '_blank', `width=${this._winW()},height=600`);
         if (!printWindow) {
             alert("El navegador bloqueó la ventana de estado de cuenta. Por favor, permita las ventanas emergentes.");
             return;
@@ -1001,7 +969,7 @@ const PrintingService = {
                 factura.abonos.forEach(abono => {
                     const fechaAbono = abono.fecha ? new Date(abono.fecha.toDate ? abono.fecha.toDate() : abono.fecha).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' }) : '';
                     abonosDetalle += `
-                        <div style="display: flex; justify-content: space-between; font-size: 16px; color: #555; margin-left: 10px;">
+                        <div style="display: flex; justify-content: space-between; font-size: ${this._px(16)}; color: #555; margin-left: 10px;">
                             <span>- Abono (${fechaAbono})</span>
                             <span>$${abono.monto.toFixed(2)}</span>
                         </div>
@@ -1011,12 +979,12 @@ const PrintingService = {
 
             facturasHTML += `
                 <div style="margin-bottom: 8px; border-bottom: 1px dotted #ccc; padding-bottom: 4px;">
-                    <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 18px;">
+                    <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: ${this._px(18)};">
                         <span>${fechaFactura} - Fac #${this._escape(factura.invoiceNumber)}</span>
                         <span>$${factura.total.toFixed(2)}</span>
                     </div>
                     ${abonosDetalle}
-                    <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 18px; margin-top: 2px;">
+                    <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: ${this._px(18)}; margin-top: 2px;">
                         <span>Saldo Pendiente:</span>
                         <span>$${saldoPendiente.toFixed(2)}</span>
                     </div>
@@ -1030,46 +998,24 @@ const PrintingService = {
             <head>
                 <meta charset="UTF-8">
                 <title>Estado de Cuenta - Equipo ${this._escape(equipoData.numero)}</title>
-                <style>
-                    /* CORRECCIÓN IMPRESIÓN: Forzar negro puro */
-                    * {
-                        color: #000 !important;
-                        text-rendering: optimizeLegibility;
-                        -webkit-font-smoothing: antialiased;
-                    }
-                    body { 
-                        font-family: 'Courier New', monospace; 
-                        font-size: 18px; 
-                        margin: 0; 
-                        padding: 6px;
-                        width: 58mm;
-                        font-weight: bold;
-                        background: white;
-                    }
-                    .header { text-align: center; margin-bottom: 12px; }
-                    .line { border-bottom: 3px dashed #000; margin: 4px 0; }
-                    .client-info { margin: 8px 0; font-size: 18px; text-align: center;}
-                    .total-box { 
-                        text-align: center; 
-                        margin-top: 15px; 
-                        border: 2px solid #000;
-                        padding: 8px;
-                        font-size: 20px;
-                    }
-                    .footer { text-align: center; margin-top: 12px; font-size: 14px; }
-                </style>
+                <style>${this._ticketCSS(`
+                    body { font-size: ${this._px(18)}; }
+                    .client-info { margin: 8px 0; font-size: ${this._px(18)}; text-align: center; }
+                    .total-box { text-align: center; margin-top: 15px; border: 2px solid #000; padding: 8px; font-size: ${this._px(20)}; }
+                    .footer { font-size: ${this._px(14)}; }
+                `)}</style>
             </head>
             <body>
                 <div class="header">
-                    <h3 style="margin: 2px 0; font-size: 22px;">TALLER WILLIAN</h3>
-                    <div style="font-size: 18px;">ESTADO DE CUENTA</div>
-                    <div style="font-size: 16px;">${fechaActual}</div>
+                    <h3 style="margin: 2px 0; font-size: ${this._px(22)};">TALLER WILLIAN</h3>
+                    <div style="font-size: ${this._px(18)};">ESTADO DE CUENTA</div>
+                    <div style="font-size: ${this._px(16)};">${fechaActual}</div>
                 </div>
                 
                 <div class="line"></div>
                 
                 <div class="client-info">
-                    <strong>Equipo:</strong> <span style="font-size: 24px;">${this._escape(equipoData.numero)}</span><br>
+                    <strong>Equipo:</strong> <span style="font-size: ${this._px(24)};">${this._escape(equipoData.numero)}</span><br>
                     ${this._escape(equipoData.cliente)}
                 </div>
                 
@@ -1081,7 +1027,7 @@ const PrintingService = {
                 
                 <div class="total-box">
                     <div>GRAN TOTAL PENDIENTE</div>
-                    <div style="font-size: 28px; font-weight: 900;">$${equipoData.total.toFixed(2)}</div>
+                    <div style="font-size: ${this._px(28)}; font-weight: 900;">$${equipoData.total.toFixed(2)}</div>
                 </div>
                 
                 <div class="footer">
@@ -1106,7 +1052,7 @@ const PrintingService = {
     },
 
     printSaleAndAbono(saleData, abonoData, nuevoSaldo) {
-        const printWindow = window.open('', '_blank', 'width=350,height=800');
+        const printWindow = window.open('', '_blank', `width=${this._winW()},height=800`);
         if (!printWindow) {
             alert("El navegador bloqueó la ventana de impresión. Por favor, permita las ventanas emergentes para imprimir los tickets.");
             return;
@@ -1132,8 +1078,8 @@ const PrintingService = {
                 const descripcion = producto.descripcion.length > 25 ? producto.descripcion.substring(0, 25) + '...' : producto.descripcion;
                 productosHTML += `
                     <div style="margin: 4px 0;">
-                        <div style="font-size: 16px;">• ${this._escape(descripcion)}</div>
-                        <div style="display: flex; justify-content: space-between; font-size: 18px;">
+                        <div style="font-size: ${this._px(16)};">• ${this._escape(descripcion)}</div>
+                        <div style="display: flex; justify-content: space-between; font-size: ${this._px(18)};">
                             <div>x${producto.cantidad}</div>
                             <div>$${(producto.precio * producto.cantidad).toFixed(2)}</div>
                         </div>
@@ -1147,24 +1093,22 @@ const PrintingService = {
             <html>
             <head>
                 <meta charset="UTF-8">
-                <style>
-                    * { color: #000 !important; font-family: 'Courier New', monospace; font-weight: bold; }
-                    body { font-size: 20px; margin: 0; padding: 6px; width: 58mm; background: white; }
-                    .header { text-align: center; margin-bottom: 10px; }
-                    .line { border-bottom: 3px dashed #000; margin: 8px 0; }
-                    .total { font-weight: bold; text-align: center; font-size: 24px; margin: 10px 0; }
-                    .equipo-text { font-size: 30px; font-weight: 900; text-align: center; margin: 5px 0; }
-                </style>
+                <style>${this._ticketCSS(`
+                    body { font-size: ${this._px(20)}; }
+                    .line { margin: 8px 0; }
+                    .total { margin: 10px 0; }
+                    .equipo-text { font-size: ${this._px(30)}; text-align: center; }
+                `)}</style>
             </head>
             <body>
                 <div class="header">
-                    <h3 style="margin: 2px 0; font-size: 24px;">TALLER WILLIAN</h3>
-                    <div style="font-size: 16px;">Ticket: ${this._escape(saleData.invoiceNumber)}</div>
-                    <div style="font-size: 16px;">${fechaFormateada}, ${tipoPago}</div>
+                    <h3 style="margin: 2px 0; font-size: ${this._px(24)};">TALLER WILLIAN</h3>
+                    <div style="font-size: ${this._px(16)};">Ticket: ${this._escape(saleData.invoiceNumber)}</div>
+                    <div style="font-size: ${this._px(16)};">${fechaFormateada}, ${tipoPago}</div>
                 </div>
 
                 <div class="line"></div>
-                ${saleData.clientName !== saleData.equipoNumber ? `<div style="text-align:center; font-size: 16px;">${this._escape(saleData.clientName)}</div>` : ''}
+                ${saleData.clientName !== saleData.equipoNumber ? `<div style="text-align:center; font-size: ${this._px(16)};">${this._escape(saleData.clientName)}</div>` : ''}
                 <div class="equipo-text">${this._escape(saleData.equipoNumber)}</div>
                 <div class="line"></div>
 
@@ -1175,21 +1119,21 @@ const PrintingService = {
                 <div style="border-bottom: 4px double #000; margin: 10px 0;"></div>
                 
                 <div class="header">
-                    <h3 style="margin: 2px 0; font-size: 22px;">TALLER WILLIAN</h3>
-                    <div style="text-align: center; font-size: 18px; text-decoration: underline;">COMPROBANTE DE ABONO</div>
+                    <h3 style="margin: 2px 0; font-size: ${this._px(22)};">TALLER WILLIAN</h3>
+                    <div style="text-align: center; font-size: ${this._px(18)}; text-decoration: underline;">COMPROBANTE DE ABONO</div>
                 </div>
 
                 <div style="text-align: center; margin: 10px 0;">
-                    <div style="font-size: 18px;">MONTO RECIBIDO</div>
-                    <div style="font-size: 26px;">$${abonoData.monto.toFixed(2)}</div>
+                    <div style="font-size: ${this._px(18)};">MONTO RECIBIDO</div>
+                    <div style="font-size: ${this._px(26)};">$${abonoData.monto.toFixed(2)}</div>
                 </div>
 
                 <div style="border: 2px solid #000; padding: 5px; margin: 10px 0;">
-                    <div style="font-size: 16px;">SALDO ANTEROR: $${(nuevoSaldo + abonoData.monto).toFixed(2)}</div>
-                    <div style="font-size: 20px;">NUEVO SALDO: $${nuevoSaldo.toFixed(2)}</div>
+                    <div style="font-size: ${this._px(16)};">SALDO ANTEROR: $${(nuevoSaldo + abonoData.monto).toFixed(2)}</div>
+                    <div style="font-size: ${this._px(20)};">NUEVO SALDO: $${nuevoSaldo.toFixed(2)}</div>
                 </div>
 
-                <div style="text-align: center; margin-top: 20px; font-size: 16px;">
+                <div style="text-align: center; margin-top: 20px; font-size: ${this._px(16)};">
                     GRACIAS POR SU PAGO<br>
                     ${fechaFormateada}
                 </div>
