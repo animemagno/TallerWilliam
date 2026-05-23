@@ -17,13 +17,53 @@ const SalesService = {
             UIService.showStatus("Ingrese una descripción para el producto", "error");
             return;
         }
-        this.addToCart({
-            id: 'manual-' + Date.now(),
-            codigo: 'MANUAL',
-            descripcion: descripcion,
-            precio: 0,
-            cantidad: 1
-        });
+
+        // Limpiar buscador y ocultar sugerencias de inmediato
+        const searchInput = document.getElementById('buscar-producto');
+        const dropdown = document.getElementById('search-dropdown');
+        if (searchInput) searchInput.value = '';
+        if (dropdown) dropdown.style.display = 'none';
+
+        // Ejecutar preguntas con pequeño retraso para permitir repintar pantalla limpia
+        setTimeout(() => {
+            // 1. Pedir cantidad
+            const cantInput = prompt(`Ingrese la cantidad para "${descripcion}":`, "1");
+            if (cantInput === null) {
+                if (searchInput) searchInput.focus();
+                return;
+            }
+
+            const cantidad = parseInt(cantInput);
+            if (isNaN(cantidad) || cantidad <= 0) {
+                UIService.showStatus("Cantidad inválida", "error");
+                if (searchInput) searchInput.focus();
+                return;
+            }
+
+            // 2. Pedir precio
+            const precioInput = prompt(`Ingrese el precio unitario para "${descripcion}":`, "0.00");
+            if (precioInput === null) {
+                if (searchInput) searchInput.focus();
+                return;
+            }
+
+            const precio = parseFloat(precioInput);
+            if (isNaN(precio) || precio < 0) {
+                UIService.showStatus("Precio inválido", "error");
+                if (searchInput) searchInput.focus();
+                return;
+            }
+
+            this.addToCart({
+                id: 'manual-' + Date.now(),
+                codigo: 'MANUAL',
+                descripcion: descripcion,
+                precio: precio,
+                cantidad: cantidad
+            });
+
+            if (searchInput) searchInput.focus();
+        }, 50);
     },
 
     removeFromCart(index) {

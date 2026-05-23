@@ -1018,27 +1018,55 @@
             },
 
             addManualItem(description) {
-                const priceStr = prompt(`Ingrese precio para "${description}":`, "0.00");
-                if (priceStr === null) return; // Cancelado
-
-                const price = parseFloat(priceStr);
-                if (isNaN(price) || price < 0) {
-                    alert("Precio inválido");
-                    return;
+                // Limpiar el buscador visualmente antes de las preguntas
+                const searchInput = document.getElementById('input-busqueda');
+                if (searchInput) {
+                    searchInput.value = '';
+                    this.handleSearch('');
                 }
 
-                const manualId = 'MANUAL-' + Date.now();
-                this.state.carrito.push({
-                    id: manualId,
-                    descripcion: description,
-                    precio: price,
-                    cantidad: 1,
-                    codigo: 'MANUAL'
-                });
+                setTimeout(() => {
+                    // 1. Pedir cantidad
+                    const cantStr = prompt(`Ingrese la cantidad para "${description}":`, "1");
+                    if (cantStr === null) {
+                        if (searchInput) searchInput.focus();
+                        return;
+                    }
 
-                this.saveCart();
-                this.showToast(`Agregado: ${description}`);
-                this.clearSearch();
+                    const quantity = parseInt(cantStr);
+                    if (isNaN(quantity) || quantity <= 0) {
+                        alert("Cantidad inválida");
+                        if (searchInput) searchInput.focus();
+                        return;
+                    }
+
+                    // 2. Pedir precio
+                    const priceStr = prompt(`Ingrese precio unitario para "${description}":`, "0.00");
+                    if (priceStr === null) {
+                        if (searchInput) searchInput.focus();
+                        return;
+                    }
+
+                    const price = parseFloat(priceStr);
+                    if (isNaN(price) || price < 0) {
+                        alert("Precio inválido");
+                        if (searchInput) searchInput.focus();
+                        return;
+                    }
+
+                    const manualId = 'MANUAL-' + Date.now();
+                    this.state.carrito.push({
+                        id: manualId,
+                        descripcion: description,
+                        precio: price,
+                        cantidad: quantity,
+                        codigo: 'MANUAL'
+                    });
+
+                    this.saveCart();
+                    this.showToast(`Agregado: ${description}`);
+                    if (searchInput) searchInput.focus();
+                }, 50);
             },
 
             // --- CARRITO ---
