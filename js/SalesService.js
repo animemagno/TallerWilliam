@@ -6,6 +6,7 @@ const SalesService = {
             codigo: product.codigo || 'MANUAL',
             descripcion: product.descripcion || 'Sin descripción',
             precio: product.precio || 0,
+            costo: product.costo !== undefined ? Number(product.costo) : 0,
             cantidad: cant
         };
         AppState.cart.push(cartItem);
@@ -60,6 +61,7 @@ const SalesService = {
                 codigo: 'MANUAL',
                 descripcion: descripcion,
                 precio: precio,
+                costo: 0,
                 cantidad: cantidad
             });
 
@@ -368,7 +370,7 @@ const SalesService = {
             if (!isUnique) { AppState.processingSale = false; UIService.updatePaymentButtonsState(false); UIService.showLoading(false); return; }
             const saleData = {
                 invoiceNumber, equipoNumber: finalEquipo, clientName: finalCliente,
-                products: AppState.cart.map(item => ({ id: item.id, codigo: item.codigo, descripcion: item.descripcion, precio: item.precio, cantidad: item.cantidad })),
+                products: AppState.cart.map(item => ({ id: item.id, codigo: item.codigo, descripcion: item.descripcion, precio: item.precio, costo: item.costo !== undefined ? Number(item.costo) : 0, cantidad: item.cantidad })),
                 total: totalVenta, paymentType: 'contado', timestamp: DateUtils.getCurrentTimestampElSalvador(),
                 date: fechaVenta, status: 'pagado', fechaCreacion: DateUtils.getCurrentTimestampElSalvador(), printed: true
             };
@@ -405,7 +407,7 @@ const SalesService = {
             if (!isUnique) { AppState.processingSale = false; UIService.updatePaymentButtonsState(false); UIService.showLoading(false); return; }
             const saleData = {
                 invoiceNumber, equipoNumber: finalEquipo, clientName: finalCliente,
-                products: AppState.cart.map(item => ({ id: item.id, codigo: item.codigo, descripcion: item.descripcion, precio: item.precio, cantidad: item.cantidad })),
+                products: AppState.cart.map(item => ({ id: item.id, codigo: item.codigo, descripcion: item.descripcion, precio: item.precio, costo: item.costo !== undefined ? Number(item.costo) : 0, cantidad: item.cantidad })),
                 total: totalVenta, paymentType: 'pendiente', timestamp: DateUtils.getCurrentTimestampElSalvador(),
                 date: fechaVenta, status: 'pendiente', saldoPendiente: totalVenta, abonos: [],
                 fechaCreacion: DateUtils.getCurrentTimestampElSalvador(), printed: true
@@ -450,7 +452,7 @@ const SalesService = {
             };
             const saleData = {
                 invoiceNumber, equipoNumber: finalEquipo, clientName: finalCliente,
-                products: AppState.cart.map(item => ({ id: item.id, codigo: item.codigo, descripcion: item.descripcion, precio: item.precio, cantidad: item.cantidad })),
+                products: AppState.cart.map(item => ({ id: item.id, codigo: item.codigo, descripcion: item.descripcion, precio: item.precio, costo: item.costo !== undefined ? Number(item.costo) : 0, cantidad: item.cantidad })),
                 total: totalVenta, paymentType: saldoPendiente <= 0 ? 'contado' : 'pendiente',
                 timestamp: DateUtils.getCurrentTimestampElSalvador(), date: fechaVenta,
                 status: saldoPendiente <= 0 ? 'pagado' : 'pendiente', saldoPendiente: saldoPendiente,
@@ -543,7 +545,7 @@ const SalesService = {
             }
 
             const saleData = {
-                products: AppState.cart.map(item => ({ id: item.id || ('manual-' + Date.now()), codigo: item.codigo || 'MANUAL', descripcion: item.descripcion || 'Sin descripción', precio: item.precio || 0, cantidad: item.cantidad || 1 })),
+                products: AppState.cart.map(item => ({ id: item.id || ('manual-' + Date.now()), codigo: item.codigo || 'MANUAL', descripcion: item.descripcion || 'Sin descripción', precio: item.precio || 0, costo: item.costo !== undefined ? Number(item.costo) : 0, cantidad: item.cantidad || 1 })),
                 total: nuevoTotal, saldoPendiente: nuevoSaldoPendiente, fechaActualizacion: DateUtils.getCurrentTimestampElSalvador()
             };
 
@@ -728,7 +730,7 @@ const SalesService = {
             try { venta = await DataService.getSaleById(invoiceId); } catch (e) { console.error("Error buscando factura para editar:", e); }
         }
         if (!venta) { UIService.showStatus("No se encontró la factura para editar", "error"); return; }
-        AppState.cart = venta.products.map(p => ({ id: p.id || ('manual-' + Date.now()), codigo: p.codigo || 'MANUAL', descripcion: p.descripcion || 'Sin descripción', precio: p.precio || 0, cantidad: p.cantidad || 1 }));
+        AppState.cart = venta.products.map(p => ({ id: p.id || ('manual-' + Date.now()), codigo: p.codigo || 'MANUAL', descripcion: p.descripcion || 'Sin descripción', precio: p.precio || 0, costo: p.costo !== undefined ? Number(p.costo) : 0, cantidad: p.cantidad || 1 }));
         document.getElementById('equipo').value = venta.equipoNumber || '';
         document.getElementById('cliente').value = venta.clientName || '';
         document.getElementById('fecha-venta').value = venta.date || DateUtils.getCurrentDateStringElSalvador();

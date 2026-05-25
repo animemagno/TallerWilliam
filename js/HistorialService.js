@@ -643,5 +643,365 @@ const HistorialService = {
         `;
 
         return html;
+    },
+
+    showGananciasReport() {
+        const movimientos = AppState.filteredHistorial || AppState.historial || [];
+        // Filtrar solo las ventas no canceladas
+        const ventas = movimientos.filter(mov => (mov.tipo === 'venta' || !mov.tipo) && !mov.cancelada);
+
+        let totalVentas = 0;
+        let totalCostos = 0;
+        let totalGanancia = 0;
+
+        const filasHTML = [];
+
+        // Modificar modal a tamaño pantalla completa
+        const modalContent = document.querySelector('#invoice-modal .modal-content');
+        if (modalContent) {
+            modalContent.style.maxWidth = '98%';
+            modalContent.style.width = '98%';
+            modalContent.style.maxHeight = '98vh';
+            modalContent.style.height = '98vh';
+            modalContent.style.padding = '15px';
+            modalContent.style.display = 'flex';
+            modalContent.style.flexDirection = 'column';
+            
+            const contentWrapper = document.getElementById('invoice-modal-content');
+            if (contentWrapper) {
+                contentWrapper.style.flex = '1';
+                contentWrapper.style.display = 'flex';
+                contentWrapper.style.flexDirection = 'column';
+                contentWrapper.style.minHeight = '0';
+            }
+        }
+
+        ventas.forEach(venta => {
+            let costoVenta = 0;
+            const tieneProductos = venta.products && venta.products.length > 0;
+            let prodsRowsHTML = '';
+
+            if (tieneProductos) {
+                venta.products.forEach(prod => {
+                    let costoItem = 0;
+                    if (prod.costo !== undefined) {
+                        costoItem = Number(prod.costo) || 0;
+                    } else if (prod.codigo && prod.codigo !== 'MANUAL' && typeof ProductCache !== 'undefined' && ProductCache.data) {
+                        let cacheItem = null;
+                        if (prod.id) cacheItem = ProductCache.data.get(prod.id);
+                        if (!cacheItem && prod.codigo) cacheItem = ProductCache.getByCode(prod.codigo);
+                        
+                        if (cacheItem && cacheItem.costo !== undefined) {
+                            costoItem = Number(cacheItem.costo) || 0;
+                        }
+                    }
+
+                    if (prod.tipo === 'servicio') {
+                        costoItem = 0;
+                    }
+
+                    const cantidad = Number(prod.cantidad) || 0;
+                    const precioUnit = Number(prod.precio) || 0;
+                    const itemTotalVenta = precioUnit * cantidad;
+                    const itemTotalCosto = costoItem * cantidad;
+                    const itemGanancia = itemTotalVenta - itemTotalCosto;
+                    const itemMargen = itemTotalVenta > 0 ? ((itemGanancia / itemTotalVenta) * 100).toFixed(0) : 0;
+
+                    costoVenta += itemTotalCosto;
+
+                    prodsRowsHTML += `
+                        <tr style="border-bottom: 1px solid #f1f2f6;">
+                            <td style="padding: 6px 8px; text-align: center; color: #57606f;">${cantidad}</td>
+                            <td style="padding: 6px 8px; color: #2c3e50;">${this._escape(prod.descripcion || 'Sin descripción')}</td>
+                            <td style="padding: 6px 8px; text-align: right; color: #57606f;">$${precioUnit.toFixed(2)}</td>
+                            <td style="padding: 6px 8px; text-align: right; color: #7f8c8d;">$${costoItem.toFixed(2)}</td>
+                            <td style="padding: 6px 8px; text-align: right; color: #2c3e50; font-weight: 500;">$${itemTotalVenta.toFixed(2)}</td>
+                            <td style="padding: 6px 8px; text-align: right; color: #7f8c8d;">$${itemTotalCosto.toFixed(2)}</td>
+                            <td style="padding: 6px 8px; text-align: right; color: #8e44ad; font-weight: bold;">$${itemGanancia.toFixed(2)}</td>
+                            <td style="padding: 6px 8px; text-align: center;"><span style="background: #f8effc; color: #9b59b6; padding: 1px 4px; border-radius: 4px; font-size: 0.7rem;">${itemMargen}%</span></td>
+                        </tr>
+                    `;
+                });
+            } else {
+                prodsRowsHTML = `
+                    <tr>
+                        <td colspan="8" style="padding: 8px; text-align: center; color: #95a5a6; font-style: italic;">No hay artículos registrados para esta factura.</td>
+                    </tr>
+                `;
+            }
+
+            const gananciaVenta = venta.total - costoVenta;
+            totalVentas += venta.total;
+            totalCostos += costoVenta;
+            totalGanancia += gananciaVenta;
+
+            const margen = venta.total > 0 ? (gananciaVenta / venta.total * 100).toFixed(0) : 0;
+
+            filasHTML.push(`
+                <tr style="background: #fdfefe; border-top: 2px solid #e2e8f0;">
+                    <td style="padding: 10px 8px; font-weight: bold; color: #2c3e50;">#${this._escape(venta.invoiceNumber)}</td>
+                    <td style="padding: 10px 8px;">
+                        <div style="font-weight: 600; color: #34495e;">Eq: ${this._escape(venta.equipoNumber || '-')}</div>
+                        <div style="font-size: 0.75rem; color: #7f8c8d;">${this._escape(venta.clientName || 'Cliente General')}</div>
+                    </td>
+                    <td style="padding: 10px 8px; text-align: right; font-weight: bold; color: #2c3e50;">$${venta.total.toFixed(2)}</td>
+                    <td style="padding: 10px 8px; text-align: right; color: #7f8c8d;">$${costoVenta.toFixed(2)}</td>
+                    <td style="padding: 10px 8px; text-align: right; font-weight: bold; color: #8e44ad;">$${gananciaVenta.toFixed(2)}</td>
+                    <td style="padding: 10px 8px; text-align: center;"><span style="background: #f3e5f5; color: #8e44ad; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: bold;">${margen}%</span></td>
+                </tr>
+                <tr style="background: #fafbfc;">
+                    <td colspan="6" style="padding: 6px 12px 12px 12px; border-bottom: 2px solid #e2e8f0;">
+                        <div style="margin: 0; padding: 0 5px; border-left: 3px solid #8e44ad;">
+                            <table style="width: 100%; border-collapse: collapse; font-size: 0.75rem; background: white; border: 1px solid #e2e8f0; border-radius: 6px; overflow: hidden; box-shadow: inset 0 1px 3px rgba(0,0,0,0.02);">
+                                <thead>
+                                    <tr style="background: #f8f9fa; color: #7f8c8d; border-bottom: 1px solid #e2e8f0; font-size: 0.7rem; text-transform: uppercase;">
+                                        <th style="padding: 5px 8px; font-weight: bold; text-align: center; width: 45px;">Cant</th>
+                                        <th style="padding: 5px 8px; font-weight: bold;">Detalle del Producto / Servicio</th>
+                                        <th style="padding: 5px 8px; font-weight: bold; text-align: right; width: 75px;">Precio U.</th>
+                                        <th style="padding: 5px 8px; font-weight: bold; text-align: right; width: 75px;">Costo U.</th>
+                                        <th style="padding: 5px 8px; font-weight: bold; text-align: right; width: 85px;">Total Vta</th>
+                                        <th style="padding: 5px 8px; font-weight: bold; text-align: right; width: 85px;">Total Costo</th>
+                                        <th style="padding: 5px 8px; font-weight: bold; text-align: right; width: 85px; color: #8e44ad;">Ganancia</th>
+                                        <th style="padding: 5px 8px; font-weight: bold; text-align: center; width: 55px;">Margen</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${prodsRowsHTML}
+                                </tbody>
+                            </table>
+                        </div>
+                    </td>
+                </tr>
+            `);
+        });
+
+        const numVentas = ventas.length;
+
+        const reportHTML = `
+            <div style="font-family: 'Segoe UI', system-ui, sans-serif; color: #2c3e50; display: flex; flex-direction: column; height: 100%; min-height: 0; padding: 5px;">
+                <!-- Header Violeta Premium -->
+                <div style="background: linear-gradient(135deg, #8e44ad 0%, #9b59b6 100%); padding: 15px 20px; border-radius: 12px; text-align: center; color: white; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(142, 68, 173, 0.2); flex-shrink: 0;">
+                    <div style="font-size: 1.8rem; margin-bottom: 5px;"><i class="fas fa-chart-line"></i></div>
+                    <h2 style="margin: 0; font-size: 1.4rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;">Reporte de Ganancias</h2>
+                    <div style="font-size: 0.85rem; opacity: 0.9; margin-top: 5px;">Movimientos seleccionados (${numVentas} Facturas/Tickets)</div>
+                </div>
+
+                <!-- Tarjetas de Resumen Financiero -->
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px; flex-shrink: 0;">
+                    <div style="background: #f8f9fa; border: 1px solid #e2e8f0; padding: 10px 8px; border-radius: 10px; text-align: center;">
+                        <span style="font-size: 0.7rem; color: #7f8c8d; font-weight: bold; text-transform: uppercase;">Total Ventas</span>
+                        <div style="font-size: 1.15rem; font-weight: bold; color: #2c3e50; margin-top: 4px;">$${totalVentas.toFixed(2)}</div>
+                    </div>
+                    <div style="background: #f8f9fa; border: 1px solid #e2e8f0; padding: 10px 8px; border-radius: 10px; text-align: center;">
+                        <span style="font-size: 0.7rem; color: #7f8c8d; font-weight: bold; text-transform: uppercase;">Costo Total</span>
+                        <div style="font-size: 1.15rem; font-weight: bold; color: #e74c3c; margin-top: 4px;">$${totalCostos.toFixed(2)}</div>
+                    </div>
+                    <div style="background: #f3e5f5; border: 2px solid #d6b4fc; padding: 10px 8px; border-radius: 10px; text-align: center;">
+                        <span style="font-size: 0.7rem; color: #8e44ad; font-weight: bold; text-transform: uppercase;">Ganancia Neta</span>
+                        <div style="font-size: 1.25rem; font-weight: 800; color: #8e44ad; margin-top: 4px;">$${totalGanancia.toFixed(2)}</div>
+                    </div>
+                </div>
+
+                <!-- Tabla Detallada -->
+                <div style="flex: 1; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 15px; min-height: 0; background: #fff;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; text-align: left;">
+                        <thead>
+                            <tr style="background: #34495e; color: white; position: sticky; top: 0; z-index: 10;">
+                                <th style="padding: 10px 8px; font-weight: 600;">Factura</th>
+                                <th style="padding: 10px 8px; font-weight: 600;">Equipo / Cliente</th>
+                                <th style="padding: 10px 8px; font-weight: 600; text-align: right;">Venta</th>
+                                <th style="padding: 10px 8px; font-weight: 600; text-align: right;">Costo</th>
+                                <th style="padding: 10px 8px; font-weight: 600; text-align: right;">Ganancia</th>
+                                <th style="padding: 10px 8px; font-weight: 600; text-align: center;">Margen</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${filasHTML.length > 0 ? filasHTML.join('') : '<tr><td colspan="6" style="padding: 20px; text-align: center; color: #7f8c8d; font-style: italic;">No hay ventas registradas en la vista actual.</td></tr>'}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Botón de impresión del reporte dentro del modal -->
+                <div style="display: flex; gap: 10px; flex-shrink: 0;">
+                    <button onclick="HistorialService.printGananciasReport()" style="flex: 1; padding: 12px; background: linear-gradient(135deg, #27ae60 0%, #219653 100%); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.9rem;">
+                        <i class="fas fa-print"></i> IMPRIMIR REPORTE
+                    </button>
+                </div>
+            </div>
+        `;
+
+        UIService.showInvoiceModal(reportHTML);
+    },
+
+    printGananciasReport() {
+        const movimientos = AppState.filteredHistorial || AppState.historial || [];
+        const ventas = movimientos.filter(mov => (mov.tipo === 'venta' || !mov.tipo) && !mov.cancelada);
+
+        let totalVentas = 0;
+        let totalCostos = 0;
+        let totalGanancia = 0;
+
+        let filasHTML = '';
+
+        ventas.forEach(venta => {
+            let costoVenta = 0;
+            const tieneProductos = venta.products && venta.products.length > 0;
+            let prodsRowsHTML = '';
+
+            if (tieneProductos) {
+                venta.products.forEach(prod => {
+                    let costoItem = 0;
+                    if (prod.costo !== undefined) {
+                        costoItem = Number(prod.costo) || 0;
+                    } else if (prod.codigo && prod.codigo !== 'MANUAL' && typeof ProductCache !== 'undefined' && ProductCache.data) {
+                        let cacheItem = null;
+                        if (prod.id) cacheItem = ProductCache.data.get(prod.id);
+                        if (!cacheItem && prod.codigo) cacheItem = ProductCache.getByCode(prod.codigo);
+                        
+                        if (cacheItem && cacheItem.costo !== undefined) {
+                            costoItem = Number(cacheItem.costo) || 0;
+                        }
+                    }
+
+                    if (prod.tipo === 'servicio') {
+                        costoItem = 0;
+                    }
+
+                    const cantidad = Number(prod.cantidad) || 0;
+                    const precioUnit = Number(prod.precio) || 0;
+                    const itemTotalVenta = precioUnit * cantidad;
+                    const itemTotalCosto = costoItem * cantidad;
+                    const itemGanancia = itemTotalVenta - itemTotalCosto;
+                    const itemMargen = itemTotalVenta > 0 ? ((itemGanancia / itemTotalVenta) * 100).toFixed(0) : 0;
+
+                    costoVenta += itemTotalCosto;
+
+                    prodsRowsHTML += `
+                        <tr style="border-bottom: 1px solid #ddd;">
+                            <td style="padding: 5px; text-align: center; border-right: 1px solid #ddd;">${cantidad}</td>
+                            <td style="padding: 5px; border-right: 1px solid #ddd;">${prod.descripcion || 'Sin descripción'}</td>
+                            <td style="padding: 5px; text-align: right; border-right: 1px solid #ddd;">$${precioUnit.toFixed(2)}</td>
+                            <td style="padding: 5px; text-align: right; border-right: 1px solid #ddd;">$${costoItem.toFixed(2)}</td>
+                            <td style="padding: 5px; text-align: right; border-right: 1px solid #ddd;">$${itemTotalVenta.toFixed(2)}</td>
+                            <td style="padding: 5px; text-align: right; border-right: 1px solid #ddd;">$${itemTotalCosto.toFixed(2)}</td>
+                            <td style="padding: 5px; text-align: right; border-right: 1px solid #ddd; font-weight: bold; color: #8e44ad;">$${itemGanancia.toFixed(2)}</td>
+                            <td style="padding: 5px; text-align: center;">${itemMargen}%</td>
+                        </tr>
+                    `;
+                });
+            } else {
+                prodsRowsHTML = `
+                    <tr>
+                        <td colspan="8" style="padding: 5px; text-align: center; color: #999; font-style: italic;">No hay artículos registrados para esta factura.</td>
+                    </tr>
+                `;
+            }
+
+            const gananciaVenta = venta.total - costoVenta;
+            totalVentas += venta.total;
+            totalCostos += costoVenta;
+            totalGanancia += gananciaVenta;
+
+            const margen = venta.total > 0 ? (gananciaVenta / venta.total * 100).toFixed(0) : 0;
+
+            filasHTML += `
+                <tr style="background-color: #f2f2f2; font-weight: bold;">
+                    <td style="border: 1px solid #ddd; padding: 8px;">#${venta.invoiceNumber}</td>
+                    <td style="border: 1px solid #ddd; padding: 8px;">Eq: ${venta.equipoNumber || '-'} - ${venta.clientName || 'General'}</td>
+                    <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">$${venta.total.toFixed(2)}</td>
+                    <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">$${costoVenta.toFixed(2)}</td>
+                    <td style="border: 1px solid #ddd; padding: 8px; text-align: right; font-weight: bold; color: #8e44ad;">$${gananciaVenta.toFixed(2)}</td>
+                    <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${margen}%</td>
+                </tr>
+                <tr>
+                    <td colspan="6" style="border: 1px solid #ddd; padding: 6px 12px 12px 12px; background-color: #ffffff;">
+                        <div style="border-left: 3px solid #8e44ad; padding-left: 8px;">
+                            <table style="width: 100%; border-collapse: collapse; font-size: 10px; border: 1px solid #ddd;">
+                                <thead>
+                                    <tr style="background-color: #f9f9f9; border-bottom: 1px solid #ddd; font-weight: bold;">
+                                        <th style="padding: 4px; text-align: center; width: 40px; border-right: 1px solid #ddd;">Cant</th>
+                                        <th style="padding: 4px; border-right: 1px solid #ddd;">Descripción</th>
+                                        <th style="padding: 4px; text-align: right; width: 70px; border-right: 1px solid #ddd;">Precio U.</th>
+                                        <th style="padding: 4px; text-align: right; width: 70px; border-right: 1px solid #ddd;">Costo U.</th>
+                                        <th style="padding: 4px; text-align: right; width: 80px; border-right: 1px solid #ddd;">Total Vta</th>
+                                        <th style="padding: 4px; text-align: right; width: 80px; border-right: 1px solid #ddd;">Total Costo</th>
+                                        <th style="padding: 4px; text-align: right; width: 80px; border-right: 1px solid #ddd; color: #8e44ad;">Ganancia</th>
+                                        <th style="padding: 4px; text-align: center; width: 50px;">Margen</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${prodsRowsHTML}
+                                </tbody>
+                            </table>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        });
+
+        const printWindow = window.open('', '_blank', 'width=800,height=600');
+        if (!printWindow) {
+            alert("Por favor permita las ventanas emergentes para imprimir.");
+            return;
+        }
+
+        const content = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Reporte de Ganancias - Taller Willian</title>
+                <style>
+                    body { font-family: 'Arial', sans-serif; margin: 20px; font-size: 12px; color: #333; }
+                    h2 { color: #2c3e50; text-align: center; margin-bottom: 5px; }
+                    .date { text-align: center; color: #7f8c8d; margin-bottom: 20px; font-size: 10px; }
+                    table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+                    th { background-color: #f2f2f2; border: 1px solid #ddd; padding: 10px; font-weight: bold; text-align: left; }
+                    .totals-box { display: flex; justify-content: flex-end; gap: 20px; font-size: 14px; margin-top: 20px; border-top: 2px solid #333; padding-top: 10px; }
+                    .totals-box div { font-weight: bold; }
+                </style>
+            </head>
+            <body>
+                <h2>TALLER WILLIAN</h2>
+                <h3 style="text-align: center; margin: 5px 0;">REPORTE DE GANANCIAS</h3>
+                <div class="date">Generado el: ${new Date().toLocaleString('es-ES')}</div>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Factura</th>
+                            <th>Equipo / Cliente</th>
+                            <th style="text-align: right;">Total Venta</th>
+                            <th style="text-align: right;">Costo Total</th>
+                            <th style="text-align: right;">Ganancia</th>
+                            <th style="text-align: center;">Margen</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${filasHTML}
+                    </tbody>
+                </table>
+
+                <div class="totals-box">
+                    <div>Total Ventas: $${totalVentas.toFixed(2)}</div>
+                    <div style="color: #c0392b;">Costo Total: $${totalCostos.toFixed(2)}</div>
+                    <div style="color: #27ae60;">Ganancia Total: $${totalGanancia.toFixed(2)}</div>
+                </div>
+            </body>
+            </html>
+        `;
+
+        printWindow.document.open();
+        printWindow.document.write(content);
+        printWindow.document.close();
+
+        printWindow.onload = function() {
+            printWindow.focus();
+            printWindow.print();
+            printWindow.close();
+        };
+
+        if (printWindow.document.readyState === 'complete') {
+            printWindow.onload();
+        }
     }
 };

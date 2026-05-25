@@ -156,16 +156,24 @@ const UIService = {
                     </div>
                 `;
                 item.addEventListener('click', () => {
+                    const searchInput = document.getElementById('buscar-producto');
                     const cantidadStr = prompt(`Ingrese la cantidad para "${product.descripcion || 'este producto'}":`, "1");
-                    if (cantidadStr === null) return; // Cancelado por el usuario
+                    if (cantidadStr === null) {
+                        if (searchInput) searchInput.focus();
+                        return; // Cancelado por el usuario
+                    }
                     const cantidad = parseInt(cantidadStr) || 1;
                     if (cantidad < 1) {
                         UIService.showStatus("La cantidad debe ser al menos 1", "error");
+                        if (searchInput) searchInput.focus();
                         return;
                     }
                     SalesService.addToCart(product, cantidad);
                     dropdown.style.display = 'none';
-                    document.getElementById('buscar-producto').value = '';
+                    if (searchInput) {
+                        searchInput.value = '';
+                        searchInput.focus();
+                    }
                 });
                 dropdown.appendChild(item);
             });

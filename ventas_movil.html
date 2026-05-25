@@ -1143,6 +1143,7 @@
                     id: manualId,
                     descripcion: description,
                     precio: price,
+                    costo: 0,
                     cantidad: cantidad,
                     codigo: 'MANUAL'
                 });
@@ -1168,6 +1169,7 @@
                         id: item.id,
                         descripcion: item.descripcion,
                         precio: item.precio || 0,
+                        costo: item.costo !== undefined ? Number(item.costo) : 0,
                         cantidad: cantidad,
                         codigo: item.codigo || ''
                     });
@@ -1279,7 +1281,14 @@
                     const ventaData = {
                         clientName: grupo || `Equipo ${equipo}`,
                         equipoNumber: equipo,
-                        products: this.state.carrito,
+                        products: this.state.carrito.map(item => ({
+                            id: item.id,
+                            descripcion: item.descripcion,
+                            precio: Number(item.precio) || 0,
+                            costo: item.costo !== undefined ? Number(item.costo) : 0,
+                            cantidad: Number(item.cantidad) || 1,
+                            codigo: item.codigo || ''
+                        })),
                         total: total,
                         usuario: this.state.usuario
                     };

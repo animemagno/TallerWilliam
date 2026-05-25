@@ -22,6 +22,23 @@ const ModalService = {
 
     closeInvoiceModal() {
         document.getElementById('invoice-modal').style.display = 'none';
+        const modalContent = document.querySelector('#invoice-modal .modal-content');
+        if (modalContent) {
+            modalContent.style.maxWidth = '';
+            modalContent.style.width = '';
+            modalContent.style.maxHeight = '';
+            modalContent.style.height = '';
+            modalContent.style.padding = '';
+            modalContent.style.display = '';
+            modalContent.style.flexDirection = '';
+        }
+        const contentWrapper = document.getElementById('invoice-modal-content');
+        if (contentWrapper) {
+            contentWrapper.style.flex = '';
+            contentWrapper.style.display = '';
+            contentWrapper.style.flexDirection = '';
+            contentWrapper.style.minHeight = '';
+        }
     },
 
     closeDetalleModal() {

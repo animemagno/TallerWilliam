@@ -288,7 +288,7 @@ const App = {
 
         document.getElementById('contado-btn').addEventListener('click', () => SalesService.processSale('contado'));
         document.getElementById('pendiente-btn').addEventListener('click', () => SalesService.processSale('pendiente'));
-        document.getElementById('print-historial-btn').addEventListener('click', () => SalesService.printCurrentHistorial());
+        document.getElementById('report-historial-btn').addEventListener('click', () => HistorialService.showGananciasReport());
         SalesService.initSearchAutocomplete();
 
         const filterInput = document.getElementById('filter-historial');
