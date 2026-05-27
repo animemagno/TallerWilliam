@@ -1005,8 +1005,8 @@ window.GrupoManager = {
         let tieneAbonos = false;
 
         for (const equipoKey of grupo.equipos) {
-            // 1. Buscar por clave exacta
-            let equipoEncontrado = this.equiposPendientes.get(equipoKey);
+            // NOTA REVERTIBLE: Se cambió .get(equipoKey) por .getEquipoData(equipoKey) para usar el traductor inteligente
+            let equipoEncontrado = this.getEquipoData ? this.getEquipoData(equipoKey) : this.equiposPendientes.get(equipoKey);
 
             // 2. Fallback para grupos antiguos: buscar por número
             const equiposCoincidentes = [];
@@ -1201,8 +1201,8 @@ window.GrupoManager = {
         if (!grupo) return;
 
         for (const equipoKey of grupo.equipos) {
-            // 1. Buscar por clave exacta
-            let equipoEncontrado = this.equiposPendientes.get(equipoKey);
+            // NOTA REVERTIBLE: Se cambió .get(equipoKey) por .getEquipoData(equipoKey) para usar el traductor inteligente
+            let equipoEncontrado = this.getEquipoData ? this.getEquipoData(equipoKey) : this.equiposPendientes.get(equipoKey);
 
             // Fallback eliminado: exigimos coincidencia exacta.
 

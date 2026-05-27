@@ -20,12 +20,13 @@ GrupoManager.showGroupPaymentModal = function (grupoId) {
     document.getElementById('bulk-abono-left-col').style.display = 'block';
     document.querySelector('.modal-opt2').classList.remove('single-column');
 
-    // Recopilar equipos: solo por clave exacta
+    // Recopilar equipos: con traductor inteligente (getEquipoData)
     let equiposHTML = '<div style="font-weight: 800; color: #747d8c; margin-bottom: 12px; font-size: 13px; text-transform: uppercase; padding-left: 5px;">Equipos en Grupo</div>';
     let totalGrupoReal = 0;
 
     for (const equipoKey of grupo.equipos) {
-        let equipoEncontrado = this.equiposPendientes.get(equipoKey);
+        // NOTA REVERTIBLE: Se cambió .get(equipoKey) por .getEquipoData(equipoKey) para soportar nombres con o sin detalle de cliente
+        let equipoEncontrado = this.getEquipoData ? this.getEquipoData(equipoKey) : this.equiposPendientes.get(equipoKey);
 
         if (equipoEncontrado && equipoEncontrado.total > 0) {
             totalGrupoReal += equipoEncontrado.total;
@@ -69,13 +70,13 @@ GrupoManager.showGroupPaymentModal = function (grupoId) {
         try {
             UIService.showLoading(true);
 
-            // Recopilar TODAS las facturas: primero por clave exacta, luego por número
+            // Recopilar TODAS las facturas: primero con traductor inteligente (getEquipoData)
             const facturas = [];
             for (const equipoKey of grupo.equipos) {
-                let equipoExacto = GrupoManager.equiposPendientes.get(equipoKey);
+                // NOTA REVERTIBLE: Se cambió .get(equipoKey) por .getEquipoData(equipoKey) para recopilar correctamente facturas con nombres compuestos
+                let equipoExacto = this.getEquipoData ? this.getEquipoData(equipoKey) : GrupoManager.equiposPendientes.get(equipoKey);
 
                 if (equipoExacto && equipoExacto.facturas) {
-                    // Encontrado por clave exacta
                     equipoExacto.facturas.forEach(f => {
                         facturas.push({
                             id: f.id,
