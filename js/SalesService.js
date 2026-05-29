@@ -10,7 +10,7 @@ const SalesService = {
             cantidad: cant
         };
         AppState.cart.push(cartItem);
-        UIService.updateCartDisplay();
+        UIService.updateCartDisplay(true);
         UIService.showStatus("Producto agregado al carrito", "success");
     },
 
@@ -569,6 +569,15 @@ const SalesService = {
 
     async loadHistorial() {
         try {
+            const filterInput = document.getElementById('filter-historial');
+            const filter = filterInput ? filterInput.value.trim() : '';
+            
+            if (filter !== '') {
+                // Si hay un filtro de búsqueda activo, mantenemos la búsqueda global en lugar de cargar solo lo de hoy
+                await this.searchGlobal(filter);
+                return;
+            }
+
             UIService.showLoading(true);
             // Cargar solo los movimientos del día actual para evitar timeouts
             const today = DateUtils.getCurrentDateStringElSalvador();

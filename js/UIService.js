@@ -73,7 +73,7 @@ const UIService = {
         document.getElementById('editar-ingreso-modal').style.display = 'flex';
     },
 
-    updateCartDisplay() {
+    updateCartDisplay(scrollToBottom = false) {
         const cartItems = document.getElementById('cart-items');
         const totalAmount = document.getElementById('total-amount');
 
@@ -124,9 +124,11 @@ const UIService = {
         cartItems.innerHTML = itemsHTML.join('');
         totalAmount.textContent = `TOTAL: $${total.toFixed(2)}`;
 
-        // SCROLL AUTOMÁTICO AL FINAL
-        const cartContainer = document.getElementById('cart-items');
-        cartContainer.scrollTop = cartContainer.scrollHeight;
+        // SCROLL AUTOMÁTICO AL FINAL SOLO AL AGREGAR
+        if (scrollToBottom) {
+            const cartContainer = document.getElementById('cart-items');
+            cartContainer.scrollTop = cartContainer.scrollHeight;
+        }
     },
 
     showSearchResults(results) {
