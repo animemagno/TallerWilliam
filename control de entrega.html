@@ -363,6 +363,18 @@
             border-left: 2px solid #48bb78;
         }
 
+        /* DÍA DE DESCANSO REGISTRADO ($0) - NARANJA */
+        .dia-calendario.registrado-descanso {
+            background-color: #4a3520 !important;
+            border-left: 2px solid #ed8936 !important;
+        }
+
+        .dia-calendario.registrado-descanso .monto-input-simple[readonly] {
+            background-color: #4a3520 !important;
+            border-color: #ed8936 !important;
+            color: #ed8936 !important;
+        }
+
         /* HOY - AZUL CLARO */
         .dia-calendario.hoy {
             background-color: #2c4a6e;
@@ -2075,11 +2087,18 @@
 
                 equipos.forEach(equipo => {
                     // Obtener ingresos del equipo en el período actual
-                    const ingresosEquipo = ingresos.filter(ingreso =>
-                        ingreso.equipo === equipo.numero &&
+                    const ingresosBrutos = ingresos.filter(ingreso =>
+                        ingreso.equipo == equipo.numero &&
                         ingreso.fecha >= periodoActual.inicioStr &&
                         ingreso.fecha <= periodoActual.finStr
                     );
+
+                    // Eliminar duplicados por fecha (para coincidir con el calendario)
+                    const unicosMap = {};
+                    ingresosBrutos.forEach(ing => {
+                        if (!unicosMap[ing.fecha]) unicosMap[ing.fecha] = ing;
+                    });
+                    const ingresosEquipo = Object.values(unicosMap);
 
                     // Calcular estadísticas solicitadas
                     const diasPeriodo = calcularDiasEnPeriodo();
@@ -2091,7 +2110,10 @@
                     // Días de descanso (monto == 0)
                     const diasDescanso = ingresosEquipo.filter(ing => ing.monto === 0).length;
 
-                    const porcentajeCompletado = Math.round((ingresosRegistrados / diasPeriodo) * 100);
+                    const diasLaborablesReales = diasPeriodo - diasDescanso;
+                    const porcentajeCompletado = diasLaborablesReales > 0 
+                        ? Math.round((diasLaborados / diasLaborablesReales) * 100) 
+                        : 0;
 
                     // Calcular total registrado (Saldo Acumulado)
                     const totalRegistrado = ingresosEquipo.reduce((sum, ingreso) => sum + ingreso.monto, 0);
@@ -2140,7 +2162,7 @@
                                     <div class="progreso-completado" style="width: ${porcentajeCompletado}%"></div>
                                 </div>
                                 <div class="estadisticas-equipo">
-                                    <span>${ingresosRegistrados}/${diasPeriodo} días</span>
+                                    <span>${diasLaborados}/${diasLaborablesReales} días</span>
                                     <span>${porcentajeCompletado}%</span>
                                 </div>
                             </div>
@@ -2205,18 +2227,29 @@
                 hoy.setHours(0, 0, 0, 0);
 
                 // Obtener ingresos del equipo en el período actual para las estadísticas
-                const ingresosEquipo = ingresos.filter(ing =>
-                    ing.equipo === equipoSeleccionado.numero &&
+                const ingresosBrutos = ingresos.filter(ing =>
+                    ing.equipo == equipoSeleccionado.numero &&
                     ing.fecha >= periodoActual.inicioStr &&
                     ing.fecha <= periodoActual.finStr
                 );
+
+                // Eliminar duplicados por fecha (para coincidir con el calendario)
+                const unicosMap = {};
+                ingresosBrutos.forEach(ing => {
+                    if (!unicosMap[ing.fecha]) unicosMap[ing.fecha] = ing;
+                });
+                const ingresosEquipo = Object.values(unicosMap);
 
                 // Cálculos de estadísticas
                 const diasLaborados = ingresosEquipo.filter(ing => ing.monto > 0).length;
                 const diasDescanso = ingresosEquipo.filter(ing => ing.monto === 0).length;
                 const totalAcumulado = ingresosEquipo.reduce((sum, ing) => sum + ing.monto, 0);
                 const diasTotalesPeriodo = calcularDiasEnPeriodo();
-                const porcentaje = Math.round((ingresosEquipo.length / diasTotalesPeriodo) * 100);
+                
+                const diasLaborablesReales = diasTotalesPeriodo - diasDescanso;
+                const porcentaje = diasLaborablesReales > 0 
+                    ? Math.round((diasLaborados / diasLaborablesReales) * 100) 
+                    : 0;
 
                 // Poblar barra lateral
                 if (sidebarStats) {
@@ -2294,6 +2327,9 @@
                     if (ingreso) {
                         // Día con entrega registrada - VERDE (incluye sábados y domingos)
                         claseDia = 'registrado';
+                        if (ingreso.monto === 0) {
+                            claseDia += ' registrado-descanso';
+                        }
                     } else if (fechaSinHora.getTime() === hoy.getTime()) {
                         // Hoy - AZUL
                         claseDia = 'hoy';
