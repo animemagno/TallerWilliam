@@ -324,27 +324,158 @@
             color: #666;
         }
 
-        /* ===== CLIENT SELECT ===== */
-        .client-select {
-            width: 100%;
-            padding: 10px 12px;
-            border: 2px solid #e8e8e8;
-            border-radius: 8px;
-            font-size: 15px;
-            margin-bottom: 8px;
-            background: #fafafa;
-            -webkit-appearance: none;
-            appearance: none;
-            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
-            background-repeat: no-repeat;
-            background-position: right 12px center;
-            background-size: 16px;
+        /* ===== CLIENT SELECT & VENTA FLUX ===== */
+        .cliente-opcion-general {
+            display: flex;
+            align-items: center;
+            background: linear-gradient(135deg, #1a73e8, #0d47a1);
+            color: white;
+            padding: 14px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 2px 6px rgba(26,115,232,0.3);
+            margin-bottom: 12px;
+            touch-action: manipulation;
         }
 
-        .client-select:focus {
+        .cliente-opcion-general:active {
+            transform: scale(0.97);
+            opacity: 0.9;
+        }
+
+        .cliente-opcion-general .icon {
+            font-size: 26px;
+            margin-right: 12px;
+        }
+
+        .cliente-opcion-general .info {
+            flex: 1;
+        }
+
+        .cliente-opcion-general .info .titulo {
+            font-weight: 700;
+            font-size: 15px;
+        }
+
+        .cliente-opcion-general .info .sub {
+            font-size: 11px;
+            opacity: 0.85;
+        }
+
+        .cliente-opcion-general .flecha {
+            font-size: 18px;
+            opacity: 0.85;
+        }
+
+        .client-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            max-height: 280px;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .client-card {
+            background: #f8f9fa;
+            border: 2px solid #e8e8e8;
+            border-radius: 10px;
+            padding: 10px 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.15s;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 72px;
+            touch-action: manipulation;
+        }
+
+        .client-card:active {
+            transform: scale(0.95);
             border-color: #1a73e8;
-            outline: none;
-            background-color: white;
+            background: #e8f0fe;
+        }
+
+        .client-card .icon {
+            font-size: 20px;
+            margin-bottom: 2px;
+        }
+
+        .client-card .nombre {
+            font-weight: 600;
+            font-size: 13px;
+            color: #333;
+            line-height: 1.2;
+            word-break: break-word;
+        }
+
+        .client-card .saldo-hoy {
+            font-size: 11px;
+            color: #28a745;
+            font-weight: 700;
+            margin-top: 4px;
+        }
+
+        .header-cliente-activo {
+            background: #e8f0fe;
+            border: 1.5px solid #b6d4fe;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 12px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            gap: 8px;
+        }
+
+        .cliente-activo-info .label-tienda {
+            font-size: 10px;
+            color: #666;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .cliente-activo-info .nombre-tienda {
+            font-size: 15px;
+            font-weight: 700;
+            color: #1a73e8;
+        }
+
+        .cliente-activo-acumulado {
+            text-align: right;
+        }
+
+        .cliente-activo-acumulado .label-saldo {
+            font-size: 10px;
+            color: #555;
+            font-weight: 600;
+        }
+
+        .cliente-activo-acumulado .monto-saldo {
+            font-size: 16px;
+            font-weight: 800;
+            color: #28a745;
+        }
+
+        .btn-cambiar-cliente {
+            background: white;
+            border: 1px solid #1a73e8;
+            color: #1a73e8;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            touch-action: manipulation;
+        }
+
+        .btn-cambiar-cliente:active {
+            background: #1a73e8;
+            color: white;
         }
 
         /* ===== INPUT GROUP ===== */
@@ -671,45 +802,74 @@
 
     <!-- ===== TAB 2: VENTA ===== -->
     <div id="tabVenta" class="tab-content">
-        <div class="card">
-            <h3>🏪 Cliente</h3>
-            <select class="client-select" id="selectCliente">
-                <option value="general">👤 Cliente General</option>
-            </select>
-            <button class="btn btn-outline btn-sm" onclick="abrirModalCliente()" style="margin-top:4px; width:100%;">
-                ➕ Nuevo Cliente
-            </button>
+        <!-- VISTA 1: SELECCIONAR CLIENTE / TIENDA -->
+        <div id="vistaSeleccionarCliente" class="card">
+            <h3 style="justify-content: center; font-size: 16px;">🏪 ¿A quién le vas a vender?</h3>
+            <p style="color:#666; font-size:13px; text-align:center; margin-bottom:12px;">
+                Selecciona una tienda o cliente general para continuar
+            </p>
+
+            <div class="cliente-opcion-general" onclick="seleccionarClienteParaVenta('general')">
+                <div class="icon">👤</div>
+                <div class="info">
+                    <div class="titulo">Cliente General</div>
+                    <div class="sub">Venta rápida al contado</div>
+                </div>
+                <div class="flecha">➔</div>
+            </div>
+
+            <div style="margin: 14px 0 8px 0; display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-weight:600; font-size:13px; color:#444;">🏪 Tiendas Registradas</span>
+                <button class="btn btn-outline btn-sm" onclick="abrirModalCliente()" style="margin:0;">➕ Nueva Tienda</button>
+            </div>
+
+            <div id="gridSeleccionarTienda" class="client-grid"></div>
         </div>
 
-        <div class="card">
-            <h3>🛒 Productos</h3>
-            <div class="category-buttons" id="categoriasVenta">
-                <button class="active" data-cat="todos">Todos</button>
-                <button data-cat="Cervezas">🍺 Cervezas</button>
-                <button data-cat="Refrescos">🥤 Refrescos</button>
-                <button data-cat="Jugos">🧃 Jugos</button>
-                <button data-cat="Aguas">💧 Aguas</button>
-                <button data-cat="Otros">📦 Otros</button>
+        <!-- VISTA 2: PRODUCTOS Y CARRITO (SE MUESTRA TRAS SELECCIONAR TIENDA) -->
+        <div id="vistaVentaProductos" style="display:none;">
+            <!-- Header con cliente activo y saldo acumulado -->
+            <div class="header-cliente-activo">
+                <div class="cliente-activo-info">
+                    <div class="label-tienda">Tienda / Cliente:</div>
+                    <div class="nombre-tienda" id="nombreClienteActivo">👤 Cliente General</div>
+                </div>
+                <div class="cliente-activo-acumulado">
+                    <div class="label-saldo">Saldo Acumulado:</div>
+                    <div class="monto-saldo" id="saldoAcumuladoCliente">$0.00</div>
+                </div>
+                <button class="btn-cambiar-cliente" onclick="solicitarCambioCliente()">🔄 Cambiar</button>
             </div>
-            <input type="text" class="search-box" id="searchVenta" placeholder="🔍 Buscar producto...">
-            <div id="listaVenta" class="product-grid"></div>
-        </div>
 
-        <div class="card">
-            <h3>🧾 Venta Actual</h3>
-            <div id="clienteActual">Cliente: 👤 General</div>
-            <div id="listaVentaActual"></div>
-            <div class="total-display">
-                <div class="label">Total</div>
-                <div class="monto" id="totalVentaActual">$0.00</div>
+            <div class="card">
+                <h3>🛒 Productos</h3>
+                <div class="category-buttons" id="categoriasVenta">
+                    <button class="active" data-cat="todos">Todos</button>
+                    <button data-cat="Cervezas">🍺 Cervezas</button>
+                    <button data-cat="Refrescos">🥤 Refrescos</button>
+                    <button data-cat="Jugos">🧃 Jugos</button>
+                    <button data-cat="Aguas">💧 Aguas</button>
+                    <button data-cat="Otros">📦 Otros</button>
+                </div>
+                <input type="text" class="search-box" id="searchVenta" placeholder="🔍 Buscar producto...">
+                <div id="listaVenta" class="product-grid"></div>
             </div>
-            <div class="input-group">
-                <label>💰 Pago:</label>
-                <input type="number" id="inputPago" placeholder="0.00" step="0.01" inputmode="decimal">
+
+            <div class="card">
+                <h3>🧾 Venta Actual</h3>
+                <div id="listaVentaActual"></div>
+                <div class="total-display">
+                    <div class="label">Total a Pagar</div>
+                    <div class="monto" id="totalVentaActual">$0.00</div>
+                </div>
+                <div class="input-group">
+                    <label>💰 Pago:</label>
+                    <input type="number" id="inputPago" placeholder="0.00" step="0.01" inputmode="decimal">
+                </div>
+                <div id="cambioDisplay"></div>
+                <button class="btn btn-success" onclick="finalizarVenta()">✅ Finalizar Venta</button>
+                <button class="btn btn-danger" onclick="cancelarVenta()" style="margin-top:4px;">🗑️ Cancelar Venta</button>
             </div>
-            <div id="cambioDisplay"></div>
-            <button class="btn btn-success" onclick="finalizarVenta()">✅ Finalizar Venta</button>
-            <button class="btn btn-danger" onclick="cancelarVenta()" style="margin-top:4px;">🗑️ Cancelar</button>
         </div>
     </div>
 
@@ -817,7 +977,8 @@
         let estado = {
             productos: [],
             clientes: [],
-            ventaActual: { cliente: 'general', items: [], pago: 0 },
+            ventaActual: { cliente: null, items: [], pago: 0 },
+            ventasDelDia: [],
             historial: [],
             fecha: new Date().toISOString().split('T')[0]
         };
@@ -840,15 +1001,17 @@
                 if (data) {
                     const parsed = JSON.parse(data);
                     estado = parsed;
+                    if (!estado.ventasDelDia) estado.ventasDelDia = [];
                     const hoy = new Date().toISOString().split('T')[0];
                     if (estado.fecha !== hoy) {
                         if (estado.historial && estado.productos.length > 0) {
-                            const resumen = calcularResumen();
+                            const resumen = calcularResumen().filter(r => r.cargado > 0);
                             estado.historial.push({ fecha: estado.fecha, resumen: resumen });
                         }
                         estado.fecha = hoy;
                         estado.productos = PRODUCTOS_BASE.map(p => ({ ...p, cargado: 0, vendido: 0 }));
-                        estado.ventaActual = { cliente: 'general', items: [], pago: 0 };
+                        estado.ventaActual = { cliente: null, items: [], pago: 0 };
+                        estado.ventasDelDia = [];
                         guardarEstado();
                     }
                     return true;
@@ -866,13 +1029,14 @@
                 { id: 2, nombre: 'Super Chino' },
                 { id: 3, nombre: 'Mercado Central' }
             ];
-            estado.ventaActual = { cliente: 'general', items: [], pago: 0 };
+            estado.ventaActual = { cliente: null, items: [], pago: 0 };
+            estado.ventasDelDia = [];
             estado.historial = [];
             guardarEstado();
         }
 
         // ============================================================
-        // 4. RENDERIZADO
+        // 4. RENDERIZADO & VISTAS
         // ============================================================
         function renderizarCarga() {
             const container = document.getElementById('listaCarga');
@@ -888,7 +1052,61 @@
             `).join('');
         }
 
+        function mostrarVistaVenta() {
+            const vistaSel = document.getElementById('vistaSeleccionarCliente');
+            const vistaProd = document.getElementById('vistaVentaProductos');
+            if (!estado.ventaActual.cliente) {
+                if (vistaSel) vistaSel.style.display = 'block';
+                if (vistaProd) vistaProd.style.display = 'none';
+                renderizarSeleccionarCliente();
+            } else {
+                if (vistaSel) vistaSel.style.display = 'none';
+                if (vistaProd) vistaProd.style.display = 'block';
+            }
+        }
+
+        function renderizarSeleccionarCliente() {
+            const grid = document.getElementById('gridSeleccionarTienda');
+            if (!grid) return;
+            if (estado.clientes.length === 0) {
+                grid.innerHTML = '<div style="grid-column: span 2; text-align:center; color:#888; font-size:12px; padding:12px;">No hay tiendas registradas</div>';
+                return;
+            }
+            grid.innerHTML = estado.clientes.map(c => {
+                const acumuladoHoy = (estado.ventasDelDia || [])
+                    .filter(v => v.clienteId === c.id)
+                    .reduce((sum, v) => sum + v.total, 0);
+                const textoHoy = acumuladoHoy > 0 ? `Vendido hoy: $${acumuladoHoy.toFixed(2)}` : 'Sin compras hoy';
+                return `
+                    <div class="client-card" onclick="seleccionarClienteParaVenta(${c.id})">
+                        <div class="icon">🏪</div>
+                        <div class="nombre">${c.nombre}</div>
+                        <div class="saldo-hoy">${textoHoy}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function seleccionarClienteParaVenta(clienteId) {
+            estado.ventaActual.cliente = clienteId;
+            guardarEstado();
+            mostrarVistaVenta();
+            renderizarVenta();
+        }
+
+        function solicitarCambioCliente() {
+            if (estado.ventaActual.items.length > 0) {
+                if (!confirm('Hay productos en el pedido actual. ¿Deseas cambiar de cliente?')) return;
+            }
+            estado.ventaActual.cliente = null;
+            guardarEstado();
+            mostrarVistaVenta();
+        }
+
         function renderizarVenta() {
+            mostrarVistaVenta();
+            if (!estado.ventaActual.cliente) return;
+
             const container = document.getElementById('listaVenta');
             const search = document.getElementById('searchVenta').value.toLowerCase();
             const catActiva = document.querySelector('#categoriasVenta .active');
@@ -917,11 +1135,33 @@
         function renderizarVentaActual() {
             const container = document.getElementById('listaVentaActual');
             const items = estado.ventaActual.items;
+            const clienteId = estado.ventaActual.cliente;
+
+            let clienteNombre = '👤 Cliente General';
+            let ventasPreviasHoy = 0;
+            
+            if (clienteId && clienteId !== 'general') {
+                const cli = estado.clientes.find(c => c.id === clienteId);
+                if (cli) clienteNombre = `🏪 ${cli.nombre}`;
+                ventasPreviasHoy = (estado.ventasDelDia || [])
+                    .filter(v => v.clienteId === clienteId)
+                    .reduce((sum, v) => sum + v.total, 0);
+            }
+
+            const totalActual = items.reduce((sum, i) => sum + (i.cantidad * i.precioUnitario), 0);
+            const saldoAcumulado = ventasPreviasHoy + totalActual;
+
+            const elNombre = document.getElementById('nombreClienteActivo');
+            const elSaldo = document.getElementById('saldoAcumuladoCliente');
+            if (elNombre) elNombre.textContent = clienteNombre;
+            if (elSaldo) elSaldo.textContent = `$${saldoAcumulado.toFixed(2)}`;
+
             if (items.length === 0) {
-                container.innerHTML = '<div class="empty-state"><div class="icon">🛒</div><p>Sin productos</p></div>';
+                container.innerHTML = '<div class="empty-state"><div class="icon">🛒</div><p>Sin productos agregados</p></div>';
                 document.getElementById('totalVentaActual').textContent = '$0.00';
                 return;
             }
+
             let total = 0;
             container.innerHTML = items.map(item => {
                 const producto = estado.productos.find(p => p.id === item.productoId);
@@ -940,10 +1180,8 @@
                     </div>
                 `;
             }).join('');
+
             document.getElementById('totalVentaActual').textContent = `$${total.toFixed(2)}`;
-            const clienteNombre = estado.ventaActual.cliente === 'general' ? '👤 Cliente General' : 
-                estado.clientes.find(c => c.id === estado.ventaActual.cliente)?.nombre || 'Cliente';
-            document.getElementById('clienteActual').textContent = `Cliente: ${clienteNombre}`;
         }
 
         function renderizarClientes() {
@@ -960,41 +1198,38 @@
             `).join('');
         }
 
-        function renderizarSelectClientes() {
-            const select = document.getElementById('selectCliente');
-            const valorActual = estado.ventaActual.cliente;
-            select.innerHTML = `<option value="general">👤 Cliente General</option>`;
-            estado.clientes.forEach(c => {
-                select.innerHTML += `<option value="${c.id}">🏪 ${c.nombre}</option>`;
-            });
-            select.value = valorActual;
-        }
-
         // ============================================================
         // 5. ACCIONES
         // ============================================================
         function seleccionarProducto(modo, id) {
             const producto = estado.productos.find(p => p.id === id);
             if (!producto) return;
+            
+            productoSeleccionado = producto;
+            modoAccion = modo;
+            
+            const inputCant = document.getElementById('inputCantidad');
+            inputCant.value = 1;
+
             if (modo === 'carga') {
-                productoSeleccionado = producto;
-                modoAccion = 'carga';
                 document.getElementById('modalProductoNombre').textContent = producto.nombre;
                 document.getElementById('modalProductoPrecio').textContent = `$${producto.precio.toFixed(2)} (carga)`;
-                document.getElementById('inputCantidad').value = 1;
                 document.getElementById('btnConfirmarCantidad').onclick = confirmarCarga;
-                document.getElementById('modalCantidad').classList.add('active');
             } else if (modo === 'venta') {
                 const disponible = producto.cargado - producto.vendido;
                 if (disponible <= 0) { mostrarToast('❌ Sin stock'); return; }
-                productoSeleccionado = producto;
-                modoAccion = 'venta';
                 document.getElementById('modalProductoNombre').textContent = producto.nombre;
                 document.getElementById('modalProductoPrecio').textContent = `$${producto.precio.toFixed(2)} (Stock: ${disponible})`;
-                document.getElementById('inputCantidad').value = 1;
                 document.getElementById('btnConfirmarCantidad').onclick = confirmarVenta;
-                document.getElementById('modalCantidad').classList.add('active');
             }
+
+            document.getElementById('modalCantidad').classList.add('active');
+            
+            // Auto seleccionar cantidad para que el usuario solo digite y presione aceptar
+            setTimeout(() => {
+                inputCant.focus();
+                inputCant.select();
+            }, 150);
         }
 
         function confirmarCarga() {
@@ -1055,30 +1290,44 @@
                 return;
             }
             const cambio = pago - total;
-            document.getElementById('cambioDisplay').textContent = `💵 Cambio: $${cambio.toFixed(2)}`;
-            estado.ventaActual.items = [];
-            estado.ventaActual.pago = 0;
+            
+            // Guardar venta realizada hoy para el cliente
+            if (!estado.ventasDelDia) estado.ventasDelDia = [];
+            estado.ventasDelDia.push({
+                clienteId: estado.ventaActual.cliente,
+                total: total,
+                fecha: estado.fecha,
+                items: [...estado.ventaActual.items]
+            });
+
+            // Reiniciar venta actual para solicitar tienda en la siguiente venta
+            estado.ventaActual = { cliente: null, items: [], pago: 0 };
             document.getElementById('inputPago').value = '';
+            document.getElementById('cambioDisplay').textContent = '';
             guardarEstado();
-            renderizarVenta();
-            mostrarToast(`✅ Venta: $${total.toFixed(2)}, Cambio: $${cambio.toFixed(2)}`);
-            setTimeout(() => { document.getElementById('cambioDisplay').textContent = ''; }, 5000);
+            
+            mostrarToast(`✅ Venta finalizada: $${total.toFixed(2)}, Cambio: $${cambio.toFixed(2)}`);
+            mostrarVistaVenta();
         }
 
         function cancelarVenta() {
-            if (estado.ventaActual.items.length === 0) { mostrarToast('No hay venta'); return; }
-            if (!confirm('¿Cancelar venta?')) return;
+            if (estado.ventaActual.items.length === 0) {
+                estado.ventaActual.cliente = null;
+                guardarEstado();
+                mostrarVistaVenta();
+                return;
+            }
+            if (!confirm('¿Cancelar la venta actual?')) return;
             estado.ventaActual.items.forEach(item => {
                 const producto = estado.productos.find(p => p.id === item.productoId);
                 if (producto) producto.vendido -= item.cantidad;
             });
-            estado.ventaActual.items = [];
-            estado.ventaActual.pago = 0;
+            estado.ventaActual = { cliente: null, items: [], pago: 0 };
             document.getElementById('inputPago').value = '';
             document.getElementById('cambioDisplay').textContent = '';
             guardarEstado();
-            renderizarVenta();
             mostrarToast('🗑️ Venta cancelada');
+            mostrarVistaVenta();
         }
 
         // ============================================================
@@ -1086,8 +1335,9 @@
         // ============================================================
         function abrirModalCliente() {
             document.getElementById('modalCliente').classList.add('active');
-            document.getElementById('inputClienteNombre').value = '';
-            setTimeout(() => document.getElementById('inputClienteNombre').focus(), 100);
+            const inputName = document.getElementById('inputClienteNombre');
+            inputName.value = '';
+            setTimeout(() => inputName.focus(), 150);
         }
 
         function cerrarModalCliente() {
@@ -1101,18 +1351,24 @@
             estado.clientes.push({ id: nuevoId, nombre });
             guardarEstado();
             renderizarClientes();
-            renderizarSelectClientes();
             cerrarModalCliente();
             mostrarToast(`✅ Cliente "${nombre}" creado`);
+
+            // Si estábamos en la vista de selección de cliente, seleccionamos la nueva tienda automáticamente
+            if (!estado.ventaActual.cliente) {
+                seleccionarClienteParaVenta(nuevoId);
+            } else {
+                renderizarSeleccionarCliente();
+            }
         }
 
         function eliminarCliente(id) {
             if (!confirm('¿Eliminar este cliente?')) return;
             estado.clientes = estado.clientes.filter(c => c.id !== id);
-            if (estado.ventaActual.cliente === id) estado.ventaActual.cliente = 'general';
+            if (estado.ventaActual.cliente === id) estado.ventaActual.cliente = null;
             guardarEstado();
             renderizarClientes();
-            renderizarSelectClientes();
+            mostrarVistaVenta();
             mostrarToast('🗑️ Cliente eliminado');
         }
 
@@ -1132,8 +1388,8 @@
 
         function generarResumen() {
             const container = document.getElementById('resumenContenido');
-            const resumen = calcularResumen();
-            if (estado.productos.every(p => p.cargado === 0)) {
+            const resumen = calcularResumen().filter(r => r.cargado > 0);
+            if (resumen.length === 0) {
                 container.innerHTML = '<div class="empty-state"><div class="icon">📦</div><p>Sin productos cargados</p></div>';
                 return;
             }
@@ -1161,15 +1417,16 @@
 
         function cerrarRuta() {
             if (!confirm('¿Cerrar ruta? Se guardará el resumen.')) return;
-            const resumen = calcularResumen();
+            const resumen = calcularResumen().filter(r => r.cargado > 0);
             estado.historial.push({ fecha: estado.fecha, resumen: resumen });
             estado.productos = PRODUCTOS_BASE.map(p => ({ ...p, cargado: 0, vendido: 0 }));
-            estado.ventaActual = { cliente: 'general', items: [], pago: 0 };
+            estado.ventaActual = { cliente: null, items: [], pago: 0 };
+            estado.ventasDelDia = [];
             document.getElementById('inputPago').value = '';
             document.getElementById('cambioDisplay').textContent = '';
             guardarEstado();
             renderizarCarga();
-            renderizarVenta();
+            mostrarVistaVenta();
             renderizarHistorial();
             mostrarToast('✅ Ruta cerrada');
         }
@@ -1243,7 +1500,7 @@
                 document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
                 document.getElementById(this.dataset.tab).classList.add('active');
                 if (this.dataset.tab === 'tabCarga') renderizarCarga();
-                if (this.dataset.tab === 'tabVenta') renderizarVenta();
+                if (this.dataset.tab === 'tabVenta') { mostrarVistaVenta(); renderizarVenta(); }
                 if (this.dataset.tab === 'tabResumen') { generarResumen(); renderizarHistorial(); }
                 if (this.dataset.tab === 'tabClientes') renderizarClientes();
             });
@@ -1260,12 +1517,6 @@
             });
         });
 
-        document.getElementById('selectCliente').addEventListener('change', function() {
-            estado.ventaActual.cliente = this.value === 'general' ? 'general' : parseInt(this.value);
-            guardarEstado();
-            renderizarVentaActual();
-        });
-
         document.getElementById('inputPago').addEventListener('input', function() {
             const total = estado.ventaActual.items.reduce((sum, i) => sum + (i.cantidad * i.precioUnitario), 0);
             const pago = parseFloat(this.value) || 0;
@@ -1275,6 +1526,24 @@
                 document.getElementById('cambioDisplay').textContent = `⚠️ Faltan $${(total - pago).toFixed(2)}`;
             } else {
                 document.getElementById('cambioDisplay').textContent = '';
+            }
+        });
+
+        document.getElementById('inputCantidad').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                document.getElementById('btnConfirmarCantidad').click();
+            }
+        });
+
+        document.getElementById('inputCantidad').addEventListener('focus', function() {
+            this.select();
+        });
+
+        document.getElementById('inputClienteNombre').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                guardarCliente();
             }
         });
 
@@ -1296,15 +1565,15 @@
             const cargado = cargarEstado();
             if (!cargado) inicializarEstado();
             renderizarCarga();
+            mostrarVistaVenta();
             renderizarVenta();
             renderizarClientes();
-            renderizarSelectClientes();
             generarResumen();
             renderizarHistorial();
         }
 
         init();
-        console.log('✅ Sistema de Ruta - Optimizado para iPhone');
+        console.log('✅ Sistema de Ruta - Optimizado para POS Móvil');
     </script>
 </body>
 </html>
