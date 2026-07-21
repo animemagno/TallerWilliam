@@ -86,6 +86,31 @@
             text-overflow: ellipsis;
         }
 
+        .btn-fullscreen {
+            background: rgba(255, 255, 255, 0.25);
+            border: 1.5px solid rgba(255, 255, 255, 0.5);
+            color: white;
+            font-size: 17px;
+            font-weight: 700;
+            border-radius: 10px;
+            padding: 8px 12px;
+            cursor: pointer;
+            touch-action: manipulation;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            transition: all 0.15s;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+            min-height: 40px;
+        }
+
+        .btn-fullscreen:active {
+            transform: scale(0.92);
+            background: rgba(255, 255, 255, 0.45);
+        }
+
         /* ===== NAV TABS ===== */
         .nav-tabs {
             display: flex;
@@ -959,7 +984,7 @@
             <h1>Sistema de Ruta</h1>
             <div class="fecha" id="fechaActual"></div>
         </div>
-        <button onclick="togglePantallaCompleta()" title="Pantalla Completa" style="background:rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.35); color:white; font-size:18px; border-radius:8px; padding:6px 10px; cursor:pointer; touch-action:manipulation; flex-shrink:0;">
+        <button class="btn-fullscreen" onclick="togglePantallaCompleta()" title="Pantalla Completa">
             ⛶
         </button>
     </div>
