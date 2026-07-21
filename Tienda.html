@@ -3,8 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#1a73e8">
     <meta name="format-detection" content="telephone=no">
     <title>Sistema de Ruta - POS Móvil</title>
     <style>
@@ -957,6 +959,9 @@
             <h1>Sistema de Ruta</h1>
             <div class="fecha" id="fechaActual"></div>
         </div>
+        <button onclick="togglePantallaCompleta()" title="Pantalla Completa" style="background:rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.35); color:white; font-size:18px; border-radius:8px; padding:6px 10px; cursor:pointer; touch-action:manipulation; flex-shrink:0;">
+            ⛶
+        </button>
     </div>
 
     <!-- ===== NAV TABS ===== -->
@@ -1385,6 +1390,22 @@
             const fechaCapitalizada = fechaStr.charAt(0).toUpperCase() + fechaStr.slice(1);
             const elem = document.getElementById('fechaActual');
             if (elem) elem.textContent = fechaCapitalizada;
+        }
+
+        function togglePantallaCompleta() {
+            if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+                if (document.documentElement.requestFullscreen) {
+                    document.documentElement.requestFullscreen();
+                } else if (document.documentElement.webkitRequestFullscreen) {
+                    document.documentElement.webkitRequestFullscreen();
+                }
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                }
+            }
         }
 
         function verificarAvisoPersistencia() {
