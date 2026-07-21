@@ -1118,12 +1118,19 @@
                 <div class="monto" id="totalVentaActualModal">$0.00</div>
             </div>
             
-            <div class="input-group" style="margin-bottom:6px; margin-top:10px;">
-                <label style="font-weight:600;">💰 El cliente paga con:</label>
-                <input type="number" id="inputPagoModal" placeholder="0.00" step="0.01" inputmode="decimal" style="font-size:18px; font-weight:bold; color:#1a73e8; padding:8px 12px;">
+            <!-- Casilla 1: Pago del Cliente -->
+            <div class="input-group" style="margin-bottom:10px; margin-top:12px;">
+                <label style="font-weight:700; font-size:13px; color:#333;">💰 El cliente paga con ($):</label>
+                <input type="number" id="inputPagoModal" placeholder="0.00" step="0.01" inputmode="decimal" style="font-size:20px; font-weight:bold; color:#1a73e8; padding:10px 14px; border:2px solid #b6d4fe; border-radius:8px;">
             </div>
-            
-            <div id="cambioDisplayModal" style="text-align:center; font-weight:700; margin:6px 0; font-size:15px; border-radius:8px; transition:all 0.2s;"></div>
+
+            <!-- Casilla 2: Cambio a Devolver -->
+            <div style="margin-bottom:12px;">
+                <label style="font-weight:700; font-size:13px; color:#333; display:block; margin-bottom:4px;">💵 Cambio a Devolver ($):</label>
+                <div id="casillaCambioModal" style="background:#e6f4ea; border:2px solid #a8dab5; border-radius:8px; padding:10px 14px; font-size:22px; font-weight:bold; color:#137333; text-align:center; min-height:48px; display:flex; align-items:center; justify-content:center;">
+                    $0.00
+                </div>
+            </div>
             
             <div style="display:flex; flex-direction:column; gap:6px; margin-top:10px;">
                 <button class="btn btn-success" onclick="finalizarVenta()" style="font-size:15px; padding:12px;">✅ Finalizar Venta</button>
@@ -1861,30 +1868,27 @@
         function actualizarCambioDisplayModal() {
             const total = estado.ventaActual.items.reduce((sum, i) => sum + (i.cantidad * i.precioUnitario), 0);
             const inputMod = document.getElementById('inputPagoModal');
-            const cambioEl = document.getElementById('cambioDisplayModal');
-            if (!inputMod || !cambioEl) return;
+            const casillaCambio = document.getElementById('casillaCambioModal');
+            if (!inputMod || !casillaCambio) return;
 
             const pago = parseFloat(inputMod.value) || 0;
             if (pago >= total && total > 0) {
                 const cambio = pago - total;
-                cambioEl.style.background = '#d4edda';
-                cambioEl.style.color = '#155724';
-                cambioEl.style.border = '1px solid #c3e6cb';
-                cambioEl.style.padding = '8px 12px';
-                cambioEl.innerHTML = `💵 Cambio a devolver: <strong>$${cambio.toFixed(2)}</strong>`;
+                casillaCambio.style.background = '#e6f4ea';
+                casillaCambio.style.borderColor = '#a8dab5';
+                casillaCambio.style.color = '#137333';
+                casillaCambio.textContent = `$${cambio.toFixed(2)}`;
             } else if (pago > 0 && pago < total) {
                 const falta = total - pago;
-                cambioEl.style.background = '#fff3cd';
-                cambioEl.style.color = '#856404';
-                cambioEl.style.border = '1px solid #ffeeba';
-                cambioEl.style.padding = '8px 12px';
-                cambioEl.innerHTML = `⚠️ Faltan por entregar: <strong>$${falta.toFixed(2)}</strong>`;
+                casillaCambio.style.background = '#fef7e0';
+                casillaCambio.style.borderColor = '#fdd835';
+                casillaCambio.style.color = '#b06000';
+                casillaCambio.textContent = `Faltan $${falta.toFixed(2)}`;
             } else {
-                cambioEl.style.background = 'transparent';
-                cambioEl.style.color = '#1a73e8';
-                cambioEl.style.border = 'none';
-                cambioEl.style.padding = '0';
-                cambioEl.innerHTML = '';
+                casillaCambio.style.background = '#f8f9fa';
+                casillaCambio.style.borderColor = '#dadce0';
+                casillaCambio.style.color = '#70757a';
+                casillaCambio.textContent = '$0.00';
             }
         }
 
