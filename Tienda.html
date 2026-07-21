@@ -29,21 +29,42 @@
             padding-bottom: env(safe-area-inset-bottom);
         }
 
-        /* ===== HEADER COMPACTO ===== */
+        /* ===== HEADER COMPACTO CON LOGO ===== */
         .header {
             background: linear-gradient(135deg, #1a73e8, #0d47a1);
             color: white;
-            padding: 10px 15px;
+            padding: 8px 15px;
             border-radius: 10px;
             margin-bottom: 10px;
             text-align: center;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .header-title-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .header-logo {
+            max-height: 28px;
+            max-width: 110px;
+            height: auto;
+            width: auto;
+            object-fit: contain;
+            border-radius: 4px;
         }
 
         .header h1 {
             font-size: 18px;
             font-weight: 600;
             letter-spacing: 0.3px;
+            margin: 0;
         }
 
         .header .fecha {
@@ -839,9 +860,12 @@
 </head>
 <body>
 
-    <!-- ===== HEADER COMPACTO ===== -->
+    <!-- ===== HEADER COMPACTO CON LOGO ===== -->
     <div class="header">
-        <h1>🚚 Sistema de Ruta</h1>
+        <div class="header-title-container">
+            <img src="img/Logo.png" alt="Logo" class="header-logo" onerror="this.onerror=null; this.src='img/logo.png';">
+            <h1>🚚 Sistema de Ruta</h1>
+        </div>
         <div class="fecha" id="fechaActual"></div>
     </div>
 
@@ -915,6 +939,9 @@
                     <button data-cat="Refrescos">🥤 Refrescos</button>
                     <button data-cat="Jugos">🧃 Jugos</button>
                     <button data-cat="Aguas">💧 Aguas</button>
+                    <button data-cat="Hidratante">⚡ Hidratante</button>
+                    <button data-cat="Deportiva">🏃 Deportiva</button>
+                    <button data-cat="Energizante">🔥 Energizante</button>
                     <button data-cat="Otros">📦 Otros</button>
                 </div>
                 <input type="text" class="search-box" id="searchVenta" placeholder="🔍 Buscar producto...">
@@ -1025,6 +1052,9 @@
                             <option value="Refrescos">🥤 Refrescos</option>
                             <option value="Jugos">🧃 Jugos</option>
                             <option value="Aguas">💧 Aguas</option>
+                            <option value="Hidratante">⚡ Hidratante</option>
+                            <option value="Deportiva">🏃 Deportiva</option>
+                            <option value="Energizante">🔥 Energizante</option>
                             <option value="Otros" selected>📦 Otros</option>
                         </select>
                     </div>
@@ -1083,8 +1113,8 @@
             { id: 27, nombre: "Tropical lata", precio: 7.00, categoria: "Jugos" },
             { id: 28, nombre: "Suprema", precio: 22.50, categoria: "Cervezas" },
             { id: 29, nombre: "Regia chola", precio: 22.50, categoria: "Cervezas" },
-            { id: 30, nombre: "Gatorade", precio: 22.00, categoria: "Otros" },
-            { id: 31, nombre: "Raptor", precio: 10.50, categoria: "Otros" },
+            { id: 30, nombre: "Gatorade", precio: 22.00, categoria: "Deportiva" },
+            { id: 31, nombre: "Raptor", precio: 10.50, categoria: "Energizante" },
             { id: 32, nombre: "Petit", precio: 12.75, categoria: "Otros" }
         ];
 
