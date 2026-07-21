@@ -1296,7 +1296,10 @@
             
             <div id="listaGestionProductos" style="max-height:220px; overflow-y:auto; border:1px solid #e8e8e8; border-radius:8px; background:white;"></div>
             
-            <button class="btn btn-outline" onclick="cerrarModalGestionProductos()" style="margin-top:10px;">Cerrar</button>
+            <div style="display:flex; gap:6px; margin-top:10px;">
+                <button class="btn btn-outline" style="flex:1; margin:0;" onclick="cerrarModalGestionProductos()">Cerrar</button>
+                <button class="btn btn-outline" style="color:#d93025; border-color:#f5c6cb; font-size:12px; margin:0;" onclick="restablecerCatalogoBase()">🔄 Restablecer Catálogo</button>
+            </div>
         </div>
     </div>
 
@@ -1375,6 +1378,19 @@
                     estado = parsed;
                     if (!estado.ventasDelDia) estado.ventasDelDia = [];
                     if (!estado.cargasDelDia) estado.cargasDelDia = [];
+                    
+                    // Garantizar que el catálogo de productos nunca quede vacío o corrupto
+                    if (!estado.productos || !Array.isArray(estado.productos) || estado.productos.length === 0) {
+                        estado.productos = PRODUCTOS_BASE.map(p => ({ ...p, cargado: 0, vendido: 0 }));
+                    } else {
+                        PRODUCTOS_BASE.forEach(pBase => {
+                            const existe = estado.productos.find(p => p.id === pBase.id);
+                            if (!existe) {
+                                estado.productos.push({ ...pBase, cargado: 0, vendido: 0 });
+                            }
+                        });
+                    }
+
                     const hoy = new Date().toISOString().split('T')[0];
                     if (estado.fecha !== hoy) {
                         if (estado.historial && estado.productos.length > 0) {
@@ -2250,6 +2266,17 @@
                     </div>
                 </div>
             `).join('');
+        }
+
+        function restablecerCatalogoBase() {
+            if (confirm('¿Restablecer todo el catálogo de productos con los 32 productos originales?')) {
+                estado.productos = PRODUCTOS_BASE.map(p => ({ ...p, cargado: 0, vendido: 0 }));
+                guardarEstado();
+                renderizarCarga();
+                renderizarVenta();
+                renderizarGestionProductos();
+                mostrarToast('✅ Catálogo restablecido con 32 productos');
+            }
         }
 
         // ============================================================
