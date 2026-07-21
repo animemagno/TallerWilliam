@@ -594,6 +594,37 @@
             font-weight: 700;
         }
 
+        /* ===== FORM FIELD ALIGNMENT ===== */
+        .form-field {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .form-field label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .form-field input, .form-field select {
+            width: 100%;
+            padding: 8px 10px;
+            border: 2px solid #e8e8e8;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+            box-sizing: border-box;
+            height: 38px;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .form-field input:focus, .form-field select:focus {
+            border-color: #1a73e8;
+            outline: none;
+        }
+
         /* ===== INPUT GROUP ===== */
         .input-group {
             display: flex;
@@ -1087,22 +1118,22 @@
 
             <!-- Formulario para Agregar / Editar -->
             <div style="background:#f8f9fa; padding:12px; border-radius:10px; border:1px solid #e8e8e8; margin-bottom:12px;">
-                <h4 id="tituloFormProducto" style="font-size:13px; margin-bottom:8px; color:#1a73e8; font-weight:700;">➕ Agregar Nuevo Producto</h4>
+                <h4 id="tituloFormProducto" style="font-size:14px; margin-bottom:10px; color:#1a73e8; font-weight:700;">➕ Agregar Nuevo Producto</h4>
                 <input type="hidden" id="editProductoId" value="">
                 
-                <div class="input-group" style="margin:6px 0;">
-                    <label style="min-width:65px; font-size:13px;">Nombre:</label>
-                    <input type="text" id="inputProdNombre" placeholder="Ej: Coca Cola 600ml" autocomplete="off" style="font-size:14px;">
+                <div class="form-field" style="margin-bottom:10px;">
+                    <label for="inputProdNombre">Nombre del Producto:</label>
+                    <input type="text" id="inputProdNombre" placeholder="Ej: Coca Cola 600ml" autocomplete="off">
                 </div>
                 
-                <div style="display:flex; gap:8px; margin:6px 0; flex-wrap:wrap;">
-                    <div class="input-group" style="flex:1; margin:0;">
-                        <label style="min-width:55px; font-size:13px;">Precio $:</label>
-                        <input type="number" id="inputProdPrecio" placeholder="0.00" step="0.01" inputmode="decimal" style="font-size:14px;">
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:12px;">
+                    <div class="form-field">
+                        <label for="inputProdPrecio">Precio ($):</label>
+                        <input type="number" id="inputProdPrecio" placeholder="0.00" step="0.01" inputmode="decimal">
                     </div>
-                    <div class="input-group" style="flex:1; margin:0;">
-                        <label style="min-width:65px; font-size:13px;">Categoría:</label>
-                        <select id="selectProdCategoria" class="search-box" style="margin:0; padding:8px; font-size:13px; height:38px;">
+                    <div class="form-field">
+                        <label for="selectProdCategoria">Categoría:</label>
+                        <select id="selectProdCategoria">
                             <option value="Cervezas">🍺 Cervezas</option>
                             <option value="Refrescos">🥤 Refrescos</option>
                             <option value="Jugos">🧃 Jugos</option>
@@ -1115,9 +1146,9 @@
                     </div>
                 </div>
 
-                <div style="display:flex; gap:6px; margin-top:10px;">
-                    <button class="btn btn-primary btn-sm" style="flex:1;" onclick="guardarProductoCatalogo()">💾 Guardar Producto</button>
-                    <button class="btn btn-outline btn-sm" id="btnCancelarEditProd" style="display:none;" onclick="limpiarFormularioProducto()">Cancelar</button>
+                <div style="display:flex; gap:6px;">
+                    <button class="btn btn-primary btn-sm" style="flex:1; margin:0;" onclick="guardarProductoCatalogo()">💾 Guardar Producto</button>
+                    <button class="btn btn-outline btn-sm" id="btnCancelarEditProd" style="display:none; margin:0;" onclick="limpiarFormularioProducto()">Cancelar</button>
                 </div>
             </div>
 
