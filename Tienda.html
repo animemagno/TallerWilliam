@@ -33,49 +33,55 @@
         .header {
             background: linear-gradient(135deg, #1a73e8, #0d47a1);
             color: white;
-            padding: 10px 15px;
+            padding: 8px 12px;
             border-radius: 12px;
             margin-bottom: 10px;
-            text-align: center;
             box-shadow: 0 2px 6px rgba(0,0,0,0.12);
             display: flex;
-            flex-direction: column;
             align-items: center;
-            justify-content: center;
-        }
-
-        .header-title-container {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            margin-bottom: 2px;
+            gap: 12px;
+            min-height: 56px;
         }
 
         .header-logo {
-            max-height: 44px;
-            max-width: 150px;
-            height: auto;
+            height: 50px;
+            max-width: 140px;
             width: auto;
             object-fit: contain;
             border-radius: 6px;
             background: rgba(255, 255, 255, 0.95);
             padding: 3px 6px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+            flex-shrink: 0;
+        }
+
+        .header-text-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            flex: 1;
+            min-width: 0;
         }
 
         .header h1 {
-            font-size: 19px;
+            font-size: 18px;
             font-weight: 700;
             letter-spacing: 0.3px;
             margin: 0;
+            line-height: 1.2;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .header .fecha {
-            font-size: 12px;
+            font-size: 11.5px;
             opacity: 0.9;
             margin-top: 2px;
             font-weight: 400;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         /* ===== NAV TABS ===== */
@@ -946,11 +952,11 @@
 
     <!-- ===== HEADER COMPACTO CON LOGO ===== -->
     <div class="header">
-        <div class="header-title-container">
-            <img src="img/Logo.png" alt="Logo" class="header-logo" onerror="this.onerror=null; this.src='img/logo.png';">
-            <h1>🚚 Sistema de Ruta</h1>
+        <img src="img/Logo.png" alt="Logo" class="header-logo" onerror="this.onerror=null; this.src='img/logo.png';">
+        <div class="header-text-container">
+            <h1>Sistema de Ruta</h1>
+            <div class="fecha" id="fechaActual"></div>
         </div>
-        <div class="fecha" id="fechaActual"></div>
     </div>
 
     <!-- ===== NAV TABS ===== -->
@@ -984,60 +990,57 @@
 
     <!-- ===== TAB 2: VENTA ===== -->
     <div id="tabVenta" class="tab-content active">
-        <!-- VISTA 1: SELECCIONAR CLIENTE / TIENDA -->
-        <div id="vistaSeleccionarCliente" class="card">
-            <h3 style="justify-content: center; font-size: 16px;">🏪 ¿A quién le vas a vender?</h3>
-            <p style="color:#666; font-size:13px; text-align:center; margin-bottom:12px;">
-                Selecciona una tienda o cliente general para continuar
-            </p>
-
-            <div class="cliente-opcion-general" onclick="seleccionarClienteParaVenta('general')">
-                <div class="icon">👤</div>
-                <div class="info">
-                    <div class="titulo">Cliente General</div>
-                    <div class="sub">Venta rápida al contado</div>
-                </div>
-                <div class="flecha">➔</div>
-            </div>
-
-            <div style="margin: 14px 0 8px 0; display:flex; justify-content:space-between; align-items:center;">
-                <span style="font-weight:600; font-size:13px; color:#444;">🏪 Tiendas Registradas</span>
-                <button class="btn btn-outline btn-sm" onclick="abrirModalCliente()" style="margin:0;">➕ Nueva Tienda</button>
-            </div>
-
-            <div id="gridSeleccionarTienda" class="client-grid"></div>
-        </div>
-
-        <!-- VISTA 2: PRODUCTOS Y CARRITO (SE MUESTRA TRAS SELECCIONAR TIENDA) -->
-        <div id="vistaVentaProductos" style="display:none;">
-            <!-- Header con cliente activo y saldo acumulado -->
-            <div class="header-cliente-activo">
-                <div class="cliente-activo-info">
-                    <div class="label-tienda">Tienda / Cliente:</div>
-                    <div class="nombre-tienda" id="nombreClienteActivo">👤 Cliente General</div>
-                </div>
-                <div class="cliente-activo-acumulado">
-                    <div class="label-saldo">Saldo Acumulado:</div>
-                    <div class="monto-saldo" id="saldoAcumuladoCliente">$0.00</div>
-                </div>
-                <button class="btn-cambiar-cliente" onclick="solicitarCambioCliente()">🔄 Cambiar</button>
-            </div>
-
+        <!-- VISTA DE PRODUCTOS Y CARRITO DE VENTA -->
+        <div id="vistaVentaProductos">
             <div class="card">
-                <h3>🛒 Productos</h3>
-                <div class="category-buttons" id="categoriasVenta">
-                    <button class="active" data-cat="todos">Todos</button>
-                    <button data-cat="Cervezas">🍺 Cervezas</button>
-                    <button data-cat="Refrescos">🥤 Refrescos</button>
-                    <button data-cat="Jugos">🧃 Jugos</button>
-                    <button data-cat="Aguas">💧 Aguas</button>
-                    <button data-cat="Hidratante">⚡ Hidratante</button>
-                    <button data-cat="Deportiva">🏃 Deportiva</button>
-                    <button data-cat="Energizante">🔥 Energizante</button>
-                    <button data-cat="Otros">📦 Otros</button>
+                <!-- Barra Superior de Cliente Activo, Saldo y Acciones (Filtros, Buscar) -->
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; flex-wrap:wrap; gap:6px;">
+                    <div onclick="abrirModalSeleccionarCliente()" style="cursor:pointer; background:#e8f0fe; padding:6px 12px; border-radius:8px; border:1px solid #b6d4fe; display:flex; align-items:center; gap:6px;">
+                        <span style="font-size:13px; font-weight:700; color:#1a73e8;" id="nombreClienteActivo">👤 Cliente General</span>
+                        <span style="font-size:11px; color:#666;" title="Cambiar Cliente">🔄</span>
+                    </div>
+
+                    <div style="display:flex; align-items:center; gap:6px;">
+                        <div style="font-size:13px; font-weight:700; color:#28a745; background:#d4edda; padding:6px 10px; border-radius:8px;" id="saldoAcumuladoCliente">
+                            $0.00
+                        </div>
+                        <button class="btn-icon btn-icon-primary" onclick="toggleFiltrosCategorias()" title="Filtrar por categoría">
+                            🎛️ Filtros
+                        </button>
+                        <button class="btn-icon btn-icon-primary" onclick="toggleBusquedaVenta()" title="Buscar producto">
+                            🔍
+                        </button>
+                    </div>
                 </div>
-                <input type="text" class="search-box" id="searchVenta" placeholder="🔍 Buscar producto...">
-                <div id="listaVenta" class="product-grid"></div>
+
+                <!-- Menú Desplegable de Categorías (Oculto por defecto) -->
+                <div id="contenedorFiltrosCategorias" style="display:none; margin-bottom:10px; padding:8px; background:#f8f9fa; border-radius:8px; border:1px solid #e8e8e8;">
+                    <div class="category-buttons" id="categoriasVenta">
+                        <button class="active" data-cat="todos">Todos</button>
+                        <button data-cat="Cervezas">🍺 Cervezas</button>
+                        <button data-cat="Refrescos">🥤 Refrescos</button>
+                        <button data-cat="Jugos">🧃 Jugos</button>
+                        <button data-cat="Aguas">💧 Aguas</button>
+                        <button data-cat="Hidratante">⚡ Hidratante</button>
+                        <button data-cat="Deportiva">🏃 Deportiva</button>
+                        <button data-cat="Energizante">🔥 Energizante</button>
+                        <button data-cat="Otros">📦 Otros</button>
+                    </div>
+                </div>
+
+                <!-- Campo de Búsqueda Desplegable (Oculto por defecto) -->
+                <div id="contenedorBusquedaVenta" style="display:none; margin-bottom:10px;">
+                    <input type="text" class="search-box" id="searchVenta" placeholder="🔍 Escribe para buscar producto..." style="margin:0;">
+                </div>
+
+                <!-- Pill de Filtro Activo (Oculto por defecto) -->
+                <div id="badgeFiltroActivo" style="display:none; margin-bottom:8px; font-size:12px; color:#1a73e8; font-weight:600; background:#e8f0fe; padding:4px 10px; border-radius:6px; align-items:center; justify-content:space-between;">
+                    <span>Filtro: <strong id="textoFiltroActivo">Todos</strong></span>
+                    <button onclick="limpiarFiltroCategoria()" style="background:none; border:none; color:#dc3545; cursor:pointer; font-weight:bold;">✕ Quitar filtro</button>
+                </div>
+
+                <!-- Listado de Productos -->
+                <div id="listaVenta" class="product-grid" style="max-height:480px;"></div>
             </div>
 
             <div class="card">
@@ -1080,6 +1083,32 @@
             <h3>🏪 Clientes</h3>
             <button class="btn btn-primary" onclick="abrirModalCliente()">➕ Nuevo Cliente</button>
             <div id="listaClientes" style="margin-top:12px;"></div>
+        </div>
+    </div>
+
+    <!-- ===== MODAL SELECCIONAR CLIENTE ===== -->
+    <div class="modal-overlay" id="modalSeleccionarCliente">
+        <div class="modal" style="max-width:440px; width:95%;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <h3 style="margin:0; font-size:16px;">🏪 ¿A quién le vas a vender?</h3>
+                <button onclick="cerrarModalSeleccionarCliente()" style="background:none; border:none; font-size:20px; cursor:pointer; padding:4px;">✕</button>
+            </div>
+
+            <div class="cliente-opcion-general" onclick="seleccionarClienteParaVenta('general')">
+                <div class="icon">👤</div>
+                <div class="info">
+                    <div class="titulo">Cliente General</div>
+                    <div class="sub">Venta rápida al contado</div>
+                </div>
+                <div class="flecha">➔</div>
+            </div>
+
+            <div style="margin: 14px 0 8px 0; display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-weight:600; font-size:13px; color:#444;">🏪 Tiendas Registradas</span>
+                <button class="btn btn-outline btn-sm" onclick="cerrarModalSeleccionarCliente(); abrirModalCliente();" style="margin:0;">➕ Nueva Tienda</button>
+            </div>
+
+            <div id="gridSeleccionarTienda" class="client-grid" style="max-height:260px;"></div>
         </div>
     </div>
 
@@ -1310,16 +1339,61 @@
             `).join('');
         }
 
-        function mostrarVistaVenta() {
-            const vistaSel = document.getElementById('vistaSeleccionarCliente');
-            const vistaProd = document.getElementById('vistaVentaProductos');
-            if (!estado.ventaActual.cliente) {
-                if (vistaSel) vistaSel.style.display = 'block';
-                if (vistaProd) vistaProd.style.display = 'none';
-                renderizarSeleccionarCliente();
+        function actualizarFecha() {
+            const opciones = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            const fechaStr = new Date().toLocaleDateString('es-ES', opciones);
+            const fechaCapitalizada = fechaStr.charAt(0).toUpperCase() + fechaStr.slice(1);
+            const elem = document.getElementById('fechaActual');
+            if (elem) elem.textContent = fechaCapitalizada;
+        }
+
+        function abrirModalSeleccionarCliente() {
+            renderizarSeleccionarCliente();
+            const modal = document.getElementById('modalSeleccionarCliente');
+            if (modal) modal.classList.add('active');
+        }
+
+        function cerrarModalSeleccionarCliente() {
+            const modal = document.getElementById('modalSeleccionarCliente');
+            if (modal) modal.classList.remove('active');
+        }
+
+        function toggleFiltrosCategorias() {
+            const cont = document.getElementById('contenedorFiltrosCategorias');
+            if (!cont) return;
+            const estaVisible = cont.style.display === 'block';
+            cont.style.display = estaVisible ? 'none' : 'block';
+        }
+
+        function toggleBusquedaVenta() {
+            const cont = document.getElementById('contenedorBusquedaVenta');
+            const input = document.getElementById('searchVenta');
+            if (!cont) return;
+            const estaVisible = cont.style.display === 'block';
+            if (estaVisible) {
+                cont.style.display = 'none';
+                if (input) input.value = '';
+                renderizarVenta();
             } else {
-                if (vistaSel) vistaSel.style.display = 'none';
-                if (vistaProd) vistaProd.style.display = 'block';
+                cont.style.display = 'block';
+                if (input) setTimeout(() => input.focus(), 100);
+            }
+        }
+
+        function limpiarFiltroCategoria() {
+            document.querySelectorAll('#categoriasVenta button').forEach(b => {
+                b.classList.toggle('active', b.dataset.cat === 'todos');
+            });
+            const badge = document.getElementById('badgeFiltroActivo');
+            if (badge) badge.style.display = 'none';
+            renderizarVenta();
+        }
+
+        function mostrarVistaVenta() {
+            const vistaProd = document.getElementById('vistaVentaProductos');
+            if (vistaProd) vistaProd.style.display = 'block';
+            if (!estado.ventaActual.cliente) {
+                abrirModalSeleccionarCliente();
             }
         }
 
@@ -1348,32 +1422,46 @@
         function seleccionarClienteParaVenta(clienteId) {
             estado.ventaActual.cliente = clienteId;
             guardarEstado();
-            mostrarVistaVenta();
+            cerrarModalSeleccionarCliente();
             renderizarVenta();
         }
 
         function solicitarCambioCliente() {
             if (estado.ventaActual.items.length > 0) {
-                if (!confirm('Hay productos en el pedido actual. ¿Deseas cambiar de cliente?')) return;
+                if (!confirm('Hay productos en la venta actual. ¿Deseas cambiar de cliente?')) return;
             }
-            estado.ventaActual.cliente = null;
-            guardarEstado();
-            mostrarVistaVenta();
+            abrirModalSeleccionarCliente();
         }
 
         function renderizarVenta() {
             mostrarVistaVenta();
-            if (!estado.ventaActual.cliente) return;
-
             const container = document.getElementById('listaVenta');
-            const search = document.getElementById('searchVenta').value.toLowerCase();
+            const inputBusqueda = document.getElementById('searchVenta');
+            const search = inputBusqueda ? inputBusqueda.value.toLowerCase() : '';
             const catActiva = document.querySelector('#categoriasVenta .active');
             const cat = catActiva ? catActiva.dataset.cat : 'todos';
-            
+
+            const badgeFiltro = document.getElementById('badgeFiltroActivo');
+            const textoFiltro = document.getElementById('textoFiltroActivo');
+            if (badgeFiltro && textoFiltro) {
+                if (cat !== 'todos') {
+                    textoFiltro.textContent = cat;
+                    badgeFiltro.style.display = 'flex';
+                } else {
+                    badgeFiltro.style.display = 'none';
+                }
+            }
+
             let productos = estado.productos;
             if (search) productos = productos.filter(p => p.nombre.toLowerCase().includes(search));
             if (cat !== 'todos') productos = productos.filter(p => p.categoria === cat);
             
+            if (productos.length === 0) {
+                container.innerHTML = '<div style="grid-column: span 2; text-align:center; color:#888; padding:20px; font-size:13px;">Sin productos coincidentes</div>';
+                renderizarVentaActual();
+                return;
+            }
+
             container.innerHTML = productos.map(p => {
                 const disponible = p.cargado - p.vendido;
                 const sinStock = disponible <= 0;
@@ -1981,13 +2069,6 @@
             toast._timer = setTimeout(() => toast.classList.remove('show'), 2800);
         }
 
-        function actualizarFecha() {
-            const hoy = new Date();
-            document.getElementById('fechaActual').textContent = hoy.toLocaleDateString('es-ES', {
-                year: 'numeric', month: 'short', day: 'numeric'
-            });
-        }
-
         // ============================================================
         // 9. EVENTOS
         // ============================================================
@@ -2005,13 +2086,17 @@
         });
 
         document.getElementById('searchCarga').addEventListener('input', renderizarCarga);
-        document.getElementById('searchVenta').addEventListener('input', renderizarVenta);
-        document.getElementById('searchGestionProductos').addEventListener('input', renderizarGestionProductos);
+        const inputSearchVenta = document.getElementById('searchVenta');
+        if (inputSearchVenta) inputSearchVenta.addEventListener('input', renderizarVenta);
+        const inputSearchGestion = document.getElementById('searchGestionProductos');
+        if (inputSearchGestion) inputSearchGestion.addEventListener('input', renderizarGestionProductos);
 
         document.querySelectorAll('#categoriasVenta button').forEach(btn => {
             btn.addEventListener('click', function() {
                 document.querySelectorAll('#categoriasVenta button').forEach(b => b.classList.remove('active'));
                 this.classList.add('active');
+                const cont = document.getElementById('contenedorFiltrosCategorias');
+                if (cont) cont.style.display = 'none';
                 renderizarVenta();
             });
         });
@@ -2051,7 +2136,7 @@
         });
 
         document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') { cerrarModal(); cerrarModalCliente(); cerrarModalGestionProductos(); }
+            if (e.key === 'Escape') { cerrarModal(); cerrarModalCliente(); cerrarModalGestionProductos(); cerrarModalSeleccionarCliente(); }
         });
 
         document.querySelectorAll('.modal-overlay').forEach(overlay => {
