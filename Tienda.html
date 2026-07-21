@@ -478,6 +478,69 @@
             color: white;
         }
 
+        /* ===== GESTIÓN DE PRODUCTOS ===== */
+        .item-gestion-producto {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 6px;
+            border-bottom: 1px solid #f0f0f0;
+            gap: 6px;
+        }
+
+        .item-gestion-producto:last-child {
+            border-bottom: none;
+        }
+
+        .item-gestion-producto .info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .item-gestion-producto .nombre {
+            font-weight: 600;
+            font-size: 13px;
+            color: #333;
+        }
+
+        .item-gestion-producto .sub {
+            font-size: 11px;
+            color: #777;
+        }
+
+        .item-gestion-producto .acciones {
+            display: flex;
+            gap: 4px;
+        }
+
+        .btn-icon {
+            background: #f0f2f5;
+            border: 1px solid #ddd;
+            font-size: 14px;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 6px;
+            touch-action: manipulation;
+            transition: all 0.15s;
+        }
+
+        .btn-icon:active {
+            transform: scale(0.95);
+            background: #e8e8e8;
+        }
+
+        .btn-icon-danger {
+            color: #dc3545;
+            border-color: #f8d7da;
+            background: #fff5f5;
+        }
+
+        .btn-icon-primary {
+            color: #1a73e8;
+            border-color: #cff4fc;
+            background: #f0f8ff;
+        }
+
         /* ===== INPUT GROUP ===== */
         .input-group {
             display: flex;
@@ -793,7 +856,10 @@
     <!-- ===== TAB 1: CARGA ===== -->
     <div id="tabCarga" class="tab-content active">
         <div class="card">
-            <h3>📥 Cargar Inventario</h3>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:6px;">
+                <h3 style="margin-bottom:0;">📥 Cargar Inventario</h3>
+                <button class="btn btn-outline btn-sm" onclick="abrirModalGestionProductos()" style="margin:0;">⚙️ Editar Catálogo</button>
+            </div>
             <p style="color:#888; font-size:13px; margin-bottom:10px;">Selecciona un producto y coloca la cantidad</p>
             <input type="text" class="search-box" id="searchCarga" placeholder="🔍 Buscar producto...">
             <div id="listaCarga" class="product-grid"></div>
@@ -926,6 +992,55 @@
                 <button class="btn btn-outline" onclick="cerrarModalCliente()">Cancelar</button>
                 <button class="btn btn-primary" onclick="guardarCliente()">Guardar</button>
             </div>
+        </div>
+    <!-- ===== MODAL GESTIÓN DE PRODUCTOS ===== -->
+    <div class="modal-overlay" id="modalGestionProductos">
+        <div class="modal" style="max-width:440px; width:95%;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <h2 style="margin:0; font-size:17px;">⚙️ Catálogo de Productos</h2>
+                <button onclick="cerrarModalGestionProductos()" style="background:none; border:none; font-size:20px; cursor:pointer; padding:4px;">✕</button>
+            </div>
+
+            <!-- Formulario para Agregar / Editar -->
+            <div style="background:#f8f9fa; padding:12px; border-radius:10px; border:1px solid #e8e8e8; margin-bottom:12px;">
+                <h4 id="tituloFormProducto" style="font-size:13px; margin-bottom:8px; color:#1a73e8; font-weight:700;">➕ Agregar Nuevo Producto</h4>
+                <input type="hidden" id="editProductoId" value="">
+                
+                <div class="input-group" style="margin:6px 0;">
+                    <label style="min-width:65px; font-size:13px;">Nombre:</label>
+                    <input type="text" id="inputProdNombre" placeholder="Ej: Coca Cola 600ml" autocomplete="off" style="font-size:14px;">
+                </div>
+                
+                <div style="display:flex; gap:8px; margin:6px 0; flex-wrap:wrap;">
+                    <div class="input-group" style="flex:1; margin:0;">
+                        <label style="min-width:55px; font-size:13px;">Precio $:</label>
+                        <input type="number" id="inputProdPrecio" placeholder="0.00" step="0.01" inputmode="decimal" style="font-size:14px;">
+                    </div>
+                    <div class="input-group" style="flex:1; margin:0;">
+                        <label style="min-width:65px; font-size:13px;">Categoría:</label>
+                        <select id="selectProdCategoria" class="search-box" style="margin:0; padding:8px; font-size:13px; height:38px;">
+                            <option value="Cervezas">🍺 Cervezas</option>
+                            <option value="Refrescos">🥤 Refrescos</option>
+                            <option value="Jugos">🧃 Jugos</option>
+                            <option value="Aguas">💧 Aguas</option>
+                            <option value="Otros" selected>📦 Otros</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="display:flex; gap:6px; margin-top:10px;">
+                    <button class="btn btn-primary btn-sm" style="flex:1;" onclick="guardarProductoCatalogo()">💾 Guardar Producto</button>
+                    <button class="btn btn-outline btn-sm" id="btnCancelarEditProd" style="display:none;" onclick="limpiarFormularioProducto()">Cancelar</button>
+                </div>
+            </div>
+
+            <!-- Lista de Productos para Editar / Eliminar -->
+            <h4 style="font-size:13px; margin-bottom:6px; color:#333; font-weight:600;">📦 Productos en Catálogo</h4>
+            <input type="text" class="search-box" id="searchGestionProductos" placeholder="🔍 Buscar en catálogo..." style="padding:8px 12px; font-size:13px; margin-bottom:6px;">
+            
+            <div id="listaGestionProductos" style="max-height:220px; overflow-y:auto; border:1px solid #e8e8e8; border-radius:8px; background:white;"></div>
+            
+            <button class="btn btn-outline" onclick="cerrarModalGestionProductos()" style="margin-top:10px;">Cerrar</button>
         </div>
     </div>
 
@@ -1467,6 +1582,127 @@
         }
 
         // ============================================================
+        // GESTIÓN DE PRODUCTOS DEL CATÁLOGO (EDITAR, AGREGAR, ELIMINAR)
+        // ============================================================
+        function abrirModalGestionProductos() {
+            document.getElementById('modalGestionProductos').classList.add('active');
+            limpiarFormularioProducto();
+            renderizarGestionProductos();
+        }
+
+        function cerrarModalGestionProductos() {
+            document.getElementById('modalGestionProductos').classList.remove('active');
+        }
+
+        function limpiarFormularioProducto() {
+            document.getElementById('editProductoId').value = '';
+            document.getElementById('inputProdNombre').value = '';
+            document.getElementById('inputProdPrecio').value = '';
+            document.getElementById('selectProdCategoria').value = 'Otros';
+            document.getElementById('tituloFormProducto').textContent = '➕ Agregar Nuevo Producto';
+            document.getElementById('btnCancelarEditProd').style.display = 'none';
+        }
+
+        function editarProductoForm(id) {
+            const prod = estado.productos.find(p => p.id === id);
+            if (!prod) return;
+            document.getElementById('editProductoId').value = prod.id;
+            document.getElementById('inputProdNombre').value = prod.nombre;
+            document.getElementById('inputProdPrecio').value = prod.precio;
+            document.getElementById('selectProdCategoria').value = prod.categoria || 'Otros';
+            document.getElementById('tituloFormProducto').textContent = `✏️ Editar "${prod.nombre}"`;
+            document.getElementById('btnCancelarEditProd').style.display = 'inline-block';
+            
+            const modalContent = document.querySelector('#modalGestionProductos .modal');
+            if (modalContent) modalContent.scrollTop = 0;
+            document.getElementById('inputProdNombre').focus();
+        }
+
+        function guardarProductoCatalogo() {
+            const editId = document.getElementById('editProductoId').value;
+            const nombre = document.getElementById('inputProdNombre').value.trim();
+            const precio = parseFloat(document.getElementById('inputProdPrecio').value);
+            const categoria = document.getElementById('selectProdCategoria').value;
+
+            if (!nombre) { mostrarToast('❌ Ingresa el nombre del producto'); return; }
+            if (isNaN(precio) || precio < 0) { mostrarToast('❌ Ingresa un precio válido'); return; }
+
+            if (editId) {
+                const idNum = parseInt(editId);
+                const prod = estado.productos.find(p => p.id === idNum);
+                if (prod) {
+                    prod.nombre = nombre;
+                    prod.precio = precio;
+                    prod.categoria = categoria;
+                    mostrarToast(`✅ "${nombre}" actualizado`);
+                }
+            } else {
+                const nuevoId = estado.productos.length > 0 ? Math.max(...estado.productos.map(p => p.id)) + 1 : 1;
+                estado.productos.push({
+                    id: nuevoId,
+                    nombre: nombre,
+                    precio: precio,
+                    categoria: categoria,
+                    cargado: 0,
+                    vendido: 0
+                });
+                mostrarToast(`✅ "${nombre}" agregado al catálogo`);
+            }
+
+            guardarEstado();
+            renderizarCarga();
+            renderizarVenta();
+            renderizarGestionProductos();
+            limpiarFormularioProducto();
+        }
+
+        function eliminarProductoCatalogo(id) {
+            const prod = estado.productos.find(p => p.id === id);
+            if (!prod) return;
+            if (!confirm(`¿Eliminar "${prod.nombre}" del catálogo?`)) return;
+
+            estado.productos = estado.productos.filter(p => p.id !== id);
+            
+            if (estado.ventaActual && estado.ventaActual.items) {
+                estado.ventaActual.items = estado.ventaActual.items.filter(i => i.productoId !== id);
+            }
+
+            guardarEstado();
+            renderizarCarga();
+            renderizarVenta();
+            renderizarGestionProductos();
+            mostrarToast('🗑️ Producto eliminado');
+        }
+
+        function renderizarGestionProductos() {
+            const container = document.getElementById('listaGestionProductos');
+            if (!container) return;
+            const searchInput = document.getElementById('searchGestionProductos');
+            const search = (searchInput ? searchInput.value : '').toLowerCase();
+            
+            let productos = estado.productos;
+            if (search) productos = productos.filter(p => p.nombre.toLowerCase().includes(search) || (p.categoria && p.categoria.toLowerCase().includes(search)));
+
+            if (productos.length === 0) {
+                container.innerHTML = '<div style="text-align:center; color:#888; font-size:12px; padding:16px;">Sin productos</div>';
+                return;
+            }
+
+            container.innerHTML = productos.map(p => `
+                <div class="item-gestion-producto">
+                    <div class="info">
+                        <div class="nombre">${p.nombre}</div>
+                        <div class="sub">$${p.precio.toFixed(2)} | ${p.categoria || 'Otros'} | Cargado: ${p.cargado}</div>
+                    </div>
+                    <div class="acciones">
+                        <button class="btn-icon btn-icon-primary" onclick="editarProductoForm(${p.id})" title="Editar">✏️</button>
+                        <button class="btn-icon btn-icon-danger" onclick="eliminarProductoCatalogo(${p.id})" title="Eliminar">🗑️</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // ============================================================
         // 8. UTILIDADES
         // ============================================================
         function cerrarModal() {
@@ -1508,6 +1744,7 @@
 
         document.getElementById('searchCarga').addEventListener('input', renderizarCarga);
         document.getElementById('searchVenta').addEventListener('input', renderizarVenta);
+        document.getElementById('searchGestionProductos').addEventListener('input', renderizarGestionProductos);
 
         document.querySelectorAll('#categoriasVenta button').forEach(btn => {
             btn.addEventListener('click', function() {
@@ -1548,7 +1785,7 @@
         });
 
         document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') { cerrarModal(); cerrarModalCliente(); }
+            if (e.key === 'Escape') { cerrarModal(); cerrarModalCliente(); cerrarModalGestionProductos(); }
         });
 
         document.querySelectorAll('.modal-overlay').forEach(overlay => {
