@@ -1746,35 +1746,39 @@
                 }
             }
 
-            let productos = estado.productos;
-            if (search) productos = productos.filter(p => p.nombre.toLowerCase().includes(search));
-            if (cat !== 'todos') productos = productos.filter(p => p.categoria === cat);
-            
-            if (productos.length === 0) {
-                container.innerHTML = '<div style="grid-column: span 2; text-align:center; color:#888; padding:20px; font-size:13px;">Sin productos coincidentes</div>';
+            // En Venta, mostrar ÚNICAMENTE productos con stock disponible en el camión (> 0)
+            let productosConStock = estado.productos.filter(p => (p.cargado - p.vendido) > 0);
+
+            if (productosConStock.length === 0) {
+                container.innerHTML = `
+                    <div style="grid-column: span 2; background:#f8f9fa; border:1px dashed #b6d4fe; border-radius:10px; padding:24px 16px; text-align:center; margin:10px 0;">
+                        <div style="font-size:38px; margin-bottom:6px;">📦</div>
+                        <h4 style="margin:0 0 6px 0; color:#1a73e8; font-size:15px; font-weight:700;">Camión sin Inventario Disponible</h4>
+                        <p style="font-size:12.5px; color:#666; margin:0 0 12px 0;">No hay productos cargados en la ruta actual.</p>
+                        <button class="btn btn-primary btn-sm" onclick="document.querySelector('[data-tab=tabCarga]').click()" style="margin:0;">📦 Ir a Cargar Inventario</button>
+                    </div>
+                `;
                 renderizarVentaActual();
                 return;
             }
 
-            const totalCargadoGlobal = estado.productos.reduce((sum, p) => sum + p.cargado, 0);
-            let avisoHTML = '';
-            if (totalCargadoGlobal === 0) {
-                avisoHTML = `
-                    <div style="grid-column: span 2; background:#e8f0fe; border:1px solid #b6d4fe; border-radius:8px; padding:8px 12px; margin-bottom:4px; font-size:12px; color:#1a73e8; font-weight:600; text-align:center;">
-                        📦 Inventario en 0 u. — Recuerda cargar productos en la pestaña <strong>📦 Carga</strong>
-                    </div>
-                `;
+            let productos = productosConStock;
+            if (search) productos = productos.filter(p => p.nombre.toLowerCase().includes(search));
+            if (cat !== 'todos') productos = productos.filter(p => p.categoria === cat);
+            
+            if (productos.length === 0) {
+                container.innerHTML = '<div style="grid-column: span 2; text-align:center; color:#888; padding:20px; font-size:13px;">Sin productos coincidentes con stock</div>';
+                renderizarVentaActual();
+                return;
             }
 
-            container.innerHTML = avisoHTML + productos.map(p => {
+            container.innerHTML = productos.map(p => {
                 const disponible = p.cargado - p.vendido;
-                const sinStock = disponible <= 0;
                 return `
-                    <div class="product-item ${sinStock ? 'sin-stock' : ''}" 
-                         onclick="seleccionarProducto('venta', ${p.id})">
+                    <div class="product-item" onclick="seleccionarProducto('venta', ${p.id})">
                         <div class="nombre">${p.nombre}</div>
                         <div class="precio">$${p.precio.toFixed(2)}</div>
-                        <div class="stock" style="${sinStock ? 'color:#d93025; font-weight:700;' : ''}">Disp: ${disponible}</div>
+                        <div class="stock" style="color:#28a745; font-weight:700;">Disp: ${disponible}</div>
                     </div>
                 `;
             }).join('');
