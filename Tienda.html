@@ -86,14 +86,14 @@
             text-overflow: ellipsis;
         }
 
-        .btn-fullscreen {
+        .btn-header-action {
             background: rgba(255, 255, 255, 0.25);
             border: 1.5px solid rgba(255, 255, 255, 0.5);
             color: white;
             font-size: 17px;
             font-weight: 700;
             border-radius: 10px;
-            padding: 8px 12px;
+            padding: 8px 10px;
             cursor: pointer;
             touch-action: manipulation;
             flex-shrink: 0;
@@ -106,7 +106,7 @@
             min-height: 40px;
         }
 
-        .btn-fullscreen:active {
+        .btn-header-action:active {
             transform: scale(0.92);
             background: rgba(255, 255, 255, 0.45);
         }
@@ -984,9 +984,15 @@
             <h1>Sistema de Ruta</h1>
             <div class="fecha" id="fechaActual"></div>
         </div>
-        <button class="btn-fullscreen" onclick="togglePantallaCompleta()" title="Pantalla Completa">
-            ⛶
-        </button>
+        <div style="display:flex; gap:6px; align-items:center; flex-shrink:0;">
+            <button class="btn-header-action" onclick="abrirModalVentaActual()" title="Ver Venta Actual / Carrito" style="position:relative;">
+                🛒
+                <span id="badgeCarritoCount" style="display:none; position:absolute; top:-4px; right:-4px; background:#e53935; color:white; font-size:10px; font-weight:bold; border-radius:10px; padding:1px 5px; min-width:16px; text-align:center;">0</span>
+            </button>
+            <button class="btn-header-action" onclick="togglePantallaCompleta()" title="Pantalla Completa">
+                ⛶
+            </button>
+        </div>
     </div>
 
     <!-- ===== NAV TABS ===== -->
@@ -1108,6 +1114,35 @@
             <h3>🏪 Clientes</h3>
             <button class="btn btn-primary" onclick="abrirModalCliente()">➕ Nuevo Cliente</button>
             <div id="listaClientes" style="margin-top:12px;"></div>
+        </div>
+    </div>
+
+    <!-- ===== MODAL VENTA ACTUAL / CARRITO ===== -->
+    <div class="modal-overlay" id="modalVentaActual">
+        <div class="modal" style="max-width:440px; width:95%;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <h3 style="margin:0; font-size:16px;">🧾 Venta Actual (Carrito)</h3>
+                <button onclick="cerrarModalVentaActual()" style="background:none; border:none; font-size:20px; cursor:pointer; padding:4px;">✕</button>
+            </div>
+
+            <div id="listaVentaActualModal" style="max-height:220px; overflow-y:auto; margin-bottom:10px;"></div>
+            
+            <div class="total-display">
+                <div class="label">Total a Pagar</div>
+                <div class="monto" id="totalVentaActualModal">$0.00</div>
+            </div>
+            
+            <div class="input-group">
+                <label>💰 Pago:</label>
+                <input type="number" id="inputPagoModal" placeholder="0.00" step="0.01" inputmode="decimal">
+            </div>
+            
+            <div id="cambioDisplayModal" style="text-align:center; font-weight:700; margin:6px 0; font-size:14px; color:#1a73e8;"></div>
+            
+            <div style="display:flex; flex-direction:column; gap:6px; margin-top:10px;">
+                <button class="btn btn-success" onclick="finalizarVenta()">✅ Finalizar Venta</button>
+                <button class="btn btn-danger" onclick="cancelarVenta()" style="margin-top:0;">🗑️ Cancelar Venta</button>
+            </div>
         </div>
     </div>
 
@@ -1433,6 +1468,17 @@
             }
         }
 
+        function abrirModalVentaActual() {
+            renderizarVentaActual();
+            const modal = document.getElementById('modalVentaActual');
+            if (modal) modal.classList.add('active');
+        }
+
+        function cerrarModalVentaActual() {
+            const modal = document.getElementById('modalVentaActual');
+            if (modal) modal.classList.remove('active');
+        }
+
         function verificarAvisoPersistencia() {
             let veces = parseInt(localStorage.getItem('contadorAvisoPersistencia')) || 0;
             if (veces < 3) {
@@ -1602,9 +1648,22 @@
         }
 
         function renderizarVentaActual() {
-            const container = document.getElementById('listaVentaActual');
-            const items = estado.ventaActual.items;
+            const containerCard = document.getElementById('listaVentaActual');
+            const containerModal = document.getElementById('listaVentaActualModal');
+            const items = estado.ventaActual ? estado.ventaActual.items : [];
             const clienteId = estado.ventaActual.cliente;
+
+            // Actualizar badge en boton carrito del header
+            const badge = document.getElementById('badgeCarritoCount');
+            const totalItemsCount = items.reduce((sum, i) => sum + i.cantidad, 0);
+            if (badge) {
+                if (totalItemsCount > 0) {
+                    badge.textContent = totalItemsCount;
+                    badge.style.display = 'block';
+                } else {
+                    badge.style.display = 'none';
+                }
+            }
 
             let clienteNombre = '👤 Cliente General';
             let ventasPreviasHoy = 0;
@@ -1625,17 +1684,21 @@
             if (elNombre) elNombre.textContent = clienteNombre;
             if (elSaldo) elSaldo.textContent = `$${saldoAcumulado.toFixed(2)}`;
 
+            const totalCard = document.getElementById('totalVentaActual');
+            const totalModal = document.getElementById('totalVentaActualModal');
+            if (totalCard) totalCard.textContent = `$${totalActual.toFixed(2)}`;
+            if (totalModal) totalModal.textContent = `$${totalActual.toFixed(2)}`;
+
             if (items.length === 0) {
-                container.innerHTML = '<div class="empty-state"><div class="icon">🛒</div><p>Sin productos agregados</p></div>';
-                document.getElementById('totalVentaActual').textContent = '$0.00';
+                const emptyHTML = '<div class="empty-state" style="padding:14px;"><div class="icon">🛒</div><p style="font-size:13px;">Sin productos agregados</p></div>';
+                if (containerCard) containerCard.innerHTML = emptyHTML;
+                if (containerModal) containerModal.innerHTML = emptyHTML;
                 return;
             }
 
-            let total = 0;
-            container.innerHTML = items.map(item => {
+            const itemsHTML = items.map(item => {
                 const producto = estado.productos.find(p => p.id === item.productoId);
                 const subtotal = item.cantidad * item.precioUnitario;
-                total += subtotal;
                 return `
                     <div class="venta-item">
                         <div class="info">
@@ -1650,7 +1713,8 @@
                 `;
             }).join('');
 
-            document.getElementById('totalVentaActual').textContent = `$${total.toFixed(2)}`;
+            if (containerCard) containerCard.innerHTML = itemsHTML;
+            if (containerModal) containerModal.innerHTML = itemsHTML;
         }
 
         function renderizarClientes() {
@@ -1872,14 +1936,17 @@
         function finalizarVenta() {
             if (estado.ventaActual.items.length === 0) { mostrarToast('❌ Sin productos'); return; }
             const total = estado.ventaActual.items.reduce((sum, i) => sum + (i.cantidad * i.precioUnitario), 0);
-            const pago = parseFloat(document.getElementById('inputPago').value) || 0;
+            
+            const pagoCard = parseFloat(document.getElementById('inputPago')?.value) || 0;
+            const pagoModal = parseFloat(document.getElementById('inputPagoModal')?.value) || 0;
+            const pago = Math.max(pagoCard, pagoModal);
+
             if (pago < total) {
                 mostrarToast(`❌ Faltan $${(total - pago).toFixed(2)}`);
                 return;
             }
             const cambio = pago - total;
             
-            // Guardar venta realizada hoy para el cliente
             if (!estado.ventasDelDia) estado.ventasDelDia = [];
             estado.ventasDelDia.push({
                 clienteId: estado.ventaActual.cliente,
@@ -1888,12 +1955,18 @@
                 items: [...estado.ventaActual.items]
             });
 
-            // Reiniciar venta actual para solicitar tienda en la siguiente venta
             estado.ventaActual = { cliente: null, items: [], pago: 0 };
-            document.getElementById('inputPago').value = '';
-            document.getElementById('cambioDisplay').textContent = '';
+            const inputCard = document.getElementById('inputPago');
+            const inputMod = document.getElementById('inputPagoModal');
+            if (inputCard) inputCard.value = '';
+            if (inputMod) inputMod.value = '';
+            const cambioCard = document.getElementById('cambioDisplay');
+            const cambioMod = document.getElementById('cambioDisplayModal');
+            if (cambioCard) cambioCard.textContent = '';
+            if (cambioMod) cambioMod.textContent = '';
             guardarEstado();
             
+            cerrarModalVentaActual();
             mostrarToast(`✅ Venta finalizada: $${total.toFixed(2)}, Cambio: $${cambio.toFixed(2)}`);
             mostrarVistaVenta();
         }
@@ -1902,6 +1975,7 @@
             if (estado.ventaActual.items.length === 0) {
                 estado.ventaActual.cliente = null;
                 guardarEstado();
+                cerrarModalVentaActual();
                 mostrarVistaVenta();
                 return;
             }
@@ -1911,10 +1985,16 @@
                 if (producto) producto.vendido -= item.cantidad;
             });
             estado.ventaActual = { cliente: null, items: [], pago: 0 };
-            document.getElementById('inputPago').value = '';
-            document.getElementById('cambioDisplay').textContent = '';
+            const inputCard = document.getElementById('inputPago');
+            const inputMod = document.getElementById('inputPagoModal');
+            if (inputCard) inputCard.value = '';
+            if (inputMod) inputMod.value = '';
+            const cambioCard = document.getElementById('cambioDisplay');
+            const cambioMod = document.getElementById('cambioDisplayModal');
+            if (cambioCard) cambioCard.textContent = '';
+            if (cambioMod) cambioMod.textContent = '';
             guardarEstado();
-            mostrarToast('🗑️ Venta cancelada');
+            cerrarModalVentaActual();
             mostrarVistaVenta();
         }
 
@@ -2236,6 +2316,24 @@
             }
         });
 
+        const inputPagoMod = document.getElementById('inputPagoModal');
+        if (inputPagoMod) {
+            inputPagoMod.addEventListener('input', function() {
+                const total = estado.ventaActual.items.reduce((sum, i) => sum + (i.cantidad * i.precioUnitario), 0);
+                const pago = parseFloat(this.value) || 0;
+                const cambioEl = document.getElementById('cambioDisplayModal');
+                if (cambioEl) {
+                    if (pago >= total && total > 0) {
+                        cambioEl.textContent = `💵 Cambio: $${(pago - total).toFixed(2)}`;
+                    } else if (pago > 0 && pago < total) {
+                        cambioEl.textContent = `⚠️ Faltan $${(total - pago).toFixed(2)}`;
+                    } else {
+                        cambioEl.textContent = '';
+                    }
+                }
+            });
+        }
+
         document.getElementById('inputCantidad').addEventListener('keydown', function(e) {
             if (e.key === 'Enter') {
                 e.preventDefault();
@@ -2266,6 +2364,7 @@
                 cerrarModalSeleccionarCliente(); 
                 cerrarModalHistorialCargas(); 
                 cerrarAvisoPersistencia();
+                cerrarModalVentaActual();
             }
         });
 
