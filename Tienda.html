@@ -1122,6 +1122,36 @@
         </div>
     </div>
 
+    <!-- ===== MODAL AVISO DE PERSISTENCIA ===== -->
+    <div class="modal-overlay" id="modalAvisoPersistencia">
+        <div class="modal" style="max-width:420px; width:95%; text-align:left;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <h3 style="margin:0; font-size:16px; color:#d93025; display:flex; align-items:center; gap:6px;">
+                    ⚠️ Almacenamiento de Datos
+                </h3>
+                <button onclick="cerrarAvisoPersistencia()" style="background:none; border:none; font-size:20px; cursor:pointer; padding:4px;">✕</button>
+            </div>
+
+            <div style="background:#fff8f6; border-left:4px solid #d93025; padding:10px 12px; border-radius:8px; margin-bottom:12px; font-size:13px; color:#444; line-height:1.45;">
+                <p style="margin:0 0 6px 0; font-weight:700; color:#b71c1c;">📱 Información Importante sobre tus Registros:</p>
+                <ul style="margin:0; padding-left:18px;">
+                    <li>Tus ventas y cargas se guardan en el navegador de este dispositivo.</li>
+                    <li><strong>No utilices Modo Incógnito</strong> o perderás tus datos al cerrar la pestaña.</li>
+                    <li><strong>No borres el historial/cookies</strong> del navegador durante la ruta.</li>
+                </ul>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px;">
+                <span id="textoVecesRestantes" style="font-size:11.5px; color:#666; font-weight:600;">
+                    Aviso 1 de 3
+                </span>
+                <button class="btn btn-primary btn-sm" onclick="cerrarAvisoPersistencia()" style="margin:0; width:auto; padding:8px 16px;">
+                    Entendido
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- ===== MODAL CANTIDAD ===== -->
     <div class="modal-overlay" id="modalCantidad">
         <div class="modal">
@@ -1355,6 +1385,32 @@
             const fechaCapitalizada = fechaStr.charAt(0).toUpperCase() + fechaStr.slice(1);
             const elem = document.getElementById('fechaActual');
             if (elem) elem.textContent = fechaCapitalizada;
+        }
+
+        function verificarAvisoPersistencia() {
+            let veces = parseInt(localStorage.getItem('contadorAvisoPersistencia')) || 0;
+            if (veces < 3) {
+                veces += 1;
+                localStorage.setItem('contadorAvisoPersistencia', veces);
+                const restantes = 3 - veces;
+                const textoElem = document.getElementById('textoVecesRestantes');
+                if (textoElem) {
+                    if (restantes > 0) {
+                        textoElem.textContent = `Aviso ${veces} de 3 (Se notificará ${restantes} vez${restantes !== 1 ? 'es' : ''} más)`;
+                    } else {
+                        textoElem.textContent = `Aviso 3 de 3 (Última notificación de advertencia)`;
+                    }
+                }
+                setTimeout(() => {
+                    const modal = document.getElementById('modalAvisoPersistencia');
+                    if (modal) modal.classList.add('active');
+                }, 800);
+            }
+        }
+
+        function cerrarAvisoPersistencia() {
+            const modal = document.getElementById('modalAvisoPersistencia');
+            if (modal) modal.classList.remove('active');
         }
 
         function abrirModalHistorialCargas() {
@@ -2163,6 +2219,7 @@
                 cerrarModalGestionProductos(); 
                 cerrarModalSeleccionarCliente(); 
                 cerrarModalHistorialCargas(); 
+                cerrarAvisoPersistencia();
             }
         });
 
@@ -2186,6 +2243,7 @@
             renderizarClientes();
             generarResumen();
             renderizarHistorial();
+            verificarAvisoPersistencia();
         }
 
         init();
