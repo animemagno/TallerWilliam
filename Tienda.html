@@ -562,6 +562,38 @@
             background: #f0f8ff;
         }
 
+        /* ===== HISTORIAL CARGAS ===== */
+        .item-historial-carga {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 6px;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 13px;
+        }
+
+        .item-historial-carga:last-child {
+            border-bottom: none;
+        }
+
+        .item-historial-carga .badge-sumar {
+            background: #d4edda;
+            color: #155724;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .item-historial-carga .badge-reemplazar {
+            background: #fff3cd;
+            color: #856404;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
         /* ===== INPUT GROUP ===== */
         .input-group {
             display: flex;
@@ -888,6 +920,14 @@
             <input type="text" class="search-box" id="searchCarga" placeholder="🔍 Buscar producto...">
             <div id="listaCarga" class="product-grid"></div>
         </div>
+
+        <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <h3 style="margin:0;">📜 Cargas del Día</h3>
+                <span id="totalCargasContador" style="font-size:12px; color:#1a73e8; font-weight:600;">0 movimientos</span>
+            </div>
+            <div id="historialCargasContenido"></div>
+        </div>
     </div>
 
     <!-- ===== TAB 2: VENTA ===== -->
@@ -995,14 +1035,29 @@
     <div class="modal-overlay" id="modalCantidad">
         <div class="modal">
             <h2 id="modalProductoNombre">Producto</h2>
-            <p style="color:#666; font-size:14px;">Precio: <strong id="modalProductoPrecio">$0.00</strong></p>
+            <p style="color:#666; font-size:14px;" id="modalProductoSub">Precio: <strong id="modalProductoPrecio">$0.00</strong></p>
+            <div id="modalCargaActualInfo" style="display:none; font-size:13px; color:#1a73e8; background:#e8f0fe; padding:6px 10px; border-radius:6px; margin:6px 0; font-weight:600;">
+                📦 Cargado hoy: <span id="modalCargadoActualMonto">0</span> u.
+            </div>
+
             <div class="input-group">
                 <label>Cantidad:</label>
                 <input type="number" id="inputCantidad" value="1" min="1" step="1" inputmode="numeric">
             </div>
-            <div class="btn-group">
+
+            <!-- Botones para MODO CARGA -->
+            <div id="btnGroupCarga" style="display:none; flex-direction:column; gap:6px; margin-top:8px;">
+                <div style="display:flex; gap:6px;">
+                    <button class="btn btn-success" style="flex:1; margin:0;" onclick="confirmarCarga('sumar')">➕ Sumar a Carga</button>
+                    <button class="btn btn-warning" style="flex:1; margin:0;" onclick="confirmarCarga('reemplazar')">✏️ Reemplazar Total</button>
+                </div>
+                <button class="btn btn-outline" style="margin-top:2px;" onclick="cerrarModal()">Cancelar</button>
+            </div>
+
+            <!-- Botones para MODO VENTA -->
+            <div id="btnGroupVenta" class="btn-group">
                 <button class="btn btn-outline" onclick="cerrarModal()">Cancelar</button>
-                <button class="btn btn-primary" id="btnConfirmarCantidad">Confirmar</button>
+                <button class="btn btn-primary" id="btnConfirmarCantidad">Confirmar Venta</button>
             </div>
         </div>
     </div>
@@ -1126,6 +1181,7 @@
             clientes: [],
             ventaActual: { cliente: null, items: [], pago: 0 },
             ventasDelDia: [],
+            cargasDelDia: [],
             historial: [],
             fecha: new Date().toISOString().split('T')[0]
         };
@@ -1149,6 +1205,7 @@
                     const parsed = JSON.parse(data);
                     estado = parsed;
                     if (!estado.ventasDelDia) estado.ventasDelDia = [];
+                    if (!estado.cargasDelDia) estado.cargasDelDia = [];
                     const hoy = new Date().toISOString().split('T')[0];
                     if (estado.fecha !== hoy) {
                         if (estado.historial && estado.productos.length > 0) {
@@ -1159,6 +1216,7 @@
                         estado.productos = PRODUCTOS_BASE.map(p => ({ ...p, cargado: 0, vendido: 0 }));
                         estado.ventaActual = { cliente: null, items: [], pago: 0 };
                         estado.ventasDelDia = [];
+                        estado.cargasDelDia = [];
                         guardarEstado();
                     }
                     return true;
@@ -1178,6 +1236,7 @@
             ];
             estado.ventaActual = { cliente: null, items: [], pago: 0 };
             estado.ventasDelDia = [];
+            estado.cargasDelDia = [];
             estado.historial = [];
             guardarEstado();
         }
@@ -1358,38 +1417,157 @@
             const inputCant = document.getElementById('inputCantidad');
             inputCant.value = 1;
 
+            const infoCarga = document.getElementById('modalCargaActualInfo');
+            const btnCarga = document.getElementById('btnGroupCarga');
+            const btnVenta = document.getElementById('btnGroupVenta');
+
             if (modo === 'carga') {
                 document.getElementById('modalProductoNombre').textContent = producto.nombre;
                 document.getElementById('modalProductoPrecio').textContent = `$${producto.precio.toFixed(2)} (carga)`;
-                document.getElementById('btnConfirmarCantidad').onclick = confirmarCarga;
+                document.getElementById('modalCargadoActualMonto').textContent = producto.cargado;
+                
+                if (infoCarga) infoCarga.style.display = 'block';
+                if (btnCarga) btnCarga.style.display = 'flex';
+                if (btnVenta) btnVenta.style.display = 'none';
+
             } else if (modo === 'venta') {
                 const disponible = producto.cargado - producto.vendido;
                 if (disponible <= 0) { mostrarToast('❌ Sin stock'); return; }
                 document.getElementById('modalProductoNombre').textContent = producto.nombre;
                 document.getElementById('modalProductoPrecio').textContent = `$${producto.precio.toFixed(2)} (Stock: ${disponible})`;
                 document.getElementById('btnConfirmarCantidad').onclick = confirmarVenta;
+                
+                if (infoCarga) infoCarga.style.display = 'none';
+                if (btnCarga) btnCarga.style.display = 'none';
+                if (btnVenta) btnVenta.style.display = 'flex';
             }
 
             document.getElementById('modalCantidad').classList.add('active');
             
-            // Auto seleccionar cantidad para que el usuario solo digite y presione aceptar
             setTimeout(() => {
                 inputCant.focus();
                 inputCant.select();
             }, 150);
         }
 
-        function confirmarCarga() {
+        function confirmarCarga(tipoAccion) {
             const cantidad = parseInt(document.getElementById('inputCantidad').value) || 0;
-            if (cantidad <= 0) { mostrarToast('❌ Cantidad inválida'); return; }
+            if (cantidad < 0) { mostrarToast('❌ Cantidad inválida'); return; }
+            if (tipoAccion === 'sumar' && cantidad <= 0) { mostrarToast('❌ Ingresa una cantidad a sumar'); return; }
+            
             const producto = estado.productos.find(p => p.id === productoSeleccionado.id);
-            if (producto) {
+            if (!producto) return;
+
+            const hora = new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+            if (!estado.cargasDelDia) estado.cargasDelDia = [];
+            const nuevoId = estado.cargasDelDia.length > 0 ? Math.max(...estado.cargasDelDia.map(c => c.id)) + 1 : 1;
+
+            if (tipoAccion === 'sumar') {
                 producto.cargado += cantidad;
-                guardarEstado();
-                renderizarCarga();
-                mostrarToast(`✅ ${cantidad} unidades cargadas`);
+                estado.cargasDelDia.push({
+                    id: nuevoId,
+                    productoId: producto.id,
+                    productoNombre: producto.nombre,
+                    cantidad: cantidad,
+                    tipo: 'sumar',
+                    hora: hora
+                });
+                mostrarToast(`✅ +${cantidad} u. sumadas a ${producto.nombre}`);
+
+            } else if (tipoAccion === 'reemplazar') {
+                if (cantidad < producto.vendido) {
+                    mostrarToast(`❌ No puedes fijar menos de lo vendido (${producto.vendido} u.)`);
+                    return;
+                }
+                const previa = producto.cargado;
+                producto.cargado = cantidad;
+                estado.cargasDelDia.push({
+                    id: nuevoId,
+                    productoId: producto.id,
+                    productoNombre: producto.nombre,
+                    cantidad: cantidad,
+                    cantidadPrevia: previa,
+                    tipo: 'reemplazar',
+                    hora: hora
+                });
+                mostrarToast(`✅ ${producto.nombre} fijado en ${cantidad} u.`);
             }
+
+            guardarEstado();
+            renderizarCarga();
+            renderizarHistorialCargas();
             cerrarModal();
+        }
+
+        function eliminarCargaHistorial(cargaId) {
+            if (!estado.cargasDelDia) return;
+            const idx = estado.cargasDelDia.findIndex(c => c.id === cargaId);
+            if (idx === -1) return;
+            const carga = estado.cargasDelDia[idx];
+            const producto = estado.productos.find(p => p.id === carga.productoId);
+
+            if (!confirm(`¿Eliminar registro de carga (${carga.productoNombre})?`)) return;
+
+            if (producto) {
+                if (carga.tipo === 'sumar') {
+                    const nuevoCargado = producto.cargado - carga.cantidad;
+                    if (nuevoCargado < producto.vendido) {
+                        mostrarToast(`❌ No se puede eliminar: se requiere mantener al menos ${producto.vendido} u. vendidas`);
+                        return;
+                    }
+                    producto.cargado = Math.max(0, nuevoCargado);
+                } else if (carga.tipo === 'reemplazar') {
+                    if (carga.cantidadPrevia < producto.vendido) {
+                        mostrarToast(`❌ No se puede revertir: valor previo (${carga.cantidadPrevia} u.) menor que ventas (${producto.vendido} u.)`);
+                        return;
+                    }
+                    producto.cargado = carga.cantidadPrevia !== undefined ? carga.cantidadPrevia : producto.cargado;
+                }
+            }
+
+            estado.cargasDelDia.splice(idx, 1);
+            guardarEstado();
+            renderizarCarga();
+            renderizarHistorialCargas();
+            mostrarToast('🗑️ Registro de carga eliminado');
+        }
+
+        function renderizarHistorialCargas() {
+            const container = document.getElementById('historialCargasContenido');
+            const contador = document.getElementById('totalCargasContador');
+            if (!container) return;
+
+            const cargas = estado.cargasDelDia || [];
+            if (contador) contador.textContent = `${cargas.length} movimiento${cargas.length !== 1 ? 's' : ''}`;
+
+            if (cargas.length === 0) {
+                container.innerHTML = '<div class="empty-state" style="padding:14px;"><p style="font-size:12px;">Sin cargas registradas hoy</p></div>';
+                return;
+            }
+
+            container.innerHTML = cargas.slice().reverse().map(c => {
+                const esSumar = c.tipo === 'sumar';
+                const badgeClass = esSumar ? 'badge-sumar' : 'badge-reemplazar';
+                const detalleTexto = esSumar 
+                    ? `+${c.cantidad} u. sumadas` 
+                    : `Fijado a ${c.cantidad} u. (antes: ${c.cantidadPrevia !== undefined ? c.cantidadPrevia : '?'})`;
+
+                return `
+                    <div class="item-historial-carga">
+                        <div style="flex:1; min-width:0;">
+                            <div style="font-weight:600; color:#333;">${c.productoNombre}</div>
+                            <div style="font-size:11px; color:#666; margin-top:2px;">
+                                <span class="${badgeClass}">${esSumar ? '➕ Adición' : '✏️ Ajuste'}</span>
+                                <span style="margin-left:4px;">${detalleTexto}</span>
+                            </div>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <span style="font-size:11px; color:#888;">${c.hora || ''}</span>
+                            <button class="btn-icon btn-icon-danger" onclick="eliminarCargaHistorial(${c.id})" title="Eliminar este movimiento">🗑️</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
         }
 
         function confirmarVenta() {
@@ -1767,7 +1945,7 @@
                 this.classList.add('active');
                 document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
                 document.getElementById(this.dataset.tab).classList.add('active');
-                if (this.dataset.tab === 'tabCarga') renderizarCarga();
+                if (this.dataset.tab === 'tabCarga') { renderizarCarga(); renderizarHistorialCargas(); }
                 if (this.dataset.tab === 'tabVenta') { mostrarVistaVenta(); renderizarVenta(); }
                 if (this.dataset.tab === 'tabResumen') { generarResumen(); renderizarHistorial(); }
                 if (this.dataset.tab === 'tabClientes') renderizarClientes();
@@ -1801,7 +1979,11 @@
         document.getElementById('inputCantidad').addEventListener('keydown', function(e) {
             if (e.key === 'Enter') {
                 e.preventDefault();
-                document.getElementById('btnConfirmarCantidad').click();
+                if (modoAccion === 'carga') {
+                    confirmarCarga('sumar');
+                } else {
+                    document.getElementById('btnConfirmarCantidad').click();
+                }
             }
         });
 
@@ -1834,6 +2016,7 @@
             const cargado = cargarEstado();
             if (!cargado) inicializarEstado();
             renderizarCarga();
+            renderizarHistorialCargas();
             mostrarVistaVenta();
             renderizarVenta();
             renderizarClientes();
