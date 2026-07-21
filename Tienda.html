@@ -2429,7 +2429,8 @@
             });
         });
 
-        document.getElementById('searchCarga').addEventListener('input', renderizarCarga);
+        const inputSearchCarga = document.getElementById('searchCarga');
+        if (inputSearchCarga) inputSearchCarga.addEventListener('input', renderizarCarga);
         const inputSearchVenta = document.getElementById('searchVenta');
         if (inputSearchVenta) inputSearchVenta.addEventListener('input', renderizarVenta);
         const inputSearchGestion = document.getElementById('searchGestionProductos');
@@ -2445,17 +2446,23 @@
             });
         });
 
-        document.getElementById('inputPago').addEventListener('input', function() {
-            const total = estado.ventaActual.items.reduce((sum, i) => sum + (i.cantidad * i.precioUnitario), 0);
-            const pago = parseFloat(this.value) || 0;
-            if (pago >= total && total > 0) {
-                document.getElementById('cambioDisplay').textContent = `💵 Cambio: $${(pago - total).toFixed(2)}`;
-            } else if (pago > 0 && pago < total) {
-                document.getElementById('cambioDisplay').textContent = `⚠️ Faltan $${(total - pago).toFixed(2)}`;
-            } else {
-                document.getElementById('cambioDisplay').textContent = '';
-            }
-        });
+        const inputPagoEl = document.getElementById('inputPago');
+        if (inputPagoEl) {
+            inputPagoEl.addEventListener('input', function() {
+                const total = estado.ventaActual.items.reduce((sum, i) => sum + (i.cantidad * i.precioUnitario), 0);
+                const pago = parseFloat(this.value) || 0;
+                const cambioEl = document.getElementById('cambioDisplay');
+                if (cambioEl) {
+                    if (pago >= total && total > 0) {
+                        cambioEl.textContent = `💵 Cambio: $${(pago - total).toFixed(2)}`;
+                    } else if (pago > 0 && pago < total) {
+                        cambioEl.textContent = `⚠️ Faltan $${(total - pago).toFixed(2)}`;
+                    } else {
+                        cambioEl.textContent = '';
+                    }
+                }
+            });
+        }
 
         const inputPagoMod = document.getElementById('inputPagoModal');
         if (inputPagoMod) {
@@ -2475,27 +2482,34 @@
             });
         }
 
-        document.getElementById('inputCantidad').addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                if (modoAccion === 'carga') {
-                    confirmarCarga('sumar');
-                } else {
-                    document.getElementById('btnConfirmarCantidad').click();
+        const inputCantidadEl = document.getElementById('inputCantidad');
+        if (inputCantidadEl) {
+            inputCantidadEl.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (modoAccion === 'carga') {
+                        confirmarCarga('sumar');
+                    } else {
+                        const btnConf = document.getElementById('btnConfirmarCantidad');
+                        if (btnConf) btnConf.click();
+                    }
                 }
-            }
-        });
+            });
 
-        document.getElementById('inputCantidad').addEventListener('focus', function() {
-            this.select();
-        });
+            inputCantidadEl.addEventListener('focus', function() {
+                this.select();
+            });
+        }
 
-        document.getElementById('inputClienteNombre').addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                guardarCliente();
-            }
-        });
+        const inputClienteNombreEl = document.getElementById('inputClienteNombre');
+        if (inputClienteNombreEl) {
+            inputClienteNombreEl.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    guardarCliente();
+                }
+            });
+        }
 
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') { 
