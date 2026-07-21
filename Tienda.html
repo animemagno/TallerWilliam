@@ -984,6 +984,9 @@
             <div class="fecha" id="fechaActual"></div>
         </div>
         <div style="display:flex; gap:6px; align-items:center; flex-shrink:0;">
+            <button class="btn-header-action" onclick="abrirTutorial(true)" title="Guía / Tutorial">
+                ❓
+            </button>
             <button class="btn-header-action" onclick="abrirModalVentaActual()" title="Ver Venta Actual / Carrito" style="position:relative;">
                 🛒
                 <span id="badgeCarritoCount" style="display:none; position:absolute; top:-4px; right:-4px; background:#e53935; color:white; font-size:10px; font-weight:bold; border-radius:10px; padding:1px 5px; min-width:16px; text-align:center;">0</span>
@@ -1125,6 +1128,63 @@
             <div style="display:flex; flex-direction:column; gap:6px; margin-top:10px;">
                 <button class="btn btn-success" onclick="finalizarVenta()">✅ Finalizar Venta</button>
                 <button class="btn btn-danger" onclick="cancelarVenta()" style="margin-top:0;">🗑️ Cancelar Venta</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== MODAL TUTORIAL / GUÍA INICIAL ===== -->
+    <div class="modal-overlay" id="modalTutorial">
+        <div class="modal" style="max-width:440px; width:95%; text-align:left; padding:20px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <h3 style="margin:0; font-size:17px; color:#1a73e8; display:flex; align-items:center; gap:6px;">
+                    ✨ Guía Rápida de Uso
+                </h3>
+                <button onclick="cerrarTutorial()" style="background:none; border:none; font-size:20px; cursor:pointer; padding:4px;">✕</button>
+            </div>
+
+            <!-- Paso 1 -->
+            <div class="tutorial-paso" id="tutorialPaso1">
+                <div style="text-align:center; font-size:42px; margin-bottom:8px;">📦</div>
+                <h4 style="font-size:15px; margin-bottom:6px; color:#333; text-align:center;">1. Carga de Inventario</h4>
+                <p style="font-size:13px; color:#666; line-height:1.45; margin-bottom:12px; text-align:center;">
+                    Al iniciar el día, ve a <strong>📦 Carga</strong> e ingresa las unidades que llevas en tu camión. Puedes ver o corregir tus registros en <strong>📜 Cargas del Día</strong>.
+                </p>
+            </div>
+
+            <!-- Paso 2 -->
+            <div class="tutorial-paso" id="tutorialPaso2" style="display:none;">
+                <div style="text-align:center; font-size:42px; margin-bottom:8px;">💰</div>
+                <h4 style="font-size:15px; margin-bottom:6px; color:#333; text-align:center;">2. Registro de Ventas</h4>
+                <p style="font-size:13px; color:#666; line-height:1.45; margin-bottom:12px; text-align:center;">
+                    En <strong>💰 Venta</strong> selecciona la tienda o cliente. Toca los productos para agregarlos. Usa 🎛️ <strong>Filtros</strong> o la 🔍 <strong>Lupa</strong> para encontrar productos rápidamente.
+                </p>
+            </div>
+
+            <!-- Paso 3 -->
+            <div class="tutorial-paso" id="tutorialPaso3" style="display:none;">
+                <div style="text-align:center; font-size:42px; margin-bottom:8px;">🛒</div>
+                <h4 style="font-size:15px; margin-bottom:6px; color:#333; text-align:center;">3. Carretilla & Cobro</h4>
+                <p style="font-size:13px; color:#666; line-height:1.45; margin-bottom:12px; text-align:center;">
+                    Toca la carretilla <strong>🛒</strong> en el encabezado superior para revisar el pedido, ingresar el pago recibido en efectivo y calcular el cambio automáticamente.
+                </p>
+            </div>
+
+            <!-- Paso 4 -->
+            <div class="tutorial-paso" id="tutorialPaso4" style="display:none;">
+                <div style="text-align:center; font-size:42px; margin-bottom:8px;">📊</div>
+                <h4 style="font-size:15px; margin-bottom:6px; color:#333; text-align:center;">4. Resumen & Cierre de Ruta</h4>
+                <p style="font-size:13px; color:#666; line-height:1.45; margin-bottom:12px; text-align:center;">
+                    Al terminar la jornada, ve a <strong>📊 Resumen</strong> para revisar totales vendidos y realizar el 🔒 <strong>Cierre de Ruta</strong> para guardar el historial del día.
+                </p>
+            </div>
+
+            <!-- Indicadores de Paso y Botones -->
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:14px; border-top:1px solid #eee; padding-top:12px;">
+                <span id="tutorialIndicador" style="font-size:12px; font-weight:700; color:#1a73e8;">Paso 1 de 4</span>
+                <div style="display:flex; gap:6px;">
+                    <button class="btn btn-outline btn-sm" id="btnTutorialAnt" onclick="cambiarPasoTutorial(-1)" style="display:none; margin:0; padding:6px 12px;">Anterior</button>
+                    <button class="btn btn-primary btn-sm" id="btnTutorialSig" onclick="cambiarPasoTutorial(1)" style="margin:0; padding:6px 14px;">Siguiente ➔</button>
+                </div>
             </div>
         </div>
     </div>
@@ -1449,6 +1509,63 @@
             const fechaCapitalizada = fechaStr.charAt(0).toUpperCase() + fechaStr.slice(1);
             const elem = document.getElementById('fechaActual');
             if (elem) elem.textContent = fechaCapitalizada;
+        }
+
+        let pasoTutorialActual = 1;
+
+        function abrirTutorial(manual = false) {
+            pasoTutorialActual = 1;
+            mostrarPasoTutorial(1);
+            const modal = document.getElementById('modalTutorial');
+            if (modal) modal.classList.add('active');
+        }
+
+        function cerrarTutorial() {
+            localStorage.setItem('tutorialVisto', 'true');
+            const modal = document.getElementById('modalTutorial');
+            if (modal) modal.classList.remove('active');
+        }
+
+        function mostrarPasoTutorial(paso) {
+            pasoTutorialActual = paso;
+            for (let i = 1; i <= 4; i++) {
+                const el = document.getElementById(`tutorialPaso${i}`);
+                if (el) el.style.display = i === paso ? 'block' : 'none';
+            }
+            const ind = document.getElementById('tutorialIndicador');
+            if (ind) ind.textContent = `Paso ${paso} de 4`;
+            
+            const btnAnt = document.getElementById('btnTutorialAnt');
+            const btnSig = document.getElementById('btnTutorialSig');
+            
+            if (btnAnt) btnAnt.style.display = paso > 1 ? 'inline-block' : 'none';
+            if (btnSig) {
+                if (paso === 4) {
+                    btnSig.textContent = '¡Comenzar! 🚀';
+                    btnSig.className = 'btn btn-success btn-sm';
+                } else {
+                    btnSig.textContent = 'Siguiente ➔';
+                    btnSig.className = 'btn btn-primary btn-sm';
+                }
+            }
+        }
+
+        function cambiarPasoTutorial(dir) {
+            const nuevoPaso = pasoTutorialActual + dir;
+            if (nuevoPaso > 4) {
+                cerrarTutorial();
+            } else if (nuevoPaso >= 1) {
+                mostrarPasoTutorial(nuevoPaso);
+            }
+        }
+
+        function verificarTutorialInicial() {
+            const visto = localStorage.getItem('tutorialVisto');
+            if (!visto) {
+                setTimeout(() => {
+                    abrirTutorial(false);
+                }, 1200);
+            }
         }
 
         function togglePantallaCompleta() {
@@ -2389,6 +2506,7 @@
                 cerrarModalHistorialCargas(); 
                 cerrarAvisoPersistencia();
                 cerrarModalVentaActual();
+                cerrarTutorial();
             }
         });
 
@@ -2413,6 +2531,7 @@
             generarResumen();
             renderizarHistorial();
             verificarAvisoPersistencia();
+            verificarTutorialInicial();
         }
 
         init();
