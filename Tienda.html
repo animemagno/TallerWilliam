@@ -972,19 +972,14 @@
         <div class="card">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:6px;">
                 <h3 style="margin-bottom:0;">📥 Cargar Inventario</h3>
-                <button class="btn btn-outline btn-sm" onclick="abrirModalGestionProductos()" style="margin:0;">⚙️ Editar Catálogo</button>
+                <div style="display:flex; gap:6px;">
+                    <button class="btn btn-outline btn-sm" onclick="abrirModalHistorialCargas()" style="margin:0;">📜 Cargas del Día</button>
+                    <button class="btn btn-outline btn-sm" onclick="abrirModalGestionProductos()" style="margin:0;">⚙️ Catálogo</button>
+                </div>
             </div>
             <p style="color:#888; font-size:13px; margin-bottom:10px;">Selecciona un producto y coloca la cantidad</p>
             <input type="text" class="search-box" id="searchCarga" placeholder="🔍 Buscar producto...">
-            <div id="listaCarga" class="product-grid"></div>
-        </div>
-
-        <div class="card">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                <h3 style="margin:0;">📜 Cargas del Día</h3>
-                <span id="totalCargasContador" style="font-size:12px; color:#1a73e8; font-weight:600;">0 movimientos</span>
-            </div>
-            <div id="historialCargasContenido"></div>
+            <div id="listaCarga" class="product-grid" style="max-height:480px;"></div>
         </div>
     </div>
 
@@ -1083,6 +1078,21 @@
             <h3>🏪 Clientes</h3>
             <button class="btn btn-primary" onclick="abrirModalCliente()">➕ Nuevo Cliente</button>
             <div id="listaClientes" style="margin-top:12px;"></div>
+        </div>
+    </div>
+
+    <!-- ===== MODAL HISTORIAL DE CARGAS DEL DÍA ===== -->
+    <div class="modal-overlay" id="modalHistorialCargas">
+        <div class="modal" style="max-width:440px; width:95%;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <div>
+                    <h3 style="margin:0; font-size:16px;">📜 Cargas del Día</h3>
+                    <span id="totalCargasContador" style="font-size:11px; color:#1a73e8; font-weight:600;">0 movimientos</span>
+                </div>
+                <button onclick="cerrarModalHistorialCargas()" style="background:none; border:none; font-size:20px; cursor:pointer; padding:4px;">✕</button>
+            </div>
+            
+            <div id="historialCargasContenido" style="max-height:360px; overflow-y:auto; border:1px solid #e8e8e8; border-radius:8px; background:white; padding:4px;"></div>
         </div>
     </div>
 
@@ -1345,6 +1355,17 @@
             const fechaCapitalizada = fechaStr.charAt(0).toUpperCase() + fechaStr.slice(1);
             const elem = document.getElementById('fechaActual');
             if (elem) elem.textContent = fechaCapitalizada;
+        }
+
+        function abrirModalHistorialCargas() {
+            renderizarHistorialCargas();
+            const modal = document.getElementById('modalHistorialCargas');
+            if (modal) modal.classList.add('active');
+        }
+
+        function cerrarModalHistorialCargas() {
+            const modal = document.getElementById('modalHistorialCargas');
+            if (modal) modal.classList.remove('active');
         }
 
         function abrirModalSeleccionarCliente() {
@@ -2136,7 +2157,13 @@
         });
 
         document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') { cerrarModal(); cerrarModalCliente(); cerrarModalGestionProductos(); cerrarModalSeleccionarCliente(); }
+            if (e.key === 'Escape') { 
+                cerrarModal(); 
+                cerrarModalCliente(); 
+                cerrarModalGestionProductos(); 
+                cerrarModalSeleccionarCliente(); 
+                cerrarModalHistorialCargas(); 
+            }
         });
 
         document.querySelectorAll('.modal-overlay').forEach(overlay => {
