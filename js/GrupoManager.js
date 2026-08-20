@@ -1215,6 +1215,19 @@ window.GrupoManager = {
     },
 
     imprimirTicketFactura(factura, equipo) {
+        if (!factura) return;
+
+        // Verificar si contiene productos con precio $0.00
+        const tienePrecioCero = factura.products && factura.products.some(p => Number(p.precio) === 0);
+        if (tienePrecioCero) {
+            if (typeof UIService !== 'undefined' && UIService.showStatus) {
+                UIService.showStatus("No se puede imprimir el ticket: contiene productos con precio $0.00", "warning");
+            } else {
+                alert("No se puede imprimir el ticket: contiene productos con precio $0.00");
+            }
+            return;
+        }
+
         const printWindow = window.open('', '_blank');
         const fecha = factura.timestamp ? new Date(factura.timestamp.toDate ? factura.timestamp.toDate() : factura.timestamp) : new Date();
         const fechaFormateada = fecha.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' });

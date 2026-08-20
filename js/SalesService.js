@@ -148,8 +148,6 @@ const SalesService = {
             const confirmacion = confirm("La fecha seleccionada es futura. ¿Está seguro de continuar?");
             if (!confirmacion) throw new Error("Fecha futura no confirmada");
         }
-        const productosConPrecioCero = AppState.cart.filter(item => item.precio === 0);
-        if (productosConPrecioCero.length > 0) throw new Error("Hay productos con precio $0.00. Modifique los precios antes de guardar.");
         const productosConPrecioInvalido = AppState.cart.filter(item => item.precio < 0 || isNaN(item.precio) || !isFinite(item.precio));
         if (productosConPrecioInvalido.length > 0) throw new Error("Hay productos con precios inválidos. Verifique los montos.");
         return true;
@@ -531,8 +529,8 @@ const SalesService = {
         try {
             const ventaActual = await DataService.getSaleById(invoiceId);
             if (!ventaActual) throw new Error("No se encontró la factura a actualizar");
-            const productosConPrecioCero = AppState.cart.filter(item => item.precio === 0);
-            if (productosConPrecioCero.length > 0) throw new Error("Hay productos con precio $0.00. Modifique los precios antes de actualizar.");
+            const productosConPrecioInvalido = AppState.cart.filter(item => item.precio < 0 || isNaN(item.precio) || !isFinite(item.precio));
+            if (productosConPrecioInvalido.length > 0) throw new Error("Hay productos con precios inválidos. Verifique los montos.");
             const nuevoTotal = AppState.cart.reduce((sum, item) => sum + (item.precio * item.cantidad), 0);
             let nuevoSaldoPendiente = nuevoTotal;
 
@@ -865,9 +863,11 @@ const SalesService = {
         let venta;
         try { venta = await DataService.getSaleById(invoiceId); } catch (error) { venta = AppState.historial.find(v => v.id === invoiceId && v.tipo === 'venta'); }
         if (venta) {
-            PrintingService.printTicket(venta);
-            if (!venta.printed) { try { await AppState.db.collection('VENTAS').doc(invoiceId).update({ printed: true }); } catch (e) { console.error("Error marcando como impresa", e); } }
-            UIService.showStatus("Ticket reimpreso", "success");
+            const printed = PrintingService.printTicket(venta);
+            if (printed !== false) {
+                if (!venta.printed) { try { await AppState.db.collection('VENTAS').doc(invoiceId).update({ printed: true }); } catch (e) { console.error("Error marcando como impresa", e); } }
+                UIService.showStatus("Ticket reimpreso", "success");
+            }
         } else { UIService.showStatus("No se encontró la factura", "error"); }
     },
 

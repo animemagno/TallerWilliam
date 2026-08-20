@@ -653,6 +653,19 @@ const PrintingService = {
     },
 
     printTicket(saleData) {
+        if (!saleData) return false;
+
+        // Verificar si contiene productos con precio $0.00
+        const tienePrecioCero = saleData.products && saleData.products.some(p => Number(p.precio) === 0);
+        if (tienePrecioCero) {
+            if (typeof UIService !== 'undefined' && UIService.showStatus) {
+                UIService.showStatus("No se puede imprimir el ticket: contiene productos con precio $0.00", "warning");
+            } else {
+                alert("No se puede imprimir el ticket: contiene productos con precio $0.00");
+            }
+            return false;
+        }
+
         const printWindow = window.open('', '_blank', `width=${this._winW()},height=600`);
 
         if (!printWindow) {
@@ -1052,6 +1065,20 @@ const PrintingService = {
     },
 
     printSaleAndAbono(saleData, abonoData, nuevoSaldo) {
+        if (!saleData) return false;
+
+        // Si contiene productos en $0.00, avisar y no imprimir ticket de venta
+        const tienePrecioCero = saleData.products && saleData.products.some(p => Number(p.precio) === 0);
+        if (tienePrecioCero) {
+            if (typeof UIService !== 'undefined' && UIService.showStatus) {
+                UIService.showStatus("Ticket de venta no impreso: contiene productos con precio $0.00", "warning");
+            }
+            if (typeof this.printAbonoTicket === 'function' && abonoData) {
+                return this.printAbonoTicket(abonoData, nuevoSaldo, saleData);
+            }
+            return false;
+        }
+
         const printWindow = window.open('', '_blank', `width=${this._winW()},height=800`);
         if (!printWindow) {
             alert("El navegador bloqueó la ventana de impresión. Por favor, permita las ventanas emergentes para imprimir los tickets.");
