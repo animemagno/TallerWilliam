@@ -726,7 +726,7 @@ const HistorialService = {
 
         const productosList = Array.from(productosMap.entries())
             .map(([desc, data]) => ({ descripcion: desc, cantidad: data.cantidad, total: data.total }))
-            .sort((a, b) => b.cantidad - a.cantidad);
+            .sort((a, b) => a.descripcion.localeCompare(b.descripcion, 'es', { sensitivity: 'base' }));
 
         let productosTableHTML = '';
 
@@ -973,7 +973,7 @@ const HistorialService = {
 
         const productosList = Array.from(productosMap.entries())
             .map(([desc, data]) => ({ descripcion: desc, cantidad: data.cantidad, total: data.total }))
-            .sort((a, b) => b.cantidad - a.cantidad);
+            .sort((a, b) => a.descripcion.localeCompare(b.descripcion, 'es', { sensitivity: 'base' }));
 
         let productosPrintTableHTML = '';
         if (productosList.length <= 10) {
