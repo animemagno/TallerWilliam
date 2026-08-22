@@ -432,19 +432,34 @@ const UIService = {
         });
     },
 
-    setupTabs() {
+    activateTab(tabId) {
         const tabButtons = document.querySelectorAll('.tab-btn');
         const tabContents = document.querySelectorAll('.tab-content');
+
+        tabButtons.forEach(btn => {
+            if (btn.getAttribute('data-tab') === tabId) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+
+        tabContents.forEach(content => {
+            if (content.id === `tab-${tabId}`) {
+                content.classList.add('active');
+            } else {
+                content.classList.remove('active');
+            }
+        });
+    },
+
+    setupTabs() {
+        const tabButtons = document.querySelectorAll('.tab-btn');
 
         tabButtons.forEach(button => {
             button.addEventListener('click', () => {
                 const tabId = button.getAttribute('data-tab');
-
-                tabButtons.forEach(btn => btn.classList.remove('active'));
-                tabContents.forEach(content => content.classList.remove('active'));
-
-                button.classList.add('active');
-                document.getElementById(`tab-${tabId}`).classList.add('active');
+                this.activateTab(tabId);
             });
         });
     },

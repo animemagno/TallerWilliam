@@ -93,15 +93,26 @@ const App = {
     },
 
     setupEventListeners() {
-        // === SISTEMA DE PESTAÑAS (Panel Derecho) ===
+        // === SISTEMA DE PESTAÑAS (Panel Izquierdo/Principal) ===
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const targetTab = e.currentTarget.dataset.tab;
-                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-                e.currentTarget.classList.add('active');
-                document.getElementById(`tab-${targetTab}`).classList.add('active');
+                if (typeof UIService !== 'undefined' && UIService.activateTab) {
+                    UIService.activateTab(targetTab);
+                }
             });
+        });
+
+        // Cambiar automáticamente a la pestaña CARRITO al seleccionar cualquier casilla de NUEVA VENTA
+        const ventaInputs = document.querySelectorAll('.venta-form-section input, .venta-form-section select');
+        ventaInputs.forEach(input => {
+            const goToCart = () => {
+                if (typeof UIService !== 'undefined' && UIService.activateTab) {
+                    UIService.activateTab('carrito');
+                }
+            };
+            input.addEventListener('focus', goToCart);
+            input.addEventListener('click', goToCart);
         });
 
         document.addEventListener('click', (e) => {
