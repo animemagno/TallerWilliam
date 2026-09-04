@@ -464,6 +464,7 @@ const HistorialService = {
         let totalIngresos = 0;
 
         movimientos.forEach(mov => {
+            if (mov.cancelada) return;
             if (mov.tipo === 'venta') {
                 // Sumar productos
                 if (mov.products) {
@@ -648,15 +649,15 @@ const HistorialService = {
     showGananciasReport() {
         const movimientos = AppState.filteredHistorial || AppState.historial || [];
         
-        // Filtrar estrictamente solo las facturas de venta no canceladas
+        // Filtrar estrictamente solo las facturas de venta
         const ventas = movimientos.filter(mov => {
-            if (mov.cancelada) return false;
             if (mov.tipo === 'retiro' || mov.tipo === 'ingreso' || mov.tipo === 'abono') return false;
             return (mov.tipo === 'venta' || mov.invoiceNumber || (mov.products && mov.products.length > 0));
         });
 
         let totalContado = 0;
         let totalPendientes = 0;
+        let totalSaldoPendiente = 0;
         let totalAbonos = 0;
         let totalRetiros = 0;
         let totalIngresos = 0;
@@ -668,26 +669,35 @@ const HistorialService = {
                 totalAbonos += (Number(mov.monto) || 0);
             } else if (mov.tipo === 'ingreso') {
                 totalIngresos += (Number(mov.monto) || 0);
-            } else if (!mov.cancelada && (mov.tipo === 'venta' || mov.invoiceNumber || (mov.products && mov.products.length > 0))) {
-                if (mov.paymentType === 'contado' || mov.status === 'pagado') {
+            } else if (mov.tipo === 'venta' || mov.invoiceNumber || (mov.products && mov.products.length > 0)) {
+                const pType = (mov.paymentType || '').toLowerCase();
+                const status = (mov.status || '').toLowerCase();
+                const saldo = mov.saldoPendiente !== undefined ? Number(mov.saldoPendiente) : Number(mov.total);
+
+                if (pType === 'contado' || status.includes('pagad') || saldo <= 0 || mov.cancelada) {
                     totalContado += (Number(mov.total) || 0);
                 } else {
                     totalPendientes += (Number(mov.total) || 0);
+                    totalSaldoPendiente += (saldo > 0 ? saldo : 0);
                 }
             }
         });
 
-        // Caja Final = Ventas Contado + Abonos + Ingresos - Retiros
-        const cajaFinal = totalContado + totalAbonos + totalIngresos - totalRetiros;
+        // Entradas de efectivo del día = Contado puro/Pagadas + Abonos + Ingresos
+        const totalEntradas = totalContado + totalAbonos + totalIngresos;
+        // Caja Final = Total Entradas - Retiros
+        const cajaFinal = totalEntradas - totalRetiros;
 
         // 1. Filas de la tabla de facturas
         const facturasRowsHTML = ventas.map(venta => {
-            const esPendiente = venta.paymentType === 'pendiente';
-            const estadoBadge = esPendiente 
-                ? '<span style="background: #fef3c7; color: #d97706; padding: 1px 6px; border-radius: 10px; font-size: 0.7rem; font-weight: 700;">PENDIENTE</span>'
-                : '<span style="background: #dcfce7; color: #16a34a; padding: 1px 6px; border-radius: 10px; font-size: 0.7rem; font-weight: 700;">CONTADO</span>';
-
+            const pType = (venta.paymentType || '').toLowerCase();
+            const status = (venta.status || '').toLowerCase();
             const saldo = venta.saldoPendiente !== undefined ? Number(venta.saldoPendiente) : Number(venta.total);
+            const esPagada = pType === 'contado' || status.includes('pagad') || saldo <= 0 || venta.cancelada;
+
+            const estadoBadge = esPagada 
+                ? `<span style="background: #dcfce7; color: #16a34a; padding: 1px 6px; border-radius: 10px; font-size: 0.7rem; font-weight: 700;">${pType === 'contado' ? 'CONTADO' : 'PAGADO'}</span>`
+                : '<span style="background: #fef3c7; color: #d97706; padding: 1px 6px; border-radius: 10px; font-size: 0.7rem; font-weight: 700;">PENDIENTE</span>';
 
             return `
                 <tr style="background: #ffffff; border-bottom: 1px solid #e2e8f0;">
@@ -698,7 +708,7 @@ const HistorialService = {
                     </td>
                     <td style="padding: 4px 10px; text-align: center;">${estadoBadge}</td>
                     <td style="padding: 4px 10px; text-align: right; font-weight: 700; color: #2c3e50; font-size: 0.88rem;">$${Number(venta.total || 0).toFixed(2)}</td>
-                    <td style="padding: 4px 10px; text-align: right; font-weight: 700; color: ${esPendiente && saldo > 0 ? '#dc2626' : '#16a34a'}; font-size: 0.88rem;">$${saldo.toFixed(2)}</td>
+                    <td style="padding: 4px 10px; text-align: right; font-weight: 700; color: ${!esPagada && saldo > 0 ? '#dc2626' : '#16a34a'}; font-size: 0.88rem;">$${saldo.toFixed(2)}</td>
                 </tr>
             `;
         }).join('');
@@ -831,32 +841,32 @@ const HistorialService = {
 
                 <!-- Tarjetas de Resumen Financiero -->
                 <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 15px;">
-                    <!-- 1. CAJA (VENTAS) -->
+                    <!-- 1. CAJA FINAL (EFECTIVO) -->
                     <div style="background: #f0fdf4; border: 2px solid #86efac; padding: 8px; border-radius: 10px; text-align: center;">
-                        <span style="font-size: 0.68rem; color: #16a34a; font-weight: bold; text-transform: uppercase;">Ventas (Caja Final)</span>
-                        <div style="font-size: 1.2rem; font-weight: 800; color: #15803d; margin-top: 2px;">$${cajaFinal.toFixed(2)}</div>
-                        <span style="font-size: 0.62rem; color: #16a34a; opacity: 0.85;">Contado + Abonos + Ing - Ret</span>
+                        <span style="font-size: 0.68rem; color: #16a34a; font-weight: bold; text-transform: uppercase;">Caja Final (Efectivo)</span>
+                        <div style="font-size: 1.25rem; font-weight: 800; color: #15803d; margin-top: 2px;">$${cajaFinal.toFixed(2)}</div>
+                        <span style="font-size: 0.62rem; color: #16a34a; opacity: 0.85;">Entradas ($${totalEntradas.toFixed(2)}) - Retiros</span>
                     </div>
 
-                    <!-- 2. ABONOS -->
+                    <!-- 2. ENTRADAS DE DINERO -->
                     <div style="background: #f0f9ff; border: 1px solid #bae6fd; padding: 8px; border-radius: 10px; text-align: center;">
-                        <span style="font-size: 0.68rem; color: #0284c7; font-weight: bold; text-transform: uppercase;">Abonos</span>
-                        <div style="font-size: 1.2rem; font-weight: 800; color: #0369a1; margin-top: 2px;">$${totalAbonos.toFixed(2)}</div>
-                        <span style="font-size: 0.62rem; color: #0284c7; opacity: 0.85;">Total abonos</span>
+                        <span style="font-size: 0.68rem; color: #0284c7; font-weight: bold; text-transform: uppercase;">Entradas Totales</span>
+                        <div style="font-size: 1.25rem; font-weight: 800; color: #0369a1; margin-top: 2px;">$${totalEntradas.toFixed(2)}</div>
+                        <span style="font-size: 0.62rem; color: #0284c7; opacity: 0.9;">Abo: $${totalAbonos.toFixed(2)} | Cont: $${totalContado.toFixed(2)}${totalIngresos > 0 ? ` | Ing: $${totalIngresos.toFixed(2)}` : ''}</span>
                     </div>
 
                     <!-- 3. RETIROS -->
                     <div style="background: #fef2f2; border: 1px solid #fecaca; padding: 8px; border-radius: 10px; text-align: center;">
-                        <span style="font-size: 0.68rem; color: #dc2626; font-weight: bold; text-transform: uppercase;">Retiros</span>
-                        <div style="font-size: 1.2rem; font-weight: 800; color: #b91c1c; margin-top: 2px;">$${totalRetiros.toFixed(2)}</div>
-                        <span style="font-size: 0.62rem; color: #dc2626; opacity: 0.85;">Total retiros</span>
+                        <span style="font-size: 0.68rem; color: #dc2626; font-weight: bold; text-transform: uppercase;">Retiros de Caja</span>
+                        <div style="font-size: 1.25rem; font-weight: 800; color: #b91c1c; margin-top: 2px;">-$${totalRetiros.toFixed(2)}</div>
+                        <span style="font-size: 0.62rem; color: #dc2626; opacity: 0.85;">Salidas de dinero</span>
                     </div>
 
-                    <!-- 4. VENTAS PENDIENTES -->
+                    <!-- 4. POR COBRAR (PENDIENTES) -->
                     <div style="background: #fffbeb; border: 1px solid #fde68a; padding: 8px; border-radius: 10px; text-align: center;">
-                        <span style="font-size: 0.68rem; color: #d97706; font-weight: bold; text-transform: uppercase;">Ventas Pendientes</span>
-                        <div style="font-size: 1.2rem; font-weight: 800; color: #b45309; margin-top: 2px;">$${totalPendientes.toFixed(2)}</div>
-                        <span style="font-size: 0.62rem; color: #d97706; opacity: 0.85;">Total por cobrar</span>
+                        <span style="font-size: 0.68rem; color: #d97706; font-weight: bold; text-transform: uppercase;">Por Cobrar (Pendientes)</span>
+                        <div style="font-size: 1.25rem; font-weight: 800; color: #b45309; margin-top: 2px;">$${totalSaldoPendiente.toFixed(2)}</div>
+                        <span style="font-size: 0.62rem; color: #d97706; opacity: 0.85;">Facturado a crédito: $${totalPendientes.toFixed(2)}</span>
                     </div>
                 </div>
 
@@ -913,6 +923,7 @@ const HistorialService = {
 
         let totalContado = 0;
         let totalPendientes = 0;
+        let totalSaldoPendiente = 0;
         let totalAbonos = 0;
         let totalRetiros = 0;
         let totalIngresos = 0;
@@ -924,28 +935,38 @@ const HistorialService = {
                 totalAbonos += (Number(mov.monto) || 0);
             } else if (mov.tipo === 'ingreso') {
                 totalIngresos += (Number(mov.monto) || 0);
-            } else if (!mov.cancelada && (mov.tipo === 'venta' || mov.invoiceNumber || (mov.products && mov.products.length > 0))) {
-                if (mov.paymentType === 'contado' || mov.status === 'pagado') {
+            } else if (mov.tipo === 'venta' || mov.invoiceNumber || (mov.products && mov.products.length > 0)) {
+                const pType = (mov.paymentType || '').toLowerCase();
+                const status = (mov.status || '').toLowerCase();
+                const saldo = mov.saldoPendiente !== undefined ? Number(mov.saldoPendiente) : Number(mov.total);
+
+                if (pType === 'contado' || status.includes('pagad') || saldo <= 0 || mov.cancelada) {
                     totalContado += (Number(mov.total) || 0);
                 } else {
                     totalPendientes += (Number(mov.total) || 0);
+                    totalSaldoPendiente += (saldo > 0 ? saldo : 0);
                 }
             }
         });
 
-        const cajaFinal = totalContado + totalAbonos + totalIngresos - totalRetiros;
+        const totalEntradas = totalContado + totalAbonos + totalIngresos;
+        const cajaFinal = totalEntradas - totalRetiros;
 
         // 1. Filas de Facturas
         const facturasPrintHTML = ventas.map(venta => {
-            const esPendiente = venta.paymentType === 'pendiente';
+            const pType = (venta.paymentType || '').toLowerCase();
+            const status = (venta.status || '').toLowerCase();
             const saldo = venta.saldoPendiente !== undefined ? Number(venta.saldoPendiente) : Number(venta.total);
+            const esPagada = pType === 'contado' || status.includes('pagad') || saldo <= 0 || venta.cancelada;
+            const estadoTexto = esPagada ? (pType === 'contado' ? 'CONTADO' : 'PAGADO') : 'PENDIENTE';
+
             return `
                 <tr>
                     <td style="border: 1px solid #ddd; padding: 5px; font-weight: bold;">#${venta.invoiceNumber}</td>
                     <td style="border: 1px solid #ddd; padding: 5px;">Eq: ${venta.equipoNumber || '-'} - ${venta.clientName || 'General'}</td>
-                    <td style="border: 1px solid #ddd; padding: 5px; text-align: center;">${esPendiente ? 'PENDIENTE' : 'CONTADO'}</td>
+                    <td style="border: 1px solid #ddd; padding: 5px; text-align: center;">${estadoTexto}</td>
                     <td style="border: 1px solid #ddd; padding: 5px; text-align: right; font-weight: bold;">$${Number(venta.total || 0).toFixed(2)}</td>
-                    <td style="border: 1px solid #ddd; padding: 5px; text-align: right; color: ${esPendiente && saldo > 0 ? '#c0392b' : '#27ae60'}; font-weight: bold;">$${saldo.toFixed(2)}</td>
+                    <td style="border: 1px solid #ddd; padding: 5px; text-align: right; color: ${!esPagada && saldo > 0 ? '#c0392b' : '#27ae60'}; font-weight: bold;">$${saldo.toFixed(2)}</td>
                 </tr>
             `;
         }).join('');
@@ -1068,6 +1089,7 @@ const HistorialService = {
                     .card { border: 1px solid #ddd; padding: 6px; text-align: center; border-radius: 4px; }
                     .card-title { font-size: 8px; text-transform: uppercase; font-weight: bold; color: #7f8c8d; }
                     .card-val { font-size: 13px; font-weight: bold; margin-top: 2px; }
+                    .card-sub { font-size: 7.5px; color: #7f8c8d; margin-top: 2px; }
                     table { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
                     th { background-color: #f2f2f2; border: 1px solid #ddd; padding: 5px; font-weight: bold; text-align: left; font-size: 10px; }
                     .sec-title { font-size: 11px; font-weight: bold; margin: 10px 0 4px 0; color: #2c3e50; border-bottom: 1px solid #ddd; padding-bottom: 2px; }
@@ -1080,20 +1102,24 @@ const HistorialService = {
 
                 <div class="cards-grid">
                     <div class="card" style="background: #f0fdf4; border-color: #86efac;">
-                        <div class="card-title" style="color: #16a34a;">Ventas (Caja Final)</div>
+                        <div class="card-title" style="color: #16a34a;">Caja Final (Efectivo)</div>
                         <div class="card-val" style="color: #15803d;">$${cajaFinal.toFixed(2)}</div>
+                        <div class="card-sub">Entradas ($${totalEntradas.toFixed(2)}) - Retiros</div>
                     </div>
                     <div class="card" style="background: #f0f9ff; border-color: #bae6fd;">
-                        <div class="card-title" style="color: #0284c7;">Abonos</div>
-                        <div class="card-val" style="color: #0369a1;">$${totalAbonos.toFixed(2)}</div>
+                        <div class="card-title" style="color: #0284c7;">Entradas Totales</div>
+                        <div class="card-val" style="color: #0369a1;">$${totalEntradas.toFixed(2)}</div>
+                        <div class="card-sub">Abo: $${totalAbonos.toFixed(2)} | Cont: $${totalContado.toFixed(2)}</div>
                     </div>
                     <div class="card" style="background: #fef2f2; border-color: #fecaca;">
-                        <div class="card-title" style="color: #dc2626;">Retiros</div>
-                        <div class="card-val" style="color: #b91c1c;">$${totalRetiros.toFixed(2)}</div>
+                        <div class="card-title" style="color: #dc2626;">Retiros de Caja</div>
+                        <div class="card-val" style="color: #b91c1c;">-$${totalRetiros.toFixed(2)}</div>
+                        <div class="card-sub">Salidas de dinero</div>
                     </div>
                     <div class="card" style="background: #fffbeb; border-color: #fde68a;">
-                        <div class="card-title" style="color: #d97706;">Ventas Pendientes</div>
-                        <div class="card-val" style="color: #b45309;">$${totalPendientes.toFixed(2)}</div>
+                        <div class="card-title" style="color: #d97706;">Por Cobrar (Pendientes)</div>
+                        <div class="card-val" style="color: #b45309;">$${totalSaldoPendiente.toFixed(2)}</div>
+                        <div class="card-sub">Facturado a crédito: $${totalPendientes.toFixed(2)}</div>
                     </div>
                 </div>
 
