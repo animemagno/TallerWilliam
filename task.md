@@ -1,6 +1,7 @@
 # Hoja de Ruta - Taller William
 
 ## 🟢 Tareas Activas
+- [x] Resaltado de filas de ingreso (contado, abono, ingreso) con fondo verde y mayor contraste en fondo general de `movil.html`.
 - [ ] Pruebas de impresión de tickets tras ventas reales/abonos masivos.
 - [ ] Monitorear actualización de saldos en `GrupoManager`.
 
