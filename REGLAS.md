@@ -3,18 +3,27 @@
 Este archivo contiene las normas obligatorias que debe seguir el Agente (IA) durante el desarrollo de este proyecto.
 
 ## 1. Comunicación
+*   **Respuestas Cortas y Simples:** Las respuestas tienen que ser cortas y simples sin palabras técnicas o sin vocabulario técnico.
 *   **Lenguaje Sencillo:** No usar palabras técnicas complejas (como "DOM", "Listeners", "Refactorización"). Explicar todo de forma simple y para un usuario no experto.
 *   **Concisión:** Resumir las explicaciones de forma entendible y directa. Ir al grano.
 
 ## 1.1 Contexto Global (Lectura Obligatoria)
 Para entender el estado real del proyecto, **SIEMPRE** debes leer estos archivos al iniciar:
-1.  `REGLAS.md`: Estas normas.
+1.  `task.md`: Hoja de ruta global (qué falta, qué sigue).
+2.  `REGLAS.md`: Estas normas obligatorias.
 
 ## 2. Flujo de Desarrollo
 *   **(NUEVO) Diálogo Previo Obligatorio:** Antes de escribir cualquier código, **explicar verbalmente** qué cambios se planean hacer. Usar un lenguaje extremadamente simple (nada de tecnicismos como "array", "función", "clase"). Esperar confirmación del usuario antes de proceder.
 *   **Consulta Previa:** Siempre preguntar o comentar "cómo se puede mejorar algo" ANTES de aplicar cambios. No asumir ni actuar por cuenta propia fuera de lo solicitado.
-*   **Commit Controlado:** NUNCA hacer un commit sin preguntar antes. El usuario debe autorizar explícitamente cada guardado en el historial.
-*   **Guardado Completo post-Pruebas:** Una vez que el usuario confirme que las pruebas funcionan correctamente, proceder INMEDIATAMENTE a realizar un guardado (commit + push) en GitHub que incluya **todos** los archivos del proyecto, para asegurar el estado funcional.
+*   **Registro de Modificaciones (Fecha, Cambio y Razón):** Cada vez que se realice una modificación a una página o archivo, se debe dejar registrado obligatoriamente el detalle con la **fecha**, **qué se modificó** exactamente y la **razón o motivo** del cambio (en el archivo `task.md` y en la explicación al usuario).
+*   **Pruebas a Cargo del Usuario:** Las pruebas las realiza exclusivamente el usuario una vez modificado el código. El Agente NO debe abrir el navegador ni realizar pruebas automatizadas por su cuenta.
+*   **Commit Controlado y Solicitud de Guardado:** NUNCA hacer un commit ni subir a GitHub sin preguntar antes. Al momento de solicitar autorización para guardar en GitHub, el Agente debe presentar obligatoriamente el resumen detallado:
+    *   **Fecha:** Día de la modificación.
+    *   **Página o Archivo:** Dónde se aplicó el cambio.
+    *   **Qué se modificó:** Explicación sencilla de lo que se cambió.
+    *   **Razón:** Motivo o necesidad de la modificación.
+    *   *Solo tras recibir el permiso explícito del usuario se ejecuta el guardado.*
+*   **Guardado Completo:** Al proceder con un guardado (commit), siempre se deben incluir **todos** los archivos modificados del proyecto en el repositorio.
 *   **⚠️ IMPORTANTE - Guardado en GitHub:** 
     *   Cuando el usuario dice "guardar", se refiere a **guardar en GitHub** (commit + push), NO solo guardar localmente.
     *   Siempre verificar con `git status` si hay cambios pendientes de subir.
@@ -69,3 +78,9 @@ Para evitar la degradación del código por errores acumulados:
     *   `group`: ID del grupo (si aplica)
 *   **`GRUPOS`**: Definición de grupos.
 *   **`INVENTARIO`**: Catálogo de productos.
+
+## 7. Estructura de Inventario y Auditoría de Ventas
+*   **Inventario Congelado (`INVENTARIO`):** Las existencias físicas en la base de datos permanecen congeladas al facturar.
+*   **Resumen de Ventas (`RESUMEN_SALIDAS_MES`):** Se guardan de forma acumulativa las cantidades vendidas durante el mes actual.
+*   **Simulación de Stock en Pantalla:** El sistema siempre muestra en pantalla el stock calculado restando automáticamente las ventas mensuales al stock congelado.
+*   **Auditoría Manual:** El botón de auditoría permite comparar los números, restar permanentemente las ventas del mes en la base de datos oficial y reiniciar el mes de manera limpia.

@@ -14,4 +14,6 @@
 - [x] Modularización total de `ventas.html` (repartido en carpetas `/js`).
 - [x] Corrección de errores de `serverTimestamp` y lógica de impresión.
 - [x] Creación de archivos de gestión (`task.md`, `project_status.md`).
+- [x] (12/10/2026) Actualización de `REGLAS.md`: sincronización de reglas de comunicación, flujo de desarrollo, auditoría y control de guardado desde willianworkshop.
+
 
