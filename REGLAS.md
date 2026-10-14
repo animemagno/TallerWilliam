@@ -11,6 +11,7 @@ Este archivo contiene las normas obligatorias que debe seguir el Agente (IA) dur
 Para entender el estado real del proyecto, **SIEMPRE** debes leer estos archivos al iniciar:
 1.  `task.md`: Hoja de ruta global (qué falta, qué sigue).
 2.  `REGLAS.md`: Estas normas obligatorias.
+3.  `INDICE_SISTEMA.md`: Mapa maestro del sistema, funcionamiento de pantallas y bitácora de cambios.
 
 ## 2. Flujo de Desarrollo
 *   **(NUEVO) Diálogo Previo Obligatorio:** Antes de escribir cualquier código, **explicar verbalmente** qué cambios se planean hacer. Usar un lenguaje extremadamente simple (nada de tecnicismos como "array", "función", "clase"). Esperar confirmación del usuario antes de proceder.

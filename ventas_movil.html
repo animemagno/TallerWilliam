@@ -432,6 +432,27 @@
             border: 2px solid var(--bg-card);
         }
 
+        /* --- PIVOT INDICATOR --- */
+        .pivot-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: linear-gradient(135deg, rgba(148, 163, 184, 0.22), rgba(71, 85, 105, 0.35));
+            border: 1px solid rgba(203, 213, 225, 0.45);
+            color: #f1f5f9;
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 2px 7px;
+            border-radius: 6px;
+            letter-spacing: 0.5px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+            vertical-align: middle;
+        }
+
+        .pivot-indicator svg {
+            flex-shrink: 0;
+        }
+
         /* --- UTILITIES --- */
         .hidden {
             display: none !important;
@@ -721,6 +742,64 @@
             },
             getCurrentTimestampElSalvador() {
                 return firebase.firestore.FieldValue.serverTimestamp();
+            }
+        };
+
+        // --- PIVOT HELPER ---
+        const PivotUtils = {
+            CODES: ['AB171021', '24171129', '36AB400A', '36244016', '24171198'],
+
+            isPivot(itemOrCode) {
+                if (!itemOrCode) return false;
+
+                // Si es texto (código)
+                if (typeof itemOrCode === 'string') {
+                    const clean = itemOrCode.trim().toUpperCase().replace(/[-\s]/g, '');
+                    return this.CODES.some(c => clean === c || clean.includes(c));
+                }
+
+                // Si es un producto o ítem
+                const cod = String(itemOrCode.codigo || '').trim().toUpperCase().replace(/[-\s]/g, '');
+                const id = String(itemOrCode.id || '').trim().toUpperCase().replace(/[-\s]/g, '');
+                const desc = String(itemOrCode.descripcion || '').trim().toUpperCase();
+
+                // 1. Coincide exactamente por campo código o ID
+                if (this.CODES.some(c => cod === c || id === c || cod.includes(c))) return true;
+
+                // 2. Si el código está escrito dentro del nombre/descripción (ej: "PIVOT 24171129")
+                if (this.CODES.some(c => desc.replace(/[-\s]/g, '').includes(c))) return true;
+
+                // 3. Si la descripción dice PIVOT y NO es mano de obra (no dice poner, cambiar, reparar, servicio, m.o.)
+                const esManoDeObra = /poner|cambi|instal|repar|m\.o|mano\s+de\s+obra|servicio/i.test(desc);
+                if (/pivot/i.test(desc) && !esManoDeObra) return true;
+
+                return false;
+            },
+
+            hasPivot(products) {
+                if (!products || !Array.isArray(products)) return false;
+                return products.some(p => this.isPivot(p));
+            },
+
+            getIconSvg(width = 14, height = 20) {
+                return `<svg viewBox="0 0 24 32" width="${width}" height="${height}" style="vertical-align: middle; display: inline-block; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5)); flex-shrink: 0;" aria-label="PIVOT">
+                    <!-- Cabeza Superior -->
+                    <rect x="3" y="1" width="18" height="6" rx="2" fill="#cbd5e1" stroke="#475569" stroke-width="0.8"/>
+                    <!-- Ranura Superior -->
+                    <rect x="4.5" y="7" width="15" height="2.5" fill="#0f172a"/>
+                    <!-- Cuerpo Cilíndrico Central -->
+                    <rect x="4" y="9.5" width="16" height="11" fill="#e2e8f0" stroke="#475569" stroke-width="0.8"/>
+                    <!-- Ranura Inferior -->
+                    <rect x="4.5" y="20.5" width="15" height="2.5" fill="#0f172a"/>
+                    <!-- Base Inferior -->
+                    <rect x="3" y="23" width="18" height="6.5" rx="2" fill="#cbd5e1" stroke="#475569" stroke-width="0.8"/>
+                    <!-- Reflejo Metálico -->
+                    <line x1="7.5" y1="2" x2="7.5" y2="28" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round"/>
+                </svg>`;
+            },
+
+            getBadgeHtml() {
+                return `<span class="pivot-indicator" title="Contiene PIVOT">${this.getIconSvg(13, 18)} PIVOT</span>`;
             }
         };
 
@@ -1047,7 +1126,7 @@
             async loadInventario() {
                 try {
                     const [invSnap, provSnap, servSnap] = await Promise.all([
-                        db.collection('INVENTARIO').limit(500).get(),
+                        db.collection('INVENTARIO').get(),
                         db.collection('INVENTARIO_PROVICIONAL').get(),
                         db.collection('SERVICIOS').get()
                     ]);
@@ -1093,8 +1172,11 @@
                 let html = results.map(item => `
                     <div class="product-card">
                         <div class="prod-info">
-                            <h4>${item.descripcion}</h4>
-                            <p>${item.codigo || 'Sin código'}</p>
+                            <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap">
+                                <h4 style="margin:0">${item.descripcion}</h4>
+                                ${PivotUtils.isPivot(item) ? PivotUtils.getBadgeHtml() : ''}
+                            </div>
+                            <p style="margin:3px 0 0 0">${item.codigo || 'Sin código'}</p>
                             <div class="prod-price">$${(item.precio || 0).toFixed(2)}</div>
                         </div>
                         <button class="add-btn" onclick="App.addToCart('${item.id}')">
@@ -1232,11 +1314,17 @@
                 let total = 0;
                 container.innerHTML = this.state.carrito.map((item, idx) => {
                     total += item.precio * item.cantidad;
+                    const esPivot = PivotUtils.isPivot(item);
                     return `
                         <div class="cart-item">
                             <div style="flex:1">
-                                <div style="font-weight:600; font-size:0.9rem">${item.descripcion}</div>
-                                <div style="color:var(--text-secondary); font-size:0.8rem">$${item.precio.toFixed(2)} c/u</div>
+                                <div style="font-weight:600; font-size:0.9rem; display:flex; align-items:center; gap:6px">
+                                    <span>${item.descripcion}</span>
+                                    ${esPivot ? PivotUtils.getIconSvg(13, 17) : ''}
+                                </div>
+                                <div style="color:var(--text-secondary); font-size:0.8rem">
+                                    $${item.precio.toFixed(2)} c/u ${item.codigo ? `<span style="opacity:0.6; font-size:0.75rem">(${item.codigo})</span>` : ''}
+                                </div>
                             </div>
                             <div class="qty-control">
                                 <i class="fas fa-minus-circle qty-btn" onclick="App.changeQty(${idx}, -1)"></i>
@@ -1346,12 +1434,16 @@
                 container.innerHTML = sales.map(s => {
                     const date = new Date(s.timestamp.seconds * 1000);
                     const dateStr = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    const tienePivot = PivotUtils.hasPivot(s.products);
 
                     return `
                     <div class="product-card" style="margin-bottom:8px; flex-direction:column; align-items:flex-start">
                              <div style="display:flex; justify-content:space-between; width:100%; align-items:center">
                                 <div class="prod-info" style="flex:1">
-                                    <h4 style="color:var(--text-primary); margin-bottom:4px; font-size:1rem">${s.equipoNumber} - ${s.clientName}</h4>
+                                    <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px; flex-wrap:wrap">
+                                        <h4 style="color:var(--text-primary); margin:0; font-size:1rem">${s.equipoNumber} - ${s.clientName}</h4>
+                                        ${tienePivot ? PivotUtils.getBadgeHtml() : ''}
+                                    </div>
                                     <p style="font-size:0.8rem; color:var(--text-secondary); margin-bottom:2px">${dateStr}</p>
                                     <p style="font-size:0.85rem; color:var(--accent-color); font-weight:bold">#${s.invoiceNumber}</p>
                                 </div>
@@ -1453,6 +1545,7 @@
                     // Análisis de Contenido para Color
                     let tieneCaja = false;
                     let tieneAceite = false;
+                    let tienePivot = PivotUtils.hasPivot(venta.products);
 
                     if (venta.products) {
                         const matchStr = venta.products.map(p => p.descripcion).join(' ').toLowerCase();
@@ -1476,9 +1569,13 @@
 
                     const detailId = `mobile-detail-${venta.id}`;
 
-                    let prodsHtml = (venta.products || []).map(p =>
-                        `<div style="font-size:0.85rem; padding:2px 0; color:#ddd">• ${p.cantidad} ${p.descripcion}</div>`
-                    ).join('');
+                    let prodsHtml = (venta.products || []).map(p => {
+                        const esPiv = PivotUtils.isPivot(p);
+                        return `<div style="font-size:0.85rem; padding:2px 0; color:#ddd; display:flex; align-items:center; gap:6px">
+                            <span>• ${p.cantidad} ${p.descripcion}</span>
+                            ${esPiv ? PivotUtils.getIconSvg(12, 16) : ''}
+                        </div>`;
+                    }).join('');
 
                     const fechaStr = venta.timestamp ? new Date(venta.timestamp.seconds * 1000).toLocaleString([], { year: '2-digit', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : 'N/A';
 
@@ -1490,8 +1587,9 @@
                                 <div style="display:flex; align-items:flex-start; gap:12px; flex:1">
                                     <i class="fas ${icon}" style="color:${statusColor}; font-size:1.1rem; margin-top:3px"></i>
                                     <div>
-                                        <div style="font-weight:bold; font-size:1rem; color:var(--text-primary); margin-bottom:2px">
-                                           ${venta.equipoNumber} - ${venta.clientName || 'Sin Nombre'}
+                                        <div style="font-weight:bold; font-size:1rem; color:var(--text-primary); margin-bottom:2px; display:flex; align-items:center; gap:6px; flex-wrap:wrap">
+                                           <span>${venta.equipoNumber} - ${venta.clientName || 'Sin Nombre'}</span>
+                                           ${tienePivot ? PivotUtils.getBadgeHtml() : ''}
                                         </div>
                                         <div style="font-size:0.85rem; color:${statusColor}; margin-bottom:2px">
                                             ${fechaStr}
