@@ -542,7 +542,14 @@ const SalesService = {
                 nuevoSaldoPendiente = nuevoTotal - totalAbonado;
             }
 
+            const equipoInput = document.getElementById('equipo') ? document.getElementById('equipo').value.trim() : '';
+            const clienteInput = document.getElementById('cliente') ? document.getElementById('cliente').value.trim() : '';
+            const finalEquipo = equipoInput || ventaActual.equipoNumber || '0000';
+            const finalCliente = clienteInput || `Equipo ${finalEquipo}`;
+
             const saleData = {
+                equipoNumber: finalEquipo,
+                clientName: finalCliente,
                 products: AppState.cart.map(item => ({ id: item.id || ('manual-' + Date.now()), codigo: item.codigo || 'MANUAL', descripcion: item.descripcion || 'Sin descripción', precio: item.precio || 0, costo: item.costo !== undefined ? Number(item.costo) : 0, cantidad: item.cantidad || 1 })),
                 total: nuevoTotal, saldoPendiente: nuevoSaldoPendiente, fechaActualizacion: DateUtils.getCurrentTimestampElSalvador()
             };

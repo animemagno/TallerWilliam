@@ -491,12 +491,12 @@
 
         <!-- Modales existentes -->
         <div class="modal-overlay" id="detalle-modal">
-            <div class="modal-content" style="position: relative;">
+            <div class="modal-content" id="detalle-modal-box" style="width: 94%; max-width: 1280px; height: 95vh; max-height: 95vh; display: flex; flex-direction: column; overflow: hidden; padding: 16px 22px;">
                 <button onclick="document.getElementById('detalle-modal').style.display='none'"
-                    style="position: sticky; top: 0; float: right; z-index: 10; background: #e74c3c; color: white; border: none; width: 32px; height: 32px; border-radius: 50%; font-size: 16px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center;"
+                    style="position: absolute; top: 14px; right: 18px; z-index: 20; background: #e74c3c; color: white; border: none; width: 34px; height: 34px; border-radius: 50%; font-size: 16px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center;"
                     title="Cerrar">✕</button>
-                <div id="detalle-modal-content"></div>
-                <div style="display: flex; gap: 10px; margin-top: 15px;">
+                <div id="detalle-modal-content" style="flex: 1; overflow-y: auto; padding-right: 6px;"></div>
+                <div style="display: flex; gap: 10px; margin-top: 12px; padding-top: 10px; border-top: 1px solid #e2e8f0; flex-shrink: 0;">
                     <button class="btn btn-success" id="imprimir-detalle-modal" style="flex: 1;">
                         <i class="fas fa-print"></i> IMPRIMIR HISTORIAL
                     </button>
@@ -507,13 +507,67 @@
             </div>
         </div>
 
+        <!-- Modal para Editar Datos de Factura (Fecha, Equipo, Grupo) -->
+        <div class="modal-overlay" id="editar-datos-factura-modal" style="z-index: 2600;">
+            <div class="modal-content" style="max-width: 460px; border-radius: 14px; padding: 22px; box-shadow: 0 15px 35px rgba(0,0,0,0.25);">
+                <div style="text-align: center; border-bottom: 2px solid #f39c12; padding-bottom: 12px; margin-bottom: 16px;">
+                    <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1.5px; color: #7f8c8d; font-weight: 700;">Modificar Encabezado</div>
+                    <h3 style="margin: 4px 0 0 0; color: #2c3e50; font-size: 1.35rem; font-weight: 800;">
+                        <i class="fas fa-edit" style="color: #f39c12; margin-right: 6px;"></i>Editar Datos de Factura
+                    </h3>
+                    <div id="edit-datos-factura-num" style="margin-top: 4px; font-size: 0.9rem; font-weight: 700; color: #3498db;">#---</div>
+                </div>
+
+                <input type="hidden" id="edit-datos-factura-id">
+
+                <div class="form-group" style="margin-bottom: 14px;">
+                    <label for="edit-datos-fecha" style="display: block; font-weight: 700; color: #34495e; margin-bottom: 6px; font-size: 0.9rem;">
+                        <i class="fas fa-calendar-alt" style="color: #3498db; margin-right: 5px;"></i>Fecha de la Factura:
+                    </label>
+                    <input type="date" id="edit-datos-fecha" class="form-control" style="width: 100%; padding: 10px 12px; border: 2px solid #cbd5e1; border-radius: 8px; font-size: 1rem; font-weight: 700; color: #2c3e50;">
+                </div>
+
+                <div class="form-group" style="margin-bottom: 14px;">
+                    <label for="edit-datos-equipo" style="display: block; font-weight: 700; color: #34495e; margin-bottom: 6px; font-size: 0.9rem;">
+                        <i class="fas fa-motorcycle" style="color: #e67e22; margin-right: 5px;"></i>Número de Equipo:
+                    </label>
+                    <input type="text" id="edit-datos-equipo" maxlength="4" placeholder="Ej: 100" oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="form-control" style="width: 100%; padding: 10px 12px; border: 2px solid #cbd5e1; border-radius: 8px; font-size: 1.1rem; font-weight: 800; color: #2c3e50; text-align: center;">
+                </div>
+
+                <div class="form-group" style="margin-bottom: 18px;">
+                    <label for="edit-datos-cliente" style="display: block; font-weight: 700; color: #34495e; margin-bottom: 6px; font-size: 0.9rem;">
+                        <i class="fas fa-users" style="color: #8e44ad; margin-right: 5px;"></i>Nombre de Grupo / Cliente:
+                    </label>
+                    <input type="text" id="edit-datos-cliente" placeholder="Dejar vacío si solo usa el número de equipo" class="form-control" style="width: 100%; padding: 10px 12px; border: 2px solid #cbd5e1; border-radius: 8px; font-size: 0.95rem; font-weight: 600; color: #2c3e50;">
+                </div>
+
+                <div style="margin-bottom: 16px; padding-top: 10px; border-top: 1px dashed #cbd5e1;">
+                    <button type="button" onclick="GrupoManager.enviarFacturaAlCarritoDesdeModal()"
+                        style="width: 100%; padding: 9px 12px; background: #eef2ff; color: #4f46e5; border: 1px solid #c7d2fe; border-radius: 8px; font-weight: 700; font-size: 0.82rem; cursor: pointer;">
+                        <i class="fas fa-shopping-cart"></i> ¿Necesitas cambiar productos o precios? Pasar al Carrito
+                    </button>
+                </div>
+
+                <div style="display: flex; gap: 10px;">
+                    <button type="button" class="btn btn-danger" onclick="document.getElementById('editar-datos-factura-modal').style.display='none'" style="flex: 1; height: 42px;">
+                        CANCELAR
+                    </button>
+                    <button type="button" class="btn btn-success" onclick="GrupoManager.guardarDatosFacturaEditada()" style="flex: 1; height: 42px; font-weight: 800;">
+                        <i class="fas fa-save"></i> GUARDAR DATOS
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <div class="modal-overlay" id="grupo-detalle-modal">
-            <div class="modal-content">
-                <div id="grupo-detalle-modal-content"></div>
-                <button class="btn btn-primary" id="close-grupo-detalle-modal"
-                    style="margin-top: 15px; width: 100%;">CERRAR</button>
-                <button class="btn btn-success" id="imprimir-grupo-detalle-modal"
-                    style="margin-top: 10px; width: 100%;">IMPRIMIR GRUPO</button>
+            <div class="modal-content" style="width: 94%; max-width: 1280px; height: 95vh; max-height: 95vh; display: flex; flex-direction: column; overflow: hidden; padding: 16px 22px;">
+                <div id="grupo-detalle-modal-content" style="flex: 1; overflow-y: auto; padding-right: 6px;"></div>
+                <div style="display: flex; gap: 10px; margin-top: 12px; padding-top: 10px; border-top: 1px solid #e2e8f0; flex-shrink: 0;">
+                    <button class="btn btn-success" id="imprimir-grupo-detalle-modal"
+                        style="flex: 1;"><i class="fas fa-print"></i> IMPRIMIR GRUPO</button>
+                    <button class="btn btn-primary" id="close-grupo-detalle-modal"
+                        style="flex: 1;">CERRAR</button>
+                </div>
             </div>
         </div>
 
@@ -808,7 +862,7 @@
     <script src="js/AppState.js?v=5"></script>
 
     <!-- Módulos de servicio -->
-    <script src="js/PrintingService.js?v=5"></script>
+    <script src="js/PrintingService.js?v=10"></script>
     <script src="js/HistorialService.js?v=5"></script>
     <script src="js/DataService.js?v=5"></script>
     <script src="js/RealTimeHistoryManager.js?v=5"></script>
@@ -816,10 +870,10 @@
     <!-- Módulos de UI -->
     <script src="js/UIService.js?v=6"></script>
     <script src="js/ModalService.js?v=6"></script>
-    <script src="js/SalesService.js?v=6"></script>
+    <script src="js/SalesService.js?v=12"></script>
 
     <!-- Módulos de gestión -->
-    <script src="js/GrupoManager.js?v=6"></script>
+    <script src="js/GrupoManager.js?v=13"></script>
     <script src="js/GrupoManagerPatch.js?v=6"></script>
     <script src="js/FacturasTabManager.js?v=6"></script>
     <script src="js/GruposTabManager.js?v=6"></script>

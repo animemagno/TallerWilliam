@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Muestra Interactiva - Fusión de Facturas por Equipo</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #eef2f7;
+            color: #2c3e50;
+            padding: 20px;
+        }
+
+        /* Barra guía superior para probar la muestra */
+        .demo-banner {
+            max-width: 1280px;
+            width: 92%;
+            margin: 0 auto 18px auto;
+            background: linear-gradient(135deg, #1e3799 0%, #0984e3 100%);
+            color: white;
+            padding: 16px 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(9, 132, 227, 0.25);
+        }
+
+        .demo-banner h3 {
+            font-size: 1.1rem;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .demo-banner p {
+            font-size: 0.88rem;
+            opacity: 0.95;
+            line-height: 1.4;
+        }
+
+        .demo-controls {
+            margin-top: 12px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .demo-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .demo-btn:hover {
+            background: white;
+            color: #1e3799;
+        }
+
+        /* Contenedor principal imitando el modal de Detalle del Equipo en ventas.html */
+        .modal-card {
+            max-width: 1280px;
+            width: 92%;
+            margin: 0 auto;
+            background: white;
+            border-radius: 14px;
+            padding: 24px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Barra de botones de selección */
+        .selection-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f1f5f9;
+            padding: 10px 14px;
+            border-radius: 10px;
+            margin: 14px 0;
+            border: 1px solid #e2e8f0;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .selection-hint {
+            font-size: 0.83rem;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .btn-action {
+            border: none;
+            padding: 9px 16px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 700;
+            font-size: 0.85rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+            transition: transform 0.15s, opacity 0.15s;
+        }
+
+        .btn-action:hover {
+            transform: translateY(-1px);
+            opacity: 0.95;
+        }
+
+        .btn-fusionar {
+            background: linear-gradient(135deg, #8e44ad 0%, #6c5ce7 100%);
+        }
+
+        .btn-abonar-sel {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+        }
+
+        /* TARJETA CONTENEDORA DE FACTURAS FUSIONADAS */
+        .fusion-container-card {
+            background: #f8f6ff;
+            border: 2px solid #8e44ad;
+            border-radius: 12px;
+            margin: 16px 0;
+            overflow: hidden;
+            box-shadow: 0 4px 14px rgba(142, 68, 173, 0.12);
+        }
+
+        .fusion-header {
+            background: linear-gradient(135deg, #6c5ce7 0%, #8e44ad 100%);
+            color: white;
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .fusion-title-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .fusion-badge {
+            background: rgba(255, 255, 255, 0.22);
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .fusion-body {
+            padding: 12px 14px;
+            background: #f5f3ff;
+        }
+
+        .fusion-inner-label {
+            font-size: 0.76rem;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: #6c5ce7;
+            font-weight: 700;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .fusion-footer {
+            background: white;
+            border-top: 2px dashed #d6bcfa;
+            padding: 14px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .fusion-totals-breakdown {
+            display: flex;
+            gap: 18px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .fusion-stat {
+            font-size: 0.82rem;
+            color: #64748b;
+        }
+
+        .fusion-stat strong {
+            font-size: 0.95rem;
+            color: #2c3e50;
+        }
+
+        .fusion-final-balance {
+            background: #fff5f5;
+            border: 1px solid #feb2b2;
+            padding: 8px 14px;
+            border-radius: 8px;
+            text-align: right;
+        }
+
+        .fusion-final-balance span {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            color: #c53030;
+            font-weight: 700;
+            display: block;
+        }
+
+        .fusion-final-balance strong {
+            font-size: 1.25rem;
+            color: #e74c3c;
+            font-weight: 800;
+        }
+
+        /* Modal de Abono para la Muestra */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.55);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 15px;
+        }
+
+        .abono-box {
+            background: white;
+            width: 100%;
+            max-width: 440px;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #2c3e50;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            display: none;
+            z-index: 2000;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Guía interactiva -->
+    <div class="demo-banner">
+        <h3><i class="fas fa-flask"></i> Muestra Interactiva: Fusión de Facturas (Equipo 100)</h3>
+        <p>
+            <strong>Escenario de prueba:</strong> El cliente del <strong>Equipo 100</strong> llamó el lunes y tenía 3 facturas acumuladas (28 oct, 30 oct y 01 nov, una de ellas ya tenía un abono de $5.00). El miércoles vino por otro trabajo nuevo (04 nov).<br>
+            👉 <strong>Prueba:</strong> Marca las primeras 3 facturas y presiona <strong>"FUSIONAR (3)"</strong>, o usa el botón rápido de abajo para ver cómo quedan agrupadas en una sola tarjeta contenedora y hacerle un abono sin tocar la factura nueva del miércoles.
+        </p>
+        <div class="demo-controls">
+            <button class="demo-btn" onclick="fusionarEjemploLunes()">
+                <i class="fas fa-magic"></i> Simular Fusión del Corte del Lunes (3 facturas)
+            </button>
+            <button class="demo-btn" onclick="reiniciarMuestra()">
+                <i class="fas fa-redo"></i> Reiniciar Muestra Original
+            </button>
+        </div>
+    </div>
+
+    <!-- Tarjeta de Detalle del Equipo (Idéntica a ventas.html) -->
+    <div class="modal-card">
+        <div style="text-align: center; padding: 8px 0 12px 0; border-bottom: 3px solid #3498db; margin-bottom: 16px;">
+            <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 2px; color: #95a5a6; margin-bottom: 4px;">
+                Detalle del Equipo
+            </div>
+            <h2 style="margin: 0; color: #2c3e50; font-size: 1.5rem; font-weight: 800;">
+                <i class="fas fa-motorcycle" style="margin-right: 8px;"></i>100 - Don Carlos
+            </h2>
+        </div>
+
+        <!-- Resumen Superior del Equipo -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-bottom: 16px;">
+            <div style="background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%); padding: 14px 10px; border-radius: 10px; text-align: center; color: white;">
+                <i class="fas fa-file-invoice" style="font-size: 1.2rem; margin-bottom: 4px; display: block; opacity: 0.8;"></i>
+                <div style="font-size: 1.4rem; font-weight: 800;" id="resumen-cantidad">4</div>
+                <div style="font-size: 0.7rem; opacity: 0.85;">Facturas Activas</div>
+            </div>
+            <div style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); padding: 14px 10px; border-radius: 10px; text-align: center; color: white;">
+                <i class="fas fa-dollar-sign" style="font-size: 1.2rem; margin-bottom: 4px; display: block; opacity: 0.8;"></i>
+                <div style="font-size: 1.4rem; font-weight: 800;" id="resumen-total">$85.00</div>
+                <div style="font-size: 0.7rem; opacity: 0.85;">Total Facturado</div>
+            </div>
+            <div style="background: linear-gradient(135deg, #e67e22 0%, #d35400 100%); padding: 14px 10px; border-radius: 10px; text-align: center; color: white;">
+                <i class="fas fa-exclamation-triangle" style="font-size: 1.2rem; margin-bottom: 4px; display: block; opacity: 0.8;"></i>
+                <div style="font-size: 1.4rem; font-weight: 800;" id="resumen-pendiente">$80.00</div>
+                <div style="font-size: 0.7rem; opacity: 0.85;">Saldo Pendiente General</div>
+            </div>
+        </div>
+
+        <!-- Barra de acciones al seleccionar casillas -->
+        <div class="selection-bar">
+            <div class="selection-hint" id="selection-text" style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                <label style="display: inline-flex; align-items: center; gap: 8px; background: white; border: 2px solid #8e44ad; color: #2c3e50; padding: 6px 12px; border-radius: 8px; font-size: 0.84rem; font-weight: 700; cursor: pointer; user-select: none; box-shadow: 0 2px 4px rgba(0,0,0,0.06);">
+                    <input type="checkbox" id="chk-seleccionar-todas" onchange="toggleSeleccionarTodas()" style="width: 18px; height: 18px; cursor: pointer;">
+                    <span id="lbl-seleccionar-todas">Seleccionar todas</span>
+                </label>
+                <span>Marca 2 o más facturas para <strong>Fusionarlas</strong> o <strong>Abonarles</strong></span>
+            </div>
+            <div class="action-buttons">
+                <button class="btn-action btn-fusionar" id="btn-fusionar-sel" style="display: none;" onclick="fusionarSeleccionadas()">
+                    <i class="fas fa-object-group"></i> FUSIONAR (0)
+                </button>
+                <button class="btn-action btn-abonar-sel" id="btn-abonar-sel" style="display: none;" onclick="abrirModalAbonoSeleccionadas()">
+                    <i class="fas fa-money-bill-wave"></i> ABONAR SELECCIONADAS (0)
+                </button>
+            </div>
+        </div>
+
+        <!-- Contenedor de Facturas (Fusionadas y Sueltas) -->
+        <div>
+            <h4 style="color: #2c3e50; font-size: 0.95rem; margin: 0 0 12px 0; padding-bottom: 8px; border-bottom: 2px solid #ecf0f1; display: flex; align-items: center; gap: 8px;">
+                <i class="fas fa-list-alt" style="color: #3498db;"></i> Facturas Pendientes del Equipo
+            </h4>
+            <div id="facturas-list-container"></div>
+        </div>
+    </div>
+
+    <!-- Modal para Abonar a la Fusión o Selección -->
+    <div class="modal-overlay" id="modal-abono">
+        <div class="abono-box">
+            <h3 style="text-align: center; color: #2c3e50; margin-bottom: 6px; font-weight: 800;" id="modal-abono-titulo">
+                Abonar a Facturas Fusionadas
+            </h3>
+            <p style="text-align: center; color: #7f8c8d; font-size: 0.83rem; margin-bottom: 16px;" id="modal-abono-sub">
+                El abono se aplicará únicamente a las facturas dentro de esta fusión (de la más antigua a la más reciente).
+            </p>
+
+            <div style="background: #2f3542; color: white; padding: 14px; border-radius: 12px; text-align: center; margin-bottom: 16px;">
+                <div style="font-size: 0.75rem; text-transform: uppercase; opacity: 0.8;">Saldo Pendiente de este Corte</div>
+                <div style="font-size: 1.8rem; font-weight: 800; color: #ff6b81;" id="modal-abono-saldo-actual">$0.00</div>
+            </div>
+
+            <div style="margin-bottom: 14px;">
+                <label style="display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 6px; color: #34495e;">
+                    ¿Cuánto va a abonar o pagar hoy?
+                </label>
+                <div style="display: flex; gap: 8px;">
+                    <input type="number" id="input-monto-abono" step="0.01" min="0.01" placeholder="0.00"
+                        oninput="actualizarCalculoModal()"
+                        style="flex: 1; padding: 10px 12px; font-size: 1.2rem; font-weight: 800; text-align: center; border: 2px solid #cbd5e1; border-radius: 8px;">
+                    <button onclick="llenarPagoTotalCorte()"
+                        style="background: #eef2ff; color: #4f46e5; border: 1px solid #c7d2fe; border-radius: 8px; padding: 0 12px; font-weight: 700; font-size: 0.78rem; cursor: pointer;">
+                        PAGO TOTAL
+                    </button>
+                </div>
+            </div>
+
+            <div style="background: #fffafa; border: 1px dashed #ff4757; padding: 10px; border-radius: 10px; text-align: center; margin-bottom: 18px;">
+                <span style="font-size: 0.72rem; font-weight: 700; color: #747d8c; text-transform: uppercase;">
+                    Nuevo Saldo de este Corte después del abono
+                </span>
+                <div id="modal-nuevo-saldo" style="font-size: 1.35rem; font-weight: 800; color: #ff4757;">$0.00</div>
+            </div>
+
+            <div style="display: flex; gap: 10px;">
+                <button onclick="cerrarModalAbono()"
+                    style="flex: 1; padding: 11px; border-radius: 8px; border: none; background: #e2e8f0; color: #475569; font-weight: 700; cursor: pointer;">
+                    CANCELAR
+                </button>
+                <button onclick="confirmarAbono()"
+                    style="flex: 1; padding: 11px; border-radius: 8px; border: none; background: #2ecc71; color: white; font-weight: 700; cursor: pointer;">
+                    <i class="fas fa-check"></i> APLICAR ABONO
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast-msg"></div>
+
+    <script>
+        // Datos iniciales de ejemplo para el Equipo 100
+        const datosIniciales = [
+            {
+                id: 'fac-1',
+                invoiceNumber: '20261028-04',
+                fechaTexto: '28 oct 2026',
+                timestampMs: new Date('2026-10-28T09:30:00').getTime(),
+                total: 22.00,
+                abonos: [
+                    { monto: 5.00, fechaTexto: '29/10' }
+                ],
+                fusionId: null,
+                fusionFechaTexto: null,
+                tieneAceite: true,
+                tieneCaja: false,
+                products: [
+                    { cantidad: 1, descripcion: 'Cambio de aceite de motor', precio: 14.00 },
+                    { cantidad: 1, descripcion: 'Filtro de aire', precio: 8.00 }
+                ]
+            },
+            {
+                id: 'fac-2',
+                invoiceNumber: '20261030-11',
+                fechaTexto: '30 oct 2026',
+                timestampMs: new Date('2026-10-30T14:15:00').getTime(),
+                total: 18.00,
+                abonos: [],
+                fusionId: null,
+                fusionFechaTexto: null,
+                tieneAceite: false,
+                tieneCaja: false,
+                products: [
+                    { cantidad: 2, descripcion: 'Fricciones de freno traseras', precio: 6.50 },
+                    { cantidad: 1, descripcion: 'Cable de freno', precio: 5.00 }
+                ]
+            },
+            {
+                id: 'fac-3',
+                invoiceNumber: '20261101-07',
+                fechaTexto: '01 nov 2026',
+                timestampMs: new Date('2026-11-01T11:00:00').getTime(),
+                total: 15.00,
+                abonos: [],
+                fusionId: null,
+                fusionFechaTexto: null,
+                tieneAceite: false,
+                tieneCaja: false,
+                products: [
+                    { cantidad: 3, descripcion: 'Pernos de corona reforzados', precio: 2.00 },
+                    { cantidad: 1, descripcion: 'Balero 6204 Japón', precio: 9.00 }
+                ]
+            },
+            {
+                id: 'fac-4',
+                invoiceNumber: '20261104-19',
+                fechaTexto: '04 nov 2026 (NUEVA)',
+                timestampMs: new Date('2026-11-04T16:20:00').getTime(),
+                total: 30.00,
+                abonos: [],
+                fusionId: null,
+                fusionFechaTexto: null,
+                tieneAceite: false,
+                tieneCaja: true,
+                products: [
+                    { cantidad: 1, descripcion: 'Revisión de caja y transmisión', precio: 18.00 },
+                    { cantidad: 1, descripcion: 'Cruceta de transmisión', precio: 12.00 }
+                ]
+            }
+        ];
+
+        let facturas = [];
+        let seleccionadas = new Set();
+        let idsParaAbonoActual = [];
+
+        function calcularSaldoFactura(f) {
+            const abonado = (f.abonos || []).reduce((s, a) => s + a.monto, 0);
+            return Math.max(0, f.total - abonado);
+        }
+
+        function calcularAbonadoFactura(f) {
+            return (f.abonos || []).reduce((s, a) => s + a.monto, 0);
+        }
+
+        function reiniciarMuestra() {
+            facturas = JSON.parse(JSON.stringify(datosIniciales));
+            seleccionadas.clear();
+            renderizarTodo();
+            mostrarToast('Muestra reiniciada con las 4 facturas sueltas');
+        }
+
+        function fusionarEjemploLunes() {
+            facturas = JSON.parse(JSON.stringify(datosIniciales));
+            seleccionadas.clear();
+            const fusionCode = 'FUS-LUNES';
+            facturas.forEach(f => {
+                if (f.id === 'fac-1' || f.id === 'fac-2' || f.id === 'fac-3') {
+                    f.fusionId = fusionCode;
+                    f.fusionRange = '28 oct 2026 al 01 nov 2026';
+                }
+            });
+            renderizarTodo();
+            mostrarToast('¡3 facturas fusionadas en un solo bloque! La del 04 nov quedó afuera.');
+        }
+
+        // Genera el diseño de una tarjeta individual de factura (ya sea suelta o dentro de una fusión)
+        function generarHTMLTarjetaFactura(factura, dentroDeFusion = false) {
+            const saldo = calcularSaldoFactura(factura);
+            const abonado = calcularAbonadoFactura(factura);
+            const pagada = saldo <= 0.009;
+
+            // Filas de productos
+            let filasProductos = '';
+            factura.products.forEach((p, idx) => {
+                filasProductos += `
+                    <tr style="background: ${idx % 2 === 0 ? '#fafbfc' : 'white'};">
+                        <td style="padding: 5px 8px; text-align: center; font-weight: 600; color: #2c3e50; border-bottom: 1px solid #f0f0f0;">${p.cantidad}</td>
+                        <td style="padding: 5px 8px; color: #555; border-bottom: 1px solid #f0f0f0;">
+                            <i class="fas fa-wrench" style="color: #bdc3c7; font-size: 0.65rem; margin-right: 4px;"></i>${p.descripcion}
+                        </td>
+                        <td style="padding: 5px 8px; text-align: right; color: #7f8c8d; border-bottom: 1px solid #f0f0f0;">$${p.precio.toFixed(2)}</td>
+                        <td style="padding: 5px 8px; text-align: right; font-weight: 600; color: #2c3e50; border-bottom: 1px solid #f0f0f0;">$${(p.precio * p.cantidad).toFixed(2)}</td>
+                    </tr>
+                `;
+            });
+
+            // Etiquetas de Aceite / Caja y Marco Oscuro para diferenciar claramente cada tarjeta
+            let borderStyle = '2px solid #34495e';
+            let bgFactura = 'white';
+            let iconoServicio = '';
+
+            if (factura.tieneCaja) {
+                borderStyle = '2px solid #e74c3c';
+                bgFactura = '#fff5f5';
+                iconoServicio = '<span style="background: #e74c3c; color: white; font-size: 0.65rem; padding: 2px 6px; border-radius: 10px; font-weight: 600;">🔧 CAJA</span>';
+            } else if (factura.tieneAceite) {
+                borderStyle = '2px solid #27ae60';
+                bgFactura = '#f0fff4';
+                iconoServicio = '<span style="background: #27ae60; color: white; font-size: 0.65rem; padding: 2px 6px; border-radius: 10px; font-weight: 600;">🛢️ ACEITE</span>';
+            }
+
+            if (pagada) {
+                borderStyle = '2px solid #27ae60';
+                bgFactura = '#f8fffe';
+            }
+
+            // Pie de cada tarjeta individual mostrando su propio saldo separado y sus abonos
+            let detalleAbonos = '';
+            if (factura.abonos && factura.abonos.length > 0) {
+                detalleAbonos = factura.abonos.map(a => `<span style="font-size: 0.75rem; color: #27ae60;">+$${a.monto.toFixed(2)} (${a.fechaTexto})</span>`).join(' · ');
+            }
+
+            const barraSaldoIndividual = `
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: ${abonado > 0 ? '#e8f8f5' : '#f1f5f9'}; border-top: 1px solid #cbd5e1; font-size: 0.8rem; flex-wrap: wrap; gap: 6px;">
+                    <div>
+                        ${abonado > 0
+                            ? `<i class="fas fa-coins" style="color: #27ae60; margin-right: 4px;"></i> <strong>Abonado a esta factura:</strong> $${abonado.toFixed(2)} <span style="margin-left: 4px;">${detalleAbonos}</span>`
+                            : `<span style="color: #64748b;"><i class="fas fa-receipt"></i> Sin abonos previos</span>`
+                        }
+                    </div>
+                    <div>
+                        ${pagada
+                            ? `<span style="background: #27ae60; color: white; padding: 2px 8px; border-radius: 12px; font-weight: 700; font-size: 0.75rem;"><i class="fas fa-check"></i> CUBIERTA ($0.00)</span>`
+                            : `<span style="font-weight: 700; color: #e74c3c;">Saldo de esta factura: $${saldo.toFixed(2)}</span>`
+                        }
+                    </div>
+                </div>
+            `;
+
+            // Si está suelta lleva checkbox individual; si está dentro de fusión no necesita checkbox suelto porque se maneja desde la tarjeta principal
+            const checkboxHTML = !dentroDeFusion ? `
+                <input type="checkbox" ${seleccionadas.has(factura.id) ? 'checked' : ''}
+                    onchange="toggleSeleccion('${factura.id}')"
+                    style="width: 18px; height: 18px; cursor: pointer;">
+            ` : `
+                <span style="background: #ede9fe; color: #6d28d9; font-size: 0.7rem; font-weight: 700; padding: 2px 7px; border-radius: 6px;">
+                    <i class="fas fa-link"></i> En Fusión
+                </span>
+            `;
+
+            return `
+                <div style="background: ${bgFactura}; border-radius: 8px; margin: 0; display: flex; flex-direction: column; height: 100%; overflow: hidden; border: ${borderStyle}; box-shadow: 0 3px 8px rgba(0,0,0,0.12);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-bottom: 1px solid #e0e0e0; flex-wrap: wrap; gap: 8px;">
+                        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                            ${checkboxHTML}
+                            <i class="fas fa-file-invoice" style="color: #3498db; font-size: 0.9rem;"></i>
+                            <span style="font-weight: 700; color: #2c3e50; font-size: 0.9rem;">#${factura.invoiceNumber}</span>
+                            ${iconoServicio}
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <span style="color: #475569; font-size: 0.8rem; font-weight: 600; background: #fff; padding: 2px 8px; border-radius: 6px; border: 1px solid #cbd5e1;">
+                                <i class="fas fa-calendar-alt" style="margin-right: 4px; color: #3498db;"></i>${factura.fechaTexto}
+                            </span>
+                            <span style="font-weight: 700; color: #2c3e50; font-size: 0.95rem;">Total: $${factura.total.toFixed(2)}</span>
+                        </div>
+                    </div>
+                    <div style="flex: 1;">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 0.8rem;">
+                            <thead>
+                                <tr style="background: linear-gradient(135deg, #2c3e50, #34495e);">
+                                    <th style="padding: 6px 8px; text-align: center; color: white; font-size: 0.72rem; font-weight: 600; width: 50px;">CANT.</th>
+                                    <th style="padding: 6px 8px; text-align: left; color: white; font-size: 0.72rem; font-weight: 600;">DESCRIPCIÓN</th>
+                                    <th style="padding: 6px 8px; text-align: right; color: white; font-size: 0.72rem; font-weight: 600; width: 80px;">P. UNIT.</th>
+                                    <th style="padding: 6px 8px; text-align: right; color: white; font-size: 0.72rem; font-weight: 600; width: 80px;">SUBTOTAL</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${filasProductos}
+                            </tbody>
+                        </table>
+                    </div>
+                    ${barraSaldoIndividual}
+                </div>
+            `;
+        }
+
+        function renderizarTodo() {
+            const container = document.getElementById('facturas-list-container');
+            // Ordenar por fecha original (más antiguas primero)
+            const ordenadas = [...facturas].sort((a, b) => a.timestampMs - b.timestampMs);
+
+            // Actualizar resumen superior del equipo
+            const activas = ordenadas.filter(f => calcularSaldoFactura(f) > 0.009);
+            const sumaTotal = activas.reduce((s, f) => s + f.total, 0);
+            const sumaPendiente = activas.reduce((s, f) => s + calcularSaldoFactura(f), 0);
+
+            document.getElementById('resumen-cantidad').textContent = activas.length;
+            document.getElementById('resumen-total').textContent = `$${sumaTotal.toFixed(2)}`;
+            document.getElementById('resumen-pendiente').textContent = `$${sumaPendiente.toFixed(2)}`;
+
+            // Agrupar las que comparten un mismo fusionId vs las sueltas
+            const gruposFusion = new Map();
+            const itemsRender = [];
+
+            ordenadas.forEach(f => {
+                if (f.fusionId) {
+                    if (!gruposFusion.has(f.fusionId)) {
+                        const grupoObj = { tipo: 'fusion', fusionId: f.fusionId, facturas: [] };
+                        gruposFusion.set(f.fusionId, grupoObj);
+                        itemsRender.push(grupoObj);
+                    }
+                    gruposFusion.get(f.fusionId).facturas.push(f);
+                } else {
+                    itemsRender.push({ tipo: 'individual', factura: f });
+                }
+            });
+
+            const cantidadSueltas = itemsRender.filter(i => i.tipo === 'individual').length;
+            const gridExteriorStyle = cantidadSueltas >= 2
+                ? 'display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; align-items: stretch;'
+                : 'display: grid; grid-template-columns: 1fr; gap: 14px;';
+
+            let html = `<div style="${gridExteriorStyle}">`;
+
+            itemsRender.forEach(item => {
+                if (item.tipo === 'fusion') {
+                    const lista = item.facturas;
+                    const totalOriginalFusion = lista.reduce((s, f) => s + f.total, 0);
+                    const totalAbonadoFusion = lista.reduce((s, f) => s + calcularAbonadoFactura(f), 0);
+                    const saldoPendienteFusion = lista.reduce((s, f) => s + calcularSaldoFactura(f), 0);
+
+                    const primeraFecha = lista[0].fechaTexto;
+                    const ultimaFecha = lista[lista.length - 1].fechaTexto;
+
+                    let tarjetasInternasHTML = '';
+                    lista.forEach(f => {
+                        tarjetasInternasHTML += generarHTMLTarjetaFactura(f, true);
+                    });
+
+                    const gridInternoFusionStyle = lista.length >= 2
+                        ? 'display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; align-items: stretch;'
+                        : 'display: grid; grid-template-columns: 1fr; gap: 12px;';
+
+                    html += `
+                        <div class="fusion-container-card" style="grid-column: 1 / -1; margin: 0;">
+                            <!-- Encabezado de la Tarjeta Principal Fusionada -->
+                            <div class="fusion-header">
+                                <div class="fusion-title-group">
+                                    <i class="fas fa-layer-group" style="font-size: 1.15rem;"></i>
+                                    <div>
+                                        <div style="font-weight: 800; font-size: 1rem;">FACTURAS FUSIONADAS (${lista.length} facturas)</div>
+                                        <div style="font-size: 0.78rem; opacity: 0.9;">
+                                            <i class="fas fa-calendar-check"></i> Fechas incluidas: <strong>${primeraFecha}</strong> hasta <strong>${ultimaFecha}</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style="display: flex; gap: 8px; align-items: center;">
+                                    <button onclick="deshacerFusion('${item.fusionId}')"
+                                        style="background: rgba(255,255,255,0.18); color: white; border: 1px solid rgba(255,255,255,0.4); padding: 6px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer;"
+                                        title="Volver a dejar las facturas sueltas">
+                                        <i class="fas fa-unlink"></i> Separar
+                                    </button>
+                                    ${saldoPendienteFusion > 0 ? `
+                                        <button onclick="abrirModalAbonoFusion('${item.fusionId}')"
+                                            style="background: #2ecc71; color: white; border: none; padding: 7px 14px; border-radius: 6px; font-size: 0.8rem; font-weight: 800; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.15);">
+                                            <i class="fas fa-money-bill-wave"></i> ABONAR A FUSIONADAS
+                                        </button>
+                                    ` : `
+                                        <span style="background: #2ecc71; color: white; padding: 5px 12px; border-radius: 20px; font-size: 0.78rem; font-weight: 800;">
+                                            <i class="fas fa-check-circle"></i> CORTE PAGADO
+                                        </span>
+                                    `}
+                                </div>
+                            </div>
+
+                            <!-- Tarjetas Individuales Adentro (Ordenadas por fecha con sus propios saldos) -->
+                            <div class="fusion-body">
+                                <div class="fusion-inner-label">
+                                    <i class="fas fa-arrow-down"></i> Detalle de facturas dentro de esta fusión (ordenadas por fecha):
+                                </div>
+                                <div style="${gridInternoFusionStyle}">
+                                    ${tarjetasInternasHTML}
+                                </div>
+                            </div>
+
+                            <!-- Pie de la Tarjeta Principal con el Total Acumulado de las Fusionadas -->
+                            <div class="fusion-footer">
+                                <div class="fusion-totals-breakdown">
+                                    <div class="fusion-stat">
+                                        Suma de las ${lista.length} facturas:<br>
+                                        <strong>$${totalOriginalFusion.toFixed(2)}</strong>
+                                    </div>
+                                    <div class="fusion-stat">
+                                        Abonos a favor respetados:<br>
+                                        <strong style="color: #27ae60;">-$${totalAbonadoFusion.toFixed(2)}</strong>
+                                    </div>
+                                </div>
+
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <div class="fusion-final-balance" style="${saldoPendienteFusion <= 0 ? 'background:#f0fff4; border-color:#9ae6b4;' : ''}">
+                                        <span style="${saldoPendienteFusion <= 0 ? 'color:#27ae60;' : ''}">Saldo Total Fusionado</span>
+                                        <strong style="${saldoPendienteFusion <= 0 ? 'color:#27ae60;' : ''}">$${saldoPendienteFusion.toFixed(2)}</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    // Tarjeta individual normal (por ejemplo la factura nueva creada después)
+                    html += generarHTMLTarjetaFactura(item.factura, false);
+                }
+            });
+
+            html += `</div>`;
+            container.innerHTML = html;
+            actualizarBotonesSeleccion();
+        }
+
+        function toggleSeleccion(id) {
+            if (seleccionadas.has(id)) {
+                seleccionadas.delete(id);
+            } else {
+                seleccionadas.add(id);
+            }
+            actualizarBotonesSeleccion();
+        }
+
+        function toggleSeleccionarTodas() {
+            const chkTodas = document.getElementById('chk-seleccionar-todas');
+            const sueltasActivas = facturas.filter(f => calcularSaldoFactura(f) > 0 && !f.fusionId);
+            if (chkTodas && chkTodas.checked) {
+                sueltasActivas.forEach(f => seleccionadas.add(f.id));
+            } else {
+                seleccionadas.clear();
+            }
+            renderizarTodo();
+        }
+
+        function actualizarBotonesSeleccion() {
+            const btnFusionar = document.getElementById('btn-fusionar-sel');
+            const btnAbonar = document.getElementById('btn-abonar-sel');
+            const chkTodas = document.getElementById('chk-seleccionar-todas');
+            const lblTodas = document.getElementById('lbl-seleccionar-todas');
+            const sueltasActivas = facturas.filter(f => calcularSaldoFactura(f) > 0 && !f.fusionId);
+            const n = seleccionadas.size;
+
+            if (chkTodas) {
+                const todasMarcadas = sueltasActivas.length > 0 && sueltasActivas.every(f => seleccionadas.has(f.id));
+                chkTodas.checked = todasMarcadas;
+                if (lblTodas) lblTodas.textContent = todasMarcadas ? 'Desmarcar todas' : 'Seleccionar todas';
+            }
+
+            if (n >= 2) {
+                btnFusionar.style.display = 'inline-flex';
+                btnFusionar.innerHTML = `<i class="fas fa-object-group"></i> FUSIONAR (${n})`;
+            } else {
+                btnFusionar.style.display = 'none';
+            }
+
+            if (n >= 1) {
+                btnAbonar.style.display = 'inline-flex';
+                btnAbonar.innerHTML = `<i class="fas fa-money-bill-wave"></i> ABONAR SELECCIONADAS (${n})`;
+            } else {
+                btnAbonar.style.display = 'none';
+            }
+        }
+
+        function fusionarSeleccionadas() {
+            if (seleccionadas.size < 2) return;
+            const nuevoFusionId = 'FUS-' + Date.now();
+            facturas.forEach(f => {
+                if (seleccionadas.has(f.id)) {
+                    f.fusionId = nuevoFusionId;
+                }
+            });
+            const cantidad = seleccionadas.size;
+            seleccionadas.clear();
+            renderizarTodo();
+            mostrarToast(`Se fusionaron ${cantidad} facturas en una sola tarjeta contenedora.`);
+        }
+
+        function deshacerFusion(fusionId) {
+            facturas.forEach(f => {
+                if (f.fusionId === fusionId) {
+                    f.fusionId = null;
+                }
+            });
+            renderizarTodo();
+            mostrarToast('Las facturas se separaron nuevamente.');
+        }
+
+        function abrirModalAbonoFusion(fusionId) {
+            const facturasDelCorte = facturas
+                .filter(f => f.fusionId === fusionId && calcularSaldoFactura(f) > 0.009)
+                .sort((a, b) => a.timestampMs - b.timestampMs);
+
+            if (facturasDelCorte.length === 0) return;
+
+            idsParaAbonoActual = facturasDelCorte.map(f => f.id);
+            const saldoCorte = facturasDelCorte.reduce((s, f) => s + calcularSaldoFactura(f), 0);
+
+            document.getElementById('modal-abono-titulo').textContent = 'Abonar a Facturas Fusionadas';
+            document.getElementById('modal-abono-sub').textContent =
+                'El pago se aplicará solo a las facturas dentro de esta fusión (de la más antigua a la más reciente), sin tocar las facturas nuevas de afuera.';
+            document.getElementById('modal-abono-saldo-actual').textContent = `$${saldoCorte.toFixed(2)}`;
+            document.getElementById('modal-abono').dataset.saldoMaximo = saldoCorte;
+            document.getElementById('input-monto-abono').value = '';
+            document.getElementById('modal-nuevo-saldo').textContent = `$${saldoCorte.toFixed(2)}`;
+            document.getElementById('modal-nuevo-saldo').style.color = '#ff4757';
+            document.getElementById('modal-abono').style.display = 'flex';
+            document.getElementById('input-monto-abono').focus();
+        }
+
+        function abrirModalAbonoSeleccionadas() {
+            const facturasSel = facturas
+                .filter(f => seleccionadas.has(f.id) && calcularSaldoFactura(f) > 0.009)
+                .sort((a, b) => a.timestampMs - b.timestampMs);
+
+            if (facturasSel.length === 0) return;
+
+            idsParaAbonoActual = facturasSel.map(f => f.id);
+            const saldoSel = facturasSel.reduce((s, f) => s + calcularSaldoFactura(f), 0);
+
+            document.getElementById('modal-abono-titulo').textContent = `Abonar a ${facturasSel.length} Factura(s)`;
+            document.getElementById('modal-abono-sub').textContent = 'El pago se aplicará únicamente a las facturas seleccionadas.';
+            document.getElementById('modal-abono-saldo-actual').textContent = `$${saldoSel.toFixed(2)}`;
+            document.getElementById('modal-abono').dataset.saldoMaximo = saldoSel;
+            document.getElementById('input-monto-abono').value = '';
+            document.getElementById('modal-nuevo-saldo').textContent = `$${saldoSel.toFixed(2)}`;
+            document.getElementById('modal-nuevo-saldo').style.color = '#ff4757';
+            document.getElementById('modal-abono').style.display = 'flex';
+            document.getElementById('input-monto-abono').focus();
+        }
+
+        function llenarPagoTotalCorte() {
+            const max = parseFloat(document.getElementById('modal-abono').dataset.saldoMaximo) || 0;
+            document.getElementById('input-monto-abono').value = max.toFixed(2);
+            actualizarCalculoModal();
+        }
+
+        function actualizarCalculoModal() {
+            const max = parseFloat(document.getElementById('modal-abono').dataset.saldoMaximo) || 0;
+            const monto = parseFloat(document.getElementById('input-monto-abono').value) || 0;
+            const restante = Math.max(0, max - monto);
+            const el = document.getElementById('modal-nuevo-saldo');
+            el.textContent = `$${restante.toFixed(2)}`;
+            el.style.color = restante <= 0.009 ? '#2ecc71' : '#ff4757';
+        }
+
+        function cerrarModalAbono() {
+            document.getElementById('modal-abono').style.display = 'none';
+        }
+
+        function confirmarAbono() {
+            const max = parseFloat(document.getElementById('modal-abono').dataset.saldoMaximo) || 0;
+            const monto = parseFloat(document.getElementById('input-monto-abono').value) || 0;
+
+            if (monto <= 0) {
+                alert('Ingresa un monto mayor a $0.00');
+                return;
+            }
+            if (monto > max + 0.01) {
+                alert('El monto no puede superar el saldo de este corte ($' + max.toFixed(2) + ')');
+                return;
+            }
+
+            let restantePorAplicar = monto;
+            const hoyTexto = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' });
+
+            // Aplicar en orden de fecha únicamente a las facturas del corte
+            idsParaAbonoActual.forEach(id => {
+                if (restantePorAplicar <= 0.009) return;
+                const fac = facturas.find(f => f.id === id);
+                if (!fac) return;
+                const saldoFac = calcularSaldoFactura(fac);
+                const aplicar = Math.min(restantePorAplicar, saldoFac);
+                if (aplicar > 0) {
+                    fac.abonos.push({ monto: aplicar, fechaTexto: hoyTexto });
+                    restantePorAplicar -= aplicar;
+                }
+            });
+
+            seleccionadas.clear();
+            cerrarModalAbono();
+            renderizarTodo();
+            mostrarToast(`Abono de $${monto.toFixed(2)} aplicado solo al corte seleccionado.`);
+        }
+
+        function mostrarToast(texto) {
+            const t = document.getElementById('toast-msg');
+            t.textContent = texto;
+            t.style.display = 'block';
+            clearTimeout(window._toastTimer);
+            window._toastTimer = setTimeout(() => {
+                t.style.display = 'none';
+            }, 3500);
+        }
+
+        // Iniciar con la fusión del lunes lista para verse de inmediato
+        fusionarEjemploLunes();
+    </script>
+</body>
+
+</html>
+

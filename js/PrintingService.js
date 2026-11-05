@@ -75,91 +75,264 @@ const PrintingService = {
         `;
     },
 
+    printMultipleTickets(facturas) {
+        if (!facturas || facturas.length === 0) return false;
+
+        const printWindow = window.open('', '_blank', `width=${this._winW()},height=650`);
+        if (!printWindow) {
+            alert("El navegador bloqueó la ventana de impresión. Por favor, permita las ventanas emergentes en este sitio para imprimir el ticket.");
+            return false;
+        }
+
+        const toSafeDate = (val) => {
+            if (!val) return new Date();
+            if (val instanceof Date && !isNaN(val.getTime())) return val;
+            if (typeof val.toDate === 'function') return val.toDate();
+            if (val.seconds) return new Date(val.seconds * 1000);
+            const parsed = new Date(val);
+            return isNaN(parsed.getTime()) ? new Date() : parsed;
+        };
+
+        let ticketsBodiesHTML = '';
+
+        facturas.forEach((saleData, idx) => {
+            const fecha = toSafeDate(saleData.timestamp);
+            const fechaFormateada = fecha.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' });
+            const saldoPendiente = saleData.saldoPendiente !== undefined ? saleData.saldoPendiente : saleData.total;
+            const tieneAbonos = saleData.abonos && saleData.abonos.length > 0;
+            const tipoPago = saleData.paymentType === 'pendiente' ? 'PENDIENTE' : 'CONTADO';
+
+            let abonosHTML = '';
+            if (tieneAbonos) {
+                saleData.abonos.forEach(abono => {
+                    const fechaAbono = toSafeDate(abono.fecha).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' });
+                    abonosHTML += `
+                        <div style="display: flex; justify-content: space-between; font-size: ${this._px(20)}; margin: 2px 0;">
+                            <div>ABONO: $${abono.monto.toFixed(2)} (${fechaAbono})</div>
+                        </div>
+                    `;
+                });
+            }
+
+            let productosHTML = '';
+            if (saleData.products && saleData.products.length > 0) {
+                saleData.products.forEach(producto => {
+                    const descripcion = producto.descripcion.length > 25 ? producto.descripcion.substring(0, 25) + '...' : producto.descripcion;
+                    productosHTML += `
+                        <div style="margin: 4px 0;">
+                            <div style="font-size: ${this._px(16)};">• ${this._escape(descripcion)}</div>
+                            <div style="display: flex; justify-content: space-between; font-size: ${this._px(18)};">
+                                <div>x${producto.cantidad}</div>
+                                <div>$${(producto.precio * producto.cantidad).toFixed(2)}</div>
+                            </div>
+                        </div>
+                        <div style="border-bottom: ${this._px(3)} solid #000; margin: 2px 0;"></div>
+                    `;
+                });
+            }
+
+            ticketsBodiesHTML += `
+                <div class="ticket-block" style="${idx < facturas.length - 1 ? 'page-break-after: always; padding-bottom: 18px; margin-bottom: 18px; border-bottom: 4px double #000;' : ''}">
+                    <div class="header">
+                        <h3 style="margin: 2px 0; font-size: ${this._px(26)};">TALLER WILLIAN</h3>
+                        <div class="small-text">Factura: ${this._escape(saleData.invoiceNumber)}</div>
+                        <div class="small-text">${fechaFormateada}, ${tipoPago}</div>
+                    </div>
+                    
+                    <div class="line"></div>
+                    
+                    ${saleData.clientName && saleData.clientName !== saleData.equipoNumber && saleData.clientName !== `Equipo ${saleData.equipoNumber}` ? `
+                        <div class="medium-text">
+                            <strong>Grupo:</strong> ${this._escape(saleData.clientName)}
+                        </div>
+                    ` : ''}
+                    <div class="equipo-text" style="text-align: center;">
+                        ${this._escape(saleData.equipoNumber)}
+                    </div>
+                    
+                    <div class="line"></div>
+                    
+                    <div style="margin: 8px 0;">
+                        ${productosHTML}
+                    </div>
+                    
+                    <div class="line"></div>
+                    
+                    <div class="total large-text">
+                        TOTAL: $${Number(saleData.total || 0).toFixed(2)}
+                    </div>
+
+                    ${abonosHTML}
+
+                    ${tieneAbonos && saldoPendiente > 0 ? `
+                        <div class="saldo-info">
+                            <div>SALDO PENDIENTE:</div>
+                            <div class="large-text">$${saldoPendiente.toFixed(2)}</div>
+                        </div>
+                    ` : ''}
+                    
+                    <div class="thank-you">
+                        GRACIAS POR PREFERIRNOS
+                    </div>
+                </div>
+            `;
+        });
+
+        const contenido = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <title>Tickets Seleccionados (${facturas.length})</title>
+                <style>${this._ticketCSS()}</style>
+            </head>
+            <body>
+                ${ticketsBodiesHTML}
+            </body>
+            </html>
+        `;
+
+        printWindow.document.open();
+        printWindow.document.write(contenido);
+        printWindow.document.close();
+
+        const triggerPrint = () => {
+            if (printWindow.document.fonts) {
+                printWindow.document.fonts.ready.then(() => {
+                    setTimeout(() => {
+                        printWindow.focus();
+                        printWindow.print();
+                    }, 500);
+                });
+            } else {
+                setTimeout(() => {
+                    printWindow.focus();
+                    printWindow.print();
+                }, 800);
+            }
+        };
+
+        if (printWindow.document.readyState === 'complete') {
+            triggerPrint();
+        } else {
+            printWindow.onload = triggerPrint;
+        }
+    },
+
     printBalanceHistory(reportData) {
         try {
-            if (!reportData || !reportData.movimientos) {
+            if (!reportData || (!reportData.facturas && !reportData.movimientos)) {
                 alert("Error: Sin datos para imprimir");
                 return;
             }
 
-            const printWindow = window.open('', '_blank', 'width=450,height=600');
+            const printWindow = window.open('', '_blank', `width=${this._winW()},height=650`);
             if (!printWindow) {
                 alert("El navegador bloqueó la ventana de impresión. Por favor, permita las ventanas emergentes.");
                 return;
+            }
+
+            const toSafeDate = (val) => {
+                if (!val) return new Date();
+                if (val instanceof Date && !isNaN(val.getTime())) return val;
+                if (typeof val.toDate === 'function') return val.toDate();
+                if (val.seconds) return new Date(val.seconds * 1000);
+                const parsed = new Date(val);
+                return isNaN(parsed.getTime()) ? new Date() : parsed;
+            };
+
+            let detalleFacturasHTML = '';
+
+            if (reportData.facturas && reportData.facturas.length > 0) {
+                reportData.facturas.forEach((factura, idx) => {
+                    const fecha = toSafeDate(factura.timestamp);
+                    const fechaStr = fecha.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' });
+                    const saldoPendiente = factura.saldoPendiente !== undefined ? factura.saldoPendiente : factura.total;
+                    const tieneAbonos = factura.abonos && factura.abonos.length > 0;
+
+                    let productosHTML = '';
+                    if (factura.products && factura.products.length > 0) {
+                        factura.products.forEach(producto => {
+                            const descripcion = producto.descripcion.length > 25 ? producto.descripcion.substring(0, 25) + '...' : producto.descripcion;
+                            productosHTML += `
+                                <div style="margin: 3px 0;">
+                                    <div style="font-size: ${this._px(16)};">• ${this._escape(descripcion)}</div>
+                                    <div style="display: flex; justify-content: space-between; font-size: ${this._px(17)};">
+                                        <div>x${producto.cantidad}</div>
+                                        <div>$${(producto.precio * producto.cantidad).toFixed(2)}</div>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                    }
+
+                    let abonosHTML = '';
+                    if (tieneAbonos) {
+                        factura.abonos.forEach(abono => {
+                            const fechaAbono = toSafeDate(abono.fecha).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' });
+                            abonosHTML += `
+                                <div style="display: flex; justify-content: space-between; font-size: ${this._px(16)}; margin: 2px 0;">
+                                    <span>- Abono (${fechaAbono})</span>
+                                    <span>-$${Number(abono.monto || 0).toFixed(2)}</span>
+                                </div>
+                            `;
+                        });
+                    }
+
+                    detalleFacturasHTML += `
+                        <div style="margin: 8px 0; padding-bottom: 6px; ${idx < reportData.facturas.length - 1 ? 'border-bottom: 2px dashed #000;' : ''}">
+                            <div style="display: flex; justify-content: space-between; font-size: ${this._px(18)}; font-weight: 900; border-bottom: 1px solid #000; padding-bottom: 2px; margin-bottom: 4px;">
+                                <span>Fac #${this._escape(factura.invoiceNumber)}</span>
+                                <span>${fechaStr}</span>
+                            </div>
+                            ${productosHTML}
+                            <div style="display: flex; justify-content: space-between; font-size: ${this._px(18)}; margin-top: 4px; border-top: 1px dotted #000; padding-top: 2px;">
+                                <span>Total Factura:</span>
+                                <span>$${Number(factura.total || 0).toFixed(2)}</span>
+                            </div>
+                            ${abonosHTML}
+                            <div style="display: flex; justify-content: space-between; font-size: ${this._px(19)}; font-weight: 900; margin-top: 2px;">
+                                <span>Saldo Factura:</span>
+                                <span>$${Number(saldoPendiente || 0).toFixed(2)}</span>
+                            </div>
+                        </div>
+                    `;
+                });
             }
 
             let reportHTML = `
                 <!DOCTYPE html>
                 <html>
                 <head>
+                    <meta charset="UTF-8">
                     <title>Historial de Saldos - ${this._escape(reportData.cliente)}</title>
-                    <style>
-                        body { font-family: 'Courier New', monospace; font-size: 12px; margin: 0; padding: 10px; width: 80mm; color: #000; }
-                        .header { text-align: center; margin-bottom: 10px; border-bottom: 2px dashed black; padding-bottom: 5px; }
-                        .header h2 { margin: 5px 0; font-size: 16px; font-weight: bold; }
-                        .info-line { display: flex; justify-content: space-between; margin: 3px 0; font-size: 11px; }
-                        .movimientos-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-                        .movimientos-table th { text-align: left; border-bottom: 2px solid black; font-size: 10px; padding: 4px 0; }
-                        .movimientos-table td { padding: 4px 0; border-bottom: 1px dotted #000; vertical-align: top; }
-                        .total-line { border-top: 2px solid black; margin-top: 10px; padding-top: 5px; font-weight: bold; text-align: right; font-size: 14px; }
-                        .footer { text-align: center; margin-top: 15px; font-size: 10px; color: #000; }
-                    </style>
+                    <style>${this._ticketCSS()}</style>
                 </head>
                 <body>
                     <div class="header">
-                        <h2>TALLER WILLIAN</h2>
-                        <div>HISTORIAL DE SALDOS</div>
-                        <div>${new Date().toLocaleString('es-ES')}</div>
+                        <h3 style="margin: 2px 0; font-size: ${this._px(24)};">TALLER WILLIAN</h3>
+                        <div class="small-text">HISTORIAL DE SALDOS</div>
+                        <div class="small-text">${new Date().toLocaleString('es-ES')}</div>
                     </div>
 
-                    <div class="info-line">
-                        <span>Cliente:</span>
-                        <strong>${this._escape(reportData.cliente)}</strong>
+                    <div class="line"></div>
+
+                    ${reportData.cliente && reportData.cliente !== reportData.equipo && reportData.cliente !== `Equipo ${reportData.equipo}` ? `
+                        <div class="medium-text" style="text-align: center;">
+                            <strong>Cliente:</strong> ${this._escape(reportData.cliente)}
+                        </div>
+                    ` : ''}
+                    <div class="equipo-text" style="text-align: center;">
+                        Equipo ${this._escape(reportData.equipo)}
                     </div>
-                    <div class="info-line">
-                        <span>Equipo:</span>
-                        <strong>${this._escape(reportData.equipo)}</strong>
-                    </div>
 
-                    <table class="movimientos-table">
-                        <thead>
-                            <tr>
-                                <th style="width: 25%">Fecha</th>
-                                <th style="width: 50%">Movimiento</th>
-                                <th style="width: 25%; text-align: right">Monto</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-            `;
+                    <div class="line"></div>
 
-            reportData.movimientos.forEach(mov => {
-                const esAbono = mov.tipo === 'abono';
-                const signo = esAbono ? '-' : '+';
-                const cantidad = esAbono ? (mov.abono || mov.monto) : (mov.cargo || mov.monto);
+                    ${detalleFacturasHTML}
 
-                let fechaStr = "N/A";
-                try {
-                    const d = mov.fecha ? new Date(mov.fecha) : new Date();
-                    fechaStr = isNaN(d.getTime()) ? "N/A" : d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' });
-                } catch (e) { console.error("Error fecha", e); }
-
-                reportHTML += `
-                    <tr>
-                        <td>${fechaStr}</td>
-                        <td>${this._escape(mov.concepto)}</td>
-                        <td style="text-align: right; ${esAbono ? 'font-weight: bold;' : ''}">
-                            ${signo}$${Number(cantidad).toFixed(2)}
-                        </td>
-                    </tr>
-                `;
-            });
-
-            reportHTML += `
-                        </tbody>
-                    </table>
-
-                    <div class="total-line">
-                        SALDO PENDIENTE: $${Number(reportData.saldoFinal).toFixed(2)}
+                    <div class="saldo-info" style="text-align: center; margin-top: 10px;">
+                        <div>SALDO TOTAL PENDIENTE:</div>
+                        <div class="large-text">$${Number(reportData.saldoFinal).toFixed(2)}</div>
                     </div>
 
                     <div class="footer">
@@ -173,7 +346,6 @@ const PrintingService = {
             printWindow.document.write(reportHTML);
             printWindow.document.close();
 
-            // Usar un método más robusto para disparar la impresión
             if (printWindow.document.readyState === 'complete') {
                 setTimeout(() => { printWindow.focus(); printWindow.print(); }, 500);
             } else {
