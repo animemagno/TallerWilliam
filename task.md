@@ -1,6 +1,7 @@
 # Hoja de Ruta - Taller William
 
 ## 🟢 Tareas Activas
+- [x] (06/11/2026) `movil.html`: Igualación de la consulta de movimientos del día y la fórmula de la tarjeta `Caja Final` (y demás totales diarios) con el reporte de `ventas.html` (`HistorialService.showGananciasReport`).
 - [x] (05/11/2026) `js/GrupoManager.js` y `ventas.html`: Corrección del refresco automático de equipos pendientes (`loadEquiposPendientes`) tras guardar en `EDITAR DATOS`.
 - [x] (05/11/2026) `ventas.html`, `js/GrupoManager.js` y `js/SalesService.js`: Adición de botón y ventana "EDITAR DATOS" en la ventana flotante de facturas para modificar Fecha, Número de Equipo y Nombre de Grupo de una factura (además de opción directa para pasar sus productos al carrito).
 - [x] (05/11/2026) `js/GrupoManager.js` y `muestra_fusion.html`: Adición de casilla/botón "Seleccionar todas / Desmarcar todas" en la barra de acciones de las facturas del equipo para marcar todas las facturas pendientes de un solo clic.

@@ -839,23 +839,28 @@
             listContainer.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i> Cargando...</div>';
 
             try {
-                // FECHA LOCAL SEGURA
-                const now = new Date();
-                const currentDay = now.getDate();
-                const currentMonth = now.getMonth();
-                const currentYear = now.getFullYear();
+                // Fecha del día en El Salvador (YYYY-MM-DD), igual que en ventas.html
+                let todayStr;
+                try {
+                    const options = {
+                        timeZone: 'America/El_Salvador',
+                        year: 'numeric',
+                        month: 'numeric',
+                        day: 'numeric'
+                    };
+                    const parts = new Intl.DateTimeFormat('en-US', options).formatToParts(new Date());
+                    const p = {};
+                    parts.forEach(part => p[part.type] = part.value);
+                    todayStr = `${p.year}-${String(p.month).padStart(2, '0')}-${String(p.day).padStart(2, '0')}`;
+                } catch (e) {
+                    todayStr = formatDate(new Date());
+                }
 
-                const isSameDay = (dateObj) => {
-                    return dateObj.getDate() === currentDay &&
-                        dateObj.getMonth() === currentMonth &&
-                        dateObj.getFullYear() === currentYear;
-                };
-
-                // Cargar colecciones en paralelo
+                // Cargar colecciones del día en paralelo por el campo 'date', igual que en ventas.html
                 const [ventasSnap, retirosSnap, ingresosSnap] = await Promise.all([
-                    db.collection('VENTAS').orderBy('timestamp', 'desc').limit(200).get(),
-                    db.collection('RETIROS').orderBy('timestamp', 'desc').limit(50).get(),
-                    db.collection('INGRESOS').orderBy('timestamp', 'desc').limit(50).get()
+                    db.collection('VENTAS').where('date', '==', todayStr).get(),
+                    db.collection('RETIROS').where('date', '==', todayStr).get(),
+                    db.collection('INGRESOS').where('date', '==', todayStr).get()
                 ]);
 
                 let allItems = [];
@@ -865,86 +870,57 @@
                 let totalRetiros = 0;
                 let totalIngresosExtras = 0;
 
-                // Sets para rastrear ventas de contado de HOY y evitar duplicidad con abonos
-                const ventasContadoHoyIds = new Set();
-                const ventasContadoHoyNumbers = new Set();
-
-                // 1. PROCESAR VENTAS
+                // 1. PROCESAR VENTAS (misma condición que HistorialService.showGananciasReport en ventas.html)
                 ventasSnap.forEach(doc => {
                     const data = doc.data();
                     const date = parseDate(data);
+                    const item = { ...data, id: doc.id, type: 'venta', dateObj: date };
+                    allItems.push(item);
 
-                    if (isSameDay(date)) {
-                        const item = { ...data, id: doc.id, type: 'venta', dateObj: date };
-                        allItems.push(item);
+                    const pType = (item.paymentType || '').toLowerCase();
+                    const status = (item.status || '').toLowerCase();
+                    const saldo = item.saldoPendiente !== undefined ? Number(item.saldoPendiente) : Number(item.total);
+                    const monto = Number(item.total) || 0;
 
-                        const monto = parseFloat(item.total || item.monto || 0);
-
-                        // Sumar Venta (Contado o Crédito)
-                        // Si es contado, la registramos para NO sumar su abono si aparece en INGRESOS
-                        if (item.paymentType === 'contado') {
-                            totalVentasContado += monto;
-                            ventasContadoHoyIds.add(doc.id);
-                            if (item.invoiceNumber) ventasContadoHoyNumbers.add(String(item.invoiceNumber));
-                        } else {
-                            totalVentasCredito += monto;
-                        }
+                    if (pType === 'contado' || status.includes('pagad') || saldo <= 0 || item.cancelada) {
+                        totalVentasContado += monto;
+                    } else {
+                        totalVentasCredito += monto;
                     }
                 });
 
-                // 2. PROCESAR RETIROS
+                // 2. PROCESAR RETIROS (igual que en ventas.html)
                 retirosSnap.forEach(doc => {
                     const data = doc.data();
                     const date = parseDate(data);
-
-                    if (isSameDay(date)) {
-                        const item = { ...data, id: doc.id, type: 'retiro', dateObj: date };
-                        allItems.push(item);
-                        totalRetiros += parseFloat(item.monto || 0);
-                    }
+                    const item = { ...data, id: doc.id, type: 'retiro', dateObj: date };
+                    allItems.push(item);
+                    totalRetiros += Math.abs(Number(item.monto) || 0);
                 });
 
-                // 3. PROCESAR INGRESOS (Y ABONOS INDEPENDIENTES)
+                // 3. PROCESAR INGRESOS Y ABONOS (igual que en ventas.html)
                 ingresosSnap.forEach(doc => {
                     const data = doc.data();
                     const date = parseDate(data);
+                    const isAbono = data.categoria === 'abono';
+                    const item = { ...data, id: doc.id, type: isAbono ? 'abono_indep' : 'ingreso', dateObj: date };
+                    allItems.push(item);
 
-                    if (isSameDay(date)) {
-                        const isAbono = data.categoria === 'abono';
-                        const item = { ...data, id: doc.id, type: isAbono ? 'abono_indep' : 'ingreso', dateObj: date };
-                        allItems.push(item);
-
-                        const monto = parseFloat(item.monto || 0);
-                        if (isAbono) {
-                            // VERIFICACIÓN CRÍTICA:
-                            // Si este abono corresponde a una venta que HOY ya se cobró como CONTADO,
-                            // NO debemos sumarlo de nuevo, pues el dinero ya entró en 'totalVentasContado'.
-                            // Se verifica por ID de documento (saleId) o Número de Factura.
-                            const isDuplicate = (data.saleId && ventasContadoHoyIds.has(data.saleId)) ||
-                                (data.invoiceNumber && ventasContadoHoyNumbers.has(String(data.invoiceNumber)));
-
-                            if (!isDuplicate) {
-                                totalAbonos += monto;
-                            } else {
-                                console.log("Abono omitido de caja por pertenecer a Venta Contado de hoy:", data.invoiceNumber);
-                            }
-                        } else {
-                            totalIngresosExtras += monto;
-                        }
+                    const monto = Number(item.monto) || 0;
+                    if (isAbono) {
+                        totalAbonos += monto;
+                    } else {
+                        totalIngresosExtras += monto;
                     }
                 });
 
                 // Ordenar por hora descendente
                 allItems.sort((a, b) => b.dateObj - a.dateObj);
 
-                // --- CÁLCULOS FILOSOFÍA DE CAJA ---
-                // "Ventas Hoy": Para el usuario, esto debe reflejar "Cuánto vendí/produje hoy",
-                // por lo tanto debe incluir Ventas (Contado + Crédito) + Ingresos Extras (Servicios, etc).
+                // --- CÁLCULOS IGUALADOS A VENTAS.HTML ---
                 const totalProducido = totalVentasContado + totalVentasCredito + totalIngresosExtras;
-
-                // "Caja Final": Esto es DINERO FÍSICO REAL.
-                // Caja = (Ventas Contado + Ingresos) + Abonos (validos) - Retiros
-                const cajaFinal = (totalVentasContado + totalIngresosExtras) + totalAbonos - totalRetiros;
+                const totalEntradas = totalVentasContado + totalAbonos + totalIngresosExtras;
+                const cajaFinal = totalEntradas - totalRetiros;
 
                 // Renderizar Tarjetas
 
@@ -1129,12 +1105,17 @@
                         col1Text += ` [${shortMatch}]`;
                     }
 
-                    const estado = item.status === 'cancelado' ? 'cancelado' : (item.paymentType || 'pendiente');
-                    badgeClass = `status-${estado}`;
-                    col3Badge = estado;
+                    const pType = (item.paymentType || '').toLowerCase();
+                    const status = (item.status || '').toLowerCase();
+                    const saldo = item.saldoPendiente !== undefined ? Number(item.saldoPendiente) : Number(item.total);
+                    const esPagada = pType === 'contado' || status.includes('pagad') || saldo <= 0 || item.cancelada;
 
-                    // Si la venta fue de CONTADO, representa un ingreso de dinero efectivo
-                    if (item.paymentType === 'contado' && item.status !== 'cancelado') {
+                    const estado = esPagada ? 'contado' : 'pendiente';
+                    badgeClass = `status-${estado}`;
+                    col3Badge = esPagada ? (pType === 'contado' ? 'contado' : 'pagado') : 'pendiente';
+
+                    // Si la venta está pagada/contado, representa un ingreso de dinero efectivo
+                    if (esPagada) {
                         rowExtraClass = 'row-ingreso';
                     }
                 } else if (item.type === 'retiro') {
