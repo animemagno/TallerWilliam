@@ -905,6 +905,11 @@ window.GrupoManager = {
             printBtn.innerHTML = `<i class="fas fa-print"></i> IMPRIMIR HISTORIAL`;
         }
 
+        const captureBtn = document.getElementById('capturar-detalle-modal');
+        if (captureBtn) {
+            captureBtn.onclick = () => this.capturarImagenEquipo(key);
+        }
+
         const nombreEquipo = equipo && equipo.cliente && equipo.cliente !== `Equipo ${equipo.numero}`
             ? `${equipo.numero} - ${equipo.cliente}`
             : `Equipo ${equipo ? equipo.numero : key}`;
@@ -1337,26 +1342,57 @@ window.GrupoManager = {
             `;
         }
 
-        // Ocultar elementos específicos de grupos
-        document.getElementById('bulk-abono-grupo-nombre').textContent = '';
-        document.getElementById('bulk-abono-fecha').textContent = '';
-        document.getElementById('bulk-abono-equipos-list').innerHTML = '';
-        document.getElementById('bulk-abono-left-col').style.display = 'none';
-        document.querySelector('.modal-opt2').classList.add('single-column');
+        // Mostrar columna izquierda con las facturas seleccionadas y el filtro TODAS / FUSIONADAS / INDIVIDUALES
+        document.getElementById('bulk-abono-grupo-nombre').textContent = esFusion ? 'Facturas Fusionadas' : 'Facturas Seleccionadas';
+        document.getElementById('bulk-abono-fecha').textContent = new Date().toLocaleDateString('es-ES', {
+            day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
+        });
+        document.getElementById('bulk-abono-left-col').style.display = 'block';
+        document.querySelector('.modal-opt2').classList.remove('single-column');
 
-        // Calcular el total pendiente de las facturas seleccionadas
+        // Recopilar las facturas seleccionadas y calcular total
         let totalSeleccionado = 0;
+        const selectedInvoicesList = [];
         for (const invoiceId of AppState.selectedInvoicesForPayment) {
-            // Buscar en equiposPendientes (fuente real de datos)
             for (const [, equipo] of this.equiposPendientes) {
                 const factura = equipo.facturas.find(f => f.id === invoiceId);
                 if (factura) {
-                    const saldo = factura.saldoPendiente !== undefined ? factura.saldoPendiente : factura.total;
+                    const saldo = Number(factura.saldoPendiente !== undefined ? factura.saldoPendiente : factura.total) || 0;
+                    const timeMs = (typeof DateUtils !== 'undefined' && DateUtils.getTimeMs) ? DateUtils.getTimeMs(factura) : 0;
+                    const fechaStr = factura.timestamp ? new Date(timeMs).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' }) : '';
                     totalSeleccionado += saldo;
+                    selectedInvoicesList.push({
+                        id: factura.id,
+                        invoiceNumber: factura.invoiceNumber || '',
+                        fecha: fechaStr,
+                        timeMs,
+                        fusionId: factura.fusionId || null,
+                        saldo
+                    });
                     break;
                 }
             }
         }
+        selectedInvoicesList.sort((a, b) => a.timeMs - b.timeMs);
+
+        const invListHTML = selectedInvoicesList.map(f => `
+            <label class="bulk-inv-row" data-eq="sel" data-fusion="${f.fusionId ? '1' : '0'}" style="display:flex; justify-content:space-between; align-items:center; gap:8px; padding:7px 10px; border-bottom:1px solid #f1f5f9; font-size:13px; cursor:pointer; color:#334155; background:#fff;">
+                <span style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                    <input type="checkbox" class="bulk-inv-checkbox" data-eq="sel" data-id="${f.id}" data-saldo="${f.saldo}" data-fusion="${f.fusionId ? '1' : '0'}" checked onchange="GrupoManager.recalculateBulkGroupSelection()">
+                    <strong>#${f.invoiceNumber}</strong>
+                    <span style="color:#94a3b8;">(${f.fecha})</span>
+                    ${f.fusionId ? '<span style="background:#ede9fe; color:#6d28d9; padding:1px 6px; border-radius:4px; font-size:10px; font-weight:700;">Fusionada</span>' : ''}
+                </span>
+                <span style="font-weight:700; color:#dc2626;">$${f.saldo.toFixed(2)}</span>
+            </label>
+        `).join('');
+
+        document.getElementById('bulk-abono-equipos-list').innerHTML = `
+            <div style="font-weight: 800; color: #747d8c; margin-bottom: 8px; font-size: 12px; text-transform: uppercase;">Facturas en Abono</div>
+            <div style="border:1px solid #e2e8f0; border-radius:10px; overflow:hidden; background:#fff;">
+                ${invListHTML || '<div style="padding:12px; text-align:center; color:#94a3b8;">Sin facturas</div>'}
+            </div>
+        `;
 
         // Mostrar el total en el cuadro oscuro y guardarlo para el calculador
         document.getElementById('bulk-abono-total').textContent = totalSeleccionado.toFixed(2);
@@ -1366,6 +1402,9 @@ window.GrupoManager = {
         document.getElementById('saldo-restante-container').style.display = 'block';
         document.getElementById('saldo-restante').textContent = `$${totalSeleccionado.toFixed(2)}`;
         document.getElementById('saldo-restante').style.color = '#e74c3c';
+        if (typeof GrupoManager.setBulkFusionFilter === 'function') {
+            GrupoManager.setBulkFusionFilter('todas');
+        }
         modal.style.display = 'block';
 
         // Configurar el botón para procesar facturas seleccionadas
@@ -1381,10 +1420,90 @@ window.GrupoManager = {
                 return;
             }
 
+            const checkedBoxes = Array.from(document.querySelectorAll('#bulk-abono-equipos-list .bulk-inv-checkbox:checked'));
+            if (checkedBoxes.length === 0) {
+                UIService.showStatus("Seleccione al menos una factura para abonar", "error");
+                processBtn.disabled = false;
+                return;
+            }
+
+            const facturasIds = checkedBoxes.map(cb => cb.dataset.id);
+            const saldoSeleccionado = checkedBoxes.reduce((s, cb) => s + (parseFloat(cb.dataset.saldo) || 0), 0);
+
+            if (monto > saldoSeleccionado + 0.009) {
+                UIService.showStatus(`El monto ($${monto.toFixed(2)}) no puede ser mayor al saldo pendiente seleccionado ($${saldoSeleccionado.toFixed(2)})`, "error");
+                processBtn.disabled = false;
+                return;
+            }
+
             try {
                 UIService.showLoading(true);
-                const facturasIds = Array.from(AppState.selectedInvoicesForPayment);
-                await SalesService.processMultiAbono(facturasIds, monto);
+
+                // Snapshot de TODAS las facturas pendientes del equipo(s) afectado(s) antes del abono
+                const equiposAfectados = [];
+                const seenEq = new Set();
+                for (const [, equipo] of this.equiposPendientes) {
+                    if (!equipo.facturas) continue;
+                    const tieneAlguna = equipo.facturas.some(f => AppState.selectedInvoicesForPayment.has(f.id));
+                    if (tieneAlguna && !seenEq.has(equipo.numero)) {
+                        seenEq.add(equipo.numero);
+                        equiposAfectados.push(equipo);
+                    }
+                }
+
+                const snapshotFacturas = [];
+                equiposAfectados.forEach(eq => {
+                    eq.facturas.forEach(f => {
+                        const saldoAnt = f.saldoPendiente !== undefined ? f.saldoPendiente : f.total;
+                        if (saldoAnt > 0.009) {
+                            const fDate = f.timestamp ? new Date(DateUtils.getTimeMs(f)).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' }) : '';
+                            snapshotFacturas.push({
+                                id: f.id,
+                                invoiceNumber: f.invoiceNumber || '',
+                                fecha: fDate,
+                                timeMs: DateUtils.getTimeMs(f),
+                                saldoAnterior: Number(saldoAnt)
+                            });
+                        }
+                    });
+                });
+                snapshotFacturas.sort((a, b) => a.timeMs - b.timeMs);
+
+                const facturasAfectadas = await SalesService.processMultiAbono(facturasIds, monto);
+                const abonoById = {};
+                (facturasAfectadas || []).forEach(fa => {
+                    abonoById[fa.id] = (abonoById[fa.id] || 0) + (Number(fa.abono) || 0);
+                });
+
+                const facturasTicket = snapshotFacturas.map(f => {
+                    const ab = abonoById[f.id] || 0;
+                    return {
+                        invoiceNumber: f.invoiceNumber,
+                        fecha: f.fecha,
+                        saldoAnterior: f.saldoAnterior,
+                        montoAbonado: ab,
+                        nuevoSaldo: Math.max(0, f.saldoAnterior - ab)
+                    };
+                });
+
+                const saldoTotalAnterior = facturasTicket.reduce((s, f) => s + f.saldoAnterior, 0);
+                const abonoTotal = facturasTicket.reduce((s, f) => s + f.montoAbonado, 0);
+                const nuevoSaldoTotal = Math.max(0, saldoTotalAnterior - abonoTotal);
+
+                const primerEquipo = equiposAfectados[0];
+                const comprobanteData = {
+                    tipo: 'facturas',
+                    grupoNombre: primerEquipo ? (primerEquipo.cliente || '') : '',
+                    equipoNumber: equiposAfectados.map(e => e.numero).join(', '),
+                    fechaTicket: new Date().toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' }),
+                    facturas: facturasTicket,
+                    saldoTotalAnterior,
+                    abonoTotal,
+                    nuevoSaldoTotal
+                };
+
+                DataService.saveAbonoComprobante(comprobanteData).catch(e => console.error('Error guardando comprobante:', e));
+                PrintingService.printBulkAbonoTicket(comprobanteData, true);
 
                 UIService.showStatus("Abono masivo realizado correctamente", "success");
                 modal.style.display = 'none';
@@ -1395,6 +1514,11 @@ window.GrupoManager = {
                 await GrupoManager.loadEquiposPendientes(true);
                 await GrupoManager.actualizarTotalesGrupos(true);
                 GrupoManager.updateUI();
+
+                this.mostrarModalImprimirAbono(
+                    `<strong>${comprobanteData.equipoNumber ? 'Equipo ' + comprobanteData.equipoNumber : 'Facturas Seleccionadas'}</strong><br>Abono aplicado: <strong style="color:#16a34a;">$${abonoTotal.toFixed(2)}</strong><br>Nuevo saldo pendiente: <strong>$${nuevoSaldoTotal.toFixed(2)}</strong>`,
+                    () => PrintingService.printBulkAbonoTicket(comprobanteData, false)
+                );
 
             } catch (error) {
                 UIService.showStatus("Error: " + error.message, "error");
@@ -1853,6 +1977,147 @@ window.GrupoManager = {
         }
     },
 
+    getFacturaMotivoTag(factura) {
+        const parts = [];
+        const items = factura.items || factura.productos || [];
+        items.forEach(item => {
+            const desc = item.descripcionPapel || item.descripcion || item.producto || '';
+            if (desc) parts.push(desc);
+        });
+        if (factura.concepto) parts.push(factura.concepto);
+        if (factura.nota) parts.push(factura.nota);
+
+        const fullText = parts.join(' ')
+            .toUpperCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '');
+
+        const tags = [];
+        if (/CAMBIO\s*(DE)?\s*ACEITE/.test(fullText)) tags.push('CAMBIO DE ACEITE');
+        if (/\bCAJA\b/.test(fullText)) tags.push('CAJA');
+        return tags.join(' / ');
+    },
+
+    buildEquipoCaptureHTML(equipo, includeSubtotal = true) {
+        const nombreEquipo = equipo.cliente && equipo.cliente !== `Equipo ${equipo.numero}`
+            ? `Equipo ${equipo.numero} - ${equipo.cliente}`
+            : `Equipo ${equipo.numero}`;
+
+        const sortedFacturas = [...(equipo.facturas || [])]
+            .map(f => {
+                const saldo = f.saldoPendiente !== undefined ? f.saldoPendiente : f.total;
+                const timeMs = (typeof DateUtils !== 'undefined' && DateUtils.getTimeMs) ? DateUtils.getTimeMs(f) : 0;
+                const fecha = f.timestamp
+                    ? new Date(timeMs).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' })
+                    : '';
+                return {
+                    ...f,
+                    saldo: Number(saldo || 0),
+                    timeMs,
+                    fecha,
+                    motivo: this.getFacturaMotivoTag(f)
+                };
+            })
+            .filter(f => f.saldo > 0.009)
+            .sort((a, b) => a.timeMs - b.timeMs);
+
+        const rowsHTML = sortedFacturas.map((f, idx) => {
+            const bgColor = idx % 2 === 0 ? '#ffffff' : '#f8fafc';
+            const motivoHTML = f.motivo
+                ? `<span style="background:#fef3c7; color:#92400e; padding:2px 6px; border-radius:4px; font-size:11px; font-weight:700;">${f.motivo}</span>`
+                : '';
+            return `
+                <div style="display:grid; grid-template-columns: 74px 1fr 82px; align-items:center; gap:8px; padding:7px 10px; border-bottom:1px solid #e2e8f0; background:${bgColor}; font-size:13px;">
+                    <div style="color:#475569; font-weight:600;">${f.fecha}</div>
+                    <div style="text-align:center;">${motivoHTML}</div>
+                    <div style="text-align:right; font-weight:700; color:#dc2626;">$${f.saldo.toFixed(2)}</div>
+                </div>
+            `;
+        }).join('');
+
+        const totalEq = sortedFacturas.reduce((s, f) => s + f.saldo, 0);
+
+        return `
+            <div style="border:1px solid #cbd5e1; border-radius:8px; overflow:hidden; margin-bottom:14px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; background:#e2e8f0; padding:8px 12px; font-weight:800; color:#0f172a; font-size:15px;">
+                    <span>${nombreEquipo}</span>
+                    ${includeSubtotal ? `<span style="color:#dc2626;">$${totalEq.toFixed(2)}</span>` : ''}
+                </div>
+                ${rowsHTML}
+            </div>
+        `;
+    },
+
+    async capturarImagenEquipo(key) {
+        let equipo = this.equiposPendientes.get(key) || this.getEquipoData(key);
+        if (!equipo) {
+            UIService.showStatus('Equipo no encontrado', 'error');
+            return;
+        }
+        if (typeof html2canvas === 'undefined') {
+            UIService.showStatus('Error: Recarga la página para cargar la librería de captura', 'error');
+            return;
+        }
+
+        try {
+            UIService.showLoading(true);
+            const captureDiv = document.createElement('div');
+            captureDiv.style.cssText = `
+                position: fixed;
+                left: -9999px;
+                top: 0;
+                background: white;
+                padding: 20px;
+                width: 440px;
+                font-family: Arial, sans-serif;
+                border: 2px solid #2c3e50;
+                border-radius: 10px;
+            `;
+
+            const nombreEquipo = equipo.cliente && equipo.cliente !== `Equipo ${equipo.numero}`
+                ? `Equipo ${equipo.numero} - ${equipo.cliente}`
+                : `Equipo ${equipo.numero}`;
+
+            captureDiv.innerHTML = `
+                <div style="text-align: center; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 3px solid #3498db;">
+                    <h2 style="margin: 0; color: #2c3e50; font-size: 23px;">TALLER WILLIAN</h2>
+                    <h3 style="margin: 5px 0 0 0; color: #3498db; font-size: 18px;">${nombreEquipo}</h3>
+                </div>
+                ${this.buildEquipoCaptureHTML(equipo, false)}
+                <div style="background: #2c3e50; color: white; padding: 14px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 13px; margin-bottom: 4px;">SALDO TOTAL PENDIENTE</div>
+                    <div style="font-size: 26px; font-weight: bold;">$${equipo.total.toFixed(2)}</div>
+                </div>
+                <div style="text-align: center; margin-top: 12px; color: #7f8c8d; font-size: 12px;">
+                    ${new Date().toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                </div>
+            `;
+
+            document.body.appendChild(captureDiv);
+            const canvas = await html2canvas(captureDiv, {
+                backgroundColor: '#ffffff',
+                scale: 2,
+                logging: false
+            });
+            document.body.removeChild(captureDiv);
+
+            canvas.toBlob((blob) => {
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.download = `Equipo_${String(equipo.numero).replace(/\s+/g, '_')}_${new Date().getTime()}.png`;
+                link.href = url;
+                link.click();
+                URL.revokeObjectURL(url);
+                UIService.showStatus('Imagen capturada y descargada correctamente', 'success');
+            });
+        } catch (error) {
+            console.error('Error al capturar imagen del equipo:', error);
+            UIService.showStatus('Error al capturar imagen: ' + error.message, 'error');
+        } finally {
+            UIService.showLoading(false);
+        }
+    },
+
     async capturarImagenGrupo(grupoId) {
         const grupo = this.grupos.get(grupoId);
         if (!grupo) {
@@ -1878,37 +2143,25 @@ window.GrupoManager = {
                 top: 0;
                 background: white;
                 padding: 20px;
-                width: 400px;
+                width: 440px;
                 font-family: Arial, sans-serif;
                 border: 2px solid #2c3e50;
                 border-radius: 10px;
             `;
 
-            // Recopilar equipos del grupo
+            // Recopilar equipos del grupo con detalle de facturas
             let equiposHTML = '';
             let totalGrupo = 0;
-            let filaIndex = 0;
 
             let procesadosVisual = new Set();
             for (const equipoKey of grupo.equipos) {
-                // 1. Buscar por clave exacta o fallback
                 let equipoEncontrado = this.getEquipoData(equipoKey);
 
                 if (equipoEncontrado && equipoEncontrado.total > 0) {
                     if (!procesadosVisual.has(equipoEncontrado)) {
                         procesadosVisual.add(equipoEncontrado);
-                    totalGrupo += equipoEncontrado.total;
-                    const bgColor = filaIndex % 2 === 0 ? 'white' : '#f9f9f9';
-                    filaIndex++;
-                    const nombreEquipo = equipoEncontrado.cliente && equipoEncontrado.cliente !== `Equipo ${equipoEncontrado.numero}`
-                        ? `Equipo ${equipoEncontrado.numero} - ${equipoEncontrado.cliente}`
-                        : `Equipo ${equipoEncontrado.numero}`;
-                    equiposHTML += `
-                        <div style="display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #ddd; background: ${bgColor};">
-                            <div style="font-weight: bold; color: #2c3e50; font-size: 16px;">${nombreEquipo}</div>
-                            <div style="font-weight: bold; color: #e74c3c; font-size: 16px;">$${equipoEncontrado.total.toFixed(2)}</div>
-                        </div>
-                    `;
+                        totalGrupo += equipoEncontrado.total;
+                        equiposHTML += this.buildEquipoCaptureHTML(equipoEncontrado, true);
                     }
                 }
             }
@@ -2208,5 +2461,118 @@ window.GrupoManager = {
         console.log("Actualizando GrupoManager desde venta:", venta.invoiceNumber);
         await this.loadEquiposPendientes(true);
         this.updateUI();
+    },
+
+    async openHistorialAbonosModal() {
+        const modal = document.getElementById('historial-abonos-modal');
+        const listEl = document.getElementById('historial-abonos-list');
+        const searchEl = document.getElementById('historial-abonos-search');
+        if (!modal || !listEl) return;
+
+        if (searchEl) searchEl.value = '';
+        listEl.innerHTML = '<div style="text-align:center; padding:25px; color:#64748b;"><i class="fas fa-spinner fa-spin"></i> Cargando comprobantes de abono...</div>';
+        modal.style.display = 'flex';
+
+        try {
+            this._savedAbonosCache = await DataService.loadAbonoComprobantes(120);
+            this.renderHistorialAbonosList();
+        } catch (err) {
+            listEl.innerHTML = `<div style="text-align:center; padding:20px; color:#dc2626;">Error cargando comprobantes: ${err.message}</div>`;
+        }
+    },
+
+    renderHistorialAbonosList() {
+        const listEl = document.getElementById('historial-abonos-list');
+        if (!listEl) return;
+        const q = (document.getElementById('historial-abonos-search')?.value || '').toLowerCase().trim();
+        const items = (this._savedAbonosCache || []).filter(c => {
+            if (!q) return true;
+            return (c.grupoNombre && c.grupoNombre.toLowerCase().includes(q)) ||
+                (c.equipoNumber && String(c.equipoNumber).toLowerCase().includes(q)) ||
+                (c.invoiceNumber && String(c.invoiceNumber).toLowerCase().includes(q)) ||
+                (c.fechaString && c.fechaString.toLowerCase().includes(q)) ||
+                (c.tipo && c.tipo.toLowerCase().includes(q));
+        });
+
+        if (items.length === 0) {
+            listEl.innerHTML = '<div style="text-align:center; padding:25px; color:#64748b;">No hay comprobantes de abono guardados que coincidan.</div>';
+            return;
+        }
+
+        listEl.innerHTML = items.map(c => {
+            const isInd = c.tipo === 'individual';
+            const badge = isInd
+                ? '<span style="background:#e0f2fe; color:#0369a1; padding:2px 8px; border-radius:12px; font-size:11px; font-weight:700;">Individual</span>'
+                : (c.tipo === 'grupo'
+                    ? '<span style="background:#ede9fe; color:#6d28d9; padding:2px 8px; border-radius:12px; font-size:11px; font-weight:700;">Masivo Grupo</span>'
+                    : '<span style="background:#dcfce7; color:#15803d; padding:2px 8px; border-radius:12px; font-size:11px; font-weight:700;">Masivo Facturas</span>');
+
+            const titulo = isInd
+                ? `Factura #${c.invoiceNumber || ''} — Eq. ${c.equipoNumber || ''}`
+                : (c.tipo === 'grupo'
+                    ? `Grupo: ${c.grupoNombre || 'Grupo'}`
+                    : `Equipo ${c.equipoNumber || ''} ${c.grupoNombre ? '(' + c.grupoNombre + ')' : ''}`);
+
+            const monto = isInd ? Number(c.monto || 0) : Number(c.abonoTotal || 0);
+            const saldoNuevo = isInd ? Number(c.nuevoSaldo || 0) : Number(c.nuevoSaldoTotal || 0);
+
+            return `
+                <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; padding:10px 12px; border:1px solid #e2e8f0; border-radius:8px; margin-bottom:8px; background:#fff;">
+                    <div style="flex:1;">
+                        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:3px;">
+                            ${badge}
+                            <strong style="color:#0f172a; font-size:14px;">${titulo}</strong>
+                        </div>
+                        <div style="font-size:12px; color:#64748b;">
+                            ${c.fechaString || c.fechaTicket || ''} &bull; Nuevo saldo: <strong>$${saldoNuevo.toFixed(2)}</strong>
+                        </div>
+                    </div>
+                    <div style="text-align:right; display:flex; align-items:center; gap:10px;">
+                        <span style="font-size:15px; font-weight:800; color:#059669;">$${monto.toFixed(2)}</span>
+                        <button type="button" class="btn btn-info" onclick="GrupoManager.reprintSavedAbono('${c.id}')" style="padding:6px 12px; font-size:12px; font-weight:700;">
+                            <i class="fas fa-print"></i> Reimprimir
+                        </button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    },
+
+    reprintSavedAbono(id) {
+        const comp = (this._savedAbonosCache || []).find(c => c.id === id);
+        if (!comp) return;
+        if (comp.tipo === 'individual') {
+            PrintingService.printAbonoTicket(
+                {
+                    invoiceNumber: comp.invoiceNumber,
+                    clientName: comp.clientName,
+                    equipoNumber: comp.equipoNumber,
+                    saldoPendiente: comp.saldoAnterior,
+                    total: comp.saldoAnterior
+                },
+                {
+                    monto: Number(comp.monto || 0),
+                    fecha: comp.timestamp || new Date()
+                },
+                Number(comp.nuevoSaldo || 0)
+            );
+        } else {
+            PrintingService.printBulkAbonoTicket(comp);
+        }
+    },
+
+    mostrarModalImprimirAbono(summaryHtml, printFn) {
+        const confirmModal = document.getElementById('abono-print-confirm-modal');
+        const summaryEl = document.getElementById('abono-print-confirm-summary');
+        const printBtn = document.getElementById('abono-print-confirm-btn');
+        if (!confirmModal || !summaryEl || !printBtn) {
+            if (typeof printFn === 'function') printFn();
+            return;
+        }
+        summaryEl.innerHTML = summaryHtml;
+        printBtn.onclick = () => {
+            if (typeof printFn === 'function') printFn();
+        };
+        confirmModal.style.display = 'flex';
     }
 };

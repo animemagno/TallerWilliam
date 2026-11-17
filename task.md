@@ -1,6 +1,7 @@
 # Hoja de Ruta - Taller William
 
 ## 🟢 Tareas Activas
+- [x] (17/11/2026) `ventas.html`, `js/PrintingService.js`, `js/DataService.js`, `js/SalesService.js`, `js/GrupoManager.js`, `js/GrupoManagerPatch.js`, `js/FacturasTabManager.js`: Impresión detallada de tickets para abonos masivos en FACTURAS y GRUPOS (`printBulkAbonoTicket`), selección desplegable de facturas por equipo y filtro `TODAS | FUSIONADAS | INDIVIDUALES` en el modal de abono masivo, validación de monto máximo contra sobre-abono, guardado de comprobantes en Firebase (`COMPROBANTES_ABONO`) y modal de historial/reimpresión, modal post-abono con botón `IMPRIMIR TICKET` (`_triggerPrintWhenReady`), y captura de imagen detallada por fecha y motivo (`CAMBIO DE ACEITE` / `CAJA`) disponible también dentro del modal de detalle en FACTURAS.
 - [x] (06/11/2026) `movil.html`: Igualación de la consulta de movimientos del día y la fórmula de la tarjeta `Caja Final` (y demás totales diarios) con el reporte de `ventas.html` (`HistorialService.showGananciasReport`).
 - [x] (05/11/2026) `js/GrupoManager.js` y `ventas.html`: Corrección del refresco automático de equipos pendientes (`loadEquiposPendientes`) tras guardar en `EDITAR DATOS`.
 - [x] (05/11/2026) `ventas.html`, `js/GrupoManager.js` y `js/SalesService.js`: Adición de botón y ventana "EDITAR DATOS" en la ventana flotante de facturas para modificar Fecha, Número de Equipo y Nombre de Grupo de una factura (además de opción directa para pasar sus productos al carrito).

@@ -973,12 +973,38 @@ const PrintingService = {
         }
     },
 
-    printAbonoTicket(venta, abonoData, nuevoSaldo) {
+    _triggerPrintWhenReady(printWindow) {
+        const runPrint = () => {
+            if (printWindow.document.fonts) {
+                printWindow.document.fonts.ready.then(() => {
+                    setTimeout(() => {
+                        printWindow.focus();
+                        printWindow.print();
+                    }, 500);
+                });
+            } else {
+                setTimeout(() => {
+                    printWindow.focus();
+                    printWindow.print();
+                }, 700);
+            }
+        };
+
+        if (printWindow.document.readyState === 'complete') {
+            runPrint();
+        } else {
+            printWindow.onload = runPrint;
+        }
+    },
+
+    printAbonoTicket(venta, abonoData, nuevoSaldo, silentAlert = false) {
         const printWindow = window.open('', '_blank', `width=${this._winW()},height=600`);
         if (!printWindow) {
-            alert("El navegador bloqueó la ventana de impresión de abono. Por favor, permita las ventanas emergentes.");
-            console.error("Popup blocked for printAbonoTicket");
-            return;
+            if (!silentAlert) {
+                alert("El navegador bloqueó la ventana de impresión de abono. Por favor, permita las ventanas emergentes.");
+            }
+            console.warn("Popup blocked for printAbonoTicket");
+            return false;
         }
         let fechaAbono;
         if (abonoData.fecha && typeof abonoData.fecha.toDate === 'function') {
@@ -1039,16 +1065,8 @@ const PrintingService = {
                 `);
 
         printWindow.document.close();
-
-        printWindow.onload = function () {
-            printWindow.document.fonts.ready.then(() => {
-                setTimeout(() => {
-                    printWindow.focus();
-                    printWindow.print();
-                    // printWindow.onafterprint = function() { printWindow.close(); };
-                }, 800);
-            });
-        };
+        this._triggerPrintWhenReady(printWindow);
+        return true;
     },
 
     printRetiroTicket(retiroData) {
@@ -1352,5 +1370,117 @@ const PrintingService = {
                 }, 800);
             });
         };
+    },
+
+    printBulkAbonoTicket(comprobante, silentAlert = false) {
+        const printWindow = window.open('', '_blank', `width=${this._winW()},height=700`);
+        if (!printWindow) {
+            if (!silentAlert) {
+                alert("El navegador bloqueó la ventana de impresión de abono. Por favor, permita las ventanas emergentes.");
+            }
+            console.warn("Popup blocked for printBulkAbonoTicket");
+            return false;
+        }
+
+        const fechaFormateada = comprobante.fechaTicket || new Date().toLocaleDateString('es-ES', {
+            day: '2-digit', month: '2-digit', year: '2-digit'
+        });
+
+        const renderFacturasList = (facturas) => {
+            if (!facturas || facturas.length === 0) return '';
+            return facturas.map((f, idx) => {
+                const abonoLine = (f.montoAbonado || 0) > 0
+                    ? `<div style="display:flex; justify-content:space-between; font-weight:bold; font-size:${this._px(19)}; margin-top:2px;">
+                            <span>Abono: $${Number(f.montoAbonado).toFixed(2)}</span>
+                            <span>${f.nuevoSaldo <= 0.009 ? 'PAGADA' : 'Resta: $' + Number(f.nuevoSaldo).toFixed(2)}</span>
+                       </div>`
+                    : '';
+                return `
+                    <div style="margin: 5px 0; font-size: ${this._px(17)};">
+                        <div style="display:flex; justify-content:space-between; gap:4px;">
+                            <span><strong>${idx + 1}.</strong> ${this._escape(f.invoiceNumber)}</span>
+                            <span>${this._escape(f.fecha || '')}</span>
+                            <span><strong>$${Number(f.saldoAnterior || 0).toFixed(2)}</strong></span>
+                        </div>
+                        ${abonoLine}
+                    </div>
+                    <div style="border-top: 1px dashed #000; margin: 4px 0;"></div>
+                `;
+            }).join('');
+        };
+
+        let bodyHTML = '';
+        if (comprobante.tipo === 'grupo') {
+            bodyHTML += `
+                <div class="medium-text" style="margin-bottom: 6px;">
+                    <strong>Grupo:</strong> ${this._escape(comprobante.grupoNombre || '')}
+                </div>
+                <div class="line"></div>
+            `;
+
+            (comprobante.equipos || []).forEach(eq => {
+                bodyHTML += `
+                    <div style="margin-top: 10px; margin-bottom: 4px; font-weight: bold; font-size: ${this._px(21)};">
+                        Equipo: ${this._escape(eq.equipoNumber)}
+                    </div>
+                    ${renderFacturasList(eq.facturas)}
+                    <div class="saldo-info" style="margin: 6px 0 12px 0; font-size: ${this._px(17)};">
+                        <div style="display:flex; justify-content:space-between;"><span>SALDO TOTAL PENDIENTE:</span><span>$${Number(eq.saldoAnterior || 0).toFixed(2)}</span></div>
+                        <div style="display:flex; justify-content:space-between; font-weight:bold;"><span>ABONO TOTAL:</span><span>$${Number(eq.abonoTotal || 0).toFixed(2)}</span></div>
+                        <div style="display:flex; justify-content:space-between; font-weight:bold;"><span>NUEVO SALDO:</span><span>$${Number(eq.nuevoSaldo || 0).toFixed(2)}</span></div>
+                    </div>
+                `;
+            });
+
+            bodyHTML += `
+                <div class="line"></div>
+                <div class="saldo-info" style="border: 2px solid #000; padding: 6px; margin-top: 8px; font-size: ${this._px(18)};">
+                    <div style="display:flex; justify-content:space-between;"><span>Saldo total antes del abono:</span><span>$${Number(comprobante.saldoTotalAnterior || 0).toFixed(2)}</span></div>
+                    <div style="display:flex; justify-content:space-between; font-weight:bold; font-size:${this._px(20)};"><span>Total del abono:</span><span>$${Number(comprobante.abonoTotal || 0).toFixed(2)}</span></div>
+                    <div style="display:flex; justify-content:space-between; font-weight:bold; font-size:${this._px(20)};"><span>Nuevo saldo del grupo:</span><span>$${Number(comprobante.nuevoSaldoTotal || 0).toFixed(2)}</span></div>
+                </div>
+            `;
+        } else {
+            // Modo facturas (equipo individual o selección de facturas)
+            bodyHTML += `
+                <div class="medium-text" style="margin-bottom: 6px;">
+                    ${comprobante.grupoNombre ? `<strong>Grupo:</strong> ${this._escape(comprobante.grupoNombre)}<br>` : ''}
+                    ${comprobante.equipoNumber ? `<strong>Equipo:</strong> ${this._escape(comprobante.equipoNumber)}` : ''}
+                </div>
+                <div class="line"></div>
+                ${renderFacturasList(comprobante.facturas || [])}
+                <div class="saldo-info" style="border: 2px solid #000; padding: 6px; margin-top: 8px; font-size: ${this._px(18)};">
+                    <div style="display:flex; justify-content:space-between;"><span>SALDO TOTAL PENDIENTE:</span><span>$${Number(comprobante.saldoTotalAnterior || 0).toFixed(2)}</span></div>
+                    <div style="display:flex; justify-content:space-between; font-weight:bold; font-size:${this._px(20)};"><span>ABONO TOTAL:</span><span>$${Number(comprobante.abonoTotal || 0).toFixed(2)}</span></div>
+                    <div style="display:flex; justify-content:space-between; font-weight:bold; font-size:${this._px(20)};"><span>NUEVO SALDO:</span><span>$${Number(comprobante.nuevoSaldoTotal || 0).toFixed(2)}</span></div>
+                </div>
+            `;
+        }
+
+        printWindow.document.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <title>Comprobante de Abono Masivo</title>
+                <style>${this._ticketCSS('.saldo-info { border-radius: 4px; }')}</style>
+            </head>
+            <body>
+                <div class="header">
+                    <h3 style="margin: 2px 0; font-size: ${this._px(26)};">TALLER WILLIAN</h3>
+                    <div class="small-text">COMPROBANTE DE ABONO</div>
+                    <div class="small-text">${this._escape(fechaFormateada)}</div>
+                </div>
+                <div class="line"></div>
+                ${bodyHTML}
+                <div class="thank-you">
+                    GRACIAS POR PREFERIRNOS
+                </div>
+            </body>
+            </html>
+        `);
+        printWindow.document.close();
+        this._triggerPrintWhenReady(printWindow);
+        return true;
     },
 };

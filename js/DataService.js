@@ -932,6 +932,32 @@ const DataService = {
         }, "Abono Masivo");
     },
 
+    async saveAbonoComprobante(comprobanteData) {
+        try {
+            if (!AppState.firebaseInitialized) return null;
+            const docRef = AppState.db.collection("COMPROBANTES_ABONO").doc();
+            const payload = {
+                ...comprobanteData,
+                timestamp: DateUtils.getCurrentTimestampElSalvador(),
+                fechaString: comprobanteData.fechaString || new Date().toLocaleString('es-ES')
+            };
+            await docRef.set(payload);
+            return docRef.id;
+        } catch (error) {
+            console.error("Error guardando comprobante de abono:", error);
+            return null;
+        }
+    },
+
+    async loadAbonoComprobantes(limit = 100) {
+        if (!AppState.firebaseInitialized) return [];
+        const snapshot = await AppState.db.collection("COMPROBANTES_ABONO")
+            .orderBy("timestamp", "desc")
+            .limit(limit)
+            .get();
+        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    },
+
     async exportBackup() {
         try {
             const ventas = await this.loadSales(10000); // Limit high enough to get all

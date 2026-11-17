@@ -930,15 +930,32 @@ const SalesService = {
         const venta = AppState.currentAbonoInvoice;
         if (!venta) { UIService.showStatus("No hay factura seleccionada para el abono", "error"); return; }
         const saldoPendiente = venta.saldoPendiente !== undefined ? venta.saldoPendiente : venta.total;
-        if (monto > saldoPendiente) { UIService.showStatus("El monto del abono no puede ser mayor al saldo pendiente", "error"); return; }
+        if (monto > saldoPendiente + 0.009) { UIService.showStatus("El monto del abono no puede ser mayor al saldo pendiente", "error"); return; }
         try {
             UIService.showLoading(true);
             const abonoData = { monto: monto, fechaString: new Date().toLocaleString('es-ES') };
             await DataService.addAbono(venta.id, abonoData);
-            PrintingService.printAbonoTicket(venta, abonoData, saldoPendiente - monto);
+            const nuevoSaldo = Math.max(0, saldoPendiente - monto);
+            DataService.saveAbonoComprobante({
+                tipo: 'individual',
+                invoiceNumber: venta.invoiceNumber || '',
+                clientName: venta.clientName || '',
+                equipoNumber: venta.equipoNumber || '',
+                monto: monto,
+                saldoAnterior: saldoPendiente,
+                nuevoSaldo: nuevoSaldo,
+                fechaTicket: new Date().toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' })
+            }).catch(e => console.error('Error guardando comprobante individual:', e));
+            PrintingService.printAbonoTicket(venta, abonoData, nuevoSaldo, true);
             UIService.showStatus(`Abono de $${monto.toFixed(2)} registrado correctamente`, "success");
             ModalService.closeAbonoModal();
             await this.loadHistorial();
+            if (typeof GrupoManager !== 'undefined' && typeof GrupoManager.mostrarModalImprimirAbono === 'function') {
+                GrupoManager.mostrarModalImprimirAbono(
+                    `<strong>Factura #${venta.invoiceNumber || ''}</strong> (${venta.equipoNumber || ''})<br>Abono aplicado: <strong style="color:#16a34a;">$${monto.toFixed(2)}</strong><br>Nuevo saldo: <strong>$${nuevoSaldo.toFixed(2)}</strong>`,
+                    () => PrintingService.printAbonoTicket(venta, abonoData, nuevoSaldo, false)
+                );
+            }
         } catch (error) { UIService.showStatus("Error al procesar abono: " + error.message, "error"); }
         finally { UIService.showLoading(false); }
     },

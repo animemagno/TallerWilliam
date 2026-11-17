@@ -22,9 +22,10 @@ window.FacturasTabManager = {
         let html = '';
         equiposOrdenados.forEach(([key, equipo]) => {
             const mostrarNombre = equipo.cliente && !equipo.cliente.startsWith('Equipo ');
+            const safeKey = String(key).replace(/'/g, "\\'");
 
             html += `
-                <div class="equipo-card" onclick="GrupoManager.mostrarDetalleEquipo('${key}')" style="position: relative;">
+                <div class="equipo-card" onclick="GrupoManager.mostrarDetalleEquipo('${safeKey}')" style="position: relative;">
                     <div class="equipo-number">${equipo.numero}</div>
                     ${mostrarNombre ? `<div class="equipo-nombre">${equipo.cliente}</div>` : ''}
                     <div class="equipo-total" style="margin-top: auto;">$${equipo.total.toFixed(2)}</div>
