@@ -29,9 +29,13 @@ window.GruposTabManager = {
                 if (equipoEncontrado && equipoEncontrado.total > 0) {
                     if (!procesadosVisual.has(equipoEncontrado)) {
                         procesadosVisual.add(equipoEncontrado);
+                        const subNombre = String(equipoEncontrado.numero).trim() === '0' && equipoEncontrado.cliente && equipoEncontrado.cliente !== 'Equipo 0'
+                            ? `<div style="font-size: 0.72rem; color: #475569; font-weight: 600;">${equipoEncontrado.cliente}</div>`
+                            : '';
                         equiposHTML += `
                             <div class="grupo-equipo-item" onclick="GrupoManager.mostrarDetalleEquipo('${equipoKey.replace(/'/g, "\\'")}')">
                                 <div class="grupo-equipo-number">${equipoEncontrado.numero}</div>
+                                ${subNombre}
                                 <div class="grupo-equipo-total">$${equipoEncontrado.total.toFixed(2)}</div>
                             </div>
                         `;

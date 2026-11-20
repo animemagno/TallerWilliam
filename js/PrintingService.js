@@ -1442,9 +1442,12 @@ const PrintingService = {
             `;
         } else {
             // Modo facturas (equipo individual o selección de facturas)
+            const gNorm = String(comprobante.grupoNombre || '').trim().toLowerCase();
+            const eqNum = String(comprobante.equipoNumber || '').trim().toLowerCase();
+            const showGrupoLine = gNorm && gNorm !== eqNum && gNorm !== `equipo ${eqNum}`;
             bodyHTML += `
                 <div class="medium-text" style="margin-bottom: 6px;">
-                    ${comprobante.grupoNombre ? `<strong>Grupo:</strong> ${this._escape(comprobante.grupoNombre)}<br>` : ''}
+                    ${showGrupoLine ? `<strong>Grupo:</strong> ${this._escape(comprobante.grupoNombre)}<br>` : ''}
                     ${comprobante.equipoNumber ? `<strong>Equipo:</strong> ${this._escape(comprobante.equipoNumber)}` : ''}
                 </div>
                 <div class="line"></div>

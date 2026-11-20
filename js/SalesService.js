@@ -946,7 +946,6 @@ const SalesService = {
                 nuevoSaldo: nuevoSaldo,
                 fechaTicket: new Date().toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' })
             }).catch(e => console.error('Error guardando comprobante individual:', e));
-            PrintingService.printAbonoTicket(venta, abonoData, nuevoSaldo, true);
             UIService.showStatus(`Abono de $${monto.toFixed(2)} registrado correctamente`, "success");
             ModalService.closeAbonoModal();
             await this.loadHistorial();
@@ -955,6 +954,8 @@ const SalesService = {
                     `<strong>Factura #${venta.invoiceNumber || ''}</strong> (${venta.equipoNumber || ''})<br>Abono aplicado: <strong style="color:#16a34a;">$${monto.toFixed(2)}</strong><br>Nuevo saldo: <strong>$${nuevoSaldo.toFixed(2)}</strong>`,
                     () => PrintingService.printAbonoTicket(venta, abonoData, nuevoSaldo, false)
                 );
+            } else {
+                PrintingService.printAbonoTicket(venta, abonoData, nuevoSaldo, false);
             }
         } catch (error) { UIService.showStatus("Error al procesar abono: " + error.message, "error"); }
         finally { UIService.showLoading(false); }

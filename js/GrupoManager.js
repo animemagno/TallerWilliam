@@ -157,7 +157,7 @@ window.GrupoManager = {
 
             snapshot.forEach(doc => {
                 const venta = doc.data();
-                const equipo = venta.equipoNumber;
+                const equipo = venta.equipoNumber !== undefined && venta.equipoNumber !== null ? String(venta.equipoNumber).trim() : '';
                 let cliente = venta.clientName || '';
                 
                 let saldoPendiente = venta.total || 0;
@@ -166,7 +166,7 @@ window.GrupoManager = {
                     saldoPendiente = venta.total - totalAbonado;
                 }
 
-                if (equipo && saldoPendiente > 0) {
+                if (equipo !== '' && saldoPendiente > 0) {
                     // CORRECCIÓN LÓGICA: Separar por equipo Y cliente para evitar mezclar cuentas distintas con el mismo número de equipo
                     const key = cliente ? `${equipo}-${cliente}` : equipo;
 
@@ -453,9 +453,10 @@ window.GrupoManager = {
         this.grupos.forEach(grupo => {
             if (grupo.equipos.includes(key)) {
                 result = { id: grupo.id, nombre: grupo.nombre };
-            } else if (numeroCorto && grupo.equipos.includes(numeroCorto.toString())) {
+            } else if (numeroCorto !== undefined && numeroCorto !== null && String(numeroCorto).trim() !== '' && grupo.equipos.includes(String(numeroCorto).trim())) {
+                const nStr = String(numeroCorto).trim();
                 // Fallback para nombres por defecto / legacy
-                if (key === `${numeroCorto}-Equipo ${numeroCorto}` || key === numeroCorto.toString()) {
+                if (key === `${nStr}-Equipo ${nStr}` || key === nStr) {
                     result = { id: grupo.id, nombre: grupo.nombre };
                 }
             }
@@ -590,12 +591,15 @@ window.GrupoManager = {
             factura.products.forEach((producto, pIdx) => {
                 filasProductos += `
                     <tr style="background: ${pIdx % 2 === 0 ? '#fafbfc' : 'white'};">
-                        <td style="padding: 5px 8px; text-align: center; font-weight: 600; color: #2c3e50; border-bottom: 1px solid #f0f0f0;">${producto.cantidad}</td>
-                        <td style="padding: 5px 8px; color: #555; border-bottom: 1px solid #f0f0f0;">
+                        <td ondblclick="GrupoManager.activarEdicionCeldaFactura(this, '${factura.id}', ${pIdx}, 'cantidad')"
+                            style="padding: 5px 8px; text-align: center; font-weight: 600; color: #2c3e50; border-bottom: 1px solid #f0f0f0;">${producto.cantidad}</td>
+                        <td ondblclick="GrupoManager.activarEdicionCeldaFactura(this, '${factura.id}', ${pIdx}, 'descripcion')"
+                            style="padding: 5px 8px; color: #555; border-bottom: 1px solid #f0f0f0;">
                             <i class="fas fa-wrench" style="color: #bdc3c7; font-size: 0.65rem; margin-right: 4px;"></i>${producto.descripcion}
                         </td>
-                        <td style="padding: 5px 8px; text-align: right; color: #7f8c8d; border-bottom: 1px solid #f0f0f0;">$${producto.precio.toFixed(2)}</td>
-                        <td style="padding: 5px 8px; text-align: right; font-weight: 600; color: #2c3e50; border-bottom: 1px solid #f0f0f0;">$${(producto.precio * producto.cantidad).toFixed(2)}</td>
+                        <td ondblclick="GrupoManager.activarEdicionCeldaFactura(this, '${factura.id}', ${pIdx}, 'precio')"
+                            style="padding: 5px 8px; text-align: right; color: #7f8c8d; border-bottom: 1px solid #f0f0f0;">$${Number(producto.precio || 0).toFixed(2)}</td>
+                        <td style="padding: 5px 8px; text-align: right; font-weight: 600; color: #2c3e50; border-bottom: 1px solid #f0f0f0;">$${(Number(producto.precio || 0) * Number(producto.cantidad || 0)).toFixed(2)}</td>
                     </tr>
                 `;
             });
@@ -1222,6 +1226,159 @@ window.GrupoManager = {
         }
     },
 
+    activarEdicionCeldaFactura(td, invoiceId, itemIdx, field) {
+        if (!td || td.dataset.editing === '1') return;
+
+        let facturaLocal = null;
+        for (const [, eq] of this.equiposPendientes) {
+            const match = (eq.facturas || []).find(f => f.id === invoiceId);
+            if (match) { facturaLocal = match; break; }
+        }
+        if (!facturaLocal || !facturaLocal.products || !facturaLocal.products[itemIdx]) return;
+
+        const item = facturaLocal.products[itemIdx];
+        const originalVal = item[field];
+        const originalHTML = td.innerHTML;
+        td.dataset.editing = '1';
+
+        const input = document.createElement('input');
+        if (field === 'descripcion') {
+            input.type = 'text';
+            input.value = String(originalVal || '');
+            input.style.cssText = 'width: 100%; padding: 3px 6px; font-size: 0.8rem; border: 1px solid #3498db; border-radius: 4px; outline: none; box-sizing: border-box;';
+        } else if (field === 'precio') {
+            input.type = 'number';
+            input.step = '0.01';
+            input.min = '0';
+            input.value = Number(originalVal || 0).toFixed(2);
+            input.style.cssText = 'width: 68px; text-align: right; padding: 3px 5px; font-size: 0.8rem; border: 1px solid #3498db; border-radius: 4px; outline: none;';
+        } else {
+            input.type = 'number';
+            input.step = 'any';
+            input.min = '1';
+            input.value = Number(originalVal || 1);
+            input.style.cssText = 'width: 52px; text-align: center; padding: 3px 4px; font-size: 0.8rem; border: 1px solid #3498db; border-radius: 4px; outline: none;';
+        }
+
+        td.innerHTML = '';
+        td.appendChild(input);
+        input.focus();
+        input.select();
+
+        let finished = false;
+        const restore = () => {
+            td.innerHTML = originalHTML;
+            delete td.dataset.editing;
+        };
+
+        const commit = async () => {
+            if (finished) return;
+            finished = true;
+
+            let newVal;
+            if (field === 'descripcion') {
+                newVal = input.value.trim();
+                if (!newVal) {
+                    UIService.showStatus("La descripción no puede quedar vacía", "error");
+                    return restore();
+                }
+                if (newVal === String(originalVal || '').trim()) return restore();
+            } else if (field === 'precio') {
+                newVal = parseFloat(input.value);
+                if (isNaN(newVal) || !isFinite(newVal) || newVal < 0) {
+                    UIService.showStatus("Ingrese un precio válido mayor o igual a $0.00", "error");
+                    return restore();
+                }
+                if (Math.abs(newVal - Number(originalVal || 0)) < 0.001) return restore();
+                newVal = Number(newVal.toFixed(2));
+            } else {
+                newVal = parseFloat(input.value);
+                if (isNaN(newVal) || !isFinite(newVal) || newVal <= 0) {
+                    UIService.showStatus("La cantidad debe ser mayor a 0", "error");
+                    return restore();
+                }
+                if (newVal === Number(originalVal || 1)) return restore();
+            }
+
+            try {
+                UIService.showLoading(true);
+                const ventaActual = await DataService.getSaleById(invoiceId);
+                if (!ventaActual || !ventaActual.products || !ventaActual.products[itemIdx]) {
+                    throw new Error("No se encontró el producto en la factura");
+                }
+
+                // Clonar productos preservando id, codigo y costo unitario intactos
+                const updatedProducts = ventaActual.products.map((p, idx) =>
+                    idx === itemIdx ? { ...p, [field]: newVal } : { ...p }
+                );
+
+                const nuevoTotal = Number(updatedProducts.reduce((sum, p) =>
+                    sum + ((Number(p.precio) || 0) * (Number(p.cantidad) || 0)), 0
+                ).toFixed(2));
+
+                const totalAbonado = (ventaActual.abonos || []).reduce((s, a) => s + (Number(a.monto) || 0), 0);
+                let nuevoSaldo = Number((nuevoTotal - totalAbonado).toFixed(2));
+
+                if (nuevoSaldo < -0.009) {
+                    UIService.showStatus(`El nuevo total ($${nuevoTotal.toFixed(2)}) no puede ser menor al monto ya abonado ($${totalAbonado.toFixed(2)})`, "error");
+                    return restore();
+                }
+                if (Math.abs(nuevoSaldo) <= 0.009) nuevoSaldo = 0;
+
+                await AppState.db.collection("VENTAS").doc(invoiceId).update({
+                    products: updatedProducts,
+                    total: nuevoTotal,
+                    saldoPendiente: nuevoSaldo,
+                    paymentType: nuevoSaldo <= 0 ? 'contado' : 'pendiente',
+                    status: nuevoSaldo <= 0 ? 'pagado' : 'pendiente',
+                    fechaActualizacion: DateUtils.getCurrentTimestampElSalvador()
+                });
+
+                delete td.dataset.editing;
+                UIService.showStatus("Factura actualizada correctamente", "success");
+
+                await this.loadEquiposPendientes(true);
+                await this.actualizarTotalesGrupos(true);
+                this.updateUI();
+                if (typeof SalesService !== 'undefined' && SalesService.loadHistorial) {
+                    await SalesService.loadHistorial();
+                }
+
+                const detalleModal = document.getElementById('detalle-modal');
+                if (detalleModal && detalleModal.style.display === 'block' && AppState.currentDetalle?.tipo === 'equipo') {
+                    const key = AppState.currentDetalle.data;
+                    if (this.equiposPendientes.has(key) || this.getEquipoData(key)) {
+                        await this.mostrarDetalleEquipo(key);
+                    } else {
+                        detalleModal.style.display = 'none';
+                    }
+                }
+                const grupoDetalleModal = document.getElementById('grupo-detalle-modal');
+                if (grupoDetalleModal && grupoDetalleModal.style.display === 'block' && this.currentGrupoDetalle) {
+                    await this.mostrarDetalleGrupoCompleto(this.currentGrupoDetalle.id);
+                }
+            } catch (error) {
+                console.error("Error actualizando línea de factura:", error);
+                UIService.showStatus("Error al guardar cambio: " + error.message, "error");
+                restore();
+            } finally {
+                UIService.showLoading(false);
+            }
+        };
+
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                commit();
+            } else if (e.key === 'Escape') {
+                e.preventDefault();
+                finished = true;
+                restore();
+            }
+        });
+        input.addEventListener('blur', () => commit());
+    },
+
     async fusionarFacturasSeleccionadas(key) {
         if (!AppState.selectedInvoicesForPayment || AppState.selectedInvoicesForPayment.size < 2) {
             UIService.showStatus("Seleccione al menos 2 facturas para fusionar", "warning");
@@ -1503,7 +1660,6 @@ window.GrupoManager = {
                 };
 
                 DataService.saveAbonoComprobante(comprobanteData).catch(e => console.error('Error guardando comprobante:', e));
-                PrintingService.printBulkAbonoTicket(comprobanteData, true);
 
                 UIService.showStatus("Abono masivo realizado correctamente", "success");
                 modal.style.display = 'none';
@@ -1979,7 +2135,7 @@ window.GrupoManager = {
 
     getFacturaMotivoTag(factura) {
         const parts = [];
-        const items = factura.items || factura.productos || [];
+        const items = factura.products || factura.items || factura.productos || [];
         items.forEach(item => {
             const desc = item.descripcionPapel || item.descripcion || item.producto || '';
             if (desc) parts.push(desc);
@@ -2223,19 +2379,17 @@ window.GrupoManager = {
 
         let html = '';
 
-        // ITERAR DEL 1 AL 130 PARA MOSTRAR TODOS LOS LUGARES DISPONIBLES
-        for (let i = 1; i <= 130; i++) {
+        // ITERAR DEL 0 AL 130 PARA INCLUIR EQUIPO 0 (ej. 0 - Cliente) Y TODOS LOS LUGARES DISPONIBLES
+        for (let i = 0; i <= 130; i++) {
             const numeroStr = i.toString();
 
-            // 1. Buscar si hay variantes con deuda para este número (ej: "1-Cedros", "1-Otro")
+            // 1. Buscar si hay variantes con deuda para este número (ej: "0-Jolman", "1-Cedros")
             const variantes = [];
             let existeGenericoConDeuda = false;
 
             this.equiposPendientes.forEach((equipo, key) => {
-                // Verificar coincidencia de número (flexible para strings/numbers)
-                if (equipo.numero == i) {
-                    // Determinar si es el genérico basado en si NO tiene cliente específico
-                    // o si el cliente se llama "Equipo X"
+                // Comparación estricta por texto para evitar que "" o "0000" coincidan con 0
+                if (String(equipo.numero).trim() === numeroStr) {
                     const esGenerico = !equipo.cliente ||
                         equipo.cliente.trim() === '' ||
                         equipo.cliente === `Equipo ${i}`;
@@ -2247,8 +2401,25 @@ window.GrupoManager = {
                         esGenerico: esGenerico
                     });
 
-                    // Si encontramos una variante que actúa como genérico (sin nombre especial), marcamos que ya existe
                     if (esGenerico) existeGenericoConDeuda = true;
+                }
+            });
+
+            // También conservar variantes ya seleccionadas en este grupo aunque actualmente tengan deuda $0.00
+            selectedSet.forEach(selKey => {
+                const selStr = String(selKey);
+                const matchesExact = selStr === numeroStr || selStr.startsWith(`${numeroStr}-`);
+                if (matchesExact && !variantes.some(v => v.key === selStr)) {
+                    const dashIdx = selStr.indexOf('-');
+                    const subNombre = dashIdx !== -1 ? selStr.slice(dashIdx + 1) : `Equipo ${i}`;
+                    const esGen = subNombre === `Equipo ${i}` || dashIdx === -1;
+                    variantes.push({
+                        key: selStr,
+                        nombre: subNombre,
+                        total: 0,
+                        esGenerico: esGen
+                    });
+                    if (esGen) existeGenericoConDeuda = true;
                 }
             });
 
@@ -2331,8 +2502,9 @@ window.GrupoManager = {
                 const nombre = equipo ? (equipo.cliente || key) : `Equipo ${key}`;
                 const total = equipo ? equipo.total : 0;
 
-                // CORRECCIÓN: Siempre mostrar el número de equipo en la etiqueta
-                const numeroKey = parseInt(key) || '?';
+                // CORRECCIÓN: Siempre mostrar el número de equipo en la etiqueta (incluyendo el 0)
+                const parsedNum = parseInt(key);
+                const numeroKey = !isNaN(parsedNum) ? parsedNum : '?';
                 let label = '';
 
                 if (nombre === `Equipo ${numeroKey}`) {
@@ -2571,7 +2743,10 @@ window.GrupoManager = {
         }
         summaryEl.innerHTML = summaryHtml;
         printBtn.onclick = () => {
-            if (typeof printFn === 'function') printFn();
+            const printed = typeof printFn === 'function' ? printFn() : true;
+            if (printed !== false) {
+                confirmModal.style.display = 'none';
+            }
         };
         confirmModal.style.display = 'flex';
     }

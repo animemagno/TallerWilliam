@@ -180,7 +180,6 @@ GrupoManager.showGroupPaymentModal = function (grupoId) {
             };
 
             DataService.saveAbonoComprobante(comprobanteData).catch(e => console.error('Error guardando comprobante:', e));
-            PrintingService.printBulkAbonoTicket(comprobanteData, true);
 
             UIService.showStatus(`Abono de $${monto.toFixed(2)} aplicado al grupo correctamente`, "success");
             modal.style.display = 'none';
@@ -200,6 +199,8 @@ GrupoManager.showGroupPaymentModal = function (grupoId) {
                     `<strong>Grupo: ${grupo.nombre}</strong><br>Abono aplicado: <strong style="color:#16a34a;">$${abonoTotal.toFixed(2)}</strong><br>Nuevo saldo del grupo: <strong>$${nuevoSaldoTotal.toFixed(2)}</strong>`,
                     () => PrintingService.printBulkAbonoTicket(comprobanteData, false)
                 );
+            } else {
+                PrintingService.printBulkAbonoTicket(comprobanteData, false);
             }
 
         } catch (error) {

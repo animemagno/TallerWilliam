@@ -125,11 +125,30 @@ const App = {
         });
 
         const searchInput = document.getElementById('buscar-producto');
+        const clienteInput = document.getElementById('cliente');
+        const capitalizeInitial = (inputEl) => {
+            if (!inputEl) return;
+            const val = inputEl.value;
+            const updated = val.replace(/^(\s*)([a-záéíóúüñ])/, (_, sp, ch) => sp + ch.toUpperCase());
+            if (updated !== val) {
+                const start = inputEl.selectionStart;
+                const end = inputEl.selectionEnd;
+                inputEl.value = updated;
+                if (typeof start === 'number' && typeof end === 'number') {
+                    inputEl.setSelectionRange(start, end);
+                }
+            }
+        };
+        if (clienteInput) {
+            clienteInput.addEventListener('input', () => capitalizeInitial(clienteInput));
+        }
+
         const dropdown = document.getElementById('search-dropdown');
         let searchTimeout;
         let currentFocus = -1;
 
         searchInput.addEventListener('input', (e) => {
+            capitalizeInitial(e.target);
             clearTimeout(searchTimeout);
             const query = e.target.value.trim();
             if (query.length < 2) {

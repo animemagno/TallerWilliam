@@ -124,7 +124,7 @@ const DataService = {
             if (AppState.firebaseInitialized) {
                 
                 // NUEVO: Verificar grupo también al actualizar (por si cambió de cliente o equipo, o pasó a pendiente)
-                if (window.GrupoManager && saleData.paymentType === 'pendiente' && saleData.equipoNumber) {
+                if (window.GrupoManager && saleData.paymentType === 'pendiente' && saleData.equipoNumber !== undefined && saleData.equipoNumber !== null && String(saleData.equipoNumber).trim() !== '') {
                     const key = saleData.clientName ? `${saleData.equipoNumber}-${saleData.clientName}` : String(saleData.equipoNumber);
                     const grupoDestino = GrupoManager.getGrupoDeEquipo(key, saleData.equipoNumber);
                     if (grupoDestino) {
