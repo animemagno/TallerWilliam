@@ -1486,4 +1486,124 @@ const PrintingService = {
         this._triggerPrintWhenReady(printWindow);
         return true;
     },
+
+    printFusionSolida(reportData) {
+        try {
+            if (!reportData || !reportData.facturas || reportData.facturas.length === 0) {
+                alert("Error: Sin facturas fusionadas para imprimir");
+                return false;
+            }
+
+            const printWindow = window.open('', '_blank', `width=${this._winW()},height=650`);
+            if (!printWindow) {
+                alert("El navegador bloqueó la ventana de impresión. Por favor, permita las ventanas emergentes.");
+                return false;
+            }
+
+            let totalOriginal = 0;
+            let totalAbonado = 0;
+            let bloquesHTML = '';
+
+            reportData.facturas.forEach((factura) => {
+                totalOriginal += Number(factura.total || 0);
+                if (factura.abonos && factura.abonos.length > 0) {
+                    totalAbonado += factura.abonos.reduce((s, a) => s + Number(a.monto || 0), 0);
+                }
+
+                if (factura.products && factura.products.length > 0) {
+                    factura.products.forEach(producto => {
+                        const descRaw = String(producto.descripcion || '');
+                        const descripcion = descRaw.length > 25 ? descRaw.substring(0, 25) + '...' : descRaw;
+                        const cant = Number(producto.cantidad || 0);
+                        const prec = Number(producto.precio || 0);
+                        bloquesHTML += `
+                            <div style="margin: 2px 0; padding-bottom: 2px; border-bottom: 1px dotted #ccc;">
+                                <div style="font-size: ${this._px(16)};">• ${this._escape(descripcion)}</div>
+                                <div style="display: flex; justify-content: space-between; font-size: ${this._px(17)};">
+                                    <div>x${cant}</div>
+                                    <div>$${(prec * cant).toFixed(2)}</div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+            });
+
+            const saldoActual = Math.max(0, totalOriginal - totalAbonado);
+            const resumenHTML = totalAbonado > 0.009
+                ? `
+                    <div class="saldo-info" style="margin-top: 10px; font-size: ${this._px(18)};">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
+                            <span>SALDO ANTERIOR:</span>
+                            <span>$${totalOriginal.toFixed(2)}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                            <span>ABONOS:</span>
+                            <span>-$${totalAbonado.toFixed(2)}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-weight: 900; font-size: ${this._px(22)}; border-top: 1px solid #000; padding-top: 4px;">
+                            <span>SALDO ACTUAL:</span>
+                            <span>$${saldoActual.toFixed(2)}</span>
+                        </div>
+                    </div>
+                `
+                : `
+                    <div class="saldo-info" style="text-align: center; margin-top: 10px;">
+                        <div>SALDO TOTAL:</div>
+                        <div class="large-text">$${saldoActual.toFixed(2)}</div>
+                    </div>
+                `;
+
+            const reportHTML = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <title>Facturas Fusionadas - ${this._escape(reportData.cliente || '')}</title>
+                    <style>${this._ticketCSS()}</style>
+                </head>
+                <body>
+                    <div class="header">
+                        <h3 style="margin: 2px 0; font-size: ${this._px(24)};">TALLER WILLIAN</h3>
+                        <div class="small-text">FACTURAS FUSIONADAS</div>
+                        <div class="small-text">${new Date().toLocaleString('es-ES')}</div>
+                    </div>
+
+                    <div class="line"></div>
+
+                    ${reportData.cliente && reportData.cliente !== reportData.equipo && reportData.cliente !== `Equipo ${reportData.equipo}` ? `
+                        <div class="medium-text" style="text-align: center;">
+                            <strong>Cliente:</strong> ${this._escape(reportData.cliente)}
+                        </div>
+                    ` : ''}
+                    <div class="equipo-text" style="text-align: center;">
+                        Equipo ${this._escape(reportData.equipo)}
+                    </div>
+
+                    <div class="line"></div>
+
+                    ${bloquesHTML}
+
+                    <div class="line"></div>
+
+                    ${resumenHTML}
+
+                    <div class="thank-you">
+                        GRACIAS POR PREFERIRNOS
+                    </div>
+                </body>
+                </html>
+            `;
+
+            printWindow.document.open();
+            printWindow.document.write(reportHTML);
+            printWindow.document.close();
+            this._triggerPrintWhenReady(printWindow);
+            return true;
+        } catch (error) {
+            console.error("Error generando impresión sólida:", error);
+            alert("Error generando ticket sólido: " + error.message);
+            return false;
+        }
+    },
 };

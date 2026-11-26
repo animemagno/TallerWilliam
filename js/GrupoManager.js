@@ -783,25 +783,32 @@ window.GrupoManager = {
 
                 const safeFusionId = String(item.fusionId).replace(/'/g, "\\'");
 
-                const botonesFusionHTML = permitirAcciones ? `
+                const botonesFusionHTML = `
                     <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-                        <button onclick="GrupoManager.deshacerFusion('${safeFusionId}', '${safeKey}')"
-                            style="background: rgba(255,255,255,0.18); color: white; border: 1px solid rgba(255,255,255,0.4); padding: 6px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer;"
-                            title="Volver a dejar las facturas sueltas">
-                            <i class="fas fa-unlink"></i> Separar
+                        <button type="button" onclick="GrupoManager.abrirModalImprimirFusion('${safeFusionId}', '${safeKey}')"
+                            style="background: rgba(255,255,255,0.22); color: white; border: 1px solid rgba(255,255,255,0.45); padding: 6px 12px; border-radius: 6px; font-size: 0.78rem; font-weight: 700; cursor: pointer;"
+                            title="Imprimir facturas fusionadas">
+                            <i class="fas fa-print"></i> Imprimir
                         </button>
-                        ${saldoPendienteFusion > 0 ? `
-                            <button onclick="GrupoManager.abonarAFusion('${safeFusionId}', '${safeKey}')"
-                                style="background: #2ecc71; color: white; border: none; padding: 7px 14px; border-radius: 6px; font-size: 0.8rem; font-weight: 800; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.15);">
-                                <i class="fas fa-money-bill-wave"></i> ABONAR A FUSIONADAS
+                        ${permitirAcciones ? `
+                            <button onclick="GrupoManager.deshacerFusion('${safeFusionId}', '${safeKey}')"
+                                style="background: rgba(255,255,255,0.18); color: white; border: 1px solid rgba(255,255,255,0.4); padding: 6px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer;"
+                                title="Volver a dejar las facturas sueltas">
+                                <i class="fas fa-unlink"></i> Separar
                             </button>
-                        ` : `
-                            <span style="background: #2ecc71; color: white; padding: 5px 12px; border-radius: 20px; font-size: 0.78rem; font-weight: 800;">
-                                <i class="fas fa-check-circle"></i> CORTE PAGADO
-                            </span>
-                        `}
+                            ${saldoPendienteFusion > 0 ? `
+                                <button onclick="GrupoManager.abonarAFusion('${safeFusionId}', '${safeKey}')"
+                                    style="background: #2ecc71; color: white; border: none; padding: 7px 14px; border-radius: 6px; font-size: 0.8rem; font-weight: 800; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.15);">
+                                    <i class="fas fa-money-bill-wave"></i> ABONAR A FUSIONADAS
+                                </button>
+                            ` : `
+                                <span style="background: #2ecc71; color: white; padding: 5px 12px; border-radius: 20px; font-size: 0.78rem; font-weight: 800;">
+                                    <i class="fas fa-check-circle"></i> CORTE PAGADO
+                                </span>
+                            `}
+                        ` : ''}
                     </div>
-                ` : '';
+                `;
 
                 facturasHTML += `
                     <div style="grid-column: 1 / -1; background: #f8f6ff; border: 2px solid #8e44ad; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 14px rgba(142, 68, 173, 0.12);">
@@ -1477,6 +1484,74 @@ window.GrupoManager = {
 
         AppState.selectedInvoicesForPayment = new Set(facturasFusion.map(f => f.id));
         this.showBulkPaymentModal(true);
+    },
+
+    abrirModalImprimirFusion(fusionId, key) {
+        let equipo = this.equiposPendientes.get(key) || this.getEquipoData(key);
+        const facturasFusion = [];
+        if (equipo && equipo.facturas) {
+            equipo.facturas.forEach(f => {
+                if (f.fusionId === fusionId) facturasFusion.push(f);
+            });
+        } else {
+            for (const [, eq] of this.equiposPendientes) {
+                for (const f of (eq.facturas || [])) {
+                    if (f.fusionId === fusionId) {
+                        if (!equipo) equipo = eq;
+                        facturasFusion.push(f);
+                    }
+                }
+            }
+        }
+
+        if (facturasFusion.length === 0) {
+            UIService.showStatus("No se encontraron facturas dentro de esta fusión", "warning");
+            return;
+        }
+
+        facturasFusion.sort((a, b) => DateUtils.getTimeMs(a) - DateUtils.getTimeMs(b));
+
+        const saldoFinal = facturasFusion.reduce((sum, f) => {
+            const s = f.saldoPendiente !== undefined ? f.saldoPendiente : f.total;
+            return sum + Number(s || 0);
+        }, 0);
+
+        const clienteNombre = equipo ? (equipo.cliente || `Equipo ${equipo.numero}`) : '';
+        const equipoNum = equipo ? equipo.numero : '';
+
+        const modal = document.getElementById('fusion-print-modal');
+        const subtitle = document.getElementById('fusion-print-subtitle');
+        const btnActual = document.getElementById('fusion-print-actual-btn');
+        const btnSolida = document.getElementById('fusion-print-solida-btn');
+
+        const reportData = {
+            cliente: clienteNombre,
+            equipo: equipoNum,
+            facturas: facturasFusion,
+            movimientos: [],
+            saldoFinal: saldoFinal,
+            fechaImpresion: new Date()
+        };
+
+        if (!modal || !btnActual || !btnSolida) {
+            PrintingService.printFusionSolida(reportData);
+            return;
+        }
+
+        if (subtitle) {
+            subtitle.innerHTML = `<strong>Equipo ${equipoNum}</strong> &bull; ${facturasFusion.length} factura${facturasFusion.length > 1 ? 's' : ''} fusionada${facturasFusion.length > 1 ? 's' : ''} &bull; Saldo: <strong>$${saldoFinal.toFixed(2)}</strong>`;
+        }
+
+        btnActual.onclick = () => {
+            modal.style.display = 'none';
+            PrintingService.printBalanceHistory(reportData);
+        };
+        btnSolida.onclick = () => {
+            modal.style.display = 'none';
+            PrintingService.printFusionSolida(reportData);
+        };
+
+        modal.style.display = 'flex';
     },
 
     showBulkPaymentModal(esFusion = false) {
